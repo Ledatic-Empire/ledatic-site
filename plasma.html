@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="2D magnetohydrodynamics on Metal GPU, written in Rail. 256×512 grid, conservation to machine precision, Orszag-Tang vortex validated. The same solver drives the public entropy beacon.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/plasma">
+<meta property="og:title" content="Plasma — Ledatic">
+<meta property="og:description" content="2D magnetohydrodynamics on Metal GPU, written in Rail. 256×512 grid, conservation to machine precision, Orszag-Tang vortex validated. The same solver drives the public entropy beacon.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Plasma — Ledatic">
+<meta name="twitter:description" content="2D magnetohydrodynamics on Metal GPU, written in Rail. 256×512 grid, conservation to machine precision, Orszag-Tang vortex validated. The same solver drives the public entropy beacon.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Plasma — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .mhd-viewport {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid hsl(var(--primary) / 0.4);
+    background: hsl(var(--hero-bg));
+  }
+  .mhd-viewport canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .mhd-viewport .mhd-frame {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid hsl(120 55% 32% / 0.55);
+    pointer-events: none;
+    border-radius: 2px;
+  }
+  .mhd-viewport .mhd-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.75rem;
+    background: hsl(var(--hero-bg) / 0.78);
+    border: 1px solid hsl(var(--primary) / 0.45);
+    border-radius: 2px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .mhd-viewport .mhd-overlay .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: hsl(var(--primary));
+    box-shadow: 0 0 6px hsl(var(--primary) / 0.7);
+    animation: led-pulse 1.6s ease-in-out infinite;
+  }
+  .mhd-viewport .mhd-overlay .mhd-kernel {
+    color: hsl(var(--primary));
+    letter-spacing: 0.08em;
+  }
+  .mhd-viewport .mhd-readouts {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: grid;
+    grid-auto-flow: column;
+    gap: 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    padding: 0.4rem 0.75rem;
+    background: hsl(var(--hero-bg) / 0.72);
+    border: 1px solid hsl(var(--border));
+    border-radius: 2px;
+  }
+  .mhd-viewport .mhd-readouts .mhd-num {
+    color: hsl(var(--primary));
+    text-shadow: 0 0 6px hsl(var(--primary) / 0.4);
+  }
+</style>
+</head>
+<body data-shader="_shared/shaders/torus.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html" class="active">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail/tree/master/stdlib" target="_blank" rel="noopener">Source</a>
+</nav>
+
+<section class="hero">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Physics &mdash; live on GPU</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Plasma</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      Magnetohydrodynamics. Two dimensions. Zero shortcuts.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      A 256&times;512 MHD grid, stepped on Metal GPU by a Rail kernel.
+      Conservation of mass, momentum, and magnetic flux holds to
+      machine precision. This simulation drives the entropy beacon.
+    </p>
+    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+      <a class="btn btn-primary" href="entropy.html">See the beacon</a>
+      <a class="btn btn-ghost" href="https://github.com/zemo-g/rail/blob/master/stdlib/mhd.rail" target="_blank" rel="noopener">Read the solver</a>
+    </div>
+    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
+      <span class="visor-label">Grid</span>
+      <span class="visor-value">256 <span class="dim">&times;</span> 512</span>
+    </div>
+    <p class="trust fade-up" style="animation-delay: 0.9s">
+      474 GFLOPS matmul on Apple silicon &middot; Orszag-Tang vortex validated &middot; RK2 time integrator
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Solver</span>
+    <h2 class="reveal">What the kernel does.</h2>
+    <p class="lead reveal">
+      Ideal MHD in conservation form. 8 field components per cell
+      (density, momentum<sub>x,y,z</sub>, energy, B<sub>x,y,z</sub>).
+      Riemann-solver-based fluxes. Constrained transport on B.
+    </p>
+
+    <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
+      <div class="stat reveal">
+        <div class="value">256&times;512</div>
+        <div class="label">Grid cells</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value">8</div>
+        <div class="label">Conserved vars</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value">10<sup>-14</sup></div>
+        <div class="label">Conservation error</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value">Metal</div>
+        <div class="label">GPU backend</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Validation</span>
+    <h2 class="reveal">Orszag-Tang vortex.</h2>
+    <p class="body reveal">
+      The canonical 2D MHD test. Smooth initial conditions evolve into
+      turbulent small-scale structure with sharp shock fronts. Our
+      solver reproduces the reference solution at t = 0.5 within 0.8%
+      L<sub>2</sub> error on density. If we had this wrong, we'd know.
+    </p>
+
+    <div class="mhd-viewport reveal" style="margin-top: 2rem;">
+      <canvas id="mhd-canvas"
+              data-mhd-live="/entropy/frame/current"
+              data-mhd-shader="_shared/shaders/mhd_live.frag"
+              data-mhd-fallback="_shared/shaders/mhd.frag"
+              aria-hidden="true"></canvas>
+      <div class="mhd-frame" aria-hidden="true"></div>
+      <div class="mhd-overlay">
+        <span class="live-dot"></span>
+        <span>Orszag-Tang</span>
+        <span class="mhd-kernel">// live</span>
+      </div>
+      <div class="mhd-readouts">
+        <span>Grid <span class="mhd-num">64&times;128</span></span>
+        <span>Var <span class="mhd-num">&rho;</span></span>
+        <span>Step <span class="mhd-num" data-live="mhd-step">&mdash;</span></span>
+      </div>
+    </div>
+    <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
+      Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; 64&times;128 downsample
+      of the 256&times;512 solver grid, refreshed every two seconds, min-max normalized, color-mapped in
+      your GPU. Every frame you see has been hashed and signed into the entropy chain.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Why plasma</span>
+    <h2 class="reveal">Because physics should be cheap to verify.</h2>
+    <p class="body reveal">
+      Plasma is chaotic. Small perturbations blow up fast. That makes
+      it a good random-source &mdash; the output of a correctly-running
+      MHD step is unpredictable even to us, which is the property we
+      need for an honest entropy beacon. And it's beautiful to look at.
+    </p>
+    <p class="body reveal">
+      There's a serious version of this argument involving fusion
+      reactor control, but we'll let the beacon make the case.
+    </p>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="/playground">Playground</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>RAIL v3.6.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>

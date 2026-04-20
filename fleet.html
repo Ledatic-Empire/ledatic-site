@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Four independent nodes on a 10 Gb/s Thunderbolt star, every one running the same pure-Rail HTTP control plane. No tmux. No ssh fan-out. One binary, shared state.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/fleet">
+<meta property="og:title" content="Fleet — Ledatic">
+<meta property="og:description" content="Four independent nodes on a 10 Gb/s Thunderbolt star, every one running the same pure-Rail HTTP control plane. No tmux. No ssh fan-out. One binary, shared state.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fleet — Ledatic">
+<meta name="twitter:description" content="Four independent nodes on a 10 Gb/s Thunderbolt star, every one running the same pure-Rail HTTP control plane. No tmux. No ssh fan-out. One binary, shared state.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Fleet — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .node-card {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    transition: border-color 0.25s var(--ease);
+  }
+  .node-card:hover { border-color: hsl(var(--primary) / 0.4); }
+  .node-card .role {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+    margin-bottom: 0.5rem;
+  }
+  .node-card h3 { margin-bottom: 0.25rem; }
+  .node-card .specs {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1rem;
+  }
+  .node-card .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: hsl(var(--primary));
+  }
+  .node-card .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: hsl(var(--primary));
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+</style>
+</head>
+<body data-shader="_shared/shaders/dust.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html" class="active">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <a class="nav-cta" href="#nodes">Nodes</a>
+</nav>
+
+<section class="hero">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Infrastructure</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Fleet</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      Four nodes. Thunderbolt mesh. One HTTP surface.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      Four independent nodes talk to each other on a
+      10 Gb/s Thunderbolt star. Every node runs the same pure-Rail
+      HTTP control plane on port 9101. No tmux. No ssh fan-out.
+    </p>
+    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+      <a class="btn btn-primary" href="#nodes">See the nodes</a>
+      <a class="btn btn-ghost" href="#topology">Topology</a>
+    </div>
+    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
+      <span class="visor-label">Nodes</span>
+      <span class="visor-value" data-live="fleet-status">4/4 <span class="dim">//</span> ONLINE</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="nodes">
+  <div class="wrap">
+    <span class="eyebrow reveal">Nodes</span>
+    <h2 class="reveal">Who's on the mesh.</h2>
+
+    <div class="grid grid-2 reveal" style="margin-top: 2rem;">
+      <div class="node-card">
+        <span class="role">Hub &middot; Orchestrator</span>
+        <h3>Node 01</h3>
+        <p class="specs">Apple silicon &middot; desktop class</p>
+        <p>Primary inference, compilation, and orchestration. Runs the entropy beacon and the self-healer.</p>
+        <div class="status"><span class="dot"></span> UP</div>
+      </div>
+      <div class="node-card">
+        <span class="role">Reasoning</span>
+        <h3>Node 02</h3>
+        <p class="specs">Apple silicon &middot; workstation class</p>
+        <p>Large-model MLX reasoning. Dedicated Thunderbolt link to the hub at near-TB5 ceiling.</p>
+        <div class="status"><span class="dot"></span> UP</div>
+      </div>
+      <div class="node-card">
+        <span class="role">Orchestrator</span>
+        <h3>Node 03</h3>
+        <p class="specs">Apple silicon &middot; laptop class</p>
+        <p>Spoke on the Thunderbolt star. Hits the fleet HTTP surface over the mesh.</p>
+        <div class="status"><span class="dot"></span> UP</div>
+      </div>
+      <div class="node-card">
+        <span class="role">Control plane</span>
+        <h3>Node 04</h3>
+        <p class="specs">ARM64 Linux &middot; SBC class</p>
+        <p>Edge observatory. Fleet control-plane node. Reachable over the private mesh.</p>
+        <div class="status"><span class="dot"></span> UP</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="topology">
+  <div class="wrap">
+    <span class="eyebrow reveal">Topology</span>
+    <h2 class="reveal">Star, not triangle.</h2>
+    <p class="body reveal">
+      The hub carries the routing; the reasoning and laptop nodes are spokes.
+      A triangle topology was tried and failed &mdash; L2 loops on the bridge
+      caused ARP to break silently across the fabric. Star-only from then on.
+    </p>
+
+    <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
+      <div class="stat reveal">
+        <div class="value">9.16</div>
+        <div class="label">Gb/s hub &harr; reasoning</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value">0.42</div>
+        <div class="label">ms RTT</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value">0.33</div>
+        <div class="label">Gb/s hub &harr; laptop</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value">90 s</div>
+        <div class="label">Self-healer tick</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Control plane</span>
+    <h2 class="reveal">One HTTP surface.</h2>
+    <p class="body reveal">
+      Every node answers on a single port. <code>GET /health</code> returns its
+      status. <code>POST /exec</code> runs a whitelisted command. <code>POST /jobs</code>
+      enqueues an async one. No ssh fan-out. Shared state is file-based, so a
+      binary swap is a drop-in upgrade.
+    </p>
+
+    <div class="card reveal" style="margin-top: 2rem;">
+      <span class="eyebrow">Shell</span>
+      <h3>Fleet health, one command</h3>
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.8rem; line-height: 1.6;"><code>HDR="X-Fleet-Token: $TOKEN"
+for N in $NODES; do
+  echo "$N: $(curl -sH "$HDR" http://$N/health)"
+done</code></pre>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="/playground">Playground</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>RAIL v3.6.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>

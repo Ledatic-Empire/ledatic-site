@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Every tagged Rail release, in order. Eight releases in four weeks — from v2.0's 512 MB allocator and GC to v3.6.0's strict HTTPS default. Each entry points at the commit that ships it.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/changelog">
+<meta property="og:title" content="Changelog — Ledatic">
+<meta property="og:description" content="Every tagged Rail release, in order. Eight releases in four weeks — from v2.0's 512 MB allocator and GC to v3.6.0's strict HTTPS default. Each entry points at the commit that ships it.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Changelog — Ledatic">
+<meta name="twitter:description" content="Every tagged Rail release, in order. Eight releases in four weeks — from v2.0's 512 MB allocator and GC to v3.6.0's strict HTTPS default. Each entry points at the commit that ships it.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Changelog — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .release {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  @media (min-width: 768px) {
+    .release { grid-template-columns: 10rem 1fr; gap: 3rem; }
+  }
+  .release .meta {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .release .meta .ver {
+    color: hsl(var(--primary));
+    font-weight: 500;
+  }
+  .release h3 { margin-bottom: 0.75rem; }
+  .release p  { color: hsl(var(--muted-foreground)); font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.5rem; max-width: 46rem; }
+  .release ul {
+    margin-top: 0.75rem;
+    margin-left: 1.25rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .release li { margin-bottom: 0.25rem; }
+</style>
+</head>
+<body data-shader="_shared/shaders/dust.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html" class="active">Changelog</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail/releases" target="_blank" rel="noopener">Releases</a>
+</nav>
+
+<section class="hero" style="min-height: 50vh;">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Changelog</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Ship log</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      Every tagged release, in order.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      Public since v1.0. Each entry points at the commit that ships it.
+      CHANGELOG.md in the repo is the canonical source.
+    </p>
+    <div class="visor-mini fade-up" style="animation-delay: 0.7s; margin-top: 1.25rem;">
+      <span class="visor-label">Stream</span>
+      <span class="visor-value">7 <span class="dim">//</span> TAGGED</span>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap" style="max-width: 62rem;">
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.6.0</div>
+        <div>2026-04-20</div>
+      </div>
+      <div>
+        <h3>Strict HTTPS by default</h3>
+        <p>Chain-walk to trust store is now the default for <code>https_get_url</code> / <code>https_post_url</code>. Old leaf-only bodies moved under <code>_unsafe_noverify</code>. <code>_strict</code> aliases kept for one release.</p>
+        <ul>
+          <li>Trust-store SPKI cache: O(N) walk &rarr; O(1) lookup</li>
+          <li>New <code>asn1_find_spki</code> / <code>ts_has_spki_hash</code></li>
+          <li>Amazon (DigiCert/RSA) + Slack (ISRG/RSA) strict verified live</li>
+          <li>137/137 green, 2-pass byte-identical</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.5.0</div>
+        <div>2026-04-20</div>
+      </div>
+      <div>
+        <h3>hc_read_random hardened + serve_static path guard</h3>
+        <p><code>hc_read_random</code> now pipes <code>urandom</code> via stdout instead of writing a tmp file. <code>serve_static</code> returns 400 on <code>..</code> / <code>\</code>.</p>
+      </div>
+    </div>
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.4.0</div>
+        <div>2026-04-19</div>
+      </div>
+      <div>
+        <h3>Ed25519 verify</h3>
+        <p>RFC 8032 §5.1 verifier clean against TEST 1. Canonical <code>ed_d_bytes</code> LE hex. Flattened mutual recursion in <code>ed_pow_bytes_iter</code>.</p>
+      </div>
+    </div>
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.3.0</div>
+        <div>2026-04-19</div>
+      </div>
+      <div>
+        <h3>HTTPS keep-alive + ECDSA P-521</h3>
+        <p>TCP_NODELAY + pre-wrapped first-request coalesced with handshake + NST seq advance. P-521 structural clone of P-384 with 33 limbs.</p>
+      </div>
+    </div>
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.2.0</div>
+        <div>2026-04-19</div>
+      </div>
+      <div>
+        <h3>Streaming bodies + compile.rail quadratic fixes</h3>
+        <p><code>edit_dist</code> O(3<sup>n</sup>) &rarr; bounded. <code>compile_funcs</code> O(N<sup>2</sup>) &rarr; O(N). probe4 195 s &rarr; 12 s (16&times;).</p>
+      </div>
+    </div>
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.0.0</div>
+        <div>2026-04-18</div>
+      </div>
+      <div>
+        <h3>Rail speaks TLS</h3>
+        <p>Pure-Rail TLS 1.3 + chain validation. ECDSA-P256/P384, RSA-PSS/PKCS1, SHA-256/384/512, x25519, ChaCha20-Poly1305. socat retired from the fleet.</p>
+      </div>
+    </div>
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v2.0.0</div>
+        <div>2026-04-06</div>
+      </div>
+      <div>
+        <h3>512 MB allocator + conservative GC</h3>
+        <p>Bump arena + mark-sweep in ARM64 assembly. Runtime safety for <code>head []</code> / <code>tail []</code>. 116-test baseline green.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="/playground">Playground</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>RAIL v3.6.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>

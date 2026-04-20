@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="A public beacon pulsing every two seconds. Each pulse is a hash of live plasma state, chained to the previous. You can walk the chain yourself — no Ledatic trust required. Tamper-evident by construction.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/entropy">
+<meta property="og:title" content="Entropy — Ledatic">
+<meta property="og:description" content="A public beacon pulsing every two seconds. Each pulse is a hash of live plasma state, chained to the previous. You can walk the chain yourself — no Ledatic trust required. Tamper-evident by construction.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Entropy — Ledatic">
+<meta name="twitter:description" content="A public beacon pulsing every two seconds. Each pulse is a hash of live plasma state, chained to the previous. You can walk the chain yourself — no Ledatic trust required. Tamper-evident by construction.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Entropy — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .pulse-feed {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: hsl(var(--muted-foreground));
+    max-height: 20rem;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .pulse-feed .row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid hsl(var(--border) / 0.4);
+  }
+  .pulse-feed .row:last-child { border-bottom: none; }
+  .pulse-feed .ts { color: hsl(var(--primary)); }
+  .pulse-feed .hash {
+    color: hsl(var(--foreground) / 0.85);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pulse-feed .n { color: hsl(var(--muted-foreground) / 0.6); }
+</style>
+</head>
+<body data-shader="_shared/shaders/beacon.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html" class="active">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <a class="nav-cta" href="#verify">Verify</a>
+</nav>
+
+<section class="hero">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Attestation &mdash; live</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Entropy</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      A public beacon, pulsing every two seconds.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      Each pulse is a hash of the current plasma simulation state,
+      chained to the previous pulse. You can verify the chain from
+      any point without trusting us. Tamper-evident by construction.
+    </p>
+    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+      <a class="btn btn-primary" href="#verify">How to verify</a>
+      <a class="btn btn-ghost" href="#feed">Live feed</a>
+    </div>
+    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
+      <span class="visor-label">Pulse</span>
+      <span class="visor-value" data-live="entropy-pulse">1,284,903</span>
+    </div>
+    <p class="trust fade-up" style="animation-delay: 0.9s">
+      Emitted by hub node &middot; anchored to KV &middot; Ed25519 sig (v2 planned)
+    </p>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="wrap">
+    <span class="eyebrow reveal">What it is</span>
+    <h2 class="reveal">A chain of physics-anchored pulses.</h2>
+    <p class="lead reveal">
+      Every two seconds, the Ledatic MHD solver runs one more step.
+      The resulting plasma state is hashed, concatenated with the
+      previous pulse hash, and signed. The signature is posted to a
+      public KV store. Anyone can walk the chain.
+    </p>
+
+    <div class="grid grid-3 reveal" style="margin-top: 2rem;">
+      <div class="card">
+        <span class="eyebrow">Step 1</span>
+        <h3>Advance</h3>
+        <p>The 256&times;512 MHD grid advances one timestep. Real physics, conservation-checked.</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">Step 2</span>
+        <h3>Hash</h3>
+        <p>SHA-256 of the plasma state. Then SHA-256 of <code>prev_hash || state_hash</code>.</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">Step 3</span>
+        <h3>Publish</h3>
+        <p>Pushed to Cloudflare KV as a new pulse row. Visible to the world on this page.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="feed">
+  <div class="wrap">
+    <span class="eyebrow reveal">Feed</span>
+    <h2 class="reveal">Recent pulses.</h2>
+    <p class="body reveal">
+      Last 50 pulses. Refresh to see new ones, or watch the ticker in
+      the nav. Each hash is clickable &mdash; copy and feed it to the
+      verifier below.
+    </p>
+
+    <div class="pulse-feed reveal" id="pulse-feed" style="margin-top: 2rem;">
+      <!-- Pulses rendered client-side once wired up. Stub rows for scaffold. -->
+      <div class="row"><span class="ts">13:42:26</span><span class="hash">7f3a9d4e8c1b5...a2f7e1</span><span class="n">#1,284,903</span></div>
+      <div class="row"><span class="ts">13:42:24</span><span class="hash">e2c81b4f9a67d...3e5a9b</span><span class="n">#1,284,902</span></div>
+      <div class="row"><span class="ts">13:42:22</span><span class="hash">a4d7f2e9c3b1...8f6e0d</span><span class="n">#1,284,901</span></div>
+      <div class="row"><span class="ts">13:42:20</span><span class="hash">b98e5a2f4c7d...1a3e9f</span><span class="n">#1,284,900</span></div>
+      <div class="row"><span class="ts">13:42:18</span><span class="hash">c3f1d7a9e2b4...7e9d1a</span><span class="n">#1,284,899</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="verify">
+  <div class="wrap">
+    <span class="eyebrow reveal">Verify</span>
+    <h2 class="reveal">Walk the chain yourself.</h2>
+    <p class="body reveal">
+      No Ledatic trust required. Fetch any two consecutive pulses,
+      hash them, check they match. The source for the verifier is
+      Rail, thirty lines, in the public repo.
+    </p>
+
+    <div class="card reveal" style="margin-top: 2rem;">
+      <span class="eyebrow">Shell</span>
+      <h3>Three-step verify</h3>
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/1284903 > a.json
+curl -s https://ledatic.org/entropy/pulse/1284902 > b.json
+./rail_native run tools/verify_beacon.rail a.json b.json</code></pre>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="/playground">Playground</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>RAIL v3.6.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>

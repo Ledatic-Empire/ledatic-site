@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="The Rail compiler, built to WebAssembly and running in your browser. Sandboxed. AST-whitelisted. No server round-trip. Paste Rail source, compile in milliseconds, run client-side.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/playground">
+<meta property="og:title" content="Playground — Ledatic">
+<meta property="og:description" content="The Rail compiler, built to WebAssembly and running in your browser. Sandboxed. AST-whitelisted. No server round-trip. Paste Rail source, compile in milliseconds, run client-side.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Playground — Ledatic">
+<meta name="twitter:description" content="The Rail compiler, built to WebAssembly and running in your browser. Sandboxed. AST-whitelisted. No server round-trip. Paste Rail source, compile in milliseconds, run client-side.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Playground — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .editor-shell {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .editor-shell header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--muted));
+  }
+  .editor-shell header .title {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .editor-shell header .run {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: hsl(var(--primary-foreground));
+    background: hsl(var(--primary));
+    border: none;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.125rem;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+  }
+  .editor-shell header .run:hover { filter: brightness(1.1); }
+  .editor-shell .body {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 24rem;
+  }
+  @media (min-width: 768px) {
+    .editor-shell .body { grid-template-columns: 1fr 1fr; }
+  }
+  .editor-shell .code, .editor-shell .output {
+    padding: 1.25rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    white-space: pre;
+    overflow: auto;
+    color: hsl(var(--foreground));
+  }
+  .editor-shell .code {
+    background: hsl(var(--hero-bg));
+    border-right: 1px solid hsl(var(--border));
+  }
+  .editor-shell .output {
+    background: hsl(var(--panel));
+    color: hsl(var(--primary));
+  }
+  @media (max-width: 767px) {
+    .editor-shell .code { border-right: none; border-bottom: 1px solid hsl(var(--border)); }
+  }
+</style>
+</head>
+<body data-shader="_shared/shaders/grid.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+
+<section class="hero" style="min-height: 60vh;">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Playground &mdash; WASM</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Compile&nbsp;Rail</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      In your browser. Sandboxed. Real compiler.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      The same Rail compiler, built to WebAssembly. AST whitelist.
+      Import validator. Output runs entirely client-side &mdash;
+      no server, no round-trip.
+    </p>
+    <div class="visor-mini fade-up" style="animation-delay: 0.7s; margin-top: 1.25rem;">
+      <span class="visor-label">WASM</span>
+      <span class="visor-value">READY</span>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="wrap">
+    <div class="editor-shell reveal">
+      <header>
+        <span class="title">main.rail</span>
+        <a class="run" href="/playground">Launch &nearr;</a>
+      </header>
+      <div class="body">
+        <div class="code" id="code">let fact = fun n -&gt;
+  if n &lt;= 1 then 1
+  else n * fact (n - 1)
+
+println (fact 10)</div>
+        <div class="output" id="output">// launch ⇒ /playground
+// live WASM compiler, sandboxed,
+// eight pre-compiled examples,
+// real rail_native output.
+//
+// no server round-trip.
+</div>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top: 2.5rem; display: flex; flex-direction: column; align-items: flex-start; gap: 1rem;">
+      <a class="btn btn-primary" href="/playground"
+         style="font-size: 0.95rem; padding: 1.1rem 2rem;">
+        Open Live Playground &nearr;
+      </a>
+      <p class="body" style="margin: 0; max-width: 42rem; font-size: 0.88rem; color: hsl(var(--muted-foreground));">
+        The working Rail playground &mdash; eight examples, editable source, real
+        <code>rail_native</code> output &mdash; lives at
+        <code>/playground</code>. Visual refresh to match this site is in the queue.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="/playground">Playground</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>RAIL v3.6.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>
