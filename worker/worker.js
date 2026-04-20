@@ -545,6 +545,39 @@ async function handleSite(request, env, url) {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
+  // Witness surface — fleet nodes sign observations of /entropy/pulse and
+  // publish their signed latest here. Shape mirrors the beacon write path:
+  // PUT writes R2 (strongly consistent), GET reads R2. Auth reuses the shared
+  // BEACON_TOKEN — witnesses are fleet-internal writers, same trust bucket.
+  // Node name is path-restricted to known witnesses to limit attack surface.
+  const WITNESSES = new Set(["fleet0"]);
+  const witnessMatch = pathname.match(/^\/witness\/([^/]+)\/latest$/);
+  if (witnessMatch) {
+    const node = witnessMatch[1];
+    if (!WITNESSES.has(node)) return notFound();
+    const r2Key = `witness/${node}/latest.json`;
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"no witness record yet"}', {
+        status: 503,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
+      });
+    }
+  }
+
   if (pathname === "/entropy/frame/current") {
     const frame = await env.LEDATIC_KV.get("entropy:frame:current", { type: "arrayBuffer" });
     if (!frame) return new Response("No frame yet", {

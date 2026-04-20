@@ -1,17 +1,18 @@
 #!/bin/bash
-# deploy_worker.sh — push tools/deploy/worker.js to Cloudflare as the `ledatic`
-# Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2) exactly as configured.
+# deploy_worker.sh — push worker/worker.js to Cloudflare as the `ledatic`
+# Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN) exactly
+# as configured.
 #
-# Usage: ./tools/deploy/deploy_worker.sh
+# Usage: ./worker/deploy_worker.sh   (run from ledatic-site/ or anywhere)
 # Env:   CF_TOKEN read from ~/Desktop/rings (must have Account:Workers:Edit)
 
 set -e
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/.."
 
 TOKEN=$(cat ~/Desktop/rings)
 ACC=2acd6ceb3a0c57f1f2b470433d94bc87
 SCRIPT=ledatic
-SRC=tools/deploy/worker.js
+SRC=worker/worker.js
 META=/tmp/ledatic_worker_meta.json
 BACKUP_DIR=$HOME/ledatic-site/worker_backups
 TS=$(date +%Y%m%d_%H%M%S)
