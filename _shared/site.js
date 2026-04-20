@@ -346,6 +346,13 @@
       let hasFrame = false;
       let frameW = 64, frameH = 128;
 
+      // Channel layout in the binary frame header:
+      //   u32 w, u32 h, u32 c, u32 step, ...metadata... (48-byte header)
+      //   then c planes of w*h float32: ρ, vx, vy, vz, p, B
+      // Density (ρ) turns out to be near-constant in the current solver while
+      // the MHD fields evolve vigorously — so we render B instead, which is
+      // also the iconic Orszag-Tang quantity (current sheets + turbulence).
+      const stepEl = document.querySelector('[data-live="mhd-step"]');
       const fetchFrame = async () => {
         try {
           const res = await fetch(frameUrl, { cache: 'no-store' });
@@ -356,11 +363,14 @@
           const w = view.getUint32(0, true);
           const h = view.getUint32(4, true);
           const c = view.getUint32(8, true);
+          const step = view.getUint32(12, true);
           if (w <= 0 || h <= 0 || c <= 0) return;
           const nCells = w * h;
-          if (buffer.byteLength < 48 + nCells * 4) return;
-          // Density = first planar channel.
-          const floats = new Float32Array(buffer, 48, nCells);
+          if (buffer.byteLength < 48 + nCells * c * 4) return;
+          // Pick magnetic-field plane (last channel). Falls back to density
+          // if the frame hasn't been extended yet.
+          const plane = Math.min(5, c - 1);
+          const floats = new Float32Array(buffer, 48 + plane * nCells * 4, nCells);
           let min = floats[0], max = floats[0];
           for (let i = 1; i < nCells; i++) {
             const v = floats[i];
@@ -377,6 +387,7 @@
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, u8);
           frameW = w; frameH = h;
           hasFrame = true;
+          if (stepEl) stepEl.textContent = step.toLocaleString();
         } catch (_) { /* silent fallback */ }
       };
 
