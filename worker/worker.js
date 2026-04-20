@@ -578,8 +578,24 @@ async function handleSite(request, env, url) {
     }
   }
 
+  // Frame binary — beacon daemon PUTs here (auth via BEACON_TOKEN) and the
+  // plasma viewport reads. R2-backed because KV has a 60s edge cache that
+  // would freeze the live viz at 1Hz publish rate.
   if (pathname === "/entropy/frame/current") {
-    const frame = await env.LEDATIC_KV.get("entropy:frame:current", { type: "arrayBuffer" });
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.arrayBuffer();
+      await env.REPORTS_R2.put("entropy/frame.bin", body, {
+        httpMetadata: { contentType: "application/octet-stream" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    const obj = await env.REPORTS_R2.get("entropy/frame.bin");
+    const frame = obj
+      ? await obj.arrayBuffer()
+      : await env.LEDATIC_KV.get("entropy:frame:current", { type: "arrayBuffer" });
     if (!frame) return new Response("No frame yet", {
       status: 503, headers: sec({ "content-type": "text/plain" }),
     });
