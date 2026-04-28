@@ -628,6 +628,43 @@ async function handleSite(request, env, url) {
     }
   }
 
+  // Per-frame attestation snapshot — frame_attest_publisher signs
+  // sha256(/tmp/plasma_live.bin) every ~30 s and PUTs here.  Anyone
+  // pulling /entropy/frame/current at the same time can re-derive the
+  // hash and check the sig — proves "this frame existed at pulse N".
+  if (pathname === "/entropy/frame/latest.attestation.json") {
+    const r2Key = "entropy/frame.latest.attestation.json";
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      if (!body || body.length > 16 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      try { JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"no frame attestation yet"}', {
+        status: 503,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+  }
+
   // Frame binary — beacon daemon PUTs here (auth via BEACON_TOKEN) and the
   // plasma viewport reads. R2-backed because KV has a 60s edge cache that
   // would freeze the live viz at 1Hz publish rate.
@@ -655,6 +692,52 @@ async function handleSite(request, env, url) {
         "cache-control": "no-store",
         "access-control-allow-origin": "*",
         "content-disposition": 'attachment; filename="plasma_frame.bin"',
+      }),
+    });
+  }
+
+  // Shields.io endpoint badges — composed from /<kind>/latest +
+  // /<kind>/<sha>/result.json so a single img URL renders live state.
+  // Returns the schemaVersion=1 endpoint format Shields expects.
+  // Cached 60 s — Shields caches its own renders for ~5 min anyway.
+  const badgeMatch = pathname.match(/^\/attest\/badge\/(builds|selfhost)\.json$/);
+  if (badgeMatch && method === "GET") {
+    const kind = badgeMatch[1];
+    const fetchJson = async (path) => {
+      const obj = await env.REPORTS_R2.get(`attest${path}`);
+      if (!obj) return null;
+      try { return JSON.parse(await obj.text()); } catch { return null; }
+    };
+    const ptr = await fetchJson(`/${kind}/latest/index.json`);
+    let label, message, color = "lightgrey";
+    if (kind === "builds") {
+      label = "build";
+      const r = ptr ? await fetchJson(`/builds/${ptr.short}/result.json`) : null;
+      if (!r) {
+        message = "no record";
+      } else {
+        message = `${r.short} · ${r.pass}/${r.total} · pulse ${r.pulse_end}`;
+        color = r.status === "ok" ? "brightgreen" : "red";
+      }
+    } else {
+      label = "self-host";
+      const r = ptr ? await fetchJson(`/selfhost/${ptr.short}/result.json`) : null;
+      if (!r) {
+        message = "no record";
+      } else {
+        const fp = r.fixed_point && r.seed_match;
+        message = `${r.short} · ${fp ? "fixed point" : "drift"} · pulse ${r.pulse_end}`;
+        color = fp ? "brightgreen" : "red";
+      }
+    }
+    const body = JSON.stringify({
+      schemaVersion: 1, label, message, color, cacheSeconds: 60,
+    });
+    return new Response(body, {
+      headers: sec({
+        "content-type": "application/json",
+        "cache-control": "public, max-age=60",
+        "access-control-allow-origin": "*",
       }),
     });
   }

@@ -16,6 +16,43 @@ SITE_ORIGIN="https://ledatic.org"
 
 : "${CF_TOKEN:?set CF_TOKEN (e.g. CF_TOKEN=\$(cat ~/Desktop/rings))}"
 
+# Physics gate — refuse to deploy if the entropy beacon is stale.
+# This binds every site deploy to a live physical process: deploys can
+# happen only when production physics is producing distinct hashes at
+# the expected cadence.  A frozen beacon = a frozen deploy.
+#
+# Override with DEPLOY_SKIP_PHYSICS_GATE=1 (use sparingly; defeats the
+# whole point).
+gate_on_beacon() {
+  [ "${DEPLOY_SKIP_PHYSICS_GATE:-0}" = "1" ] && {
+    echo "deploy: physics gate SKIPPED via DEPLOY_SKIP_PHYSICS_GATE=1" >&2
+    return 0
+  }
+  local p1 p2 hex1 hex2 url="https://ledatic.org/entropy/pulse"
+  local snap1 snap2
+  snap1=$(curl -sf --max-time 5 "$url") || {
+    echo "deploy: beacon unreachable ($url) — refusing deploy" >&2
+    echo "        export DEPLOY_SKIP_PHYSICS_GATE=1 to override" >&2
+    exit 4
+  }
+  p1=$(printf '%s' "$snap1" | python3 -c "import sys,json;print(json.load(sys.stdin)['pulse_id'])")
+  hex1=$(printf '%s' "$snap1" | python3 -c "import sys,json;print(json.load(sys.stdin)['value_hex'])")
+  sleep 4
+  snap2=$(curl -sf --max-time 5 "$url") || {
+    echo "deploy: beacon vanished mid-check — refusing deploy" >&2
+    exit 4
+  }
+  p2=$(printf '%s' "$snap2" | python3 -c "import sys,json;print(json.load(sys.stdin)['pulse_id'])")
+  hex2=$(printf '%s' "$snap2" | python3 -c "import sys,json;print(json.load(sys.stdin)['value_hex'])")
+  if [ "$p1" = "$p2" ] || [ "$hex1" = "$hex2" ]; then
+    echo "deploy: beacon is stale — pulse $p1 didn't advance in 4 s. Refusing deploy." >&2
+    echo "        check com.ledatic.mhd; export DEPLOY_SKIP_PHYSICS_GATE=1 to force." >&2
+    exit 4
+  fi
+  echo "deploy: physics gate ok — pulse $p1 → $p2 in 4 s"
+}
+gate_on_beacon
+
 mime_of() {
   case "$1" in
     *.css)  echo "text/css" ;;
