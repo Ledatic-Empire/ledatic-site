@@ -198,6 +198,32 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Provenance</span>
+    <h2 class="reveal">Verify any release yourself.</h2>
+    <p class="reveal" style="max-width: 46rem; color: hsl(var(--muted-foreground)); margin-top: 1rem;">
+      Every tagged release binds <code>sha256(rail_native)</code> to a
+      live entropy beacon pulse and an Ed25519 signature from the Pi
+      witness. The verifier is one curl away.
+    </p>
+
+    <div class="reveal" style="margin-top: 1.5rem; background: hsl(var(--panel)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 1.25rem 1.5rem; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.78rem; color: hsl(var(--foreground) / 0.9); line-height: 1.7; overflow-x: auto;">
+<span style="color: hsl(var(--muted-foreground));"># Pull the verifier and the v3.6.1 release.</span><br>
+curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh<br>
+curl -sf https://ledatic.org/releases/v3.6.1/rail_native -o /tmp/rn<br>
+curl -sf https://ledatic.org/releases/v3.6.1/rail_native.attestation.json -o /tmp/rn.att.json<br>
+/tmp/v.sh /tmp/rn /tmp/rn.att.json<br>
+<span style="color: hsl(var(--primary));"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span>
+    </div>
+
+    <div style="margin-top: 1.5rem;" class="reveal">
+      <a class="btn btn-ghost" href="system.html">Live mission control &rarr;</a>
+      <a class="btn btn-ghost" href="entropy.html" style="margin-left: 0.75rem;">About the beacon &rarr;</a>
+    </div>
+  </div>
+</section>
+
 <footer class="site-foot">
   <div class="wrap">
     <div class="foot-grid">
