@@ -131,7 +131,7 @@
     </p>
     <div class="cta-row fade-up" style="animation-delay: 0.7s">
       <a class="btn btn-primary" href="entropy.html">See the beacon</a>
-      <a class="btn btn-ghost" href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd_ot_beacon.py" target="_blank" rel="noopener">Read the solver</a>
+      <a class="btn btn-ghost" href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd.rail" target="_blank" rel="noopener">Read the solver</a>
     </div>
     <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
       <span class="visor-label">Grid</span>
@@ -168,7 +168,7 @@
         <div class="label">Conservation error</div>
       </div>
       <div class="stat reveal">
-        <div class="value">numpy</div>
+        <div class="value">Rail</div>
         <div class="label">Runtime</div>
       </div>
     </div>
@@ -191,7 +191,7 @@
 
     <div class="mhd-viewport reveal" style="margin-top: 2rem;">
       <canvas id="mhd-canvas"
-              data-mhd-live="/entropy/frame/current"
+              data-mhd-live="https://liveplasma.ledatic.org/frame"
               data-mhd-shader="_shared/shaders/mhd_live.frag"
               data-mhd-fallback="_shared/shaders/mhd.frag"
               aria-hidden="true"></canvas>
@@ -243,7 +243,6 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="/playground">Playground</a></li>
           <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
@@ -266,7 +265,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span>RAIL v3.6.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
     </div>
   </div>
 </footer>

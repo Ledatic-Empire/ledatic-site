@@ -55,7 +55,7 @@
   .release li { margin-bottom: 0.25rem; }
 </style>
 </head>
-<body data-shader="_shared/shaders/dust.frag">
+<body data-shader="_shared/shaders/bench.frag">
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -86,15 +86,27 @@
       Public since v1.0. Each entry points at the commit that ships it.
       CHANGELOG.md in the repo is the canonical source.
     </p>
-    <div class="visor-mini fade-up" style="animation-delay: 0.7s; margin-top: 1.25rem;">
-      <span class="visor-label">Stream</span>
-      <span class="visor-value">7 <span class="dim">//</span> TAGGED</span>
-    </div>
   </div>
 </section>
 
 <section class="section">
   <div class="wrap" style="max-width: 62rem;">
+
+    <div class="release reveal">
+      <div class="meta">
+        <div class="ver">v3.6.1</div>
+        <div>2026-04-27</div>
+      </div>
+      <div>
+        <h3>Compiler hardening</h3>
+        <p>Two codegen + parser fixes; both gated by 2-pass byte-identical self-bootstrap.</p>
+        <ul>
+          <li>Undefined identifiers now fail at link time with a named symbol (<code>_RAIL_UNDEFINED_IDENT_&lt;name&gt;</code>) instead of silently producing a binary that segfaults at runtime</li>
+          <li>Parser accepts multi-line compound expressions (cons chains, nested calls, list literals) inside unclosed <code>(...)</code>/<code>[...]</code> or before strictly-greater-indented <code>(</code>/<code>[</code></li>
+          <li>137/137 green, byte-identical self-bootstrap verified (<code>14af7d5d&hellip;</code>)</li>
+        </ul>
+      </div>
+    </div>
 
     <div class="release reveal">
       <div class="meta">
@@ -193,7 +205,6 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="/playground">Playground</a></li>
           <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
@@ -216,7 +227,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span>RAIL v3.6.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
     </div>
   </div>
 </footer>

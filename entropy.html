@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A public beacon pulsing every two seconds. Each pulse is a hash of live plasma state, chained to the previous. You can walk the chain yourself — no Ledatic trust required. Tamper-evident by construction.">
+<meta name="description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Single-node today, multi-witness Ed25519 cosignature in v2.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/entropy">
 <meta property="og:title" content="Entropy — Ledatic">
-<meta property="og:description" content="A public beacon pulsing every two seconds. Each pulse is a hash of live plasma state, chained to the previous. You can walk the chain yourself — no Ledatic trust required. Tamper-evident by construction.">
+<meta property="og:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Single-node today, multi-witness Ed25519 cosignature in v2.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Entropy — Ledatic">
-<meta name="twitter:description" content="A public beacon pulsing every two seconds. Each pulse is a hash of live plasma state, chained to the previous. You can walk the chain yourself — no Ledatic trust required. Tamper-evident by construction.">
+<meta name="twitter:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Single-node today, multi-witness Ed25519 cosignature in v2.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Entropy — Ledatic</title>
@@ -83,8 +83,9 @@
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
       Each pulse is a hash of the current plasma simulation state,
-      chained to the previous pulse. You can verify the chain from
-      any point without trusting us. Tamper-evident by construction.
+      chained to the previous pulse. Walk the chain yourself and
+      catch any in-flight tampering &mdash; the verifier is one
+      shell line and you trust no one to read the result.
     </p>
     <div class="cta-row fade-up" style="animation-delay: 0.7s">
       <a class="btn btn-primary" href="#verify">How to verify</a>
@@ -92,10 +93,10 @@
     </div>
     <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
       <span class="visor-label">Pulse</span>
-      <span class="visor-value" data-live="entropy-pulse">1,284,903</span>
+      <span class="visor-value" data-live="entropy-pulse">&mdash;</span>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.9s">
-      Emitted by hub node &middot; anchored to KV &middot; Ed25519 sig (v2 planned)
+      Emitted by one node today &middot; multi-witness Ed25519 cosignature on the way
     </p>
   </div>
 </section>
@@ -107,15 +108,17 @@
     <p class="lead reveal">
       Every two seconds, the Ledatic MHD solver runs one more step.
       The resulting plasma state is hashed, concatenated with the
-      previous pulse hash, and signed. The signature is posted to a
-      public KV store. Anyone can walk the chain.
+      previous pulse hash, and posted to a public store. Anyone can
+      walk the chain. Today the chain is produced by a single node;
+      external Ed25519 cosignatures from independent witnesses
+      will land in v2.
     </p>
 
     <div class="grid grid-3 reveal" style="margin-top: 2rem;">
       <div class="card">
         <span class="eyebrow">Step 1</span>
         <h3>Advance</h3>
-        <p>The 256&times;512 MHD grid advances one timestep. Real physics, conservation-checked.</p>
+        <p>The 128&sup2; MHD grid advances one timestep. Real physics, conservation-checked.</p>
       </div>
       <div class="card">
         <span class="eyebrow">Step 2</span>
@@ -142,12 +145,8 @@
     </p>
 
     <div class="pulse-feed reveal" id="pulse-feed" style="margin-top: 2rem;">
-      <!-- Pulses rendered client-side once wired up. Stub rows for scaffold. -->
-      <div class="row"><span class="ts">13:42:26</span><span class="hash">7f3a9d4e8c1b5...a2f7e1</span><span class="n">#1,284,903</span></div>
-      <div class="row"><span class="ts">13:42:24</span><span class="hash">e2c81b4f9a67d...3e5a9b</span><span class="n">#1,284,902</span></div>
-      <div class="row"><span class="ts">13:42:22</span><span class="hash">a4d7f2e9c3b1...8f6e0d</span><span class="n">#1,284,901</span></div>
-      <div class="row"><span class="ts">13:42:20</span><span class="hash">b98e5a2f4c7d...1a3e9f</span><span class="n">#1,284,900</span></div>
-      <div class="row"><span class="ts">13:42:18</span><span class="hash">c3f1d7a9e2b4...7e9d1a</span><span class="n">#1,284,899</span></div>
+      <!-- JS replaces this once /entropy/pulse responds. -->
+      <div class="row"><span class="ts">&mdash;&mdash;:&mdash;&mdash;:&mdash;&mdash;</span><span class="hash">waiting for first pulse&hellip;</span><span class="n">&mdash;</span></div>
     </div>
   </div>
 </section>
@@ -157,17 +156,22 @@
     <span class="eyebrow reveal">Verify</span>
     <h2 class="reveal">Walk the chain yourself.</h2>
     <p class="body reveal">
-      No Ledatic trust required. Fetch any two consecutive pulses,
-      hash them, check they match. The source for the verifier is
-      Rail, thirty lines, in the public repo.
+      No Ledatic trust required. Each pulse carries the previous
+      pulse's hash in <code>prev_value_hex</code>. Fetch two pulses
+      a few seconds apart and confirm they chain. Curl and jq are
+      all you need.
     </p>
 
     <div class="card reveal" style="margin-top: 2rem;">
       <span class="eyebrow">Shell</span>
-      <h3>Three-step verify</h3>
-      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/1284903 > a.json
-curl -s https://ledatic.org/entropy/pulse/1284902 > b.json
-./rail_native run tools/verify_beacon.rail a.json b.json</code></pre>
+      <h3>Verify the chain in three lines</h3>
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/log | jq -e '. as $l | all(range(1; length); $l[.].prev_value_hex == $l[.-1].value_hex)' &amp;&amp; echo "chain OK"</code></pre>
+      <p style="margin-top: 1rem; font-size: 0.85rem; color: hsl(var(--muted-foreground));">
+        Fetches the last 50 pulses and confirms each one's
+        <code>prev_value_hex</code> matches the previous pulse's
+        <code>value_hex</code>. If anyone rewrote history mid-chain,
+        the link breaks and you'll see <code>chain BROKEN</code>.
+      </p>
     </div>
   </div>
 </section>
@@ -183,7 +187,6 @@ curl -s https://ledatic.org/entropy/pulse/1284902 > b.json
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="/playground">Playground</a></li>
           <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
@@ -206,7 +209,7 @@ curl -s https://ledatic.org/entropy/pulse/1284902 > b.json
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span>RAIL v3.6.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
     </div>
   </div>
 </footer>

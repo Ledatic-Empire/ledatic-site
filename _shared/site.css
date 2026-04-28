@@ -155,6 +155,18 @@ section.hero {
     radial-gradient(ellipse at 70% 40%, hsl(var(--primary) / 0.08), transparent 60%),
     hsl(var(--hero-bg));
 }
+/* Homepage hero gets a photographic base layer behind the procedural shader.
+   Drop the image at _shared/img/hero.jpg; it's served via the deploy.sh
+   image discovery loop. Filter cools and dims it so the CRT green primary
+   stays the dominant colour. */
+body.home .scene-fallback {
+  background:
+    radial-gradient(ellipse at 70% 40%, hsl(var(--primary) / 0.10), transparent 60%),
+    linear-gradient(180deg, hsl(var(--hero-bg) / 0.55), hsl(var(--hero-bg) / 0.85)),
+    url('/_shared/img/hero.jpg') center/cover no-repeat,
+    hsl(var(--hero-bg));
+  filter: saturate(0.65) contrast(1.05);
+}
 .overlay {
   position: absolute;
   inset: 0;

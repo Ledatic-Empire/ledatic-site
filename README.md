@@ -22,7 +22,6 @@ fleet.html       compute fleet
 entropy.html     entropy beacon
 changelog.html   release history
 manifesto.html   operator manifesto
-playground.html  WASM playground (iframe)
 _shared/
   site.css       design tokens + components
   site.js        shader mount, scroll reveals, nav, card tilt, stat rollups, live pollers

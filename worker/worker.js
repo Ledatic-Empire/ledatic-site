@@ -30,7 +30,7 @@ const CSP = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https://pub-e9d7c87d3a1b43bea50d3bd0d8ba9ffb.r2.dev",
-  "connect-src 'self' https://cloudflareinsights.com",
+  "connect-src 'self' https://cloudflareinsights.com https://liveplasma.ledatic.org",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -72,7 +72,8 @@ const DENY_EXACT = new Set([
   "assets/index-De4AavCV.js",
   "css/style.css",
   "js/main.js",
-  // (Removed "playground" — site2030 ships playground.html as a real page.)
+  "playground",
+  "playground.html",
 ]);
 
 function isPrivateKey(key) {
@@ -384,8 +385,8 @@ async function handleReports(request, env, pathname) {
 }
 
 // ─── Internal API (Bearer-authed, shared across hosts) ───────────────────────
-
-const API_BEARER = "YW4poVpINEaOEsPctzf8FRPTmycXHbH7lFyjRVRqsnc";
+// Token lives in the env.API_BEARER secret binding (deploy_worker.sh reads it
+// from ~/.ledatic/api/bearer_token and uploads as secret_text).
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -395,7 +396,7 @@ function jsonResponse(data, status = 200) {
 }
 
 async function handleAPI(request, env) {
-  if (request.headers.get("Authorization") !== `Bearer ${API_BEARER}`) {
+  if (!env.API_BEARER || request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
     return new Response("Unauthorized", { status: 401, headers: sec({ "content-type": "text/plain" }) });
   }
 
@@ -524,6 +525,15 @@ async function handleSite(request, env, url) {
     await env.REPORTS_R2.put("entropy/pulse.json", body, {
       httpMetadata: { contentType: "application/json" },
     });
+    // Also append to the rolling log so visitors can walk the chain in one
+    // request. Cap at last 50 to bound KV size. Best-effort — log failures
+    // don't block the primary write.
+    try {
+      const log = await env.LEDATIC_KV.get("entropy:pulse:log", { type: "json" }) || [];
+      log.push(JSON.parse(body));
+      if (log.length > 50) log.splice(0, log.length - 50);
+      await env.LEDATIC_KV.put("entropy:pulse:log", JSON.stringify(log));
+    } catch (e) { /* swallow — primary write already succeeded */ }
     return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
   }
   if (pathname === "/entropy/pulse") {

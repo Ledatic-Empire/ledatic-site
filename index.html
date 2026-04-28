@@ -24,7 +24,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="_shared/site.css">
 </head>
-<body data-shader="_shared/shaders/torus.frag">
+<body class="home" data-shader="_shared/shaders/field.frag">
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -62,7 +62,7 @@
       <a class="btn btn-secondary" href="fleet.html">See the Fleet</a>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.85s">
-      Rail v3.6.0 &middot; 137 tests green &middot; Self-hosting since 2026 &middot; Detroit, MI
+      Rail v3.6.1 &middot; 137 tests green &middot; Self-hosting since 2026 &middot; Detroit, MI
     </p>
   </div>
 </section>
@@ -181,7 +181,7 @@
       </svg>
 
       <p class="operator-foot reveal">
-        Rail &middot; 729K &middot; No backdoor &middot; No ICE between you and your tools
+        Rail &middot; 901K &middot; No backdoor &middot; No ICE between you and your tools
       </p>
     </div>
   </div>
@@ -201,7 +201,7 @@
       <a class="card reveal" href="rail.html">
         <span class="eyebrow">Language</span>
         <h3>Rail</h3>
-        <p>Self-hosting compiler. 4 backends. 137 tests. 729K binary.</p>
+        <p>Self-hosting compiler. 4 backends. 137 tests. 901K binary.</p>
       </a>
       <a class="card reveal" href="entropy.html">
         <span class="eyebrow">Attestation</span>
@@ -237,7 +237,7 @@
         <div class="label">Tests green</div>
       </div>
       <div class="stat reveal">
-        <div class="value">729K</div>
+        <div class="value">901K</div>
         <div class="label">Seed binary</div>
       </div>
       <div class="stat reveal">
@@ -259,7 +259,6 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="/playground">Playground</a></li>
           <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
@@ -282,7 +281,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span>RAIL v3.6.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
     </div>
   </div>
 </footer>

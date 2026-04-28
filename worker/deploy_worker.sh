@@ -1,7 +1,7 @@
 #!/bin/bash
 # deploy_worker.sh — push worker/worker.js to Cloudflare as the `ledatic`
-# Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN) exactly
-# as configured.
+# Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN +
+# API_BEARER) exactly as configured.
 #
 # Usage: ./worker/deploy_worker.sh   (run from ledatic-site/ or anywhere)
 # Env:   CF_TOKEN read from ~/Desktop/rings (must have Account:Workers:Edit)
@@ -26,6 +26,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 echo "> Writing metadata"
 BEACON_TOKEN_VAL=$(cat ~/.ledatic/entropy/beacon_token)
+API_BEARER_VAL=$(cat ~/.ledatic/api/bearer_token)
 cat > "$META" <<JSON
 {
   "main_module": "worker.js",
@@ -33,7 +34,8 @@ cat > "$META" <<JSON
   "bindings": [
     {"type":"kv_namespace","name":"LEDATIC_KV","namespace_id":"be34022eeedc4d6fb802087156eb1aae"},
     {"type":"r2_bucket","name":"REPORTS_R2","bucket_name":"ledatic-reports"},
-    {"type":"secret_text","name":"BEACON_TOKEN","text":"$BEACON_TOKEN_VAL"}
+    {"type":"secret_text","name":"BEACON_TOKEN","text":"$BEACON_TOKEN_VAL"},
+    {"type":"secret_text","name":"API_BEARER","text":"$API_BEARER_VAL"}
   ]
 }
 JSON

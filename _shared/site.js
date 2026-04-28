@@ -394,7 +394,11 @@
       }
       // Mark canvas so the procedural mount can't clobber it later.
       canvas.setAttribute('data-live-mounted', '1');
-      setInterval(fetchFrame, 2100);
+      // Poll cadence: was 2100 ms when fed by the CF-cached
+      // /entropy/frame/current endpoint (1 Hz upstream cap).  The
+      // liveplasma.ledatic.org/frame endpoint is uncached and the
+      // beacon writes ~9 fps, so bring the canvas refresh in line.
+      setInterval(fetchFrame, 120);
 
       const resize = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -431,6 +435,24 @@
     }
   }
 
+  // ─── Live RAIL version (footer trust strip) ──────────────────────────────
+  // Pulls the most recent release from /feed.xml and fills any
+  // [data-live="rail-version"] element. Falls back silently to the
+  // server-rendered fallback text if the feed is unreachable.
+  async function initLiveVersion() {
+    const els = document.querySelectorAll('[data-live="rail-version"]');
+    if (!els.length) return;
+    try {
+      const res = await fetch('/feed.xml', { cache: 'no-store' });
+      if (!res.ok) return;
+      const xml = new DOMParser().parseFromString(await res.text(), 'application/xml');
+      const title = xml.querySelector('entry > title')?.textContent || '';
+      const m = title.match(/v(\d+\.\d+\.\d+)/);
+      if (!m) return;
+      els.forEach(el => { el.textContent = `RAIL v${m[1]} · 137/137`; });
+    } catch {}
+  }
+
   function init() {
     initNav();
     initReveals();
@@ -440,6 +462,7 @@
     initLiveData();
     initLiveMHD();
     initShader();
+    initLiveVersion();
   }
 
   if (document.readyState === 'loading') {

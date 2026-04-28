@@ -24,6 +24,8 @@ mime_of() {
     *.svg)  echo "image/svg+xml" ;;
     *.json) echo "application/json" ;;
     *.png)  echo "image/png" ;;
+    *.jpg|*.jpeg) echo "image/jpeg" ;;
+    *.webp) echo "image/webp" ;;
     *.frag) echo "text/plain; charset=utf-8" ;;
     *.xsl)  echo "text/xsl; charset=utf-8" ;;
     *.xml)  echo "application/atom+xml; charset=utf-8" ;;
@@ -65,23 +67,60 @@ upload() {
     "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/purge_cache" > /dev/null || true
 }
 
+# Compute short hashes for asset cache-busting (call before deploying HTML).
+compute_asset_versions() {
+  CSS_VER=$(shasum -a 256 _shared/site.css | cut -c1-8)
+  JS_VER=$(shasum -a 256 _shared/site.js | cut -c1-8)
+  echo "asset versions: css=$CSS_VER  js=$JS_VER"
+}
+
+# Rewrite _shared/site.{css,js} refs in $1 to include ?v=<hash>, upload result.
+upload_html_versioned() {
+  local rel="$1"
+  local tmp
+  tmp=$(mktemp)
+  sed -e "s|_shared/site\.css|_shared/site.css?v=${CSS_VER}|g" \
+      -e "s|_shared/site\.js|_shared/site.js?v=${JS_VER}|g" \
+      "$rel" > "$tmp"
+  upload "$tmp" "$rel"
+  rm -f "$tmp"
+}
+
 deploy_one() {
   local rel="$1"
   [ -f "$rel" ] || { echo "no such file: $rel" >&2; exit 1; }
-  upload "$rel" "$rel"
+  case "$rel" in
+    *.html)
+      compute_asset_versions
+      upload_html_versioned "$rel"
+      ;;
+    *)
+      upload "$rel" "$rel"
+      ;;
+  esac
 }
 
 deploy_all() {
-  # 8 top-level HTML pages
+  compute_asset_versions
+  # Top-level HTML pages — playground.html is intentionally not deployed
+  # (orphan: not linked in nav, kept in repo for future use).
   for f in *.html; do
     [ -f "$f" ] || continue
-    upload "$f" "$f"
+    [ "$f" = "playground.html" ] && { echo "skip $f (orphan)"; continue; }
+    upload_html_versioned "$f"
   done
-  # Shared CSS + JS
+  # Shared CSS + JS — uploaded at the canonical (unversioned) key. The
+  # ?v=<hash> on HTML refs is purely a cache-buster; KV serves the same
+  # content regardless of query string.
   upload "_shared/site.css" "_shared/site.css"
   upload "_shared/site.js"  "_shared/site.js"
   # Fragment shaders
   for f in _shared/shaders/*.frag; do
+    [ -f "$f" ] || continue
+    upload "$f" "$f"
+  done
+  # Photographic / static images (drop new ones in _shared/img/, no script edit needed)
+  for f in _shared/img/*.jpg _shared/img/*.jpeg _shared/img/*.png _shared/img/*.webp; do
     [ -f "$f" ] || continue
     upload "$f" "$f"
   done

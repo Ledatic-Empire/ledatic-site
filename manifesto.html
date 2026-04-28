@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. 729 KB that does the whole job.">
+<meta name="description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. 901 KB that does the whole job.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/manifesto">
 <meta property="og:title" content="Manifesto — Ledatic">
-<meta property="og:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. 729 KB that does the whole job.">
+<meta property="og:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. 901 KB that does the whole job.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Manifesto — Ledatic">
-<meta name="twitter:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. 729 KB that does the whole job.">
+<meta name="twitter:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. 901 KB that does the whole job.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Manifesto — Ledatic</title>
@@ -24,7 +24,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="_shared/site.css">
 </head>
-<body data-shader="_shared/shaders/torus.frag">
+<body data-shader="_shared/shaders/porthole.frag">
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -85,7 +85,7 @@
     </p>
 
     <p class="body reveal">
-      What's left, in our case, is: a 729 kilobyte binary that speaks
+      What's left, in our case, is: a 901 kilobyte binary that speaks
       TLS 1.3, verifies X.509 chains, runs a 2D magnetohydrodynamics
       simulation, trains a small transformer, and generates this
       webpage. Written in a language that compiles itself. Zero C
@@ -103,8 +103,8 @@
     <p class="body reveal" style="color: hsl(var(--foreground) / 0.9);">
       If you want to watch us do it, the source is public. If you want
       to verify we're doing it, the entropy beacon ticks every two
-      seconds and signs what we've been up to. If you want to hire us
-      to do it for you &mdash; that's what the CTA buttons are for.
+      seconds and signs what we've been up to. The two doors below
+      are how to start.
     </p>
 
     <div class="cta-row reveal" style="margin-top: 2rem;">
@@ -125,7 +125,6 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="/playground">Playground</a></li>
           <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
@@ -148,7 +147,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span>RAIL v3.6.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
     </div>
   </div>
 </footer>
