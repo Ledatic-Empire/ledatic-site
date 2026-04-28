@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Mission control. Live beacon pulse, last-attested build, self-hosting fixed point — bound to physical time, signed by fleet0, refreshed in your browser.">
+<title>System &mdash; Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .panel {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .panel h3 {
+    font-size: 0.78rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1rem;
+  }
+  .panel h3 .dot {
+    display: inline-block;
+    width: 0.5rem; height: 0.5rem;
+    border-radius: 50%;
+    background: hsl(var(--muted));
+    margin-right: 0.5rem;
+    transform: translateY(-1px);
+  }
+  .panel.live h3 .dot { background: hsl(var(--primary)); box-shadow: 0 0 8px hsl(var(--primary) / 0.6); }
+  .panel.stale h3 .dot { background: #c08; }
+
+  .kv {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.5rem 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1.65;
+  }
+  .kv .k  { color: hsl(var(--muted-foreground)); }
+  .kv .v  { color: hsl(var(--foreground)); word-break: break-all; }
+  .kv .v.dim { color: hsl(var(--muted-foreground)); }
+  .kv .v code { font-family: inherit; }
+
+  .links {
+    margin-top: 0.9rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+  }
+  .links a { color: hsl(var(--primary)); text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
+  .links .sep { color: hsl(var(--muted-foreground)); margin: 0 0.5rem; }
+
+  .verify-recipe {
+    background: hsl(var(--background) / 0.6);
+    border: 1px solid hsl(var(--border) / 0.6);
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: hsl(var(--foreground) / 0.85);
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+  .verify-recipe .c { color: hsl(var(--muted-foreground)); }
+</style>
+</head>
+<body data-shader="_shared/shaders/grid.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <a class="nav-cta" href="#verify">Verify</a>
+</nav>
+
+<section class="hero" style="min-height: 40vh;">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Mission control &mdash; live</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">System</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      Bound to physical time.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      The numbers below are not a deploy snapshot. They&rsquo;re fetched
+      live from the beacon, the witness, and the attestation surface
+      every time you load this page. If anything is stale, this page
+      shows it.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap" style="max-width: 56rem;">
+
+    <div class="panel" id="panel-pulse">
+      <h3><span class="dot"></span>Beacon &mdash; entropy/pulse</h3>
+      <div class="kv">
+        <div class="k">pulse_id</div>      <div class="v" data-sys="pulse.id">&hellip;</div>
+        <div class="k">value_hex</div>     <div class="v dim"><code data-sys="pulse.hex">&hellip;</code></div>
+        <div class="k">timestamp_utc</div> <div class="v dim" data-sys="pulse.ts">&hellip;</div>
+        <div class="k">age</div>           <div class="v dim" data-sys="pulse.age">&hellip;</div>
+      </div>
+      <div class="links">
+        <a href="/entropy/pulse">/entropy/pulse</a>
+        <span class="sep">&middot;</span>
+        <a href="entropy.html">about the beacon</a>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-witness">
+      <h3><span class="dot"></span>Witness &mdash; fleet0</h3>
+      <div class="kv">
+        <div class="k">pulse_id</div>          <div class="v" data-sys="witness.pulse">&hellip;</div>
+        <div class="k">chain_verified</div>    <div class="v" data-sys="witness.chain">&hellip;</div>
+        <div class="k">pk_fp</div>             <div class="v dim"><code data-sys="witness.pkfp">&hellip;</code></div>
+        <div class="k">witnessed_at</div>      <div class="v dim" data-sys="witness.ts">&hellip;</div>
+      </div>
+      <div class="links">
+        <a href="/witness/fleet0/latest">/witness/fleet0/latest</a>
+        <span class="sep">&middot;</span>
+        <a href="/attest/fleet0.pub.pem">fleet0.pub.pem</a>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-fleet">
+      <h3><span class="dot"></span>Fleet &mdash; signed snapshot</h3>
+      <div class="kv">
+        <div class="k">pulse_id</div>      <div class="v" data-sys="fleet.pulse">&hellip;</div>
+        <div class="k">nodes</div>         <div class="v" data-sys="fleet.nodes">&hellip;</div>
+        <div class="k">snapshot age</div>  <div class="v dim" data-sys="fleet.age">&hellip;</div>
+        <div class="k">witness</div>       <div class="v dim"><code data-sys="fleet.pkfp">&hellip;</code></div>
+      </div>
+      <div class="links">
+        <a href="/fleet/status.json">/fleet/status.json</a>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-build">
+      <h3><span class="dot"></span>Build &mdash; latest attested</h3>
+      <div class="kv">
+        <div class="k">commit</div>      <div class="v"><code data-sys="build.short">&hellip;</code></div>
+        <div class="k">pass / total</div><div class="v" data-sys="build.pass">&hellip;</div>
+        <div class="k">status</div>      <div class="v" data-sys="build.status">&hellip;</div>
+        <div class="k">pulse_window</div><div class="v dim" data-sys="build.pulses">&hellip;</div>
+        <div class="k">log_sha256</div>  <div class="v dim"><code data-sys="build.logsha">&hellip;</code></div>
+      </div>
+      <div class="links" data-sys="build.links">&hellip;</div>
+    </div>
+
+    <div class="panel" id="panel-selfhost">
+      <h3><span class="dot"></span>Self-host &mdash; fixed point</h3>
+      <div class="kv">
+        <div class="k">commit</div>       <div class="v"><code data-sys="self.short">&hellip;</code></div>
+        <div class="k">fixed_point</div>  <div class="v" data-sys="self.fp">&hellip;</div>
+        <div class="k">seed_match</div>   <div class="v" data-sys="self.seed">&hellip;</div>
+        <div class="k">seed sha</div>     <div class="v dim"><code data-sys="self.seedsha">&hellip;</code></div>
+        <div class="k">pulse_window</div> <div class="v dim" data-sys="self.pulses">&hellip;</div>
+      </div>
+      <div class="links" data-sys="self.links">&hellip;</div>
+    </div>
+
+    <div class="panel" id="verify">
+      <h3>Verify any of this yourself</h3>
+      <p style="font-size: 0.85rem; color: hsl(var(--muted-foreground)); margin-bottom: 1rem; max-width: 42rem;">
+        Each card above resolves to a JSON artifact signed by fleet0&rsquo;s
+        Ed25519 key. The signature is over (digest, pulse_id, witnessed_at)
+        with a unique namespace prefix, so attestation sigs cannot collide
+        with beacon-witness sigs.
+      </p>
+      <div class="verify-recipe">
+<span class="c"># Pull the verifier and a release attestation, then verify locally.</span><br>
+curl -sf https://ledatic.org/attest/verify.sh -o /tmp/verify.sh &amp;&amp; chmod +x /tmp/verify.sh<br>
+curl -sf https://ledatic.org/releases/v3.6.0/rail_native -o /tmp/rail_native<br>
+curl -sf https://ledatic.org/releases/v3.6.0/rail_native.attestation.json -o /tmp/rn.att.json<br>
+/tmp/verify.sh /tmp/rail_native /tmp/rn.att.json<br>
+<span class="c"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+          <li><a href="system.html">System</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+<script src="_shared/system-live.js"></script>
+</body>
+</html>

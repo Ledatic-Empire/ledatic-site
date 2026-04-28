@@ -590,6 +590,44 @@ async function handleSite(request, env, url) {
     }
   }
 
+  // Fleet attestation snapshot — Mini-side publisher PUTs here every ~60s
+  // with {nodes, pulse_id, sig}.  The pulse_id binds the snapshot to
+  // physical time; the sig binds the bundle to fleet0's Ed25519 key, so
+  // tampering between writer and reader is detectable.  Cache: no-store
+  // (fresh state each request, like the witness endpoint).
+  if (pathname === "/fleet/status.json") {
+    const r2Key = "fleet/status.json";
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      if (!body || body.length > 64 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      try { JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"no fleet snapshot yet"}', {
+        status: 503,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+  }
+
   // Frame binary — beacon daemon PUTs here (auth via BEACON_TOKEN) and the
   // plasma viewport reads. R2-backed because KV has a 60s edge cache that
   // would freeze the live viz at 1Hz publish rate.
