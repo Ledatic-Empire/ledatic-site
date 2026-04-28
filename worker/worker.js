@@ -105,6 +105,8 @@ const MIME = {
   wasm: "application/wasm",
   frag: "text/plain; charset=utf-8",
   glsl: "text/plain; charset=utf-8",
+  sh:   "text/x-shellscript; charset=utf-8",
+  pem:  "application/x-pem-file",
 };
 
 const BINARY_EXT = new Set([
@@ -617,6 +619,84 @@ async function handleSite(request, env, url) {
         "content-disposition": 'attachment; filename="plasma_frame.bin"',
       }),
     });
+  }
+
+  // Attestation surfaces — releases, builds, selfhost.
+  // Authoring path = R2.  Public reads, BEACON_TOKEN-gated writes.
+  // Each attestation.json was signed by fleet0's Ed25519 witness key,
+  // so the live endpoint is a delivery channel, not a trust root —
+  // tampering at this layer is detectable by `tools/attest/verify.sh`.
+  // Path components restricted to [A-Za-z0-9._-]+ to keep R2 key shape
+  // predictable.  File names: any *.json (validated as parseable JSON,
+  // capped at 256 KB) OR the binary allowlist below.  The allowlist
+  // keeps the surface narrow — release bytes go here, nothing else.
+  const ATTEST_BINARY_ALLOW = new Set(["rail_native", "compile.rail"]);
+  const attestMatch = pathname.match(
+    /^\/(releases|builds|selfhost)\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)$/
+  );
+  if (attestMatch) {
+    const [, kind, ident, file] = attestMatch;
+    const isJson = file.endsWith(".json");
+    const isBinary = ATTEST_BINARY_ALLOW.has(file);
+    if (!isJson && !isBinary) {
+      return new Response("not allowed", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const r2Key = `attest/${kind}/${ident}/${file}`;
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      if (isJson) {
+        const body = await request.text();
+        if (!body || body.length > 256 * 1024) {
+          return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+        }
+        try { JSON.parse(body); }
+        catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+        await env.REPORTS_R2.put(r2Key, body, {
+          httpMetadata: { contentType: "application/json" },
+        });
+      } else {
+        // Binary upload — cap at 16 MB to keep the surface honest.
+        const body = await request.arrayBuffer();
+        if (!body.byteLength || body.byteLength > 16 * 1024 * 1024) {
+          return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+        }
+        await env.REPORTS_R2.put(r2Key, body, {
+          httpMetadata: { contentType: "application/octet-stream" },
+        });
+      }
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) {
+        return new Response(isJson ? '{"error":"not found"}' : "not found", {
+          status: 404,
+          headers: sec({
+            "content-type": isJson ? "application/json" : "text/plain",
+            "access-control-allow-origin": "*",
+          }),
+        });
+      }
+      if (isJson) {
+        return new Response(await obj.text(), {
+          headers: sec({
+            "content-type": "application/json",
+            "cache-control": "public, max-age=300",
+            "access-control-allow-origin": "*",
+          }),
+        });
+      }
+      return new Response(await obj.arrayBuffer(), {
+        headers: sec({
+          "content-type": "application/octet-stream",
+          "cache-control": "public, max-age=3600",
+          "access-control-allow-origin": "*",
+          "content-disposition": `attachment; filename="${file}"`,
+        }),
+      });
+    }
   }
 
   // API

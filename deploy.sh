@@ -29,6 +29,8 @@ mime_of() {
     *.frag) echo "text/plain; charset=utf-8" ;;
     *.xsl)  echo "text/xsl; charset=utf-8" ;;
     *.xml)  echo "application/atom+xml; charset=utf-8" ;;
+    *.sh)   echo "text/x-shellscript; charset=utf-8" ;;
+    *.pem)  echo "application/x-pem-file" ;;
     *)      echo "text/html; charset=utf-8" ;;
   esac
 }
