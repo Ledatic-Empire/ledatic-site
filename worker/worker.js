@@ -628,6 +628,71 @@ async function handleSite(request, env, url) {
     }
   }
 
+  // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
+  // beacon on Mini.  Same frame format (16B header + 32B metrics +
+  // planes), 4× resolution, ~388 fps.  Studio publisher PUTs the raw
+  // frame bytes here; the attestation sidecar lives at
+  // /entropy/frame/ot256/latest.attestation.json (signed by fleet0).
+  if (pathname === "/entropy/frame/ot256/current") {
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.arrayBuffer();
+      if (!body.byteLength || body.byteLength > 16 * 1024 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      await env.REPORTS_R2.put("entropy/frame_ot256.bin", body, {
+        httpMetadata: { contentType: "application/octet-stream" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    const obj = await env.REPORTS_R2.get("entropy/frame_ot256.bin");
+    if (!obj) return new Response("No 256² frame yet", {
+      status: 503, headers: sec({ "content-type": "text/plain" }),
+    });
+    return new Response(await obj.arrayBuffer(), {
+      headers: sec({
+        "content-type": "application/octet-stream",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "*",
+        "content-disposition": 'attachment; filename="plasma_ot256.bin"',
+      }),
+    });
+  }
+  if (pathname === "/entropy/frame/ot256/latest.attestation.json") {
+    const r2Key = "entropy/frame_ot256.latest.attestation.json";
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      if (!body || body.length > 16 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      try { JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"no ot256 attestation yet"}', {
+        status: 503,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+  }
+
   // Per-frame attestation snapshot — frame_attest_publisher signs
   // sha256(/tmp/plasma_live.bin) every ~30 s and PUTs here.  Anyone
   // pulling /entropy/frame/current at the same time can re-derive the

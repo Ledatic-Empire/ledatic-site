@@ -128,12 +128,12 @@
 
     <div class="ot-viewport">
       <canvas id="ot-canvas"
-              data-mhd-live="https://liveplasma.ledatic.org/frame"
+              data-mhd-live="https://ledatic.org/entropy/frame/ot256/current"
               data-mhd-shader="_shared/shaders/mhd_live.frag"
               data-mhd-fallback="_shared/shaders/mhd.frag"
               aria-hidden="true"></canvas>
       <div class="ot-readouts">
-        <div><span class="lab">grid</span> 128&times;128</div>
+        <div><span class="lab">grid</span> 256&times;256</div>
         <div><span class="lab">field</span> &rho;</div>
         <div><span class="lab">frame</span> <span data-live="mhd-step">&mdash;</span></div>
         <div><span class="lab">pulse</span> <span data-sys="pulse.id">&mdash;</span></div>
@@ -144,13 +144,13 @@
       <h3>Numerical method</h3>
       <div class="kv">
         <div class="k">scheme</div>      <div class="v">Lax-Friedrichs (1st order, divergence-clean by accident of LF flux structure)</div>
-        <div class="k">grid</div>        <div class="v">128 &times; 128 periodic, square 2&pi; domain</div>
+        <div class="k">grid</div>        <div class="v">256 &times; 256 periodic, square 2&pi; domain</div>
         <div class="k">equations</div>   <div class="v">ideal MHD, &gamma; = 5/3, 6 conserved fields (&rho;, &rho;v<sub>x</sub>, &rho;v<sub>y</sub>, B<sub>x</sub>, B<sub>y</sub>, E)</div>
-        <div class="k">timestep</div>    <div class="v">CFL-bounded: dt = 0.3 &middot; &Delta;x / max|c<sub>fast</sub>|</div>
-        <div class="k">init</div>        <div class="v">OT vortex: &rho;<sub>0</sub> = 25/9, p<sub>0</sub> = 5/3, v = (&minus;sin y, sin x), B = (&minus;sin y, sin 2x)</div>
-        <div class="k">conservation</div><div class="v">&Delta;m/m &lt; 10<sup>&minus;15</sup>, &Delta;E/E &lt; 10<sup>&minus;15</sup>, &nabla;&middot;B &asymp; 10<sup>&minus;15</sup> (machine precision)</div>
-        <div class="k">runtime</div>     <div class="v">Rail-native solver compiled by a self-hosting Rail compiler (byte-identical fixed point)</div>
-        <div class="k">cadence</div>     <div class="v">~3 frames/s rendered; entropy pulse advances every ~2 s</div>
+        <div class="k">timestep</div>    <div class="v">CFL-bounded: dt = 0.3 &middot; &Delta;x / max|c<sub>fast</sub>|, host-side max reduction every frame</div>
+        <div class="k">init</div>        <div class="v">OT vortex: &rho;<sub>0</sub> = 25/(36&pi;), p<sub>0</sub> = 5/(12&pi;), v = (&minus;sin y, sin x), B = (&minus;sin y / &radic;(4&pi;), sin 2x / &radic;(4&pi;))</div>
+        <div class="k">conservation</div><div class="v">&Delta;m/m &asymp; 10<sup>&minus;7</sup>, &Delta;E/E &asymp; 10<sup>&minus;7</sup>, &nabla;&middot;B &asymp; 10<sup>&minus;6</sup> (f32 precision; the lower-resolution sister at /plasma runs in f64 and conserves to 10<sup>&minus;15</sup>)</div>
+        <div class="k">runtime</div>     <div class="v">Metal compute kernel on Apple Silicon GPU (M1 Ultra, 64 cores), two-pass LF dispatched per step. Host driver in Objective-C; bytes published via the same primitive that signs every other Ledatic surface.</div>
+        <div class="k">cadence</div>     <div class="v">~388 frames/s solver, attestation re-signed every 30 s against the live entropy pulse</div>
       </div>
     </div>
 
@@ -177,8 +177,8 @@
         Reproduce-the-frame instruction:
       </p>
       <div class="citation">
-curl -sf https://ledatic.org/entropy/frame/current -o frame.bin<br>
-curl -sf https://ledatic.org/entropy/frame/latest.attestation.json -o frame.att.json<br>
+curl -sf https://ledatic.org/entropy/frame/ot256/current -o frame.bin<br>
+curl -sf https://ledatic.org/entropy/frame/ot256/latest.attestation.json -o frame.att.json<br>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh<br>
 /tmp/v.sh frame.bin frame.att.json<br>
 <span class="lab"># &rarr; ok&nbsp;&nbsp;artifact=frame.bin&nbsp;&nbsp;pulse_id=&hellip;&nbsp;&nbsp;pk_fp=cac5f21a70564aeb</span>
