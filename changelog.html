@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Every tagged Rail release, in order. Eight releases in four weeks — from v2.0's 512 MB allocator and GC to v3.6.0's strict HTTPS default. Each entry points at the commit that ships it.">
+<meta name="description" content="Every tagged Rail release, in order. Ten releases in six weeks — from v2.0's 512 MB allocator and GC to v3.8.0's signed-against-live-physics releases. Each entry points at the commit that ships it.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/changelog">
 <meta property="og:title" content="Changelog — Ledatic">
-<meta property="og:description" content="Every tagged Rail release, in order. Eight releases in four weeks — from v2.0's 512 MB allocator and GC to v3.6.0's strict HTTPS default. Each entry points at the commit that ships it.">
+<meta property="og:description" content="Every tagged Rail release, in order. Ten releases in six weeks — from v2.0's 512 MB allocator and GC to v3.8.0's signed-against-live-physics releases. Each entry points at the commit that ships it.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Changelog — Ledatic">
-<meta name="twitter:description" content="Every tagged Rail release, in order. Eight releases in four weeks — from v2.0's 512 MB allocator and GC to v3.6.0's strict HTTPS default. Each entry points at the commit that ships it.">
+<meta name="twitter:description" content="Every tagged Rail release, in order. Ten releases in six weeks — from v2.0's 512 MB allocator and GC to v3.8.0's signed-against-live-physics releases. Each entry points at the commit that ships it.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Changelog — Ledatic</title>
@@ -111,6 +111,43 @@
 <section class="section">
   <div class="wrap" style="max-width: 62rem;">
 
+    <div class="release reveal" data-attest-tag="v3.8.0">
+      <div class="meta">
+        <div class="ver">v3.8.0</div>
+        <div>2026-05-01</div>
+      </div>
+      <div>
+        <h3>Releases physicified (attestation)</h3>
+        <p>Every tagged release, every <code>./rail_native test</code> pass, and every 2-pass self-compile fixed point now binds to a live entropy beacon <code>pulse_id</code> and an Ed25519 signature from the project's <code>fleet0</code> Pi witness (<code>pk_fp = cac5f21a70564aeb</code>).</p>
+        <ul>
+          <li>Public mission control at <a href="/system">ledatic.org/system</a> &mdash; five panels (beacon &middot; witness &middot; fleet &middot; build &middot; selfhost), each resolves to a signed JSON artifact, refreshes on 2.5 s cadence, self-marks &ldquo;live&rdquo; or &ldquo;stale&rdquo;</li>
+          <li>Reproducible offline with <a href="/attest/verify.sh"><code>verify.sh</code></a> + <a href="/attest/fleet0.pub.pem"><code>fleet0.pub.pem</code></a></li>
+          <li>Backfilled coverage: v2.0.0 &rarr; v3.7.0 all attested + downloadable</li>
+          <li>LaunchAgents drive the cadences: <code>com.ledatic.attest_daily</code> (06:00), <code>com.ledatic.fleet_attest</code> (60 s)</li>
+          <li>CI fix: builds <code>libtensor_gpu.dylib</code> before tests, ending 14 days of red on tensor link errors</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release reveal" data-attest-tag="v3.7.0">
+      <div class="meta">
+        <div class="ver">v3.7.0</div>
+        <div>2026-04-30</div>
+      </div>
+      <div>
+        <h3>Float-TCO root fix, mixed-precision inference, parallel rerank</h3>
+        <p>Substrate work + new inference paths + diagnostic infrastructure. Three real bugs (one fixed at root, one workaround'd at source, one falsified). 137/137 green; byte-identical self-bootstrap verified.</p>
+        <ul>
+          <li>Float-TCO root fix: re-added <code>body_has_float</code> guard to <code>all_params_int</code>. Closes a 17-day silent wrong-result bug that reinterpreted float bits as ints in tail-recursive register-ABI calls (RMSNorm CPU, AdamW weight decay, LayerNorm CPU backward)</li>
+          <li>Runtime-mmap arena via <code>RAIL_ARENA_MB</code> env var (default 1 GB, scales to 4 GB+). Long-context training (seq=2048+) now mechanically tractable on macOS</li>
+          <li>17-counter <code>alloc_stats_snapshot</code> builtin + <code>RAIL_ARENA_TRACE</code></li>
+          <li>Rail-native fp32-acts &times; fp16-weights &times; fp32-accum GPU matmul (<code>stdlib/tensor.rail:matmul_mixed</code>) &mdash; 2&times; tighter than all-fp16</li>
+          <li><code>parallel_rerank.sh</code> validated 7.1&times; wall-clock at N=8</li>
+          <li><code>./rail_native quick</code> &mdash; 15 critical tests in ~5 s</li>
+        </ul>
+      </div>
+    </div>
+
     <div class="release reveal" data-attest-tag="v3.6.1">
       <div class="meta">
         <div class="ver">v3.6.1</div>
@@ -122,6 +159,7 @@
         <ul>
           <li>Undefined identifiers now fail at link time with a named symbol (<code>_RAIL_UNDEFINED_IDENT_&lt;name&gt;</code>) instead of silently producing a binary that segfaults at runtime</li>
           <li>Parser accepts multi-line compound expressions (cons chains, nested calls, list literals) inside unclosed <code>(...)</code>/<code>[...]</code> or before strictly-greater-indented <code>(</code>/<code>[</code></li>
+          <li><code>returns_float</code> tracks let-bound floats through V (variable) AST nodes, fixing two latent miscompile bugs in MHD axisym + MPD source-term paths</li>
           <li>137/137 green, byte-identical self-bootstrap verified (<code>14af7d5d&hellip;</code>)</li>
         </ul>
       </div>
@@ -257,7 +295,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.8.0 &middot; 137/137</span>
     </div>
   </div>
 </footer>

@@ -46,7 +46,7 @@
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Language &mdash; v3.6.1</span>
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Language &mdash; v3.8.0</span>
     <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Rail</h1>
     <p class="hero-sub fade-up" style="animation-delay: 0.4s">
       A self-hosting compiler. Zero C dependencies.
@@ -62,7 +62,7 @@
     </div>
     <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
       <span class="visor-label">Rail</span>
-      <span class="visor-value">v3.6.1 <span class="dim">//</span> 137/137</span>
+      <span class="visor-value">v3.8.0 <span class="dim">//</span> 137/137</span>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.9s">
       2-pass byte-identical self-compile &middot; BSL 1.1 &middot; Detroit, MI
@@ -166,6 +166,16 @@
 
     <div class="grid grid-2 reveal" style="margin-top: 2rem;">
       <div class="card">
+        <span class="eyebrow">2026-05-01</span>
+        <h3>v3.8.0 &mdash; Releases physicified</h3>
+        <p>Every tagged release, every test pass, every 2-pass fixed point now signed against a live entropy beacon by the Pi-hosted <code>fleet0</code> Ed25519 witness key. Mission control at <a href="/system">/system</a>.</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">2026-04-30</span>
+        <h3>v3.7.0 &mdash; Float-TCO root fix + mixed precision</h3>
+        <p>17-day silent wrong-result bug fixed at root in <code>all_params_int</code>. Runtime-mmap arena (4 GB+ scaling). Rail-native fp32&times;fp16 GPU matmul. Parallel rerank (7.1&times; at N=8).</p>
+      </div>
+      <div class="card">
         <span class="eyebrow">2026-04-27</span>
         <h3>v3.6.1 &mdash; Compiler hardening</h3>
         <p>Undefined idents now fail at link time with a named symbol instead of a runtime SIGSEGV. Parser accepts multi-line compound expressions inside unclosed brackets.</p>
@@ -209,10 +219,10 @@
     </p>
 
     <div class="reveal" style="margin-top: 1.5rem; background: hsl(var(--panel)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 1.25rem 1.5rem; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.78rem; color: hsl(var(--foreground) / 0.9); line-height: 1.7; overflow-x: auto;">
-<span style="color: hsl(var(--muted-foreground));"># Pull the verifier and the v3.6.1 release.</span><br>
+<span style="color: hsl(var(--muted-foreground));"># Pull the verifier and the v3.8.0 release.</span><br>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh<br>
-curl -sf https://ledatic.org/releases/v3.6.1/rail_native -o /tmp/rn<br>
-curl -sf https://ledatic.org/releases/v3.6.1/rail_native.attestation.json -o /tmp/rn.att.json<br>
+curl -sf https://ledatic.org/releases/v3.8.0/rail_native -o /tmp/rn<br>
+curl -sf https://ledatic.org/releases/v3.8.0/rail_native.attestation.json -o /tmp/rn.att.json<br>
 /tmp/v.sh /tmp/rn /tmp/rn.att.json<br>
 <span style="color: hsl(var(--primary));"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span>
     </div>
@@ -257,7 +267,7 @@ curl -sf https://ledatic.org/releases/v3.6.1/rail_native.attestation.json -o /tm
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v3.6.1 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.8.0 &middot; 137/137</span>
     </div>
   </div>
 </footer>
