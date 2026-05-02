@@ -234,11 +234,76 @@ def list_dirty() -> list[str]:
 
 # ---------- deploy ----------
 
+# IndexNow key — proves domain ownership to Bing / Yandex / IndexNow consumers.
+# Key file is hosted at https://ledatic.org/<KEY>.txt (in CF KV, see SEO setup).
+INDEXNOW_KEY = "32f00bfb9eaedc749c53b3ce8d5354ac"
+INDEXNOW_ENDPOINTS = [
+    "https://api.indexnow.org/IndexNow",
+    "https://www.bing.com/IndexNow",
+    "https://yandex.com/indexnow",
+]
+
+
+def submitted_url_list(pages: list[str]) -> list[str]:
+    """Translate deployed page args to public URLs. Empty list = full sitemap."""
+    if pages:
+        urls = []
+        for p in pages:
+            rel = p.strip("/")
+            if rel == "index.html":
+                urls.append(f"{SITE}/")
+            elif rel.endswith(".html"):
+                urls.append(f"{SITE}/{rel[:-5]}")
+            elif rel:
+                urls.append(f"{SITE}/{rel}")
+        return urls
+    # No specific pages → re-ping the whole sitemap.
+    return [
+        f"{SITE}/", f"{SITE}/work", f"{SITE}/case-campaign-intel",
+        f"{SITE}/rail", f"{SITE}/entropy", f"{SITE}/plasma",
+        f"{SITE}/fleet", f"{SITE}/changelog", f"{SITE}/manifesto",
+        f"{SITE}/ot", f"{SITE}/system", f"{SITE}/llms.txt",
+    ]
+
+
+def ping_indexnow(urls: list[str]) -> None:
+    """Best-effort post-deploy ping. Failures don't fail the deploy."""
+    if not urls:
+        return
+    payload = json.dumps({
+        "host": "ledatic.org",
+        "key": INDEXNOW_KEY,
+        "keyLocation": f"{SITE}/{INDEXNOW_KEY}.txt",
+        "urlList": urls,
+    }).encode()
+    print()
+    print(f"{DIM}IndexNow → {len(urls)} URL(s){RST}")
+    for ep in INDEXNOW_ENDPOINTS:
+        try:
+            req = urllib.request.Request(
+                ep, data=payload, method="POST",
+                headers={"Content-Type": "application/json", "User-Agent": "ledaticsite/1"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as r:
+                code = r.status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        except Exception:
+            code = 0
+        ok = 200 <= code < 300
+        mark = f"{GREEN}{code}{RST}" if ok else f"{YEL}{code or '---'}{RST}"
+        host = ep.split("/")[2]
+        print(f"  {mark}  {host}")
+
+
 def cmd_deploy(pages: list[str]) -> int:
     env = os.environ.copy()
     env["CF_TOKEN"] = cf_token()
     cmd = [str(ROOT / "deploy.sh"), *pages]
-    return subprocess.call(cmd, env=env, cwd=ROOT)
+    rc = subprocess.call(cmd, env=env, cwd=ROOT)
+    if rc == 0 and os.environ.get("LEDATICSITE_NO_INDEXNOW") != "1":
+        ping_indexnow(submitted_url_list(pages))
+    return rc
 
 
 def cmd_worker() -> int:
