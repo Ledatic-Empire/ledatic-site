@@ -1,0 +1,44 @@
+# LEDATIC
+
+> One-operator shop in Detroit, MI building small, practical AI workflows for everyday businesses. Plus Rail, a self-hosting compiler with zero C dependencies, and a public attestation chain anchored to a live plasma physics beacon.
+
+LEDATIC is the engineering practice of Reilly Gomez. Two pipes share one site:
+
+1. **Work** — small AI projects for small businesses, local shops, and one-person operations. A weekend script, a one-day tool, a modest weekly digest. We're not trying to dominate any market; we're trying to save shop owners a few hours a week.
+2. **Rail** — the language and runtime that makes the work durable. Self-hosting compiler, byte-identical fixed point, attested releases.
+
+## Hire us
+
+- [Work with Ledatic](https://ledatic.org/work) — three common shapes: a little workflow help (auto-draft replies, sort receipts, tag inventory, summarize notes), watch one thing (a competitor, a regulator, a supplier's prices), or a weekly intelligence brief. Small projects welcome. No minimum.
+- [Notes from a current POC](https://ledatic.org/case-campaign-intel) — honest in-flight write-up of the campaign-intelligence engagement we're running right now. The shape, what we ship, what we're learning.
+- [Email](mailto:z3m0g@icloud.com) — z3m0g@icloud.com. One short paragraph is enough. Usually a same-day reply.
+
+## Rail — the substrate
+
+- [Rail on GitHub](https://github.com/zemo-g/rail): self-hosting language, BSL 1.1. Latest tag v3.10.0. 6,039 lines of Rail in the compiler, 925 KB ARM64 seed binary, 137/137 tests, 2-pass byte-identical self-compile. Four backends: native ARM64, Linux ARM64, Linux x86_64, and WASM (Metal GPU tensor kernels in stdlib).
+- [Rail page](https://ledatic.org/rail): language pitch, stdlib surface, recent releases.
+- [Sandboxed online compiler](https://compile.ledatic.org): public Rail compiler with AST whitelist and WASM import validation. Try real Rail without leaving the tab.
+- [Changelog](https://ledatic.org/changelog): every tagged release in order, each signed against a live entropy beacon.
+
+## Attestation (the moat)
+
+Every Rail release, every test pass, every 2-pass self-compile fixed point, and every client deliverable is signed against a live plasma physics beacon by a Pi-hosted Ed25519 witness key (`pk_fp = cac5f21a70564aeb`). Anyone can verify any output we ever published, on any future date.
+
+- [Entropy beacon](https://ledatic.org/entropy): live plasma pulses, public.
+- [Plasma](https://ledatic.org/plasma): the 2D ideal-MHD solver behind the beacon. Orszag-Tang vortex on a 128² grid, conservation to machine precision.
+- [System / mission control](https://ledatic.org/system): five live panels — beacon, witness, fleet, build, self-host. Each refresh re-derives a signed JSON artifact.
+- [Verifier](https://ledatic.org/attest/verify.sh) + [public key](https://ledatic.org/attest/fleet0.pub.pem): five-line verification recipe published on every release.
+
+## Fleet
+
+- [Fleet](https://ledatic.org/fleet): four-node compute fleet (Mac Mini M4 Pro, Mac Studio M1 Ultra, MacBook Air M1, Pi Zero 2 W). Thunderbolt mesh + Tailscale. Pure-Rail HTTP control plane on `:9101`.
+
+## Manifesto
+
+- [Manifesto](https://ledatic.org/manifesto): "Rail runs on Rail. The rest runs on physics." Two load-bearing claims: a compiler that rebuilds itself byte-for-byte, and a stack answerable to a verifiable physical clock.
+
+## Contact
+
+- Email: z3m0g@icloud.com
+- GitHub: https://github.com/zemo-g/rail
+- Location: Detroit, MI

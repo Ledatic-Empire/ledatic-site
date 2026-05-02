@@ -19,6 +19,47 @@
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://ledatic.org/#org",
+      "name": "Ledatic",
+      "url": "https://ledatic.org/",
+      "logo": "https://ledatic.org/og.png",
+      "description": "One-operator shop in Detroit, MI building small, practical AI workflows for everyday businesses. Plus Rail, a self-hosting compiler with zero C dependencies.",
+      "founder": { "@type": "Person", "name": "Reilly Gomez" },
+      "address": { "@type": "PostalAddress", "addressLocality": "Detroit", "addressRegion": "MI", "addressCountry": "US" },
+      "email": "z3m0g@icloud.com",
+      "sameAs": [ "https://github.com/zemo-g/rail" ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://ledatic.org/#site",
+      "url": "https://ledatic.org/",
+      "name": "Ledatic",
+      "publisher": { "@id": "https://ledatic.org/#org" },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "ProfessionalService",
+      "name": "Ledatic — small AI workflows for everyday shops",
+      "description": "Practical AI for small businesses, local shops, and one-person operations. Auto-draft replies, sort receipts, tag inventory, summarize notes, watch one competitor. Small projects welcome.",
+      "url": "https://ledatic.org/work",
+      "provider": { "@id": "https://ledatic.org/#org" },
+      "areaServed": "Worldwide",
+      "serviceType": [
+        "Custom AI workflows",
+        "Campaign intelligence briefs",
+        "Per-target monitoring (drift watch)"
+      ]
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -34,8 +75,9 @@
     <a href="plasma.html">Plasma</a>
     <a href="fleet.html">Fleet</a>
     <a href="changelog.html">Changelog</a>
+    <a href="work.html">Work</a>
   </div>
-  <a class="nav-cta" href="manifesto.html">What we're doing</a>
+  <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=Hi">Say hi</a>
 </nav>
 
 <section class="hero">
@@ -62,7 +104,7 @@
       <a class="btn btn-secondary" href="fleet.html">See the Fleet</a>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.85s">
-      Rail v3.8.0 &middot; 137 tests green &middot; Self-hosting since 2026 &middot; Detroit, MI
+      Rail v3.10.0 &middot; 137 tests green &middot; Self-hosting since 2026 &middot; Detroit, MI
     </p>
   </div>
 </section>
@@ -181,7 +223,7 @@
       </svg>
 
       <p class="operator-foot reveal">
-        Rail &middot; 901K &middot; No backdoor &middot; No ICE between you and your tools
+        Rail &middot; 925K &middot; No backdoor &middot; No ICE between you and your tools
       </p>
     </div>
   </div>
@@ -201,7 +243,7 @@
       <a class="card reveal" href="rail.html">
         <span class="eyebrow">Language</span>
         <h3>Rail</h3>
-        <p>Self-hosting compiler. 4 backends. 137 tests. 901K binary.</p>
+        <p>Self-hosting compiler. 4 backends. 137 tests. 925K binary.</p>
       </a>
       <a class="card reveal" href="entropy.html">
         <span class="eyebrow">Attestation</span>
@@ -222,14 +264,51 @@
   </div>
 </section>
 
+<section class="section" style="border-top: 1px solid hsl(var(--border));">
+  <div class="wrap">
+    <span class="eyebrow reveal">// Work with us</span>
+    <h2 class="reveal">A little AI for everyday shops.</h2>
+    <p class="lead reveal" style="max-width: 48rem;">
+      We help small businesses, local shops, and one-person operations
+      sprinkle a little AI on the work they already do. Small projects
+      welcome &mdash; a weekend script, a one-day tool, a modest weekly
+      digest. We're not trying to dominate your industry. We're trying to
+      save you a few hours a week.
+    </p>
+
+    <div class="grid grid-2 grid-3" style="margin-top: 2.5rem;">
+      <a class="card reveal" href="work.html">
+        <span class="eyebrow">Common ask</span>
+        <h3>A little workflow help</h3>
+        <p>One small AI tool for one repeating task. Auto-draft replies, sort receipts, tag inventory, summarize a folder of notes. Tiny scripts, durable wins.</p>
+      </a>
+      <a class="card reveal" href="work.html">
+        <span class="eyebrow">Common ask</span>
+        <h3>Watch one thing</h3>
+        <p>Quietly keep an eye on something that matters &mdash; a competitor down the street, a regulator's filings, a supplier's prices. Plain-English digest.</p>
+      </a>
+      <a class="card reveal" href="work.html">
+        <span class="eyebrow">Common ask</span>
+        <h3>A weekly intelligence brief</h3>
+        <p>Structured weekly read on what's happening in your line of work. Useful for shops that want to feel less behind without paying for an analyst.</p>
+      </a>
+    </div>
+
+    <div class="cta-row reveal" style="margin-top: 2.5rem; justify-content: flex-start;">
+      <a class="btn btn-primary" href="work.html">See common asks</a>
+      <a class="btn btn-secondary" href="mailto:z3m0g@icloud.com?subject=Hi">Say hi</a>
+    </div>
+  </div>
+</section>
+
 <section class="section">
   <div class="wrap">
     <span class="eyebrow reveal">Shipping cadence</span>
-    <h2 class="reveal">Ten tagged releases in six weeks.</h2>
+    <h2 class="reveal">Twelve tagged releases in six weeks.</h2>
 
     <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
       <div class="stat reveal">
-        <div class="value">v3.8.0</div>
+        <div class="value">v3.10.0</div>
         <div class="label">Current Rail</div>
       </div>
       <div class="stat reveal">
@@ -237,7 +316,7 @@
         <div class="label">Tests green</div>
       </div>
       <div class="stat reveal">
-        <div class="value">901K</div>
+        <div class="value">925K</div>
         <div class="label">Seed binary</div>
       </div>
       <div class="stat reveal">
@@ -281,7 +360,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v3.8.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.10.0 &middot; 137/137</span>
     </div>
   </div>
 </footer>

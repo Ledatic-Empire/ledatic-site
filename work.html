@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="A little AI for the work you're already doing. We help small businesses, local shops, and one-person operations sprinkle AI into existing workflows. Small projects welcome. Detroit, MI.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/work">
+<meta property="og:title" content="Work with Ledatic — Just a sprinkle of AI">
+<meta property="og:description" content="Practical AI for small businesses and everyday shops. Small projects welcome. One-operator shop in Detroit, MI.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Work with Ledatic — A sprinkle of AI">
+<meta name="twitter:description" content="Practical AI for small businesses and everyday shops. Small projects welcome.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Work — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .offering {
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    padding: 2rem;
+    background: hsl(var(--muted) / 0.25);
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .offering:hover { border-color: hsl(var(--primary) / 0.6); transform: translateY(-2px); }
+  .offering .led-tl, .offering .led-br {
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    box-shadow: 0 0 8px hsl(var(--primary));
+  }
+  .offering .led-tl { top: 12px; left: 12px; background: hsl(var(--primary)); }
+  .offering .led-br { bottom: 12px; right: 12px; background: hsl(var(--primary) / 0.35); }
+  .offering h3 { font-size: 1.4rem; margin-top: 0.5rem; }
+  .offering .commit {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 1.25rem;
+    margin-bottom: 0.4rem;
+  }
+  .offering ul { margin-top: 0.5rem; margin-left: 1.1rem; color: hsl(var(--muted-foreground)); font-size: 0.92rem; line-height: 1.65; }
+  .offering li { margin-bottom: 0.3rem; }
+  .offering .price-line {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.82rem;
+    color: hsl(var(--foreground));
+    border-top: 1px solid hsl(var(--border));
+  }
+  .offering .price-line .anchor { color: hsl(var(--primary)); }
+
+  .pitch-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 980px) {
+    .pitch-row { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .conv-block {
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    background: hsl(var(--muted) / 0.3);
+    margin-top: 3rem;
+  }
+  .conv-block h2 { margin-bottom: 0.5rem; }
+  .conv-block p  { color: hsl(var(--muted-foreground)); max-width: 36rem; margin: 0 auto 1.5rem; }
+  .conv-block .conv-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  .principle-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: 768px) {
+    .principle-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  .principle {
+    padding: 1.25rem;
+    border-left: 2px solid hsl(var(--primary));
+    background: hsl(var(--muted) / 0.2);
+  }
+  .principle h4 {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--primary));
+    margin-bottom: 0.5rem;
+  }
+  .principle p { color: hsl(var(--muted-foreground)); font-size: 0.92rem; line-height: 1.65; margin: 0; }
+</style>
+</head>
+<body data-shader="_shared/shaders/grid.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+    <a href="work.html" class="active">Work</a>
+  </div>
+  <a class="nav-cta" href="mailto:z3m0g@icloud.com">Get in touch</a>
+</nav>
+
+<section class="hero" style="min-height: 60vh;">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 4rem;">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Work with us</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">
+      Just a <span class="accent">sprinkle</span> of AI.
+    </h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      For the work you're already doing.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      We help small businesses, local shops, and one-person operations
+      sprinkle a little AI on the work they already do &mdash; answering
+      common questions, tagging inventory, sorting receipts, drafting
+      replies, watching one competitor down the street. Small projects
+      welcome. We're not trying to dominate your industry. We're trying to
+      save you a few hours a week.
+    </p>
+    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+      <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Hi">Say hi</a>
+      <a class="btn btn-secondary" href="case-campaign-intel.html">Notes from a current POC</a>
+    </div>
+    <p class="trust fade-up" style="animation-delay: 0.85s">
+      One-operator shop &middot; Detroit, MI &middot; Small jobs welcome
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">// What we do</span>
+    <h2 class="reveal">Small AI projects, mostly.</h2>
+    <p class="lead reveal" style="max-width: 48rem;">
+      Most of what we do is small. A weekend script that saves a shop owner
+      two hours a week. A one-day tool that makes a recurring task painless.
+      A modest weekly digest. We also handle larger structured engagements
+      when the fit is right. Here are a few shapes that come up often.
+    </p>
+
+    <div class="pitch-row">
+
+      <article class="offering reveal">
+        <span class="led-tl"></span>
+        <span class="led-br"></span>
+        <span class="eyebrow">Common ask 01</span>
+        <h3>A little workflow help</h3>
+        <p style="color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65;">
+          One small AI tool for one repeating task. The kind of thing where you
+          mutter "there has to be a better way to do this" once a week. We
+          build a tiny, durable script that fits your existing workflow &mdash;
+          no new app to learn, no monthly subscription, no &ldquo;platform.&rdquo;
+        </p>
+        <div class="commit">For example</div>
+        <ul>
+          <li>Auto-draft replies to common quote / booking / FAQ emails</li>
+          <li>Tag inventory photos and write product descriptions</li>
+          <li>Sort receipts and pull totals from a folder of PDFs</li>
+          <li>Summarize a week of meeting notes into a one-page memo</li>
+          <li>Read a Google Sheet, flag the rows that need attention</li>
+          <li>A back-office helper for a one-person shop</li>
+        </ul>
+      </article>
+
+      <article class="offering reveal">
+        <span class="led-tl"></span>
+        <span class="led-br"></span>
+        <span class="eyebrow">Common ask 02</span>
+        <h3>Watch one thing</h3>
+        <p style="color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65;">
+          Quietly keep an eye on something that matters to you. One competitor
+          down the street, a regulator's filings, a city zoning board, a
+          supplier's price list, someone else's ad activity in your category.
+          Daily or weekly digest in plain English &mdash; only the things that
+          actually changed.
+        </p>
+        <div class="commit">For example</div>
+        <ul>
+          <li>One competitor's website, menu, or hours</li>
+          <li>Local zoning / permit filings near your block</li>
+          <li>A supplier's prices or stock</li>
+          <li>Someone else's ad activity in your category</li>
+          <li>A regulator's docket for things that affect you</li>
+        </ul>
+      </article>
+
+      <article class="offering reveal">
+        <span class="led-tl"></span>
+        <span class="led-br"></span>
+        <span class="eyebrow">Common ask 03</span>
+        <h3>A weekly intelligence brief</h3>
+        <p style="color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65;">
+          A structured weekly read on what's happening in your line of work
+          &mdash; useful for shops that want to feel less behind without
+          paying for an analyst. We're running one of these as a 30-day POC
+          right now; the shape we landed on is in the notes link below.
+        </p>
+        <div class="commit">For example</div>
+        <ul>
+          <li>What's new in the local market this week</li>
+          <li>Things worth a closer look</li>
+          <li>A short suggested play, if there is one</li>
+          <li>Plain English; one page on Monday</li>
+        </ul>
+      </article>
+
+    </div>
+
+    <p class="reveal" style="margin-top: 2.5rem; max-width: 48rem; color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.7;">
+      None of these is the right shape? Tell us what would actually help and
+      we'll figure it out together. If we're not the right fit, we'll say so
+      &mdash; we'd rather send you somewhere better than waste your time.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">// How we work</span>
+    <h2 class="reveal">How we try to be useful.</h2>
+
+    <div class="principle-row">
+      <div class="principle reveal">
+        <h4>Small projects welcome</h4>
+        <p>
+          A weekend script is a real engagement. We don't have a minimum.
+          If a one-day tool would save you a few hours a week, that's a
+          good outcome and a good fit.
+        </p>
+      </div>
+      <div class="principle reveal">
+        <h4>Plain English, please</h4>
+        <p>
+          We won't bury you in jargon. We'll explain what we built, why it
+          works, and how to keep it working &mdash; in language anyone in
+          your shop can follow. If we can't explain it simply, we probably
+          built the wrong thing.
+        </p>
+      </div>
+      <div class="principle reveal">
+        <h4>Your data, your machine</h4>
+        <p>
+          Where it makes sense, the tool runs on your hardware (a laptop, an
+          iPad, a small box on a shelf), so your data stays put. When we run
+          things on our hardware, we tell you exactly what crosses the wire
+          and why.
+        </p>
+      </div>
+      <div class="principle reveal">
+        <h4>One person on the other end</h4>
+        <p>
+          No account manager, no sales rep, no support tier. The same person
+          writes the code, sends the email, and answers the question. If
+          that's not your scale, that's fair &mdash; we'll tell you so.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="conv-block">
+      <span class="eyebrow reveal">// Get in touch</span>
+      <h2 class="reveal">Tell us what's eating your time.</h2>
+      <p class="reveal">
+        One short paragraph is enough &mdash; what you do, what's annoying,
+        what you wish were easier. No form, no calendar invite. Just an
+        email. We usually reply within a day.
+      </p>
+      <div class="conv-row reveal">
+        <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Hi">z3m0g@icloud.com</a>
+        <a class="btn btn-secondary" href="case-campaign-intel.html">Notes from a current POC</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="work.html">Services</a></li>
+          <li><a href="case-campaign-intel.html">Notes</a></li>
+          <li><a href="mailto:z3m0g@icloud.com">z3m0g@icloud.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span data-live="rail-version">RAIL v3.10.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>

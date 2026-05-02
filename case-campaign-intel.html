@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Notes from a 30-day campaign-intelligence POC, currently in flight. What we're shipping, the brief shape we landed on, and where attestation fits. Honest write-up, not a marketing case study.">
+<!-- og:start -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ledatic.org/case-campaign-intel">
+<meta property="og:title" content="Notes from a campaign-intelligence POC — Ledatic">
+<meta property="og:description" content="A 30-day POC, in flight. Three briefs a week, attested against a live physics beacon, local inference on our hardware.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Notes from a campaign-intelligence POC">
+<meta name="twitter:description" content="A 30-day POC, in flight. Three briefs a week, attested against a live beacon, local inference on our hardware.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Notes from a campaign-intelligence POC — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  .case {
+    max-width: 46rem;
+    margin: 0 auto;
+  }
+  .case h2 {
+    margin-top: 3rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+  .case h2::before {
+    content: "// ";
+    color: hsl(var(--primary));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    margin-right: 0.4rem;
+    vertical-align: 0.15em;
+  }
+  .case p, .case li {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.98rem;
+    line-height: 1.75;
+  }
+  .case p { margin-bottom: 1rem; }
+  .case ul { margin-left: 1.25rem; margin-bottom: 1rem; }
+  .case li { margin-bottom: 0.4rem; }
+  .case strong { color: hsl(var(--foreground)); font-weight: 500; }
+
+  .case-meta {
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    padding: 1.5rem;
+    background: hsl(var(--muted) / 0.3);
+    margin: 2.5rem 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.82rem;
+    line-height: 1.85;
+    color: hsl(var(--muted-foreground));
+  }
+  .case-meta .lab { color: hsl(var(--muted-foreground)); }
+  .case-meta .val { color: hsl(var(--foreground)); }
+  .case-meta .ok  { color: hsl(var(--primary)); }
+  .case-meta .row { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+  .brief-shape {
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+    background: hsl(var(--muted) / 0.25);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.84rem;
+    line-height: 1.75;
+    color: hsl(var(--muted-foreground));
+  }
+  .brief-shape .day { color: hsl(var(--primary)); }
+  .brief-shape .sec { color: hsl(var(--foreground)); }
+
+  .pull-quote {
+    border-left: 3px solid hsl(var(--primary));
+    padding: 0.5rem 1.25rem;
+    margin: 2rem 0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: hsl(var(--foreground));
+    font-weight: 400;
+  }
+  .pull-quote .attr {
+    display: block;
+    margin-top: 0.6rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--muted-foreground));
+  }
+</style>
+</head>
+<body data-shader="_shared/shaders/grid.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+    <a href="work.html">Work</a>
+  </div>
+  <a class="nav-cta" href="mailto:z3m0g@icloud.com">Get in touch</a>
+</nav>
+
+<section class="hero" style="min-height: 50vh;">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Notes &mdash; Campaign intelligence POC</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">
+      What we're <span class="accent">working on</span>.
+    </h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      A 30-day POC, in flight.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      An honest write-up of the campaign-intelligence engagement we're running
+      right now. Not a closed case study. Here's the shape, what we're
+      shipping, and what we're learning while we ship it.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <article class="case">
+
+      <div class="case-meta reveal">
+        <div class="row"><span class="lab">Status</span><span class="val">In flight</span></div>
+        <div class="row"><span class="lab">Engagement</span><span class="val">30-day fixed-scope POC</span></div>
+        <div class="row"><span class="lab">Cadence</span><span class="val">Mon &middot; Wed &middot; Fri</span></div>
+        <div class="row"><span class="lab">Compute</span><span class="val">Local, on our hardware</span></div>
+        <div class="row"><span class="lab">Attestation</span><span class="val ok">every brief signed against pulse_id</span></div>
+      </div>
+
+      <h2 class="reveal">What we're doing</h2>
+      <p class="reveal">
+        We're running a 30-day campaign-intelligence POC for a regional
+        client. They wanted a regular drumbeat of intel on a market they
+        compete in, without burning an analyst's full week on manual
+        scraping, and without sending their clients' material through a
+        third-party AI vendor. We thought we could put a small pipeline in
+        front of those three constraints. The POC is how we find out.
+      </p>
+
+      <h2 class="reveal">The brief shape</h2>
+      <p class="reveal">
+        We landed on a Mon / Wed / Fri rhythm. Each day targets a different
+        decision surface, so the week reads as a sequence rather than three
+        copies of the same digest:
+      </p>
+      <div class="brief-shape reveal">
+<span class="day">Monday</span>     &mdash; Arena Map
+            <span class="sec">/  what's in the market this week</span>
+            <span class="sec">/  notable moments</span>
+            <span class="sec">/  a suggested play for the week</span>
+
+<span class="day">Wednesday</span>  &mdash; Per-angle Deep-dive
+            <span class="sec">/  longevity-winners by angle</span>
+            <span class="sec">/  variation winners</span>
+            <span class="sec">/  creative brief, ready to spec</span>
+
+<span class="day">Friday</span>     &mdash; Verdict
+            <span class="sec">/  HIT / PARTIAL / MISS header</span>
+            <span class="sec">/  cross-week arc</span>
+            <span class="sec">/  market snapshot + movement</span>
+      </div>
+      <p class="reveal">
+        Friday checks itself against Monday. We don't claim that loop is
+        perfect &mdash; we claim it's the smallest honest feedback shape we
+        could build, and that having one matters more than not having one.
+      </p>
+
+      <h2 class="reveal">How it actually runs</h2>
+      <p class="reveal">
+        The pipeline lives on hardware we own. There are no public endpoints
+        reachable from the open internet; everything is on a private fabric.
+        Briefs are delivered to a private channel. The client's source
+        material never crosses our wire to a third-party model.
+      </p>
+      <p class="reveal">
+        Every brief is bound to a <code>pulse_id</code> from our live plasma
+        physics beacon at the moment of delivery, signed by an Ed25519 key
+        held on a Pi at our edge. Months from now the client can re-derive
+        the digest, fetch the witness pubkey from
+        <a href="/attest/fleet0.pub.pem">/attest/fleet0.pub.pem</a>, and
+        verify the signature with the same one-liner we publish on every
+        Rail release. That's the same primitive Ledatic uses for itself,
+        not a separate marketing layer. See <a href="/entropy">/entropy</a>
+        and <a href="/system">/system</a>.
+      </p>
+
+      <h2 class="reveal">What we're learning</h2>
+      <p class="reveal">
+        We're still mid-engagement, so we'll be careful with claims. What
+        we'll say honestly: the discipline of shipping a structured brief
+        three times a week sharpens the questions we ask of the data more
+        than we expected, and the attestation step has been less of a tax
+        than we thought it would be once the cron was wired. We'll write
+        more about both after the POC closes.
+      </p>
+
+      <h2 class="reveal">If this fits your shop</h2>
+      <p class="reveal">
+        We're early. We're not pretending to be a powerhouse. This page is
+        about one engagement, but most of what we do is smaller &mdash; a
+        weekend script, a one-day tool, a tiny watcher for one thing you
+        care about. If anything here resembles a thing you wish were
+        easier, tell us about it and we'll figure out the smallest version
+        that would actually help. If we're not the right fit, we'll say so.
+      </p>
+
+      <div class="cta-row reveal" style="margin-top: 2.5rem;">
+        <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Campaign%20intelligence%20POC">Start a conversation</a>
+        <a class="btn btn-secondary" href="work.html">See all engagements</a>
+      </div>
+
+    </article>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="plasma.html">Plasma</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="work.html">Services</a></li>
+          <li><a href="case-campaign-intel.html">Notes</a></li>
+          <li><a href="mailto:z3m0g@icloud.com">z3m0g@icloud.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span data-live="rail-version">RAIL v3.10.0 &middot; 137/137</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js"></script>
+</body>
+</html>

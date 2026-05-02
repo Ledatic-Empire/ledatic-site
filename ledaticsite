@@ -1,0 +1,463 @@
+#!/usr/bin/env python3
+"""
+ledaticsite — ledatic.org operator console.
+
+Smart-default like ./dda: bare invocation does the obvious thing.
+- If local files (HTML / _shared / shaders / worker) differ from what's
+  deployed in CF KV, push them.
+- Otherwise show status.
+
+Subcommands:
+    ledaticsite                  smart default (deploy if dirty, else status)
+    ledaticsite status           live dashboard — beacon, deploy ts, dirty files,
+                                 page liveness, attest endpoints
+    ledaticsite deploy [page..]  push pages + assets to KV
+    ledaticsite worker           push CF Worker
+    ledaticsite regen [name]     rerun rail dynamic page generators
+                                 (changelog, feed, llms, mission_control)
+    ledaticsite verify           hash-check local _shared/site.{css,js} vs prod
+                                 + 200-check every page + attest endpoints
+    ledaticsite open [page]      open https://ledatic.org/<page> in browser
+    ledaticsite logs [n]         tail com.ledatic.site-deploy log
+    ledaticsite selftest         physics gate + worker reachability + page sweep
+                                 + attest sweep
+    ledaticsite focus --big-picture "..." --next-up "..."
+                                 update home-page focus copy (replaces
+                                 the deleted update_site_data.py)
+
+Token: defaults to $(cat ~/Desktop/rings); override via CF_TOKEN.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+SITE = "https://ledatic.org"
+PAGES = [
+    "index.html",
+    "rail.html",
+    "plasma.html",
+    "fleet.html",
+    "entropy.html",
+    "changelog.html",
+    "manifesto.html",
+    "ot.html",
+    "system.html",
+]
+SHARED = ["_shared/site.css", "_shared/site.js"]
+ATTEST_ENDPOINTS = [
+    "/entropy/pulse",
+    "/entropy/frame/latest.attestation.json",
+    "/witness/fleet0/latest",
+    "/fleet/status.json",
+    "/builds/latest/index.json",
+    "/selfhost/latest/index.json",
+    "/attest/verify.sh",
+    "/attest/fleet0.pub.pem",
+    "/attest/badge/builds.json",
+    "/attest/badge/selfhost.json",
+]
+DEPLOY_LOG = Path("/tmp/ledatic-site-deploy.log")
+TOKEN_PATH = Path.home() / "Desktop" / "rings"
+
+
+# ---------- helpers ----------
+
+GREEN = "\033[32m"
+RED = "\033[31m"
+YEL = "\033[33m"
+DIM = "\033[2m"
+RST = "\033[0m"
+
+
+def cf_token() -> str:
+    tok = os.environ.get("CF_TOKEN")
+    if tok:
+        return tok
+    if TOKEN_PATH.exists():
+        return TOKEN_PATH.read_text().strip()
+    sys.exit(f"no CF_TOKEN and {TOKEN_PATH} missing")
+
+
+def http_get(url: str, timeout: float = 6.0) -> tuple[int, bytes]:
+    req = urllib.request.Request(url, headers={"User-Agent": "ledaticsite/1"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, b""
+    except Exception:
+        return 0, b""
+
+
+def sha8(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()[:8]
+
+
+def file_sha8(p: Path) -> str:
+    return sha8(p.read_bytes()) if p.exists() else "--------"
+
+
+# deploy.sh rewrites _shared/site.{css,js} → _shared/site.{css,js}?v=<sha8>
+# before upload. Strip those query strings before comparing so we measure
+# real content drift, not cache-buster drift.
+import re as _re
+_VER_RE = _re.compile(rb"(_shared/site\.(?:css|js))\?v=[0-9a-f]{6,}")
+# Cloudflare injects a challenge-platform / Rocket Loader bootstrap before
+# </body> on HTML responses (only in prod). Strip it to compare real content.
+_CF_INJECT_RE = _re.compile(
+    rb"<script>\(function\(\)\{[^<]*?__CF\$cv\$params[^<]*?\}\)\(\);</script>",
+    _re.DOTALL,
+)
+# Cloudflare Web Analytics (Insights) auto-inserts a beacon.min.js script tag.
+_CF_BEACON_RE = _re.compile(
+    rb"<script defer src=\"https://static\.cloudflareinsights\.com/beacon\.min\.js[^\"]*\"[^>]*></script>",
+)
+
+
+def normalize_for_compare(data: bytes) -> bytes:
+    data = _VER_RE.sub(rb"\1", data)
+    data = _CF_INJECT_RE.sub(b"", data)
+    data = _CF_BEACON_RE.sub(b"", data)
+    # Trim trailing whitespace differences from injection points
+    return data.replace(b"\n\n", b"\n").rstrip()
+
+
+def page_local_sha8(p: Path) -> str:
+    if not p.exists():
+        return "--------"
+    return sha8(normalize_for_compare(p.read_bytes()))
+
+
+def page_prod_sha8(body: bytes) -> str:
+    return sha8(normalize_for_compare(body))
+
+
+# ---------- status ----------
+
+def cmd_status() -> int:
+    print(f"# ledatic.org — site console")
+    print()
+
+    # Beacon pulse (gates deploys)
+    code, body = http_get(f"{SITE}/entropy/pulse", timeout=4)
+    if code == 200:
+        try:
+            j = json.loads(body)
+            pulse = j.get("pulse_id", "?")
+            hex_ = j.get("value_hex", "")[:12]
+            print(f"  beacon       {GREEN}live{RST}  pulse={pulse}  hex={hex_}…")
+        except Exception:
+            print(f"  beacon       {YEL}reachable but unparseable{RST}")
+    else:
+        print(f"  beacon       {RED}DOWN{RST}  (deploys will refuse)")
+
+    # site-deploy LaunchAgent state
+    try:
+        out = subprocess.check_output(
+            ["launchctl", "list"], text=True, stderr=subprocess.DEVNULL
+        )
+        sd = next(
+            (ln for ln in out.splitlines() if "com.ledatic.site-deploy" in ln),
+            None,
+        )
+        if sd:
+            cols = sd.split()
+            print(f"  daily cron   {GREEN}loaded{RST}  pid={cols[0]} exit={cols[1]}")
+        else:
+            print(f"  daily cron   {RED}not loaded{RST}")
+    except Exception:
+        pass
+
+    # Deploy log mtime
+    if DEPLOY_LOG.exists():
+        import datetime as _dt
+        ts = _dt.datetime.fromtimestamp(DEPLOY_LOG.stat().st_mtime)
+        print(f"  last log     {ts.isoformat(timespec='seconds')}  ({DEPLOY_LOG})")
+
+    print()
+    print("## local vs prod (sha256[:8], cache-buster stripped)")
+    dirty = []
+    for rel in SHARED + PAGES:
+        p = ROOT / rel
+        is_html = rel.endswith(".html")
+        local = page_local_sha8(p) if is_html else file_sha8(p)
+        url_path = "/" if rel == "index.html" else f"/{rel}"
+        code, body = http_get(SITE + url_path)
+        if code == 200:
+            prod = page_prod_sha8(body) if is_html else sha8(body)
+        else:
+            prod = "--------"
+        match = local == prod
+        marker = f"{GREEN}=={RST}" if match else f"{YEL}!={RST}"
+        if not match and code == 200:
+            dirty.append(rel)
+        status_col = f"{code:>3}" if code else " — "
+        print(f"  {marker}  {status_col}  {local}  {prod}  {rel}")
+
+    print()
+    if dirty:
+        print(f"  {YEL}{len(dirty)} dirty:{RST} {', '.join(dirty)}")
+        print(f"  {DIM}./ledaticsite deploy{RST} to push.")
+    else:
+        print(f"  {GREEN}clean — nothing to deploy{RST}")
+    return 0 if not dirty else 0
+
+
+def list_dirty() -> list[str]:
+    """Return list of local files differing from prod (used by smart default)."""
+    dirty = []
+    for rel in SHARED + PAGES:
+        p = ROOT / rel
+        if not p.exists():
+            continue
+        is_html = rel.endswith(".html")
+        url_path = "/" if rel == "index.html" else f"/{rel}"
+        code, body = http_get(SITE + url_path)
+        if code != 200:
+            continue
+        local = page_local_sha8(p) if is_html else file_sha8(p)
+        prod = page_prod_sha8(body) if is_html else sha8(body)
+        if local != prod:
+            dirty.append(rel)
+    return dirty
+
+
+# ---------- deploy ----------
+
+def cmd_deploy(pages: list[str]) -> int:
+    env = os.environ.copy()
+    env["CF_TOKEN"] = cf_token()
+    cmd = [str(ROOT / "deploy.sh"), *pages]
+    return subprocess.call(cmd, env=env, cwd=ROOT)
+
+
+def cmd_worker() -> int:
+    env = os.environ.copy()
+    env["CF_TOKEN"] = cf_token()
+    return subprocess.call(["./deploy_worker.sh"], env=env, cwd=ROOT / "worker")
+
+
+# ---------- regen ----------
+
+GENERATORS = {
+    "changelog": "tools/deploy/gen_feed.rail",
+    "feed": "tools/deploy/gen_feed.rail",
+    "llms": "tools/deploy/gen_llms.rail",
+    "security": "tools/deploy/gen_security.rail",
+}
+
+
+def find_rail_root() -> Path | None:
+    for cand in [Path.home() / "projects/rail-https",
+                 Path.home() / "projects/rail"]:
+        if (cand / "rail_native").exists():
+            return cand
+    return None
+
+
+def cmd_regen(name: str | None) -> int:
+    rail = find_rail_root()
+    if rail is None:
+        print(f"{RED}no rail tree found at ~/projects/rail-https or ~/projects/rail{RST}")
+        return 2
+    targets = [name] if name else list(GENERATORS.keys())
+    rc = 0
+    for t in targets:
+        rel = GENERATORS.get(t)
+        if not rel:
+            print(f"{RED}unknown generator '{t}'.{RST} known: {', '.join(GENERATORS)}")
+            rc = 2
+            continue
+        src = rail / rel
+        if not src.exists():
+            print(f"{YEL}skip {t} — {src} missing{RST}")
+            continue
+        print(f"→ regen {t}  ({src})")
+        rc |= subprocess.call(["./rail_native", "run", rel], cwd=rail)
+    return rc
+
+
+# ---------- verify / selftest ----------
+
+def cmd_verify() -> int:
+    bad = 0
+    for rel in PAGES:
+        url = SITE + ("/" if rel == "index.html" else f"/{rel}")
+        code, _ = http_get(url)
+        mark = f"{GREEN}{code}{RST}" if code == 200 else f"{RED}{code}{RST}"
+        print(f"  {mark}  {url}")
+        if code != 200:
+            bad += 1
+    print()
+    print("## attest endpoints")
+    for ep in ATTEST_ENDPOINTS:
+        code, _ = http_get(SITE + ep)
+        mark = f"{GREEN}{code}{RST}" if code == 200 else f"{RED}{code}{RST}"
+        print(f"  {mark}  {SITE}{ep}")
+        if code != 200:
+            bad += 1
+    print()
+    print(f"## hash-check _shared")
+    for rel in SHARED:
+        p = ROOT / rel
+        local = file_sha8(p)
+        code, body = http_get(SITE + f"/{rel}")
+        prod = sha8(body) if code == 200 else "--------"
+        ok = local == prod
+        mark = f"{GREEN}=={RST}" if ok else f"{RED}!={RST}"
+        print(f"  {mark}  {rel}   local={local}  prod={prod}")
+        if not ok:
+            bad += 1
+    return 0 if bad == 0 else 1
+
+
+def cmd_selftest() -> int:
+    print("## physics gate")
+    code, body = http_get(f"{SITE}/entropy/pulse")
+    if code != 200:
+        print(f"  {RED}beacon unreachable{RST} — deploys will refuse")
+        return 1
+    p1 = json.loads(body).get("pulse_id")
+    import time as _time
+    _time.sleep(4)
+    p2 = json.loads(http_get(f"{SITE}/entropy/pulse")[1]).get("pulse_id")
+    if p1 == p2:
+        print(f"  {RED}beacon stale{RST} pulse {p1} for 4s — deploys will refuse")
+        return 1
+    print(f"  {GREEN}ok{RST} pulse {p1} → {p2}")
+    print()
+    return cmd_verify()
+
+
+# ---------- open / logs ----------
+
+def cmd_open(page: str | None) -> int:
+    target = SITE if not page else f"{SITE}/{page.lstrip('/')}"
+    return subprocess.call(["open", target])
+
+
+def cmd_logs(n: int) -> int:
+    if not DEPLOY_LOG.exists():
+        print(f"{YEL}no log at {DEPLOY_LOG}{RST}")
+        return 1
+    return subprocess.call(["tail", "-n", str(n), str(DEPLOY_LOG)])
+
+
+# ---------- focus ----------
+
+FOCUS_MARKER_BIG = "<!-- ledaticsite:big-picture -->"
+FOCUS_MARKER_NEXT = "<!-- ledaticsite:next-up -->"
+
+
+def cmd_focus(big: str | None, nxt: str | None) -> int:
+    """Replace home-page focus copy. Looks for HTML markers; emits a guide if
+    they're not present so the user can wire them once."""
+    idx = ROOT / "index.html"
+    src = idx.read_text()
+    changed = False
+    if big is not None:
+        if FOCUS_MARKER_BIG not in src:
+            print(f"{YEL}index.html has no {FOCUS_MARKER_BIG} marker — wire it once:{RST}")
+            print(f"  <span data-focus='big'>...</span>{FOCUS_MARKER_BIG}")
+            return 2
+        # crude: replace the full <span data-focus='big'>...</span> preceding marker
+        import re
+        pat = re.compile(r"<([a-z0-9]+)\s[^>]*data-focus=['\"]big['\"][^>]*>.*?</\1>" + re.escape(FOCUS_MARKER_BIG), re.DOTALL)
+        new = pat.sub(f"<span data-focus='big'>{big}</span>{FOCUS_MARKER_BIG}", src)
+        if new != src:
+            src = new
+            changed = True
+    if nxt is not None:
+        if FOCUS_MARKER_NEXT not in src:
+            print(f"{YEL}index.html has no {FOCUS_MARKER_NEXT} marker — wire it once.{RST}")
+            return 2
+        import re
+        pat = re.compile(r"<([a-z0-9]+)\s[^>]*data-focus=['\"]next['\"][^>]*>.*?</\1>" + re.escape(FOCUS_MARKER_NEXT), re.DOTALL)
+        new = pat.sub(f"<span data-focus='next'>{nxt}</span>{FOCUS_MARKER_NEXT}", src)
+        if new != src:
+            src = new
+            changed = True
+    if not changed:
+        print("nothing to update")
+        return 0
+    idx.write_text(src)
+    print(f"{GREEN}index.html focus updated.{RST} run ./ledaticsite to deploy.")
+    return 0
+
+
+# ---------- main ----------
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser(prog="ledaticsite", add_help=True)
+    sub = ap.add_subparsers(dest="cmd")
+
+    sub.add_parser("status")
+
+    p_dep = sub.add_parser("deploy")
+    p_dep.add_argument("pages", nargs="*")
+
+    sub.add_parser("worker")
+
+    p_re = sub.add_parser("regen")
+    p_re.add_argument("name", nargs="?")
+
+    sub.add_parser("verify")
+    sub.add_parser("selftest")
+
+    p_op = sub.add_parser("open")
+    p_op.add_argument("page", nargs="?")
+
+    p_lg = sub.add_parser("logs")
+    p_lg.add_argument("n", nargs="?", type=int, default=80)
+
+    p_fo = sub.add_parser("focus")
+    p_fo.add_argument("--big-picture", dest="big")
+    p_fo.add_argument("--next-up", dest="nxt")
+
+    args = ap.parse_args(argv)
+
+    if args.cmd is None:
+        # smart default: deploy if dirty, else status
+        dirty = list_dirty()
+        if dirty:
+            print(f"{YEL}{len(dirty)} dirty file(s):{RST} {', '.join(dirty)}")
+            print(f"deploying…")
+            return cmd_deploy([])
+        print(f"{GREEN}clean — nothing to deploy. status:{RST}")
+        print()
+        return cmd_status()
+
+    if args.cmd == "status":
+        return cmd_status()
+    if args.cmd == "deploy":
+        return cmd_deploy(args.pages)
+    if args.cmd == "worker":
+        return cmd_worker()
+    if args.cmd == "regen":
+        return cmd_regen(args.name)
+    if args.cmd == "verify":
+        return cmd_verify()
+    if args.cmd == "selftest":
+        return cmd_selftest()
+    if args.cmd == "open":
+        return cmd_open(args.page)
+    if args.cmd == "logs":
+        return cmd_logs(args.n)
+    if args.cmd == "focus":
+        return cmd_focus(args.big, args.nxt)
+    ap.print_help()
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

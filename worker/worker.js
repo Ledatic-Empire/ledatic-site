@@ -491,6 +491,15 @@ async function handleSite(request, env, url) {
     return Response.redirect(url.toString(), 301);
   }
 
+  // api.ledatic.org is a retired subdomain (formerly served a Solana-token
+  // signal API). Capture residual traffic by 301-redirecting it to /work on
+  // the apex. Search engines treat 301 as canonical reassignment, so they
+  // will eventually drop the old surface from their index and pin the new
+  // one in its place.
+  if (url.hostname === "api.ledatic.org") {
+    return Response.redirect("https://ledatic.org/work", 301);
+  }
+
   const pathname = url.pathname;
   const method = request.method;
 

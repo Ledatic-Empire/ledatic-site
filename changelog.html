@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Every tagged Rail release, in order. Ten releases in six weeks — from v2.0's 512 MB allocator and GC to v3.8.0's signed-against-live-physics releases. Each entry points at the commit that ships it.">
+<meta name="description" content="Every tagged Rail release, in order. Twelve releases in six weeks — from v2.0's 512 MB allocator and GC to v3.10.0's Rail-native Pi signer. Each entry points at the commit that ships it.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/changelog">
 <meta property="og:title" content="Changelog — Ledatic">
-<meta property="og:description" content="Every tagged Rail release, in order. Ten releases in six weeks — from v2.0's 512 MB allocator and GC to v3.8.0's signed-against-live-physics releases. Each entry points at the commit that ships it.">
+<meta property="og:description" content="Every tagged Rail release, in order. Twelve releases in six weeks — from v2.0's 512 MB allocator and GC to v3.10.0's Rail-native Pi signer. Each entry points at the commit that ships it.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Changelog — Ledatic">
-<meta name="twitter:description" content="Every tagged Rail release, in order. Ten releases in six weeks — from v2.0's 512 MB allocator and GC to v3.8.0's signed-against-live-physics releases. Each entry points at the commit that ships it.">
+<meta name="twitter:description" content="Every tagged Rail release, in order. Twelve releases in six weeks — from v2.0's 512 MB allocator and GC to v3.10.0's Rail-native Pi signer. Each entry points at the commit that ships it.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Changelog — Ledatic</title>
@@ -84,6 +84,7 @@
     <a href="plasma.html">Plasma</a>
     <a href="fleet.html">Fleet</a>
     <a href="changelog.html" class="active">Changelog</a>
+    <a href="work.html">Work</a>
   </div>
   <a class="nav-cta" href="https://github.com/zemo-g/rail/releases" target="_blank" rel="noopener">Releases</a>
 </nav>
@@ -110,6 +111,41 @@
 
 <section class="section">
   <div class="wrap" style="max-width: 62rem;">
+
+    <div class="release reveal" data-attest-tag="v3.10.0">
+      <div class="meta">
+        <div class="ver">v3.10.0</div>
+        <div>2026-05-02</div>
+      </div>
+      <div>
+        <h3>Path B: Rail-native Pi signer + Linux backend complete</h3>
+        <p>The attestation pipeline is now Rail-native end-to-end <em>including</em> the Pi-side HTTP signer. The hot path no longer touches Python at all. Linux ARM64 cross-compile produces useful binaries beyond hello-world.</p>
+        <ul>
+          <li><code>tools/attest/pi_sign_server.rail</code>: HTTP signer on <code>fleet0:9102</code>. Replaces the ~110 LOC Python signer with a 118 KB ELF. Same wire format, same backing shell signer, end-to-end verified</li>
+          <li><code>linux_libc.s</code>: three real implementations replacing silent stubs &mdash; <code>_atof</code> (real number parser, the previous stub returned 0.0 for every Rail float literal), <code>_snprintf</code> %.15g formatter (real digit-extract, the previous stub wrote literal "0"), <code>_rail_print_float</code> (Linux-ABI clone of the Mac stub)</li>
+          <li>137/137 green; byte-identical self-bootstrap verified</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release reveal" data-attest-tag="v3.9.0">
+      <div class="meta">
+        <div class="ver">v3.9.0</div>
+        <div>2026-05-02</div>
+      </div>
+      <div>
+        <h3>Ed25519 sign + Rail-native attest pipeline</h3>
+        <p>The attestation pipeline that v3.8.0 introduced is now Rail-native end-to-end. Mac-side orchestrator, scalar arithmetic mod L, sign function, signer transport &mdash; all Rail. Only the Pi-side key material still touches OpenSSL via the existing shell signer (wrapped in a Python HTTP server).</p>
+        <ul>
+          <li><code>stdlib/ed25519_scalar.rail</code>: <code>sc_reduce</code> (64-byte mod L) and <code>sc_muladd</code> ((a&middot;b + c) mod L) in pure Rail. 8/8 vectors pass including <code>SHA-512('') mod L</code> matching the Python oracle byte-for-byte</li>
+          <li><code>stdlib/ed25519_sign.rail</code>: full RFC 8032 &sect;5.1.6 sign. <code>r</code>, <code>R</code>, <code>k</code>, <code>S = sc_muladd(k, a, r)</code>, <code>sig = R || S</code>. RFC &sect;A.4 vector 1 byte-identical for both pk and sig + round-trip verify=1; PASS on first compile</li>
+          <li><code>tools/attest/attest.rail</code>: Rail-native attestation orchestrator. SHA-256 over input bytes, HTTPS GET <code>/entropy/pulse</code>, JSON parse, HTTP POST signer, JSON outer build, write to <code>&lt;input&gt;.attestation.json</code>. Zero shell-out on the request path</li>
+          <li><code>tools/attest/pi_sign_server.py</code> + <code>com.ledatic.attest_sign.service</code>: Pi HTTP signer on <code>fleet0:9102</code> over Tailscale, token-authed. Replaces the per-attest SSH dance &mdash; release-attest wall time 49 s &rarr; 27 s</li>
+          <li>Linux ARM64 cross-compile fixed: <code>./rail_native linux foo.rail</code> produces working ELF; hello/fact/fold run on Pi</li>
+          <li>Plasma beacon RSS leak fixed: 5 GB / 31 GB swap &rarr; 21 MB / 90 s. Three-layer fix in <code>_rail_chained_malloc</code>, <code>mk_lxf_step_into</code>, double-buffered beacon loop</li>
+        </ul>
+      </div>
+    </div>
 
     <div class="release reveal" data-attest-tag="v3.8.0">
       <div class="meta">
@@ -273,7 +309,8 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="changelog.html">Changelog</a></li>
+          <li><a href="changelog.html">Changelog</a>
+    <a href="work.html">Work</a></li>
         </ul>
       </div>
       <div>
@@ -295,7 +332,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v3.8.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v3.10.0 &middot; 137/137</span>
     </div>
   </div>
 </footer>
