@@ -239,29 +239,14 @@ Awareness (ledatic.org/dda) → Interest (what's the offer?) → Qualification (
       Below is a compressed excerpt from a real 30-day POC. This is the deterministic layer—counts, persistence, format distribution, and top movers—that anchors every brief.
     </p>
 
-    <div class="sample-section reveal">
-      <h3>Social Media Harm — Week 1 (Apr 13–19)</h3>
-      <div class="sample-output">
-<code>VERTICAL:</code> social_media_harm
-<code>DATES:</code> 2026-04-13 → 2026-04-19
-<code>SCRAPE_COUNT:</code> 3 (Apr 15, 17, 19)
-<code>TOTAL_ADS:</code> 101 | <code>TOTAL_ADVERTISERS:</code> 39
-
-<code>TOP MOVERS (by ad count):</code>
-  • Social Media Addiction Claims: 32 ads, family angle (21), 9-day run
-  • Postman Law: 6 ads, authority angle (5), 17-day run
-  • The Midlife Sage: 6 ads, qualification angle (2), family (4)
-
-<code>ANGLE DISTRIBUTION:</code>
-  • family: 45% | authority: 19% | compensation: 12%
-  • qualification: 8% | validation: 8% | uncategorized: 9%
-
-<code>FORMAT DISTRIBUTION:</code>
-  • flat: 100 ads | question-lead: 1 ad
-
-<code>PERSISTENCE (days running):</code>
-  • ≥21 days: 2 advertisers | 14–20 days: 5 | 7–13 days: 12 | &lt;7 days: 20
-      </div>
+    <!-- REDACTED 2026-05-09: original sample-output block contained real
+         client POC numbers (vertical, advertiser names, ad counts, persistence
+         metrics from the 30-day legal-case monitoring engagement). That data
+         is confidential. The shipped /intel.html now points readers at /sample
+         for a fully synthetic + signed example brief instead. Keep client
+         metrics out of any public surface or proposal copy. -->
+    <div class="sample-section reveal" style="text-align: center;">
+      <p>[redacted — see /sample for a synthetic + cryptographically signed example brief]</p>
     </div>
 
     <p class="body reveal" style="margin-top: 2rem;">
