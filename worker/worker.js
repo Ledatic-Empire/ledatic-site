@@ -24,7 +24,17 @@
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com",
+  // 'unsafe-inline' is load-bearing for the plasma viewers (mobile.html,
+  // live4k.html, holo.html) — they ship their entire poll/render loop as
+  // an inline <script> per page, intentionally so each viewer is
+  // self-contained and cacheable independently. Without this, iOS Safari
+  // (and any strict-CSP browser) silently blocks the inline script — page
+  // renders the static HUD but pulse/step/rho stay on `…` placeholders
+  // forever and no /entropy/* fetch ever fires. Earned 2026-05-02 from
+  // an iPhone test of /mobile.html that black-screened with no console
+  // signal anywhere on the page. Migration to per-script SHA-256 hashes
+  // is a future tightening, not a now-fix.
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://static.cloudflareinsights.com",
   // Inline styles are load-bearing on site2030 (animation-delay, per-page page-style blocks).
   // Google Fonts are pulled from fonts.googleapis.com.
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -107,12 +117,31 @@ const MIME = {
   glsl: "text/plain; charset=utf-8",
   sh:   "text/x-shellscript; charset=utf-8",
   pem:  "application/x-pem-file",
+  // Generic binary blobs — recording frames, packed-float arrays, etc.
+  // MUST live in BINARY_EXT below or KV.get() decodes as text and the
+  // bytes get UTF-8-mangled (every non-ASCII byte → U+FFFD, 3 bytes).
+  // A 393 KB binary frame bloats to ~675 KB on the wire, unreadable.
+  // Earned 2026-05-02 on the ot-stable recording deploy.
+  bin:  "application/octet-stream",
+  // /aliens content types — pursue mirror surface.
+  pdf:  "application/pdf",
+  csv:  "text/csv; charset=utf-8",
+  jsonl: "application/jsonl",
+  // DVIDS-hosted video records get inline-playable MIME so the browser
+  // streams them instead of force-downloading.
+  mp4:  "video/mp4",
+  mov:  "video/quicktime",
+  m4v:  "video/x-m4v",
+  webm: "video/webm",
 };
 
 const BINARY_EXT = new Set([
   "png", "jpg", "jpeg", "gif", "webp", "ico",
   "woff", "woff2", "ttf",
   "wasm",
+  "bin",
+  "pdf",
+  "mp4", "mov", "m4v", "webm",
 ]);
 
 const LONG_CACHE_EXT = new Set([
@@ -121,6 +150,8 @@ const LONG_CACHE_EXT = new Set([
   "png", "jpg", "jpeg", "gif", "webp", "ico",
   "wasm",
   "frag", "glsl",
+  "bin",
+  "pdf",
 ]);
 
 function extOf(key) {
@@ -739,6 +770,71 @@ async function handleSite(request, env, url) {
     }
   }
 
+  // ─── Provenance Tier ────────────────────────────────────────────────
+  // Provenance manifests for AI reports. Pattern mirrors the entropy frame
+  // attestations: a Studio-side publisher composes the manifest, SSHes to
+  // fleet0 to get an Ed25519 witness signature, then PUTs here. Anyone can
+  // GET the manifest and re-derive the digest from individual fields, then
+  // verify the signature in-browser at /verify/<id>. See
+  // docs/proposals/provable_ai.md for the threat model + buyer.
+  if (pathname.startsWith("/provenance/manifest/")) {
+    const reportId = pathname.slice("/provenance/manifest/".length);
+    if (!reportId || !/^[A-Za-z0-9_-]{1,64}$/.test(reportId)) {
+      return new Response("bad report_id", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const r2Key = `provenance/manifests/${reportId}.json`;
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      if (!body || body.length > 64 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      let m;
+      try { m = JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      if (m.kind !== "ledatic.report.provenance" || m.report_id !== reportId) {
+        return new Response("bad manifest shape", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"manifest not found","report_id":"' + reportId + '"}', {
+        status: 404,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({
+          "content-type": "application/json",
+          "cache-control": "public, max-age=60",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+    return new Response("method not allowed", { status: 405, headers: sec({ "content-type": "text/plain" }) });
+  }
+
+  // /verify/<report_id> — public verification page. Static HTML lives in KV
+  // as `verify.html`; the page reads the report_id from window.location and
+  // verifies the Ed25519 signature in-browser via crypto.subtle. Same KV key
+  // serves all report IDs — no backend templating needed.
+  if (pathname.startsWith("/verify/") && method === "GET") {
+    const reportId = pathname.slice("/verify/".length);
+    if (!reportId || !/^[A-Za-z0-9_-]{1,64}$/.test(reportId)) {
+      return new Response("bad report_id", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const html = await env.LEDATIC_KV.get("verify.html");
+    if (!html) return notFound();
+    return new Response(html, {
+      headers: sec({ "content-type": MIME.html, "cache-control": "public, max-age=300" }),
+    });
+  }
+
   // Frame binary — beacon daemon PUTs here (auth via BEACON_TOKEN) and the
   // plasma viewport reads. R2-backed because KV has a 60s edge cache that
   // would freeze the live viz at 1Hz publish rate.
@@ -894,9 +990,342 @@ async function handleSite(request, env, url) {
     }
   }
 
+  // ─── DDA Live Q&A portal ─────────────────────────────────────────────────
+  // /dda             → static portal HTML from KV (key: dda.html)
+  // /dda/handoff.pdf → R2-served handoff document
+  // /dda/api/ask     → POST {question}; Worker validates token, rate-limits,
+  //                     forwards to Mini's fleet HTTP control plane.
+  // /dda/api/health  → GET; returns engine state {idle|warming|ready}.
+  //
+  // Auth: env.DDA_PORTAL_TOKEN is the shared client-side bearer token that
+  // every DDA team member uses (sent as X-DDA-Token by the page). The Worker
+  // re-authenticates to Mini using env.DDA_FLEET_TOKEN. env.DDA_API_HOST is
+  // the cftunnel hostname (e.g. dda-api.ledatic.org) that points at Mini :9101.
+  // Rate limit: env.DDA_RATE_PER_DAY (default 50) per token+UTC-day, KV-backed.
+  // The corpus never traverses the Worker — only the question text in, answer text out.
+  if (pathname === "/dda" || pathname === "/dda/") {
+    const html = await env.LEDATIC_KV.get("dda.html");
+    if (!html) return notFound();
+    return new Response(html, {
+      headers: sec({
+        "content-type": MIME.html,
+        "cache-control": "public, max-age=300, s-maxage=300",
+      }),
+    });
+  }
+  if (pathname === "/dda/handoff.pdf" && method === "GET") {
+    const obj = await env.REPORTS_R2.get("dda/handoff.pdf");
+    if (!obj) return notFound();
+    return new Response(obj.body, {
+      headers: sec({
+        "content-type": "application/pdf",
+        "content-disposition": 'inline; filename="DDA_POC_Handoff_2026-05-12.pdf"',
+        "cache-control": "public, max-age=600",
+      }),
+    });
+  }
+  if (pathname === "/dda/api/ask" && method === "POST") {
+    if (!env.DDA_PORTAL_TOKEN || request.headers.get("X-DDA-Token") !== env.DDA_PORTAL_TOKEN) {
+      return jsonResponse({ message: "Unauthorized" }, 401);
+    }
+    if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
+      return jsonResponse({ message: "Portal misconfigured server-side" }, 500);
+    }
+    // Rate limit: counter keyed by token + UTC date
+    const today = new Date().toISOString().slice(0, 10);
+    const rateKey = `dda:rate:${env.DDA_PORTAL_TOKEN.slice(0, 8)}:${today}`;
+    const rawCount = await env.LEDATIC_KV.get(rateKey);
+    const count = rawCount ? parseInt(rawCount, 10) || 0 : 0;
+    const cap = parseInt(env.DDA_RATE_PER_DAY || "50", 10);
+    if (count >= cap) {
+      return jsonResponse({ message: `Daily limit (${cap}) reached.` }, 429);
+    }
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ message: "Bad JSON" }, 400); }
+    const question = (body.question || "").toString().slice(0, 4000);
+    if (!question.trim()) return jsonResponse({ message: "Empty question" }, 400);
+    let upstream;
+    try {
+      upstream = await fetch(`https://${env.DDA_API_HOST}/dda_ask`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Fleet-Token": env.DDA_FLEET_TOKEN,
+        },
+        body: JSON.stringify({ question }),
+      });
+    } catch (e) {
+      return jsonResponse({ message: "Engine unreachable: " + e.message }, 503);
+    }
+    if (upstream.status === 503) {
+      const j = await upstream.json().catch(() => ({}));
+      return jsonResponse(j.message ? j : { message: "Engine warming up — try again in 60s." }, 503);
+    }
+    const text = await upstream.text();
+    if (!upstream.ok) {
+      return jsonResponse({ message: "Engine error: " + upstream.status }, 502);
+    }
+    // Increment rate-limit counter only on successful answer
+    await env.LEDATIC_KV.put(rateKey, String(count + 1), { expirationTtl: 86400 * 2 });
+    return new Response(text, {
+      headers: sec({
+        "content-type": "application/json",
+        "cache-control": "no-store",
+      }),
+    });
+  }
+  if (pathname === "/dda/api/health" && method === "GET") {
+    if (!env.DDA_PORTAL_TOKEN || request.headers.get("X-DDA-Token") !== env.DDA_PORTAL_TOKEN) {
+      return jsonResponse({ message: "Unauthorized" }, 401);
+    }
+    if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
+      return jsonResponse({ state: "idle", note: "portal not configured" });
+    }
+    try {
+      const r = await fetch(`https://${env.DDA_API_HOST}/dda_health`, {
+        headers: { "X-Fleet-Token": env.DDA_FLEET_TOKEN },
+      });
+      const t = await r.text();
+      return new Response(t, {
+        headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+      });
+    } catch (e) {
+      return jsonResponse({ state: "idle", note: "engine unreachable" });
+    }
+  }
+  if (pathname.startsWith("/dda/api/poll/") && method === "GET") {
+    if (!env.DDA_PORTAL_TOKEN || request.headers.get("X-DDA-Token") !== env.DDA_PORTAL_TOKEN) {
+      return jsonResponse({ message: "Unauthorized" }, 401);
+    }
+    if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
+      return jsonResponse({ message: "Portal misconfigured server-side" }, 500);
+    }
+    const jobId = pathname.slice("/dda/api/poll/".length);
+    if (!/^[a-f0-9]{8,64}$/i.test(jobId)) {
+      return jsonResponse({ message: "Bad job_id" }, 400);
+    }
+    try {
+      const r = await fetch(`https://${env.DDA_API_HOST}/dda_job/${jobId}`, {
+        headers: { "X-Fleet-Token": env.DDA_FLEET_TOKEN },
+      });
+      const text = await r.text();
+      return new Response(text, {
+        status: r.status,
+        headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+      });
+    } catch (e) {
+      return jsonResponse({ message: "Engine unreachable: " + e.message }, 503);
+    }
+  }
+
+  // DDA brief attestation surface — pulse + sig + sha256 only, NEVER
+  // brief bytes.  The moat is "Reilly holds the briefs; the world can
+  // prove they existed at a given moment under a given model."
+  // Allowed shapes (file regex below enforces structurally):
+  //   /dda/index.json                                          (top-level rollup)
+  //   /dda/<model>/<week>/<vertical>/manifest.json             (per-week rollup)
+  //   /dda/<model>/<week>/<vertical>/<brief>.<ext>.attestation.json
+  // Anything else 404s — no path can name a brief content file.
+  if (pathname === "/dda/index.json") {
+    const r2Key = "dda/index.json";
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      if (!body || body.length > 256 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      try { JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"no dda index yet"}', {
+        status: 404, headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({
+          "content-type": "application/json",
+          "cache-control": "public, max-age=300",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+  }
+  const ddaMatch = pathname.match(
+    /^\/dda\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)$/
+  );
+  if (ddaMatch) {
+    const [, model, week, vertical, file] = ddaMatch;
+    // File-name allowlist: manifest.json or *.attestation.json only.
+    // No way to name `monday.json` or `monday.md` — brief content is
+    // structurally unreachable through this surface.
+    const isManifest = file === "manifest.json";
+    const isAttest = file.endsWith(".attestation.json");
+    if (!isManifest && !isAttest) {
+      return new Response("not allowed", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const r2Key = `dda/${model}/${week}/${vertical}/${file}`;
+    if (method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.text();
+      if (!body || body.length > 256 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      try { JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (method === "GET") {
+      const obj = await env.REPORTS_R2.get(r2Key);
+      if (!obj) return new Response('{"error":"not found"}', {
+        status: 404, headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+      return new Response(await obj.text(), {
+        headers: sec({
+          "content-type": "application/json",
+          "cache-control": "public, max-age=300",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+  }
+
   // API
   if (pathname === "/api/update" && method === "POST") {
     return handleAPI(request, env);
+  }
+
+  // /pursue/files/<path>  →  R2 (REPORTS_R2 bucket, prefix "pursue/files/").
+  // Used by /aliens to serve the byte-for-byte mirrored gov files.  Read-only
+  // public surface — uploads happen via wrangler / direct R2 API on our end.
+  // Decode percent-escapes in the URL so keys with literal spaces (e.g.
+  // "department of war/...") match what wrangler/R2 stored.
+  // HEAD returns just headers (no body) so the recheck pipeline can ask
+  // "is this already mirrored?" without downloading.
+  if (pathname.startsWith("/pursue/files/") && (method === "GET" || method === "HEAD")) {
+    let r2key;
+    try { r2key = decodeURIComponent(pathname.slice(1)); }
+    catch { return notFound(); }
+    if (r2key.includes("..") || r2key.length > 512) {
+      return notFound();
+    }
+    if (method === "HEAD") {
+      const obj = await env.REPORTS_R2.head(r2key);
+      if (!obj) return notFound();
+      const ext = (r2key.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || "";
+      const ct = MIME[ext] || "application/octet-stream";
+      return new Response(null, {
+        headers: sec({
+          "content-type": ct,
+          "content-length": String(obj.size),
+          "cache-control": "public, max-age=3600, s-maxage=3600",
+        }),
+      });
+    }
+    const obj = await env.REPORTS_R2.get(r2key);
+    if (!obj) return notFound();
+    const ext = (r2key.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || "";
+    const ct = MIME[ext] || "application/octet-stream";
+    return new Response(obj.body, {
+      headers: sec({
+        "content-type": ct,
+        "cache-control": "public, max-age=3600, s-maxage=3600",
+      }),
+    });
+  }
+
+  // /pursue/manifest.jsonl → R2 (small JSONL, not KV, so we can grow past 25MB).
+  if (pathname === "/pursue/manifest.jsonl" && method === "GET") {
+    const obj = await env.REPORTS_R2.get("pursue/manifest.jsonl");
+    if (!obj) return notFound();
+    return new Response(obj.body, {
+      headers: sec({
+        "content-type": "application/jsonl",
+        "cache-control": "public, max-age=300, s-maxage=300",
+      }),
+    });
+  }
+
+  // /admin/pursue-upload?key=<r2-key>  →  single-shot PUT body to R2.
+  // Cloudflare's edge caps request bodies before they reach the worker,
+  // so this path only works for files within the edge body limit (~100 MiB).
+  // Use the multipart endpoints below for larger files.
+  if (pathname === "/admin/pursue-upload" && method === "PUT") {
+    if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+      return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const key = url.searchParams.get("key") || "";
+    if (!key.startsWith("pursue/files/") || key.includes("..") || key.length > 512) {
+      return new Response("bad key", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const ct = request.headers.get("content-type") || "application/octet-stream";
+    await env.REPORTS_R2.put(key, request.body, { httpMetadata: { contentType: ct } });
+    return new Response(JSON.stringify({ ok: true, key }), {
+      headers: sec({ "content-type": "application/json" }),
+    });
+  }
+
+  // R2 multipart for files past the CF edge body cap.  Three endpoints:
+  //   POST /admin/pursue-mp-init?key=<r2-key>
+  //   PUT  /admin/pursue-mp-part?key=<r2-key>&uploadId=<id>&part=<N>
+  //   POST /admin/pursue-mp-complete?key=<r2-key>&uploadId=<id>
+  // The client splits the file locally; R2 assembles.
+  if (pathname.startsWith("/admin/pursue-mp-")) {
+    if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+      return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const key = url.searchParams.get("key") || "";
+    if (!key.startsWith("pursue/files/") || key.includes("..") || key.length > 512) {
+      return new Response("bad key", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+    }
+    if (pathname === "/admin/pursue-mp-init" && method === "POST") {
+      const ct = request.headers.get("x-target-content-type") || "application/pdf";
+      const mp = await env.REPORTS_R2.createMultipartUpload(key, {
+        httpMetadata: { contentType: ct },
+      });
+      return new Response(JSON.stringify({ ok: true, key, uploadId: mp.uploadId }), {
+        headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    if (pathname === "/admin/pursue-mp-part" && method === "PUT") {
+      const uploadId = url.searchParams.get("uploadId") || "";
+      const part = parseInt(url.searchParams.get("part") || "0", 10);
+      if (!uploadId || !part || part < 1) {
+        return new Response("bad part", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const mp = env.REPORTS_R2.resumeMultipartUpload(key, uploadId);
+      const uploaded = await mp.uploadPart(part, request.body);
+      return new Response(JSON.stringify({ ok: true, partNumber: part, etag: uploaded.etag }), {
+        headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    if (pathname === "/admin/pursue-mp-complete" && method === "POST") {
+      const uploadId = url.searchParams.get("uploadId") || "";
+      if (!uploadId) {
+        return new Response("bad uploadId", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.json().catch(() => null);
+      if (!body || !Array.isArray(body.parts)) {
+        return new Response("bad parts manifest", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const mp = env.REPORTS_R2.resumeMultipartUpload(key, uploadId);
+      const obj = await mp.complete(body.parts);
+      return new Response(JSON.stringify({ ok: true, key, etag: obj.httpEtag }), {
+        headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    return new Response("bad multipart endpoint", { status: 404, headers: sec({ "content-type": "text/plain" }) });
   }
 
   // Canonicalize /index.html → /

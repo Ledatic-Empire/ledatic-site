@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Verify Provenance — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 96%;
+    --primary: 119 99% 46%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 20%;
+    --hero-bg: 0 0% 8%;
+    --panel: 0 0% 12%;
+    --bad: 0 80% 65%;
+    --warn: 38 90% 60%;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: hsl(var(--hero-bg));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    padding: 3rem 1.5rem;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 64rem; margin: 0 auto; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  a { color: hsl(var(--primary)); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .crumb {
+    display: inline-block;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+  }
+  .crumb a { color: hsl(var(--muted-foreground)); }
+  h1 {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+  h1 .accent { color: hsl(var(--primary)); }
+  .sub {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 2.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .status {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 1.75rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.3s ease;
+  }
+  .status .label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.25rem;
+  }
+  .status .value { font-size: 1.5rem; font-weight: 600; }
+  .status .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2.5rem;
+    font-weight: 500;
+  }
+  .status.verified { border-color: hsl(var(--primary) / 0.4); box-shadow: 0 0 30px hsl(var(--primary) / 0.06); }
+  .status.verified .value, .status.verified .badge { color: hsl(var(--primary)); }
+  .status.invalid  { border-color: hsl(var(--bad) / 0.5); }
+  .status.invalid  .value, .status.invalid .badge { color: hsl(var(--bad)); }
+  .status.partial  { border-color: hsl(var(--warn) / 0.5); }
+  .status.partial  .value, .status.partial .badge { color: hsl(var(--warn)); }
+  .status.loading  .value, .status.loading .badge { color: hsl(var(--muted-foreground)); }
+  section { margin-bottom: 2rem; }
+  section h2 {
+    font-size: 0.7rem;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .field {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-left: 3px solid hsl(var(--border));
+    border-radius: 0.375rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .field.ok  { border-left-color: hsl(var(--primary)); }
+  .field.bad { border-left-color: hsl(var(--bad)); }
+  .field .label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.35rem;
+  }
+  .field .value { font-size: 0.9rem; }
+  .field .hash {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    word-break: break-all;
+    color: hsl(var(--foreground) / 0.85);
+    margin-top: 0.25rem;
+    padding: 0.6rem 0.75rem;
+    background: hsl(var(--hero-bg));
+    border-radius: 0.25rem;
+    line-height: 1.5;
+  }
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 0.25rem;
+    margin-top: 0.75rem;
+  }
+  .check.ok   { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); border: 1px solid hsl(var(--primary) / 0.3); }
+  .check.bad  { background: hsl(var(--bad) / 0.1);     color: hsl(var(--bad));     border: 1px solid hsl(var(--bad) / 0.3); }
+  .check.warn { background: hsl(var(--warn) / 0.1);    color: hsl(var(--warn));    border: 1px solid hsl(var(--warn) / 0.3); }
+  .footer {
+    margin-top: 3rem;
+    padding: 1.75rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    background: hsl(var(--panel) / 0.5);
+  }
+  .footer p { margin-bottom: 0.85rem; }
+  .footer p:last-child { margin-bottom: 0; }
+  .footer code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--foreground));
+    background: hsl(var(--hero-bg));
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.2rem;
+  }
+  .err {
+    background: hsl(var(--bad) / 0.08);
+    border: 1px solid hsl(var(--bad) / 0.3);
+    color: hsl(var(--bad));
+    padding: 1.25rem;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .err code { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid hsl(var(--border));
+    border-top-color: hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: -2px;
+    margin-right: 0.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="/">Ledatic</a> &middot; <a href="/provenance">Provenance</a> &middot; Verify</div>
+  <h1>Verify Report <span class="accent">/</span></h1>
+  <div class="sub" id="sub">REPORT_ID: <span id="rid">…</span></div>
+  <div id="root"></div>
+</div>
+
+<script>
+"use strict";
+
+// Fleet0 Ed25519 public key (raw 32 bytes, base64). Constant — re-derivable
+// from `openssl pkey -in witness.sk -pubout -outform DER | tail -c 32 | base64`
+// on the Pi. pk_fp = sha256(DER pubkey).hex[:16] = "cac5f21a70564aeb".
+const FLEET0_PUBKEY_B64 = "BYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=";
+const REPORT_ID = decodeURIComponent(window.location.pathname.split("/").filter(Boolean).pop() || "");
+
+document.getElementById("rid").textContent = REPORT_ID || "(missing)";
+
+function b64ToBytes(s) {
+  s = String(s || "").replace(/^base64:/, "");
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function bytesToHex(buf) {
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2, "0"); }).join("");
+}
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return bytesToHex(buf);
+}
+
+async function verifyEd25519(msgStr, sigB64, pubB64) {
+  let pubKey;
+  try {
+    pubKey = await crypto.subtle.importKey(
+      "raw",
+      b64ToBytes(pubB64),
+      { name: "Ed25519" },
+      false,
+      ["verify"]
+    );
+  } catch (e) {
+    return { ok: null, reason: "this browser doesn't expose Ed25519 in WebCrypto. Try Chrome 137+, Safari 17+, or Firefox 138+. (Manifest fields are still inspectable above.)" };
+  }
+  try {
+    const valid = await crypto.subtle.verify(
+      "Ed25519",
+      pubKey,
+      b64ToBytes(sigB64),
+      new TextEncoder().encode(msgStr)
+    );
+    return { ok: valid, reason: valid ? null : "signature did not validate against fleet0's public key" };
+  } catch (e) {
+    return { ok: null, reason: "verify error: " + (e && e.message || e) };
+  }
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+async function main() {
+  const root = document.getElementById("root");
+  root.innerHTML = '<div class="status loading"><div><div class="label">Verification Status</div><div class="value"><span class="spinner"></span>Loading manifest…</div></div><div class="badge">…</div></div>';
+
+  if (!REPORT_ID) {
+    root.innerHTML = '<div class="err">No report_id in URL. Visit <code>/verify/&lt;report_id&gt;</code>.</div>';
+    return;
+  }
+
+  let manifest;
+  try {
+    const r = await fetch("/provenance/manifest/" + encodeURIComponent(REPORT_ID), { cache: "no-store" });
+    if (r.status === 404) {
+      root.innerHTML = '<div class="err">No manifest found for report_id <code>' + esc(REPORT_ID) + '</code>. Either the report is on the Standard Tier (no provenance) or the ID is wrong.</div>';
+      return;
+    }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    manifest = await r.json();
+  } catch (e) {
+    root.innerHTML = '<div class="err">Could not load manifest: <code>' + esc(e.message || e) + '</code></div>';
+    return;
+  }
+
+  // Check 1: inner integrity. SHA-256(inner_message) must match inner_digest_sha256.
+  const innerComputed = await sha256Hex(manifest.attest.inner_message);
+  const innerOk = innerComputed === manifest.attest.inner_digest_sha256;
+
+  // Check 2: witness Ed25519 signature.
+  const w = manifest.witness;
+  const witnessMsg = "attest|v1|" + w.digest_sha256 + "|" + w.pulse_id + "|" + w.value_hex + "|" + w.witnessed_at;
+  const witnessVerify = await verifyEd25519(witnessMsg, w.sig, FLEET0_PUBKEY_B64);
+
+  // Cross-check: witness's claimed digest must equal the inner_digest the manifest declared.
+  const digestLink = w.digest_sha256 === manifest.attest.inner_digest_sha256;
+
+  // Determine overall status.
+  let overall, klass, badge;
+  if (innerOk && digestLink && witnessVerify.ok === true) {
+    overall = "VERIFIED"; klass = "verified"; badge = "✓";
+  } else if (innerOk && digestLink && witnessVerify.ok === null) {
+    overall = "PARTIAL"; klass = "partial"; badge = "◐";
+  } else {
+    overall = "INVALID"; klass = "invalid"; badge = "✗";
+  }
+
+  const ge = manifest.generation_event;
+
+  // Render. Built via array.join to avoid template-literal headaches.
+  const parts = [];
+  parts.push('<div class="status ' + klass + '">');
+  parts.push('  <div><div class="label">Verification Status</div><div class="value">' + overall + '</div></div>');
+  parts.push('  <div class="badge">' + badge + '</div>');
+  parts.push('</div>');
+
+  parts.push('<section>');
+  parts.push('  <h2>Generation Event</h2>');
+  parts.push('  <div class="field"><div class="label">Report ID</div><div class="value mono">' + esc(manifest.report_id) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Client</div><div class="value mono">' + esc(manifest.client_id) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Generated At (UTC)</div><div class="value mono">' + esc(manifest.generated_at) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Model</div><div class="value">' + esc(ge.model.name) + '</div><div class="hash">weights_sha256: ' + esc(ge.model.weights_hash) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Input Prompt — SHA-256</div><div class="hash">' + esc(ge.input.prompt_sha256) + '</div><div class="value mono" style="margin-top:0.5rem;color:hsl(var(--muted-foreground));font-size:0.75rem;">' + fmtBytes(ge.input.prompt_size_bytes) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Output Response — SHA-256</div><div class="hash">' + esc(ge.output.response_sha256) + '</div><div class="value mono" style="margin-top:0.5rem;color:hsl(var(--muted-foreground));font-size:0.75rem;">' + fmtBytes(ge.output.response_size_bytes) + '</div></div>');
+  parts.push('</section>');
+
+  parts.push('<section>');
+  parts.push('  <h2>Inner-Message Integrity</h2>');
+  parts.push('  <div class="field ' + (innerOk ? 'ok' : 'bad') + '">');
+  parts.push('    <div class="label">Composed Message (the bytes that were digested + signed)</div>');
+  parts.push('    <div class="hash">' + esc(manifest.attest.inner_message) + '</div>');
+  parts.push('    <div class="label" style="margin-top:0.85rem;">SHA-256 computed in your browser, just now</div>');
+  parts.push('    <div class="hash">' + innerComputed + '</div>');
+  parts.push('    <div class="label" style="margin-top:0.85rem;">SHA-256 declared in the manifest</div>');
+  parts.push('    <div class="hash">' + esc(manifest.attest.inner_digest_sha256) + '</div>');
+  parts.push('    <div class="check ' + (innerOk ? 'ok' : 'bad') + '">' +
+             (innerOk ? '✓ inner_digest matches — manifest fields are unmodified since signing' : '✗ inner_digest mismatch — fields were tampered after the witness signed') +
+             '</div>');
+  parts.push('  </div>');
+  parts.push('  <div class="field ' + (digestLink ? 'ok' : 'bad') + '">');
+  parts.push('    <div class="label">Witness Signed Over Manifest Digest?</div>');
+  parts.push('    <div class="check ' + (digestLink ? 'ok' : 'bad') + '">' +
+             (digestLink ? '✓ witness.digest_sha256 === manifest.attest.inner_digest_sha256' : '✗ witness signed a different digest than this manifest declares') +
+             '</div>');
+  parts.push('  </div>');
+  parts.push('</section>');
+
+  parts.push('<section>');
+  parts.push('  <h2>Witness Attestation (fleet0)</h2>');
+  parts.push('  <div class="field"><div class="label">Witness Node</div><div class="value mono">' + esc(w.witness) + ' <span style="color:hsl(var(--muted-foreground));font-weight:normal;">(Pi Zero 2 W, Tailscale 100.87.231.45)</span></div></div>');
+  parts.push('  <div class="field"><div class="label">Public-Key Fingerprint (sha256 of DER pubkey, first 16 hex)</div><div class="hash">' + esc(w.pk_fp) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Pulse ID (entropy beacon, ledatic.org/entropy/pulse)</div><div class="value mono">' + esc(w.pulse_id) + ' <a href="https://ledatic.org/entropy/pulse" style="margin-left:0.5rem;font-size:0.8rem;">→ live beacon</a></div></div>');
+  parts.push('  <div class="field"><div class="label">Pulse value_hex (chains report to public ledger)</div><div class="hash">' + esc(w.value_hex) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Witnessed At (Unix timestamp)</div><div class="value mono">' + esc(w.witnessed_at) + ' <span style="color:hsl(var(--muted-foreground));font-weight:normal;font-size:0.78rem;">(' + new Date(w.witnessed_at * 1000).toUTCString() + ')</span></div></div>');
+  const sigKlass = witnessVerify.ok === true ? 'ok' : (witnessVerify.ok === false ? 'bad' : 'warn');
+  parts.push('  <div class="field ' + (witnessVerify.ok === true ? 'ok' : (witnessVerify.ok === false ? 'bad' : '')) + '">');
+  parts.push('    <div class="label">Composed Witness Message (rebuilt by your browser)</div>');
+  parts.push('    <div class="hash">' + esc(witnessMsg) + '</div>');
+  parts.push('    <div class="label" style="margin-top:0.85rem;">Ed25519 Signature (base64, 64 bytes)</div>');
+  parts.push('    <div class="hash">' + esc(w.sig) + '</div>');
+  parts.push('    <div class="label" style="margin-top:0.85rem;">Verification — your browser ran crypto.subtle.verify against fleet0 pubkey ' + esc(FLEET0_PUBKEY_B64) + '</div>');
+  parts.push('    <div class="check ' + sigKlass + '">' +
+             (witnessVerify.ok === true ? '✓ signature verifies — fleet0 cryptographically attested this report' :
+              (witnessVerify.ok === false ? '✗ ' + esc(witnessVerify.reason) :
+               '⚠ ' + esc(witnessVerify.reason))) +
+             '</div>');
+  parts.push('  </div>');
+  parts.push('</section>');
+
+  parts.push('<div class="footer">');
+  parts.push('  <p><strong>What does this prove?</strong></p>');
+  parts.push('  <p>At <code>' + esc(manifest.generated_at) + '</code>, the model <code>' + esc(ge.model.name) + '</code> processed an input with SHA-256 <code>' + esc(ge.input.prompt_sha256.slice(0, 16)) + '…</code> and produced an output with SHA-256 <code>' + esc(ge.output.response_sha256.slice(0, 16)) + '…</code>. Those fields plus the model identity and timestamp were composed into one canonical string, hashed, and Ed25519-signed by <a href="https://ledatic.org/witness/fleet0/latest">fleet0</a> — a Pi Zero 2 W physical witness node — chaining the signature against pulse <code>' + esc(w.pulse_id) + '</code> of the public <a href="https://ledatic.org/entropy/pulse">entropy beacon</a>. Your browser just verified the signature against fleet0\'s public key. No backend trust required.</p>');
+  parts.push('  <p><a href="/provenance">About Provenance Tier</a> &nbsp;·&nbsp; <a href="/provenance/manifest/' + encodeURIComponent(REPORT_ID) + '">Raw manifest JSON</a> &nbsp;·&nbsp; <a href="https://ledatic.org/witness/fleet0/latest">Latest fleet0 attestation</a></p>');
+  parts.push('</div>');
+
+  root.innerHTML = parts.join("\n");
+}
+
+main().catch(function(e) {
+  document.getElementById("root").innerHTML =
+    '<div class="err">Unhandled error: <code>' + esc(e && e.message || e) + '</code></div>';
+});
+</script>
+</body>
+</html>
