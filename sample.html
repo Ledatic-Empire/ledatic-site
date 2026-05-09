@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sample Ledatic Intel brief — EU AI Act enforcement signals. Cryptographically signed, browser-verifiable. See what daily intelligence with provenance looks like.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ledatic.org/sample">
+<meta property="og:title" content="Sample Brief — EU AI Act, May 2026">
+<meta property="og:description" content="Cryptographically signed daily intelligence brief. Verify the chain in your browser.">
+<title>Sample Brief — EU AI Act, May 2026 — Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 96%;
+    --primary: 119 99% 46%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 20%;
+    --hero-bg: 0 0% 8%;
+    --panel: 0 0% 12%;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: hsl(var(--hero-bg));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  .doc {
+    max-width: 56rem;
+    margin: 0 auto;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 3rem 3rem 2.5rem;
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.4);
+  }
+  @media (max-width: 700px) { .doc { padding: 2rem 1.5rem; } }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  a { color: hsl(var(--primary)); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Header */
+  .doc-header { padding-bottom: 1.5rem; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+  .brand-row .brand { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem; }
+  .brand-row h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; }
+  .brand-row h1 .accent { color: hsl(var(--primary)); }
+  .doc-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: hsl(var(--muted-foreground)); text-align: right; line-height: 1.8; letter-spacing: 0.05em; }
+  .doc-meta .label { color: hsl(var(--muted-foreground) / 0.7); }
+
+  /* Provenance receipt strip */
+  .receipt {
+    border: 1px solid hsl(var(--primary) / 0.4);
+    border-left: 3px solid hsl(var(--primary));
+    border-radius: 0.375rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    background: hsl(var(--primary) / 0.04);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.4rem 1rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .receipt .k { color: hsl(var(--primary)); letter-spacing: 0.05em; }
+  .receipt .v { color: hsl(var(--foreground) / 0.85); word-break: break-all; }
+  .receipt a.verify-link { color: hsl(var(--primary)); }
+
+  /* Brief content */
+  .brief h2 {
+    font-size: 0.7rem;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .brief h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem;
+    color: hsl(var(--foreground));
+  }
+  .brief h3:first-child { margin-top: 0; }
+  .brief ul { list-style: none; padding-left: 0; margin-bottom: 1rem; }
+  .brief li {
+    padding: 0.4rem 0 0.4rem 1.25rem;
+    position: relative;
+    font-size: 0.95rem;
+    color: hsl(var(--foreground) / 0.9);
+    line-height: 1.6;
+  }
+  .brief li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: hsl(var(--primary));
+  }
+  .brief strong { color: hsl(var(--foreground)); font-weight: 600; }
+  .brief-section { margin-bottom: 1.5rem; }
+
+  /* Verify CTA box */
+  .verify-cta {
+    margin: 2.5rem 0;
+    padding: 2rem;
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+  .verify-cta h3 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 500; }
+  .verify-cta p { font-size: 0.9rem; color: hsl(var(--muted-foreground)); max-width: 38rem; margin: 0 auto 1.25rem; line-height: 1.65; }
+  .verify-cta a {
+    display: inline-block;
+    padding: 0.85rem 1.75rem;
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.4);
+    border-radius: 0.375rem;
+    color: hsl(var(--primary));
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    transition: background 0.2s;
+  }
+  .verify-cta a:hover { background: hsl(var(--primary) / 0.18); text-decoration: none; }
+
+  /* Footer pricing tease */
+  .doc-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid hsl(var(--border)); }
+  .pitch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .pitch-card {
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.375rem;
+    padding: 1rem 1.25rem;
+  }
+  .pitch-card .name { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 0.4rem; }
+  .pitch-card .price { font-size: 1.4rem; font-weight: 500; }
+  .pitch-card .desc { color: hsl(var(--muted-foreground)); font-size: 0.78rem; margin-top: 0.4rem; line-height: 1.5; }
+  .pitch-card.featured { border-color: hsl(var(--primary) / 0.4); background: hsl(var(--primary) / 0.04); }
+  .final-cta {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.85rem;
+  }
+  .final-cta a { color: hsl(var(--primary)); }
+
+  /* Print-friendly */
+  @media print {
+    body { background: white; color: black; padding: 0; }
+    .doc { box-shadow: none; border: none; max-width: none; padding: 1rem; background: white; color: black; }
+    .receipt, .verify-cta, .pitch-card { background: white; border-color: #ccc; color: black; }
+    .receipt .v, .brief li, .brief strong { color: black; }
+    .receipt .k, .verify-cta a { color: #006400; }
+    .brief h2 { color: #006400; }
+    a { text-decoration: underline; }
+  }
+</style>
+</head>
+<body>
+
+<article class="doc">
+
+  <header class="doc-header">
+    <div class="brand-row">
+      <div class="brand">Ledatic Intel · Provenance Tier · Sample</div>
+      <h1>Daily Compliance Brief<span class="accent"> /</span></h1>
+    </div>
+    <div class="doc-meta">
+      <div><span class="label">Date:</span> 2026-05-09</div>
+      <div><span class="label">Vertical:</span> EU AI Act</div>
+      <div><span class="label">Audience:</span> CCO, mid-cap SaaS</div>
+    </div>
+  </header>
+
+  <div class="receipt">
+    <span class="k">REPORT_ID</span>           <span class="v">rep_demo_001</span>
+    <span class="k">MODEL</span>               <span class="v">Qwen3.5-122B-A10B-heretic-v2-2.34bit-msq</span>
+    <span class="k">WEIGHTS_SHA256</span>      <span class="v">fd3aa7f3883b2e7200e298bb9bb50a1ae4ac142c3e7cb42f443a15c61bcc1c47</span>
+    <span class="k">PROMPT_SHA256</span>       <span class="v">2c07b88fc672d7e90eb07a39d553f9d3264b1c5b38185ee58e0d1c18adfdaa4d</span>
+    <span class="k">RESPONSE_SHA256</span>     <span class="v">aa0d39342b2414cc89650fe29e45cfab57097c26110d94481efa3ae5e1e8abc5</span>
+    <span class="k">GENERATED_AT</span>        <span class="v">2026-05-09T15:36:21Z</span>
+    <span class="k">WITNESS</span>             <span class="v">fleet0 (Pi Zero 2 W) · pk_fp <strong>cac5f21a70564aeb</strong> · pulse <strong>774434</strong></span>
+    <span class="k">VERIFY</span>              <span class="v"><a class="verify-link" href="/verify/rep_demo_001">https://ledatic.org/verify/rep_demo_001</a></span>
+  </div>
+
+  <section class="brief">
+    <h2>Daily Compliance Brief — EU AI Act enforcement</h2>
+
+    <div class="brief-section">
+      <h3>Headlines</h3>
+      <ul>
+        <li>European Commission finalizes draft implementing acts for high-risk AI classification, narrowing the scope for SaaS deployment.</li>
+        <li>First infringement proceedings launched against a major LLM provider for non-compliant transparency logs.</li>
+        <li>National AI enforcement bodies in France and Germany begin joint cross-border audits of B2B algorithmic decision tools.</li>
+      </ul>
+    </div>
+
+    <div class="brief-section">
+      <h3>Risk-flagged sectors</h3>
+      <ul>
+        <li><strong>HR-Tech &amp; Recruitment:</strong> Automated resume scoring and candidate ranking systems face immediate scrutiny under the "high-risk" definition.</li>
+        <li><strong>FinTech &amp; Credit Scoring:</strong> SaaS platforms managing creditworthiness assessments must prepare for mandatory conformity assessments by Q3.</li>
+      </ul>
+    </div>
+
+    <div class="brief-section">
+      <h3>Regulatory action this week</h3>
+      <ul>
+        <li>The EU AI Office released a guidance memo clarifying "general-purpose AI" obligations for SaaS vendors integrating foundation models.</li>
+        <li>Member states convened to harmonize penalty structures, signaling a shift toward fines based on global turnover rather than fixed caps.</li>
+      </ul>
+    </div>
+
+    <div class="brief-section">
+      <h3>What to watch</h3>
+      <ul>
+        <li>The upcoming deadline for voluntary pre-market conformity testing for non-high-risk models, which may become de facto mandatory for market access.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="verify-cta">
+    <h3>Verify this brief in your browser</h3>
+    <p>
+      The receipt above is not a logo. Each field is bound into a single
+      canonical message, hashed, and Ed25519-signed by a Pi Zero physical
+      witness node. Open the verify URL and your browser cryptographically
+      checks the signature against the public fleet0 key &mdash; no Ledatic
+      backend trust required. Try changing one character of the brief on
+      this page; the hash diverges and the chain breaks.
+    </p>
+    <a href="/verify/rep_demo_001">→ verify rep_demo_001</a>
+  </div>
+
+  <footer class="doc-footer">
+    <div class="pitch-grid">
+      <div class="pitch-card">
+        <div class="name">Starter</div>
+        <div class="price">$400<span style="font-size:0.6em;color:hsl(var(--muted-foreground));"> / mo</span></div>
+        <div class="desc">One vertical, daily brief, 30-day corpus Q&amp;A.</div>
+      </div>
+      <div class="pitch-card featured">
+        <div class="name">Professional</div>
+        <div class="price">$900<span style="font-size:0.6em;color:hsl(var(--muted-foreground));"> / mo</span></div>
+        <div class="desc">Three verticals, weekly synthesis, API access, Slack.</div>
+      </div>
+      <div class="pitch-card">
+        <div class="name">+ Provenance</div>
+        <div class="price">$5,000<span style="font-size:0.6em;color:hsl(var(--muted-foreground));"> / mo</span></div>
+        <div class="desc">Every report signed like the one above. EU AI Act ready.</div>
+      </div>
+    </div>
+    <div class="final-cta">
+      <strong style="color: hsl(var(--foreground));">Want briefs like this delivered daily?</strong>
+      &nbsp;<a href="/intel#signup">Join the waitlist →</a>
+      &nbsp;|&nbsp;
+      <a href="/provenance">How the chain works →</a>
+    </div>
+    <div style="text-align:center;margin-top:2rem;font-size:0.7rem;letter-spacing:0.15em;color:hsl(var(--muted-foreground));font-family:'IBM Plex Mono',monospace;">
+      LEDATIC &middot; CRYPTOGRAPHICALLY VERIFIABLE AI &middot; DETROIT
+    </div>
+  </footer>
+
+</article>
+
+</body>
+</html>

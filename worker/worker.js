@@ -819,6 +819,72 @@ async function handleSite(request, env, url) {
     return new Response("method not allowed", { status: 405, headers: sec({ "content-type": "text/plain" }) });
   }
 
+  // /api/intel/waitlist — public email capture for /intel landing.
+  // Stored under KV key `intel:waitlist:<rand>` (colon-prefix → isPrivateKey
+  // auto-denies public reads). Rate-limited per IP via cf-connecting-ip + KV.
+  if (pathname === "/api/intel/waitlist" && method === "POST") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "invalid JSON" }), {
+        status: 400, headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    const email = (body.email || "").trim().toLowerCase();
+    const ref   = String(body.ref || "/intel").slice(0, 200);
+    // Cheap email shape check — full RFC 5322 isn't worth it for a waitlist.
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      return new Response(JSON.stringify({ error: "invalid email" }), {
+        status: 400, headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    // Dedup: if this email is already on the list, return success (idempotent).
+    const dedupKey = `intel:waitlist:by_email:${email}`;
+    const existing = await env.LEDATIC_KV.get(dedupKey);
+    const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
+    if (existing) {
+      return new Response(JSON.stringify({ ok: true, status: "already_on_list" }), {
+        headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    // Rate-limit: max 5 signups per IP per hour. KV TTL handles cleanup.
+    const ipKey = `intel:waitlist:ip:${ip}`;
+    const ipCount = parseInt((await env.LEDATIC_KV.get(ipKey)) || "0", 10);
+    if (ipCount >= 5) {
+      return new Response(JSON.stringify({ error: "rate limited" }), {
+        status: 429, headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    const id = crypto.randomUUID().split("-")[0];
+    const ts = new Date().toISOString();
+    const record = JSON.stringify({ email, ref, ip, ts, id });
+    await env.LEDATIC_KV.put(`intel:waitlist:${ts}:${id}`, record);
+    await env.LEDATIC_KV.put(dedupKey, ts, { expirationTtl: 86400 * 365 });
+    await env.LEDATIC_KV.put(ipKey, String(ipCount + 1), { expirationTtl: 3600 });
+    return new Response(JSON.stringify({ ok: true, status: "added", id }), {
+      headers: sec({ "content-type": "application/json" }),
+    });
+  }
+
+  // /admin/intel/waitlist — list waitlist entries (bearer auth, internal use).
+  if (pathname === "/admin/intel/waitlist" && method === "GET") {
+    if (request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
+      return new Response("Unauthorized", { status: 401, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const list = await env.LEDATIC_KV.list({ prefix: "intel:waitlist:", limit: 1000 });
+    const entries = [];
+    for (const k of list.keys) {
+      if (k.name.startsWith("intel:waitlist:by_email:") || k.name.startsWith("intel:waitlist:ip:")) continue;
+      const v = await env.LEDATIC_KV.get(k.name);
+      if (v) try { entries.push(JSON.parse(v)); } catch {}
+    }
+    entries.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
+    return new Response(JSON.stringify({ count: entries.length, entries }, null, 2), {
+      headers: sec({ "content-type": "application/json" }),
+    });
+  }
+
   // /verify/<report_id> — public verification page. Static HTML lives in KV
   // as `verify.html`; the page reads the report_id from window.location and
   // verifies the Ed25519 signature in-browser via crypto.subtle. Same KV key
