@@ -94,6 +94,37 @@
     color: hsl(var(--primary));
     text-shadow: 0 0 6px hsl(var(--primary) / 0.4);
   }
+
+  /* Hero viewer-mode pill: matches viewer.css's .viewer-modes look so the
+   * three viewers feel like one family. Sits below the CTA row and lets
+   * visitors pick mobile / live4k / holo without going through holo first.
+   */
+  .hero-modes {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    opacity: 0.85;
+  }
+  .hero-modes a {
+    color: hsl(var(--muted-foreground));
+    text-decoration: none;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    transition: color 180ms, background 180ms;
+  }
+  .hero-modes a:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--primary) / 0.12);
+  }
+  .hero-modes .sep {
+    opacity: 0.45;
+  }
 </style>
 </head>
 <body data-shader="_shared/shaders/torus.frag">
@@ -132,10 +163,17 @@
       precision. Every step feeds the public entropy beacon.
     </p>
     <div class="cta-row fade-up" style="animation-delay: 0.7s">
-      <a class="btn btn-primary" href="entropy.html">See the beacon</a>
+      <a class="btn btn-primary" href="/holo.html">View live &rarr;</a>
       <a class="btn btn-ghost" href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd.rail" target="_blank" rel="noopener">Read the solver</a>
     </div>
-    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
+    <nav class="hero-modes fade-up" style="animation-delay: 0.78s" aria-label="Viewer mode">
+      <a href="/mobile.html">mobile</a>
+      <span class="sep" aria-hidden="true">&middot;</span>
+      <a href="/live4k.html">live4k</a>
+      <span class="sep" aria-hidden="true">&middot;</span>
+      <a href="/holo.html">holo</a>
+    </nav>
+    <div class="visor-mini fade-up" style="animation-delay: 0.84s; margin-top: 1.25rem;">
       <span class="visor-label">Grid</span>
       <span class="visor-value">128 <span class="dim">&times;</span> 128</span>
     </div>
