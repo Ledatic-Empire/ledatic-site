@@ -1,0 +1,1744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="A live, content-addressed mirror of the U.S. Department of War's Presidential Unsealing and Reporting System for UAP Encounters (PURSUE). Every byte hashed, signed against a live entropy beacon, and browsable across the timeline of the records.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/aliens">
+<meta property="og:title" content="Aliens — Ledatic">
+<meta property="og:description" content="Live mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
+<meta property="og:image" content="https://ledatic.org/_shared/img/aliens-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Aliens — Ledatic">
+<meta name="twitter:description" content="Live mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
+<meta name="twitter:image" content="https://ledatic.org/_shared/img/aliens-og.png">
+<title>Aliens — UAP Records by Year — Ledatic PURSUE Mirror</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css?v=fef8b5f2">
+<style>
+  /* /aliens — date-driven archive scroll. */
+
+  section.hero { min-height: 50vh; }
+  .hero-content { padding-bottom: 3rem; }
+  .hero-desc { max-width: 44rem; }
+
+  .archive-meta {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.75rem;
+    margin-top: 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .archive-meta .v   { color: hsl(var(--foreground)); }
+  .archive-meta .v.ok   { color: hsl(var(--primary)); }
+  .archive-meta .v.warn { color: #ffb84d; }
+  .archive-meta .v.fail { color: #ff7d6b; }
+  .archive-meta a.v     { text-decoration: none; border-bottom: 1px dotted hsl(var(--muted-foreground) / 0.5); }
+
+  .source-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.25rem 0.7rem; border-radius: 999px;
+    border: 1px solid hsl(var(--border));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground));
+  }
+  .source-badge.live    { color: hsl(var(--primary));   border-color: hsl(var(--primary) / 0.5); }
+  .source-badge.empty   { color: hsl(var(--muted-foreground)); }
+  .source-badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 6px currentColor;
+  }
+
+  /* ── Timeline ─────────────────────────────────────────── */
+  .timeline-wrap {
+    margin-top: 2.5rem;
+    padding: 1.5rem 1.5rem 1.25rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--muted) / 0.18);
+  }
+  .timeline-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 0.85rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+  }
+  .timeline-head .left { color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.1em; }
+  .timeline-head .right { color: hsl(var(--primary)); }
+  .timeline-svg { width: 100%; height: 110px; display: block; }
+  .timeline-svg .axis { stroke: hsl(var(--border)); stroke-width: 1; }
+  .timeline-svg .tick-line { stroke: hsl(var(--border)); stroke-width: 1; }
+  .timeline-svg .tick-label { fill: hsl(var(--muted-foreground)); font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9.5px; }
+  .timeline-svg .bar { fill: hsl(var(--primary) / 0.55); }
+  .timeline-svg .bar.dim { fill: hsl(var(--muted-foreground) / 0.35); }
+  .timeline-svg .window { fill: hsl(var(--primary) / 0.10); stroke: hsl(var(--primary) / 0.6); stroke-width: 1; }
+  .timeline-svg .handle { fill: hsl(var(--primary)); cursor: ew-resize; pointer-events: none; }
+  /* `pointer-events: all` makes the transparent hit target clickable —
+     SVG's default `visiblePainted` skips elements with transparent fill. */
+  .timeline-svg .handle-hit { fill: transparent; cursor: ew-resize; pointer-events: all; }
+  .timeline-svg .handle-line { stroke: hsl(var(--primary)); stroke-width: 1; }
+  .timeline-svg .handle-label {
+    fill: hsl(var(--primary)); font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 600; pointer-events: none;
+  }
+
+  .timeline-controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
+    margin-top: 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .timeline-controls .preset {
+    padding: 0.3rem 0.65rem;
+    border: 1px solid hsl(var(--border));
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    font-family: inherit; font-size: 0.72rem;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-radius: 4px; cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .timeline-controls .preset:hover { color: hsl(var(--foreground)); }
+  .timeline-controls .preset.active { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.5); }
+  .timeline-controls select {
+    background: hsl(var(--muted) / 0.3);
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    font-family: inherit; font-size: 0.78rem;
+    padding: 0.32rem 0.6rem; border-radius: 4px;
+  }
+  .timeline-controls .spacer { flex: 1; }
+  .timeline-controls .count { color: hsl(var(--primary)); }
+  .timeline-controls input[type=search] {
+    background: hsl(var(--muted) / 0.3);
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    padding: 0.32rem 0.7rem;
+    border-radius: 4px;
+    min-width: 12rem;
+  }
+  .timeline-controls input[type=search]::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+  .type-chips {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+  .type-chips button {
+    padding: 0.28rem 0.7rem;
+    border: 1px solid hsl(var(--border));
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-radius: 999px; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .type-chips button:hover { color: hsl(var(--foreground)); }
+  .type-chips button.active {
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.5);
+    background: hsl(var(--primary) / 0.12);
+  }
+  .type-chips .ct {
+    margin-left: 0.4rem; opacity: 0.6;
+  }
+
+  /* ── View tabs (Timeline / Map) ───────────────────────── */
+  .view-tabs {
+    display: inline-flex;
+    margin-bottom: 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: hsl(var(--muted) / 0.18);
+  }
+  .view-tabs button {
+    background: transparent;
+    border: none;
+    color: hsl(var(--muted-foreground));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 1.4rem;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .view-tabs button:hover { color: hsl(var(--foreground)); }
+  .view-tabs button.active {
+    background: hsl(var(--primary) / 0.16);
+    color: hsl(var(--primary));
+  }
+  .view-panel.hidden { display: none; }
+
+  /* ── Map view ─────────────────────────────────────────── */
+  .map-wrap {
+    padding: 1.25rem 1.25rem 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--muted) / 0.18);
+  }
+  .map-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 0.5rem;
+    margin-bottom: 0.85rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+  }
+  .map-head .left { color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.1em; }
+  .map-head .right { color: hsl(var(--primary)); }
+  .map-svg {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    display: block;
+    background: #06080a;
+    border-radius: 4px;
+  }
+  .map-svg .land { fill: hsl(var(--primary) / 0.10); stroke: hsl(var(--primary) / 0.35); stroke-width: 0.4; }
+  .map-svg .grid { stroke: hsl(var(--border) / 0.55); stroke-width: 0.4; fill: none; }
+  .map-svg .grid.major { stroke: hsl(var(--border)); stroke-width: 0.7; }
+  .map-svg .gridlabel {
+    fill: hsl(var(--muted-foreground) / 0.6);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 7px;
+  }
+  .map-svg .pin-glow { fill: hsl(var(--primary) / 0.18); stroke: none; }
+  .map-svg .pin {
+    fill: hsl(var(--primary));
+    stroke: hsl(var(--primary) / 0.7);
+    stroke-width: 0.5;
+    transition: fill 0.15s ease;
+    pointer-events: none;
+  }
+  .map-svg .pin:hover { fill: #f3ffe6; }
+  /* Invisible touch target — sits over each pin so taps register on
+     mobile even though the visual marker is small.  Carries the click
+     handler. `pointer-events: all` is load-bearing: SVG's default for
+     transparent fills is `visiblePainted`, which means the element
+     doesn't respond to clicks unless it has a visible fill. */
+  .map-svg .pin-hit { fill: transparent; cursor: pointer; pointer-events: all; }
+  .map-svg .pin-count {
+    fill: #06080a;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 7.5px;
+    font-weight: 700;
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .map-svg .pin-label {
+    fill: hsl(var(--foreground) / 0.85);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 6.5px;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .map-svg .offearth-bar {
+    fill: hsl(var(--muted) / 0.4);
+    stroke: hsl(var(--border));
+    stroke-width: 0.4;
+  }
+  .map-svg .offearth-label {
+    fill: hsl(var(--muted-foreground));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .map-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(0,0,0,0.92);
+    border: 1px solid hsl(var(--primary) / 0.5);
+    border-radius: 4px;
+    padding: 0.45rem 0.7rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: hsl(var(--foreground));
+    transform: translate(-50%, -110%);
+    white-space: nowrap;
+    z-index: 50;
+    display: none;
+  }
+  .map-tooltip .loc { color: hsl(var(--primary)); display: block; margin-bottom: 0.15rem; }
+  .map-tooltip .count { color: hsl(var(--muted-foreground)); }
+
+  /* ── Modal ────────────────────────────────────────────── */
+  .modal {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.86);
+    display: none;
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto;
+    padding: 4rem 1.5rem;
+  }
+  .modal.open { display: flex; }
+  .modal .frame {
+    max-width: 880px; width: 100%;
+    background: hsl(var(--hero-bg));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.75rem 1.75rem 1.5rem;
+    color: hsl(var(--foreground));
+  }
+  .modal .close {
+    float: right;
+    background: none;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+    padding: 0.3rem 0.7rem; border-radius: 4px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem; cursor: pointer;
+  }
+  .modal .close:hover { color: hsl(var(--foreground)); }
+  .modal h3 { margin-bottom: 0.25rem; }
+  .modal .subline {
+    color: hsl(var(--muted-foreground));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    margin-bottom: 1rem;
+  }
+  .modal .record { margin-bottom: 1rem; }
+
+  /* Inline video player for video records inside the modal — replaces
+     the thumbnail column with a 16:9 frame that streams the mirrored
+     mp4 from R2.  preload=metadata so the file doesn't actually start
+     downloading until the user hits play. */
+  .modal .record.has-video {
+    grid-template-columns: 1fr;
+  }
+  .modal .record .video-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .modal .record .video-frame video {
+    width: 100%; height: 100%; display: block; background: #000;
+  }
+
+  /* ── Records list ─────────────────────────────────────── */
+  .records {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .record {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    background: hsl(var(--muted) / 0.18);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  @media (min-width: 720px) { .record { grid-template-columns: 110px 1fr; } }
+  .record:hover { border-color: hsl(var(--primary) / 0.55); transform: translateY(-1px); }
+  .record .thumb {
+    aspect-ratio: 1 / 1.3;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .record .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .record .thumb .placeholder {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+    text-align: center; padding: 0.5rem;
+  }
+  .record .body { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  .record .titleline {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.7rem;
+  }
+  .record .agency-badge {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.66rem; letter-spacing: 0.08em;
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.12);
+    padding: 0.15rem 0.55rem; border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .record .ttl {
+    font-size: 0.95rem;
+    color: hsl(var(--foreground));
+    font-weight: 500;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  .record .ttl a { color: inherit; }
+  .record .ttl a:hover { color: hsl(var(--primary)); }
+  .record .meta {
+    display: flex; flex-wrap: wrap; gap: 0.3rem 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .record .meta b { color: hsl(var(--foreground)); font-weight: 500; }
+  .record .meta .yr { color: hsl(var(--primary)); }
+  .record .desc {
+    color: hsl(var(--foreground) / 0.84);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .record .footer {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .record .footer .pill {
+    padding: 0.18rem 0.55rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 999px;
+  }
+  .record .footer .pill.attest { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.4); }
+  .record .footer .pill.drift  { color: #ff7d6b; border-color: rgba(255,125,107,0.6); background: rgba(255,125,107,0.08); text-decoration: none; }
+  .record .footer .pill.drift:hover { background: rgba(255,125,107,0.15); }
+  .record .footer a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+  }
+  .record .footer a:hover { text-decoration: underline; }
+  .record .footer .verify-btn {
+    background: transparent;
+    border: 1px solid hsl(var(--primary) / 0.4);
+    color: hsl(var(--primary));
+    font-family: inherit; font-size: inherit;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .record .footer .verify-btn:hover { background: hsl(var(--primary) / 0.1); }
+  .record .footer .verify-btn.checking { color: #ffd86b; border-color: rgba(255,216,107,0.4); }
+  .record .footer .verify-btn.match    { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.6); background: hsl(var(--primary) / 0.12); }
+  .record .footer .verify-btn.partial  { color: #ffb84d; border-color: rgba(255,184,77,0.6); background: rgba(255,184,77,0.12); }
+  .record .footer .verify-btn.fail     { color: #ff7d6b; border-color: rgba(255,125,107,0.6); background: rgba(255,125,107,0.12); }
+  .record.highlight {
+    border-color: hsl(var(--primary)) !important;
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.25);
+  }
+
+  /* ── Empty state ──────────────────────────────────────── */
+  .empty-state {
+    margin-top: 1.5rem;
+    padding: 2.25rem 1.75rem;
+    border: 1px dashed hsl(var(--border));
+    border-radius: var(--radius);
+    color: hsl(var(--muted-foreground));
+    line-height: 1.6;
+    text-align: center;
+  }
+  .empty-state .head {
+    color: hsl(var(--primary));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 0.6rem;
+  }
+
+  .honesty {
+    margin-top: 4rem;
+    padding: 1.6rem 1.7rem 1.4rem;
+    border: 1px solid hsl(var(--border));
+    border-left: 3px solid hsl(var(--primary) / 0.7);
+    border-radius: var(--radius);
+    background: hsl(var(--muted) / 0.18);
+  }
+  .honesty h3 {
+    font-size: 0.85rem; color: hsl(var(--primary));
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+  .honesty p {
+    color: hsl(var(--foreground) / 0.92);
+    font-size: 0.9rem; line-height: 1.6;
+    margin-bottom: 0.55rem;
+  }
+  .honesty .links {
+    margin-top: 1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+  }
+  .honesty .links a { color: hsl(var(--primary)); }
+  .honesty .links a + a { margin-left: 1rem; }
+
+  /* ── Mobile / coarse-pointer adjustments ──────────────── */
+  @media (pointer: coarse) {
+    /* Bump invisible hit targets so taps reliably land.  Visible
+       markers stay the same — only the touch surface grows. */
+    .map-svg .pin-hit { r: 32; }
+    .map-svg .pin { stroke-width: 0.8; }
+    .timeline-svg .handle-hit { width: 56; }
+  }
+  @media (max-width: 600px) {
+    section.hero { min-height: 60vh; }
+    .archive-meta { gap: 0.4rem 1rem; font-size: 0.72rem; }
+    .timeline-wrap, .map-wrap { padding: 1rem 1rem 0.85rem; }
+    .timeline-svg { height: 130px; }
+    .timeline-controls { gap: 0.4rem 0.7rem; font-size: 0.72rem; }
+    .timeline-controls .preset { padding: 0.45rem 0.75rem; font-size: 0.7rem; }
+    .timeline-controls .spacer { display: none; }
+    .timeline-controls label { display: flex; align-items: center; gap: 0.4rem; }
+    /* Below this width, SVG would shrink each pin to a few px.  Wrap
+       it in a horizontal scroller and pin a sensible minimum width so
+       continents stay readable; the user pans laterally to see
+       far-east records. */
+    .map-scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .map-scroller .map-svg { min-width: 720px; }
+    .map-tooltip { max-width: 78vw; white-space: normal; line-height: 1.35; }
+    .modal { padding: 1.25rem 0.85rem; }
+    .modal .frame { padding: 1.25rem 1.1rem 1rem; }
+    .record { padding: 0.85rem 0.85rem; gap: 0.7rem; grid-template-columns: 64px 1fr; }
+    .record .body { gap: 0.4rem; }
+    .record .ttl { font-size: 0.88rem; }
+    .record .meta { font-size: 0.68rem; gap: 0.2rem 0.7rem; }
+    .record .desc { font-size: 0.85rem; -webkit-line-clamp: 4; }
+    .record .footer { font-size: 0.66rem; gap: 0.35rem 0.6rem; }
+    .record .footer .verify-btn { padding: 0.32rem 0.7rem; }
+    .empty-state { padding: 1.5rem 1.1rem; }
+    .honesty { padding: 1.2rem 1.1rem 1rem; margin-top: 2.5rem; }
+  }
+</style>
+</head>
+<body data-shader="_shared/shaders/grid.frag">
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="aliens.html" class="active">Aliens</a>
+    <a href="now.html">Now</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/Ledatic-Empire/pursue" target="_blank" rel="noopener">Source</a>
+</nav>
+
+<section class="hero">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">PURSUE &mdash; live mirror</span>
+    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Aliens</h1>
+    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+      The Presidential Unsealing and Reporting System for UAP Encounters,
+      mirrored byte-for-byte and walked across time.
+    </p>
+    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+      Drag the handles on the timeline to scrub across the years the
+      records cover. Each card is a real declassified file from
+      <code>war.gov</code>, hashed in pure Rail and signed against
+      <a href="entropy.html">ledatic.org/entropy/pulse</a> at the moment
+      we mirrored it. Click any title to open the file from our copy.
+    </p>
+    <div class="archive-meta fade-up" style="animation-delay: 0.7s">
+      <span><span class="source-badge" id="source-badge"><span class="dot"></span><span id="source-label">loading</span></span></span>
+      <span>records: <span class="v" id="rec-count">&mdash;</span></span>
+      <span>agencies: <span class="v" id="agency-count">&mdash;</span></span>
+      <span>signed: <span class="v ok" id="signed-count">&mdash;</span></span>
+      <span>span: <span class="v" id="year-span">&mdash;</span></span>
+      <span>watchdog: <a href="/pursue/source_check.json" class="v" id="watchdog-status" title="loading">&mdash;</a></span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="archive">
+  <div class="wrap">
+    <div class="view-tabs" id="view-tabs">
+      <button class="active" data-view="timeline">Timeline</button>
+      <button data-view="map">Map</button>
+    </div>
+
+    <div class="view-panel" id="view-timeline">
+    <div class="timeline-wrap">
+      <div class="timeline-head">
+        <span class="left">Timeline &mdash; incident date (release date for records lacking one)</span>
+        <span class="right" id="window-label">&mdash;</span>
+      </div>
+      <svg class="timeline-svg" id="timeline" viewBox="0 0 1000 110" preserveAspectRatio="none" aria-label="Timeline of records by year"></svg>
+      <div class="timeline-controls">
+        <button class="preset" data-preset="all">All years</button>
+        <button class="preset" data-preset="early">Early (pre-1970)</button>
+        <button class="preset" data-preset="modern">Modern (1990&rarr;)</button>
+        <button class="preset" data-preset="recent">Recent (2020&rarr;)</button>
+        <span class="spacer"></span>
+        <input type="search" id="q" placeholder="Search title, description, location" aria-label="Search records">
+        <label>Sort
+          <select id="sort">
+            <option value="date_desc">Newest first</option>
+            <option value="date_asc">Oldest first</option>
+            <option value="agency">Agency, then date</option>
+            <option value="title">Title</option>
+          </select>
+        </label>
+        <label>Agency
+          <select id="agency-filter"><option value="">All</option></select>
+        </label>
+        <span>showing <span class="count" id="visible-count">0</span></span>
+      </div>
+      <div class="type-chips" id="type-chips" role="group" aria-label="Filter by file type"></div>
+    </div>
+    </div><!-- /view-timeline -->
+
+    <div class="view-panel hidden" id="view-map">
+      <div class="map-wrap" style="position: relative;">
+        <div class="map-head">
+          <span class="left">Map &mdash; pinned by incident location (records lacking a location are listed below)</span>
+          <span class="right" id="map-located-count">&mdash;</span>
+        </div>
+        <div class="map-scroller">
+          <svg class="map-svg" id="map" viewBox="0 0 1000 540" preserveAspectRatio="xMidYMid meet" aria-label="Records by incident location"></svg>
+        </div>
+        <div class="map-tooltip" id="map-tooltip"></div>
+      </div>
+    </div><!-- /view-map -->
+
+    <div class="records" id="records"></div>
+    <div class="empty-state" id="empty-state" style="display: none;"></div>
+
+    <div class="honesty">
+      <h3>How we keep this honest</h3>
+      <p>
+        Every file shown here is a byte-for-byte copy of what
+        <code>war.gov</code> published. As bytes flow to disk we
+        compute their SHA-256 in pure Rail and bind the digest to a
+        live entropy beacon pulse, signed by an independent fleet0
+        Ed25519 witness. If the source ever quietly changes a file,
+        we'll know. If we ever quietly change one, you can prove it.
+      </p>
+      <p style="color: hsl(var(--muted-foreground));">
+        It's a single Rail binary called <code>pursue</code>. Pure
+        Rail TLS&nbsp;1.3, streaming SHA-256, JSON. No curl, no
+        SQLite, no libcrypto. Source is public. Run your own copy.
+      </p>
+      <div class="links">
+        <a href="https://github.com/Ledatic-Empire/pursue" target="_blank" rel="noopener">github &rarr;</a>
+        <a href="entropy.html">entropy beacon &rarr;</a>
+        <a href="witness.html">fleet0 witness &rarr;</a>
+        <a href="/attest/verify.sh">verify yourself &rarr;</a>
+        <a href="/attest/fleet0.pub.pem">fleet0 pubkey &rarr;</a>
+        <a href="rail.html">about Rail &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="frame">
+    <button class="close" id="modal-close" aria-label="Close">esc</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="aliens.html">Aliens</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Run</h4>
+        <ul>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="witness.html">Witness</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/Ledatic-Empire/pursue" rel="noopener">pursue source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>PURSUE archive &middot; signed by fleet0</span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/aliens-land.js"></script>
+<script>
+"use strict";
+
+// ── Data sources ────────────────────────────────────────────────
+const MANIFEST_PATHS = ["pursue/manifest.jsonl", "/pursue/manifest.jsonl"];
+const FILES_BASE = "/pursue/files/";
+
+// ── Geocode table ───────────────────────────────────────────────
+// Hand-curated lat/lng for every unique incident_location string the
+// PURSUE manifest currently uses.  "*" entries are off-Earth markers
+// that render in the offearth gutter at the top of the map.
+// Lat positive = north; lng positive = east.
+const GEO = {
+  "Western United States":   { lat: 40.0, lng: -110.0 },
+  "United States":           { lat: 39.8, lng: -98.6 },
+  "Pacific Time Zone":       { lat: 37.0, lng: -120.0 },
+  "Pacific Ocean":           { lat: 0.0,  lng: -160.0 },
+  "Detroit, MI":             { lat: 42.33, lng: -83.05 },
+  "Mexico":                  { lat: 23.6, lng: -102.5 },
+  "Iraq":                    { lat: 33.2, lng: 43.7 },
+  "Syria":                   { lat: 35.0, lng: 38.0 },
+  "Iran":                    { lat: 32.4, lng: 53.7 },
+  "Persian Gulf":            { lat: 27.0, lng: 51.0 },
+  "Arabian Gulf":            { lat: 27.0, lng: 51.0 },
+  "Strait of Hormuz":        { lat: 26.5, lng: 56.5 },
+  "Gulf of Oman":            { lat: 24.5, lng: 58.0 },
+  "Gulf of Aden":            { lat: 12.5, lng: 48.0 },
+  "Arabian Sea":             { lat: 14.0, lng: 65.0 },
+  "Mediterranean Sea":       { lat: 35.0, lng: 18.0 },
+  "Aegean Sea":              { lat: 39.0, lng: 25.0 },
+  "Germany":                 { lat: 51.0, lng: 10.0 },
+  "Netherlands":             { lat: 52.13, lng: 5.3 },
+  "Azerbaijan":              { lat: 40.4, lng: 47.9 },
+  "Georgia":                 { lat: 42.0, lng: 43.4 },
+  "Kazakhstan":              { lat: 48.0, lng: 67.0 },
+  "Turkmenistan":            { lat: 38.97, lng: 59.5 },
+  "Papua New Guinea":        { lat: -6.3, lng: 143.9 },
+  // ── Locations introduced by the DVIDS video pass.
+  "United Arab Emirates":    { lat: 24.0, lng: 54.0 },
+  "Djibouti":                { lat: 11.6, lng: 43.1 },
+  "East China Sea":          { lat: 28.0, lng: 125.0 },
+  "Japan":                   { lat: 36.0, lng: 138.0 },
+  "INDOPACOM":               { lat: 20.0, lng: 150.0 },
+  "Indo-PACOM":              { lat: 20.0, lng: 150.0 },
+  "Middle East":             { lat: 30.0, lng: 45.0 },
+  "North America":           { lat: 45.0, lng: -100.0 },
+  "Southern United States":  { lat: 33.0, lng: -90.0 },
+  "Moon":                    { offearth: "Moon" },
+  "Low Earth Orbit":         { offearth: "Low Earth Orbit" },
+};
+
+// ── Date parsing ────────────────────────────────────────────────
+// War.gov dates are messy: "5/8/26", "1947-1968", "June 1947", "N/A".
+// We extract the *earliest* 4-digit year we find as the canonical
+// timeline anchor, falling back to release_date or null.
+function parseYear(s) {
+  if (!s) return null;
+  const m = String(s).match(/(?:19|20)\d{2}/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+function parseDateRange(record) {
+  const inc = record.incident_date || "";
+  const rel = record.release_date || "";
+  const desc = record.description || "";
+  const years = [];
+  // Pull every year from incident, description, and release.
+  for (const s of [inc, desc, rel]) {
+    const re = /(?:19|20)\d{2}/g;
+    let m;
+    while ((m = re.exec(s)) !== null) years.push(parseInt(m[0], 10));
+  }
+  if (!years.length) return { start: null, end: null, primary: null };
+  const start = Math.min(...years);
+  const end = Math.max(...years);
+  // Prefer the incident-date year as primary; fall back to release.
+  const primary = parseYear(inc) || parseYear(rel) || start;
+  return { start, end, primary };
+}
+
+function fmtBytes(n) {
+  if (!n || n < 0) return "—";
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + " MB";
+  return (n / 1024 / 1024 / 1024).toFixed(2) + " GB";
+}
+
+// Single escape helper — safe for both text content and attribute values.
+const _ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+function escapeHtml(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, c => _ESC[c]);
+}
+
+// ── State ───────────────────────────────────────────────────────
+// yearMin/yearMax/windowMin/windowMax fill in from the manifest in
+// computeYearCounts(); the defaults exist so drawTimeline() doesn't
+// divide by zero before data lands.
+const STATE = {
+  records: [],
+  yearMin: 1900, yearMax: 2100,
+  windowMin: 1900, windowMax: 2100,
+  yearCounts: new Map(),
+  agencyFilter: "",
+  typeFilter: "",   // "" | "doc" | "photo" | "video"
+  query: "",
+  sort: "date_desc",
+};
+
+// Group file extensions into the user-facing type buckets.
+const TYPE_GROUPS = {
+  doc:   ["pdf", "txt", "csv", "doc", "docx"],
+  photo: ["jpg", "jpeg", "png", "gif", "webp", "tif", "tiff"],
+  video: ["mp4", "mov", "m4v", "webm", "avi"],
+};
+function recordType(r) {
+  const ext = (r.file_type || "").toLowerCase();
+  for (const [g, exts] of Object.entries(TYPE_GROUPS)) {
+    if (exts.includes(ext)) return g;
+  }
+  return "other";
+}
+
+// ── Loading ────────────────────────────────────────────────────
+// CDN cache-control on the manifest is 5 min; that's the freshness
+// SLA we want.  No `no-store` — let the edge cache do its job.
+async function loadManifest() {
+  for (const p of MANIFEST_PATHS) {
+    try {
+      const r = await fetch(p);
+      if (!r.ok) continue;
+      const text = await r.text();
+      const recs = [];
+      for (const line of text.split("\n")) {
+        const t = line.trim();
+        if (!t) continue;
+        try { recs.push(JSON.parse(t)); } catch { /* tolerate torn line */ }
+      }
+      if (recs.length) return { records: recs, src: "live" };
+    } catch { /* try next path */ }
+  }
+  return { records: [], src: "empty" };
+}
+
+// ── Rendering ──────────────────────────────────────────────────
+function setSourceBadge(src) {
+  const badge = document.getElementById("source-badge");
+  const label = document.getElementById("source-label");
+  if (src === "live") {
+    badge.classList.add("live");
+    badge.classList.remove("empty");
+    label.textContent = "live · pursue mirror";
+  } else {
+    badge.classList.add("empty");
+    badge.classList.remove("live");
+    label.textContent = "empty · awaiting first sync";
+  }
+}
+
+// ── Source watchdog ───────────────────────────────────────────
+// Reads /pursue/source_check.json (written by scrape/source_watch.py)
+// and surfaces "last check X ago · N still match · M drift" in the
+// archive-meta row. Per-record drift indicator handled in renderRecord.
+async function loadWatchdog() {
+  try {
+    const r = await fetch("/pursue/source_check.json", { cache: "no-cache" });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+function humanAgo(ms) {
+  const s = Math.max(0, (Date.now() - ms) / 1000);
+  if (s < 60)    return Math.floor(s) + "s ago";
+  if (s < 3600)  return Math.floor(s/60) + "m ago";
+  if (s < 86400) return Math.floor(s/3600) + "h ago";
+  return Math.floor(s/86400) + "d ago";
+}
+
+function renderWatchdog(data) {
+  const el = document.getElementById("watchdog-status");
+  if (!el) return;
+  el.classList.remove("ok", "warn", "fail");
+  if (!data) {
+    el.textContent = "—";
+    el.title = "no source_check.json yet";
+    return;
+  }
+  const total = data.total_checked || 0;
+  const m = data.match_count || 0;
+  const d = data.drift_count || 0;
+  const miss = data.missing_count || 0;
+  const err = data.error_count || 0;
+  const ago = data.completed_at ? humanAgo(data.completed_at * 1000) : "?";
+  // index drift events by manifest URL so per-card render can find them.
+  STATE.driftByUrl = Object.create(null);
+  for (const dr of (data.drift_records || [])) STATE.driftByUrl[dr.url] = dr;
+  if (d || miss) {
+    el.classList.add("warn");
+    const parts = [];
+    if (d)    parts.push(`${d} drift`);
+    if (miss) parts.push(`${miss} missing`);
+    el.textContent = `${parts.join(" · ")} · ${ago}`;
+  } else if (total > 0) {
+    el.classList.add("ok");
+    el.textContent = `${m} still match · ${ago}`;
+  } else {
+    el.textContent = "—";
+  }
+  el.title = `last check ${ago} · ${total} checked · ${m} match · ${d} drift · ${miss} missing${err ? ' · ' + err + ' error' : ''}`;
+}
+
+function summary() {
+  const recs = STATE.records;
+  document.getElementById("rec-count").textContent = recs.length || "0";
+  const agencies = new Set(recs.map(r => r.agency).filter(Boolean));
+  document.getElementById("agency-count").textContent = agencies.size || "0";
+  const signed = recs.filter(r => r.attestation && r.attestation.sig).length;
+  document.getElementById("signed-count").textContent = signed || "0";
+  let span = "—";
+  if (STATE.yearMin && STATE.yearMax && recs.length) {
+    span = STATE.yearMin === STATE.yearMax ? `${STATE.yearMin}` : `${STATE.yearMin}–${STATE.yearMax}`;
+  }
+  document.getElementById("year-span").textContent = span;
+
+  const sel = document.getElementById("agency-filter");
+  while (sel.options.length > 1) sel.remove(1);
+  for (const a of [...agencies].sort()) {
+    const o = document.createElement("option");
+    o.value = a; o.textContent = a;
+    sel.appendChild(o);
+  }
+}
+
+function computeYearCounts() {
+  const counts = new Map();
+  let lo = Infinity, hi = -Infinity;
+  for (const r of STATE.records) {
+    const y = r._range.primary;
+    if (y == null) continue;
+    counts.set(y, (counts.get(y) || 0) + 1);
+    if (y < lo) lo = y;
+    if (y > hi) hi = y;
+  }
+  STATE.yearCounts = counts;
+  if (counts.size) {
+    STATE.yearMin = lo; STATE.yearMax = hi;
+    STATE.windowMin = lo; STATE.windowMax = hi;
+  }
+}
+
+function drawTimeline() {
+  const svg = document.getElementById("timeline");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 1000, H = 110;
+  const padL = 30, padR = 30, padT = 14, padB = 28;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const yearMin = STATE.yearMin, yearMax = STATE.yearMax;
+  const span = Math.max(1, yearMax - yearMin);
+
+  const yearToX = y => padL + ((y - yearMin) / span) * innerW;
+
+  // Tick years — every 10y if span > 30, every 5y if span > 10, else every year.
+  const step = span > 30 ? 10 : span > 10 ? 5 : 1;
+  const firstTick = Math.ceil(yearMin / step) * step;
+  for (let y = firstTick; y <= yearMax; y += step) {
+    const x = yearToX(y);
+    const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    ln.setAttribute("x1", x); ln.setAttribute("x2", x);
+    ln.setAttribute("y1", padT + innerH); ln.setAttribute("y2", padT + innerH + 4);
+    ln.classList.add("tick-line");
+    svg.appendChild(ln);
+    const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lbl.setAttribute("x", x); lbl.setAttribute("y", padT + innerH + 16);
+    lbl.setAttribute("text-anchor", "middle");
+    lbl.classList.add("tick-label");
+    lbl.textContent = y;
+    svg.appendChild(lbl);
+  }
+
+  // Axis baseline.
+  const ax = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  ax.setAttribute("x1", padL); ax.setAttribute("x2", padL + innerW);
+  ax.setAttribute("y1", padT + innerH); ax.setAttribute("y2", padT + innerH);
+  ax.classList.add("axis"); svg.appendChild(ax);
+
+  // Bars per year (use 1 px per year minimum).
+  const barW = Math.max(2, innerW / Math.max(1, span + 1));
+  const maxCount = Math.max(1, ...STATE.yearCounts.values());
+  for (const [y, c] of STATE.yearCounts.entries()) {
+    const x = yearToX(y) - barW / 2;
+    const h = (c / maxCount) * innerH * 0.95;
+    const inWindow = y >= STATE.windowMin && y <= STATE.windowMax;
+    const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bar.setAttribute("x", x);
+    bar.setAttribute("y", padT + innerH - h);
+    bar.setAttribute("width", barW);
+    bar.setAttribute("height", h);
+    bar.classList.add("bar");
+    if (!inWindow) bar.classList.add("dim");
+    svg.appendChild(bar);
+  }
+
+  // Selection window rectangle.
+  const wx1 = yearToX(STATE.windowMin);
+  const wx2 = yearToX(STATE.windowMax);
+  const win = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  win.setAttribute("x", wx1);
+  win.setAttribute("y", padT - 2);
+  win.setAttribute("width", Math.max(2, wx2 - wx1));
+  win.setAttribute("height", innerH + 4);
+  win.classList.add("window");
+  svg.appendChild(win);
+
+  // Handles — visible marker + invisible 32×96 hit rect for touch.
+  for (const [side, x, y] of [["min", wx1, STATE.windowMin], ["max", wx2, STATE.windowMax]]) {
+    const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    ln.setAttribute("x1", x); ln.setAttribute("x2", x);
+    ln.setAttribute("y1", padT - 4); ln.setAttribute("y2", padT + innerH + 2);
+    ln.classList.add("handle-line");
+    svg.appendChild(ln);
+    const h = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    h.setAttribute("x", x - 5); h.setAttribute("y", padT - 6);
+    h.setAttribute("width", 10); h.setAttribute("height", 14);
+    h.setAttribute("rx", 2);
+    h.classList.add("handle");
+    svg.appendChild(h);
+    const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lbl.setAttribute("x", x);
+    lbl.setAttribute("y", padT - 9);
+    lbl.setAttribute("text-anchor", "middle");
+    lbl.classList.add("handle-label");
+    lbl.textContent = y;
+    svg.appendChild(lbl);
+    // Hit target — wider, taller, transparent.
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    hit.setAttribute("x", x - 16); hit.setAttribute("y", padT - 8);
+    hit.setAttribute("width", 32); hit.setAttribute("height", innerH + 12);
+    hit.classList.add("handle", "handle-hit");
+    hit.dataset.side = side;
+    svg.appendChild(hit);
+  }
+
+  document.getElementById("window-label").textContent =
+    STATE.windowMin === STATE.windowMax
+      ? `window: ${STATE.windowMin}`
+      : `window: ${STATE.windowMin} → ${STATE.windowMax}`;
+}
+
+function recordsInWindow() {
+  const q = STATE.query.trim().toLowerCase();
+  const out = STATE.records.filter(r => {
+    const yr = r._range;
+    if (yr.primary == null) return false;
+    // Include records whose date range overlaps the window.
+    const s = yr.start ?? yr.primary;
+    const e = yr.end ?? yr.primary;
+    if (e < STATE.windowMin || s > STATE.windowMax) return false;
+    if (STATE.agencyFilter && r.agency !== STATE.agencyFilter) return false;
+    if (STATE.typeFilter && recordType(r) !== STATE.typeFilter) return false;
+    if (q) {
+      const hay = (
+        (r.title || "") + " " +
+        (r.description || "") + " " +
+        (r.incident_location || "") + " " +
+        (r.agency || "")
+      ).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  switch (STATE.sort) {
+    case "date_asc":
+      out.sort((a, b) => (a._range.primary || 0) - (b._range.primary || 0));
+      break;
+    case "agency":
+      out.sort((a, b) => (a.agency || "").localeCompare(b.agency || "")
+        || (b._range.primary || 0) - (a._range.primary || 0));
+      break;
+    case "title":
+      out.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      break;
+    default:
+      out.sort((a, b) => (b._range.primary || 0) - (a._range.primary || 0));
+  }
+  return out;
+}
+
+function recordId(r) {
+  // Permalink id derived from the title (case-insensitive, slug-style).
+  const t = (r.title || r.url || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return t.slice(0, 80);
+}
+
+const VIDEO_EXTS = ["mp4", "mov", "m4v", "webm"];
+
+function recordCardHtml(r, opts) {
+  opts = opts || {};
+  const ft = (r.file_type || "").toLowerCase();
+  const isVideo = VIDEO_EXTS.includes(ft);
+  const pdfHref = r.local_path
+    ? FILES_BASE + r.local_path.replace(/^files\//, "")
+    : r.url;
+  const thumbSrc = r.thumbnail_local
+    ? FILES_BASE + r.thumbnail_local.replace(/^files\//, "")
+    : "";
+  // Modal context with a video record → inline player instead of the
+  // tiny thumbnail column.  Saves the user a round-trip into a new tab.
+  let leftCol;
+  if (opts.expandVideo && isVideo && pdfHref) {
+    leftCol = `<div class="video-frame"><video controls preload="metadata"${
+      thumbSrc ? ` poster="${escapeHtml(thumbSrc)}"` : ""
+    } playsinline><source src="${escapeHtml(pdfHref)}" type="video/${ft === "m4v" ? "x-m4v" : ft}"></video></div>`;
+  } else {
+    leftCol = `<div class="thumb">${
+      thumbSrc
+        ? `<img src="${escapeHtml(thumbSrc)}" alt="thumbnail" loading="lazy">`
+        : `<div class="placeholder">${escapeHtml((r.agency || "FILE").slice(0, 8))}<br>${escapeHtml((r.file_type || "PDF").toUpperCase())}</div>`
+    }</div>`;
+  }
+  const yr = r._range;
+  const yrStr = yr.start && yr.end && yr.start !== yr.end
+    ? `${yr.start}–${yr.end}`
+    : (yr.primary || "?");
+  const desc = r.description || "";
+  const sha = r.sha256 ? r.sha256.slice(0, 12) + "…" : "";
+  const att = r.attestation && r.attestation.pulse_id;
+  const attestPill = att
+    ? `<span class="pill attest">pulse ${escapeHtml(String(r.attestation.pulse_id))}</span>`
+    : "";
+  const id = recordId(r);
+  const cls = "record" + (opts.expandVideo && isVideo ? " has-video" : "");
+  const a = r.attestation || {};
+  return `<div class="${cls}" id="case-${escapeHtml(id)}" data-id="${escapeHtml(id)}" data-sha="${escapeHtml(r.sha256 || "")}" data-href="${escapeHtml(pdfHref)}" data-pulse="${escapeHtml(String(a.pulse_id || ""))}" data-value-hex="${escapeHtml(a.value_hex || "")}" data-witnessed-at="${escapeHtml(String(a.witnessed_at || ""))}" data-sig="${escapeHtml(a.sig || "")}">
+    ${leftCol}
+    <div class="body">
+      <div class="titleline">
+        <span class="agency-badge">${escapeHtml(r.agency || "?")}</span>
+        <span class="ttl"><a href="#case-${escapeHtml(id)}" class="case-link" data-id="${escapeHtml(id)}" title="copy permalink">${escapeHtml(r.title || pdfHref)}</a></span>
+      </div>
+      <div class="meta">
+        <span><b>incident</b> <span class="yr">${escapeHtml(String(yrStr))}</span></span>
+        ${r.incident_location && r.incident_location !== "N/A" ? `<span><b>where</b> ${escapeHtml(r.incident_location)}</span>` : ""}
+        ${r.release_date ? `<span><b>released</b> ${escapeHtml(r.release_date)}</span>` : ""}
+        <span><b>size</b> ${fmtBytes(r.size_bytes)}</span>
+      </div>
+      ${desc ? `<div class="desc">${escapeHtml(desc)}</div>` : ""}
+      <div class="footer">
+        ${sha ? `<span class="pill" title="${escapeHtml(r.sha256)}">sha256 ${escapeHtml(sha)}</span>` : ""}
+        ${attestPill}
+        ${(STATE.driftByUrl && STATE.driftByUrl[r.url]) ? `<a class="pill drift" href="/pursue/${escapeHtml(STATE.driftByUrl[r.url].drift_local_path || "")}" target="_blank" rel="noopener" title="war.gov source bytes have drifted from this mirror — click for the divergent attested copy">DRIFT vs source</a>` : ""}
+        ${r.sha256 ? `<button class="verify-btn" data-action="verify">verify</button>` : ""}
+        <a href="${escapeHtml(pdfHref)}" target="_blank" rel="noopener">${
+          isVideo
+            ? "play video →"
+            : ["jpg","jpeg","png","gif","webp"].includes(ft)
+              ? "open image →"
+              : "open file →"
+        }</a>
+        <a href="#case-${escapeHtml(id)}" class="share-link" data-id="${escapeHtml(id)}" data-title="${escapeHtml(r.title || "")}">share</a>
+        ${r.url && r.url !== pdfHref ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">source</a>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderRecords() {
+  const root = document.getElementById("records");
+  const recs = recordsInWindow();
+  document.getElementById("visible-count").textContent = recs.length;
+  const empty = document.getElementById("empty-state");
+  if (recs.length === 0) {
+    root.innerHTML = "";
+    empty.style.display = "block";
+    if (STATE.records.length === 0) {
+      empty.innerHTML = `<div class="head">Mirror is empty</div>
+        <p>No records yet. <code>pursue</code> will populate this view after the first <code>sync</code>.</p>
+        <p style="margin-top:0.6rem;">When the next war.gov tranche drops, the timeline grows.</p>`;
+    } else {
+      empty.innerHTML = `<div class="head">No records in this window</div>
+        <p>Try widening the timeline range or clearing the agency filter.</p>`;
+    }
+    return;
+  }
+  empty.style.display = "none";
+  root.innerHTML = recs.map(recordCardHtml).join("");
+  bindVerifyButtons(root);
+  bindCaseLinks(root);
+  applyHighlight();
+}
+
+// ── Verify (live byte hashing + Ed25519 sig check in the browser) ─
+// Two-stage end-user proof:
+//   1. Stream the live R2 copy, hash via WebCrypto, compare to manifest sha256.
+//   2. Reconstruct the canonical witness message and verify the embedded
+//      Ed25519 sig against fleet0.pub.pem (fetched from /attest/).
+// Fetched bytes never leave the browser process.
+let _pubkeyPromise = null;
+function getPubkey() {
+  if (_pubkeyPromise) return _pubkeyPromise;
+  _pubkeyPromise = (async () => {
+    const r = await fetch("/attest/fleet0.pub.pem");
+    if (!r.ok) throw new Error("pubkey fetch HTTP " + r.status);
+    const pem = await r.text();
+    const b64 = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+    const der = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    return crypto.subtle.importKey("spki", der, { name: "Ed25519" }, false, ["verify"]);
+  })().catch(e => { _pubkeyPromise = null; throw e; });
+  return _pubkeyPromise;
+}
+
+async function verifyRecord(card) {
+  const href = card.getAttribute("data-href");
+  const want = card.getAttribute("data-sha");
+  const btn = card.querySelector(".verify-btn");
+  if (!href || !want || !btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.classList.remove("match", "partial", "fail");
+  btn.classList.add("checking");
+  btn.textContent = "fetching…";
+  let bytesOk = false;
+  let hex = "";
+  try {
+    const r = await fetch(href);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const total = parseInt(r.headers.get("Content-Length") || "0", 10);
+    const reader = r.body.getReader();
+    const chunks = [];
+    let n = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      n += value.length;
+      btn.textContent = total
+        ? `hashing ${(n/1048576).toFixed(1)}/${(total/1048576).toFixed(1)} MB…`
+        : `hashing ${(n/1048576).toFixed(1)} MB…`;
+    }
+    const buf = new Uint8Array(n);
+    let off = 0;
+    for (const c of chunks) { buf.set(c, off); off += c.length; }
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    hex = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+    bytesOk = hex === want;
+  } catch (e) {
+    btn.classList.remove("checking");
+    btn.classList.add("fail");
+    btn.textContent = "✗ fetch failed";
+    btn.title = String(e.message || e);
+    btn.disabled = false;
+    return;
+  }
+
+  if (!bytesOk) {
+    btn.classList.remove("checking");
+    btn.classList.add("fail");
+    btn.textContent = "✗ bytes differ";
+    btn.title = `expected ${want}\ngot ${hex}`;
+    btn.disabled = false;
+    return;
+  }
+
+  // Stage 2: Ed25519 signature verification.
+  const pulse = card.getAttribute("data-pulse");
+  const valueHex = card.getAttribute("data-value-hex");
+  const witnessedAt = card.getAttribute("data-witnessed-at");
+  const sigB64 = card.getAttribute("data-sig");
+  if (!pulse || !valueHex || !witnessedAt || !sigB64) {
+    btn.classList.remove("checking");
+    btn.classList.add("partial");
+    btn.textContent = "✓ bytes · sig n/a";
+    btn.title = `bytes ok\nno embedded attestation`;
+    btn.disabled = false;
+    return;
+  }
+
+  btn.textContent = "checking sig…";
+  try {
+    const key = await getPubkey();
+    const msg = new TextEncoder().encode(`attest|v1|${hex}|${pulse}|${valueHex}|${witnessedAt}`);
+    const sig = Uint8Array.from(atob(sigB64), c => c.charCodeAt(0));
+    const ok = await crypto.subtle.verify({ name: "Ed25519" }, key, sig, msg);
+    btn.classList.remove("checking");
+    if (ok) {
+      btn.classList.add("match");
+      btn.textContent = "✓ bytes · ✓ sig";
+      btn.title = `bytes match manifest sha256\nfleet0 Ed25519 sig verified at pulse ${pulse}`;
+    } else {
+      btn.classList.add("partial");
+      btn.textContent = "✓ bytes · ✗ sig";
+      btn.title = `bytes match\nbut Ed25519 signature did not verify`;
+    }
+  } catch (e) {
+    btn.classList.remove("checking");
+    btn.classList.add("partial");
+    btn.textContent = "✓ bytes · sig err";
+    btn.title = `bytes ok\nsig check failed: ${e.message || e}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function bindVerifyButtons(root) {
+  for (const btn of (root || document).querySelectorAll(".verify-btn")) {
+    if (btn.dataset.bound) continue;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const card = btn.closest(".record");
+      if (card) verifyRecord(card);
+    });
+  }
+}
+
+// ── Permalink hash routing ─────────────────────────────────────
+// Plain click: browser handles the #case-<id> jump, the hashchange
+// listener applies the highlight class.  Cmd/Ctrl-click: copy the
+// permalink without navigating.
+function bindCaseLinks(root) {
+  for (const a of (root || document).querySelectorAll(".case-link")) {
+    if (a.dataset.bound) continue;
+    a.dataset.bound = "1";
+    a.addEventListener("click", (e) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      e.preventDefault();
+      const id = a.dataset.id;
+      if (!id) return;
+      const url = `https://ledatic.org/aliens#case-${id}`;
+      navigator.clipboard?.writeText(url);
+      flashToast("permalink copied");
+    });
+  }
+  // Explicit share link — Web Share sheet on mobile, clipboard fallback
+  // on desktop.  Always present; works without modifier keys.
+  for (const a of (root || document).querySelectorAll(".share-link")) {
+    if (a.dataset.bound) continue;
+    a.dataset.bound = "1";
+    a.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const id = a.dataset.id;
+      if (!id) return;
+      const url = `https://ledatic.org/aliens#case-${id}`;
+      const title = a.dataset.title || "Aliens — Ledatic PURSUE Mirror";
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, url });
+          return;
+        } catch (_) { /* user cancelled — fall through */ }
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        flashToast("link copied");
+      } catch {
+        flashToast(url);
+      }
+    });
+  }
+}
+
+function flashToast(msg) {
+  let t = document.getElementById("toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast";
+    t.style.cssText = "position:fixed;left:50%;bottom:32px;transform:translateX(-50%);"
+      + "background:hsl(var(--primary)/0.18);color:hsl(var(--primary));"
+      + "border:1px solid hsl(var(--primary)/0.5);border-radius:999px;"
+      + "padding:0.5rem 1.1rem;font-family:'IBM Plex Mono',ui-monospace,monospace;"
+      + "font-size:0.78rem;letter-spacing:0.04em;z-index:200;pointer-events:none;"
+      + "transition:opacity 0.2s ease;opacity:0;";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = "1";
+  clearTimeout(t._fade);
+  t._fade = setTimeout(() => { t.style.opacity = "0"; }, 1400);
+}
+
+function applyHighlight() {
+  for (const r of document.querySelectorAll(".record.highlight")) r.classList.remove("highlight");
+  const m = (location.hash || "").match(/^#case-(.+)$/);
+  if (!m) return;
+  const card = document.getElementById("case-" + m[1]);
+  if (card) {
+    card.classList.add("highlight");
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+// ── Map view ───────────────────────────────────────────────────
+// Equirectangular projection: lng [-180,180] → x [0,W], lat [90,-90] → y [0,H].
+// Off-Earth records render in a small gutter above the world rectangle.
+const MAP_W = 1000, MAP_H = 540;
+const MAP_GUTTER = 40;       // top reserved for off-Earth rows
+const MAP_TOP = MAP_GUTTER;
+const MAP_BOTTOM = MAP_H;    // world goes from MAP_TOP to MAP_BOTTOM
+const MAP_WORLD_H = MAP_BOTTOM - MAP_TOP;
+
+function lngLatToXY(lng, lat) {
+  const x = ((lng + 180) / 360) * MAP_W;
+  const y = MAP_TOP + ((90 - lat) / 180) * MAP_WORLD_H;
+  return { x, y };
+}
+
+function el(tag, attrs, text) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function drawMap() {
+  const svg = document.getElementById("map");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // Off-Earth gutter background.
+  svg.appendChild(el("rect", { x: 0, y: 0, width: MAP_W, height: MAP_GUTTER, class: "offearth-bar" }));
+  svg.appendChild(el("text", { x: 8, y: MAP_GUTTER - 14, class: "offearth-label" }, "OFF-EARTH"));
+
+  // Continents — pre-projected SVG paths from Natural Earth 110m
+  // (see _shared/aliens-land.js → LAND_PATHS).  Drawn before grid so
+  // gridlines + pins render on top.
+  if (typeof LAND_PATHS !== "undefined") {
+    for (const d of LAND_PATHS) {
+      svg.appendChild(el("path", { d, class: "land" }));
+    }
+  }
+
+  // Earth grid: lat lines every 30°, lng lines every 30°.
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const { y } = lngLatToXY(0, lat);
+    svg.appendChild(el("line", {
+      x1: 0, x2: MAP_W, y1: y, y2: y,
+      class: lat === 0 ? "grid major" : "grid",
+    }));
+    if (lat !== 0) {
+      svg.appendChild(el("text", { x: 4, y: y - 2, class: "gridlabel" }, `${lat > 0 ? "+" : ""}${lat}°`));
+    }
+  }
+  for (let lng = -150; lng <= 150; lng += 30) {
+    const { x } = lngLatToXY(lng, 0);
+    svg.appendChild(el("line", {
+      x1: x, x2: x, y1: MAP_TOP, y2: MAP_BOTTOM,
+      class: lng === 0 ? "grid major" : "grid",
+    }));
+    if (lng !== 0) {
+      svg.appendChild(el("text", { x: x + 2, y: MAP_BOTTOM - 4, class: "gridlabel" }, `${lng > 0 ? "+" : ""}${lng}°`));
+    }
+  }
+  // Equator label.
+  const eq = lngLatToXY(0, 0);
+  svg.appendChild(el("text", { x: 4, y: eq.y - 2, class: "gridlabel" }, "0°"));
+
+  // World rectangle outline.
+  svg.appendChild(el("rect", {
+    x: 0.5, y: MAP_TOP + 0.5,
+    width: MAP_W - 1, height: MAP_WORLD_H - 1,
+    class: "grid major",
+    fill: "none",
+  }));
+
+  // Bucket records by location.
+  const earthBuckets = new Map();   // "lat,lng" → { lat, lng, names: Set, records: [] }
+  const offBuckets = new Map();     // offearth label → { records: [] }
+  let unlocated = 0;
+  let located = 0;
+  for (const r of STATE.records) {
+    const loc = (r.incident_location || "").trim();
+    const geo = GEO[loc];
+    if (!geo) { unlocated++; continue; }
+    if (geo.offearth) {
+      const k = geo.offearth;
+      if (!offBuckets.has(k)) offBuckets.set(k, { records: [] });
+      offBuckets.get(k).records.push(r);
+      located++;
+      continue;
+    }
+    const k = `${geo.lat},${geo.lng}`;
+    if (!earthBuckets.has(k)) {
+      earthBuckets.set(k, { lat: geo.lat, lng: geo.lng, names: new Set(), records: [] });
+    }
+    const b = earthBuckets.get(k);
+    b.names.add(loc);
+    b.records.push(r);
+    located++;
+  }
+
+  // Off-Earth pins along the gutter.
+  let oxStep = MAP_W / (offBuckets.size + 1);
+  let oi = 1;
+  for (const [name, b] of offBuckets) {
+    const x = oxStep * oi++;
+    const y = MAP_GUTTER / 2;
+    const c = b.records.length;
+    const r = 5 + Math.min(8, Math.sqrt(c) * 4);
+    svg.appendChild(el("circle", { cx: x, cy: y, r: r + 4, class: "pin-glow" }));
+    svg.appendChild(el("circle", { cx: x, cy: y, r, class: "pin" }));
+    if (c > 1) svg.appendChild(el("text", { x, y, class: "pin-count" }, String(c)));
+    svg.appendChild(el("text", { x, y: y + r + 9, class: "pin-label" }, name));
+    svg.appendChild(el("circle", {
+      cx: x, cy: y, r: Math.max(20, r + 14),
+      class: "pin-hit",
+      "data-names": name,
+      "data-count": c,
+    }));
+  }
+
+  // Earth pins — visible glow + dot + count, then a wide invisible
+  // touch target so taps register comfortably on mobile.
+  for (const [, b] of earthBuckets) {
+    const { x, y } = lngLatToXY(b.lng, b.lat);
+    const c = b.records.length;
+    const r = 4 + Math.min(10, Math.sqrt(c) * 3);
+    svg.appendChild(el("circle", { cx: x, cy: y, r: r + 4, class: "pin-glow" }));
+    svg.appendChild(el("circle", { cx: x, cy: y, r, class: "pin" }));
+    if (c > 1) svg.appendChild(el("text", { x, y, class: "pin-count" }, String(c)));
+    svg.appendChild(el("circle", {
+      cx: x, cy: y, r: Math.max(18, r + 12),
+      class: "pin-hit",
+      "data-names": Array.from(b.names).join("|"),
+      "data-count": c,
+    }));
+  }
+
+  document.getElementById("map-located-count").textContent =
+    `${located} located · ${unlocated} unspecified`;
+
+  // Hover (desktop) + click handlers attach to the invisible pin-hit
+  // circles — bigger touch targets, same data attributes.
+  const tooltip = document.getElementById("map-tooltip");
+  for (const hit of svg.querySelectorAll(".pin-hit")) {
+    hit.addEventListener("mouseenter", () => {
+      const names = (hit.getAttribute("data-names") || "").split("|");
+      const count = parseInt(hit.getAttribute("data-count") || "1", 10);
+      tooltip.innerHTML = `<span class="loc">${escapeHtml(names.join(" · "))}</span>
+        <span class="count">${count} record${count === 1 ? "" : "s"} — tap to see</span>`;
+      const wrap = hit.closest(".map-wrap").getBoundingClientRect();
+      const r = hit.getBoundingClientRect();
+      tooltip.style.left = (r.left - wrap.left + r.width / 2) + "px";
+      tooltip.style.top = (r.top - wrap.top) + "px";
+      tooltip.style.display = "block";
+    });
+    hit.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
+    hit.addEventListener("click", () => {
+      const names = (hit.getAttribute("data-names") || "").split("|");
+      openLocation(names);
+    });
+  }
+}
+
+function openLocation(locNames) {
+  const set = new Set(locNames);
+  const recs = STATE.records.filter(r => set.has((r.incident_location || "").trim()));
+  if (!recs.length) return;
+  const body = document.getElementById("modal-body");
+  body.innerHTML = `
+    <h3>${escapeHtml(locNames.join(" · "))}</h3>
+    <div class="subline">${recs.length} record${recs.length === 1 ? "" : "s"} at this location</div>
+    ${recs.map(r => recordCardHtml(r, { expandVideo: true })).join("")}
+  `;
+  document.getElementById("modal").classList.add("open");
+  bindVerifyButtons(body);
+}
+
+// ── Interaction ────────────────────────────────────────────────
+function svgXToYear(clientX) {
+  const svg = document.getElementById("timeline");
+  const r = svg.getBoundingClientRect();
+  const W = 1000, padL = 30, padR = 30;
+  const innerW = W - padL - padR;
+  const ratio = (clientX - r.left) / r.width;     // 0..1
+  const xInSvg = ratio * W;
+  const xInner = Math.max(0, Math.min(innerW, xInSvg - padL));
+  const span = Math.max(1, STATE.yearMax - STATE.yearMin);
+  return Math.round(STATE.yearMin + (xInner / innerW) * span);
+}
+
+function bindTimeline() {
+  const svg = document.getElementById("timeline");
+  // Drag handlers attach on press, detach on release — keeps the
+  // global event surface clean when nothing is being dragged.
+  function onDown(clientX, side) {
+    const move = (cx) => {
+      const y = svgXToYear(cx);
+      if (side === "min") STATE.windowMin = Math.min(y, STATE.windowMax);
+      else                STATE.windowMax = Math.max(y, STATE.windowMin);
+      drawTimeline(); renderRecords();
+    };
+    const onMouseMove = (e) => move(e.clientX);
+    const onTouchMove = (e) => { if (e.touches.length) move(e.touches[0].clientX); };
+    const stop = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", stop);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", stop);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", stop);
+    document.addEventListener("touchmove", onTouchMove, { passive: true });
+    document.addEventListener("touchend", stop);
+  }
+  svg.addEventListener("mousedown", (e) => {
+    if (e.target?.classList?.contains("handle")) {
+      e.preventDefault();
+      onDown(e.clientX, e.target.dataset.side);
+    } else {
+      // Click anywhere on the timeline → recenter the window on that year.
+      const y = svgXToYear(e.clientX);
+      const half = Math.max(1, Math.round((STATE.windowMax - STATE.windowMin) / 2));
+      STATE.windowMin = Math.max(STATE.yearMin, y - half);
+      STATE.windowMax = Math.min(STATE.yearMax, y + half);
+      drawTimeline(); renderRecords();
+    }
+  });
+  svg.addEventListener("touchstart", (e) => {
+    if (e.target?.classList?.contains("handle") && e.touches.length) {
+      e.preventDefault();
+      onDown(e.touches[0].clientX, e.target.dataset.side);
+    }
+  }, { passive: false });
+}
+
+function bindViewTabs() {
+  const buttons = Array.from(document.querySelectorAll("#view-tabs button"));
+  function activate(btn) {
+    buttons.forEach(b => {
+      const on = (b === btn);
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.setAttribute("tabindex", on ? "0" : "-1");
+    });
+    const view = btn.dataset.view;
+    document.getElementById("view-timeline").classList.toggle("hidden", view !== "timeline");
+    document.getElementById("view-map").classList.toggle("hidden", view !== "map");
+    if (view === "map") drawMap();
+  }
+  buttons.forEach((btn, i) => {
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", btn.classList.contains("active") ? "true" : "false");
+    btn.setAttribute("tabindex", btn.classList.contains("active") ? "0" : "-1");
+    btn.addEventListener("click", () => activate(btn));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const next = buttons[(i + (e.key === "ArrowRight" ? 1 : -1) + buttons.length) % buttons.length];
+        next.focus(); activate(next);
+      }
+    });
+  });
+  document.getElementById("view-tabs").setAttribute("role", "tablist");
+}
+
+function bindModal() {
+  const m = document.getElementById("modal");
+  document.getElementById("modal-close").addEventListener("click", () => m.classList.remove("open"));
+  m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") m.classList.remove("open"); });
+}
+
+function bindControls() {
+  for (const btn of document.querySelectorAll(".preset")) {
+    btn.addEventListener("click", () => {
+      for (const b of document.querySelectorAll(".preset")) b.classList.remove("active");
+      btn.classList.add("active");
+      const p = btn.dataset.preset;
+      const yMin = STATE.yearMin, yMax = STATE.yearMax;
+      if (p === "all")    { STATE.windowMin = yMin; STATE.windowMax = yMax; }
+      if (p === "early")  { STATE.windowMin = yMin; STATE.windowMax = Math.min(1969, yMax); }
+      if (p === "modern") { STATE.windowMin = Math.max(1990, yMin); STATE.windowMax = yMax; }
+      if (p === "recent") { STATE.windowMin = Math.max(2020, yMin); STATE.windowMax = yMax; }
+      drawTimeline(); renderRecords();
+    });
+  }
+  document.getElementById("sort").addEventListener("change", (e) => {
+    STATE.sort = e.target.value; renderRecords();
+  });
+  document.getElementById("agency-filter").addEventListener("change", (e) => {
+    STATE.agencyFilter = e.target.value; renderRecords();
+  });
+  // Search box — debounce so we don't re-render on every keystroke.
+  let qTimer = null;
+  document.getElementById("q").addEventListener("input", (e) => {
+    const v = e.target.value;
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => { STATE.query = v; renderRecords(); }, 120);
+  });
+}
+
+function buildTypeChips() {
+  const root = document.getElementById("type-chips");
+  if (!root) return;
+  const counts = { all: STATE.records.length, doc: 0, photo: 0, video: 0 };
+  for (const r of STATE.records) {
+    const t = recordType(r);
+    if (counts[t] !== undefined) counts[t]++;
+  }
+  const buckets = [
+    ["",      "All",      counts.all],
+    ["doc",   "Documents", counts.doc],
+    ["photo", "Photos",   counts.photo],
+    ["video", "Videos",   counts.video],
+  ];
+  root.innerHTML = buckets.map(([v, label, n]) =>
+    `<button data-type="${v}" class="${v === STATE.typeFilter ? "active" : ""}">${label}<span class="ct">${n}</span></button>`
+  ).join("");
+  for (const btn of root.querySelectorAll("button")) {
+    btn.addEventListener("click", () => {
+      STATE.typeFilter = btn.dataset.type || "";
+      for (const b of root.querySelectorAll("button")) b.classList.toggle("active", b === btn);
+      renderRecords();
+    });
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────
+(async function init() {
+  bindTimeline();
+  bindControls();
+  bindViewTabs();
+  bindModal();
+  window.addEventListener("hashchange", applyHighlight);
+  const [{ records, src }, watchdog] = await Promise.all([
+    loadManifest(),
+    loadWatchdog(),
+  ]);
+  for (const r of records) r._range = parseDateRange(r);
+  STATE.records = records;
+  computeYearCounts();
+  setSourceBadge(src);
+  summary();
+  renderWatchdog(watchdog);
+  buildTypeChips();
+  drawTimeline();
+  renderRecords();
+})();
+</script>
+
+<script src="_shared/site.js?v=34a4421d"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f9993ea2b291126',t:'MTc3ODQyMjc1NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
