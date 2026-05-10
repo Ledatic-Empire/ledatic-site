@@ -13,7 +13,8 @@ TOKEN=$(cat ~/Desktop/rings)
 ACC=2acd6ceb3a0c57f1f2b470433d94bc87
 SCRIPT=ledatic
 SRC=worker/worker.js
-META=/tmp/ledatic_worker_meta.json
+META=$(mktemp -t ledatic_worker_meta.XXXXXX)
+trap 'rm -f "$META"' EXIT
 BACKUP_DIR=$HOME/ledatic-site/worker_backups
 TS=$(date +%Y%m%d_%H%M%S)
 
