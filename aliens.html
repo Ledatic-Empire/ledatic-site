@@ -404,6 +404,27 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .record .desc-wrap.expanded .desc {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+  .record .desc-toggle {
+    margin-top: 0.25rem;
+    padding: 0;
+    background: none;
+    border: none;
+    color: hsl(var(--primary));
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    border-bottom: 1px dotted hsl(var(--primary) / 0.5);
+    line-height: 1;
+  }
+  .record .desc-toggle:hover { color: hsl(var(--foreground)); border-bottom-color: hsl(var(--foreground) / 0.5); }
+  .record .desc-wrap.no-overflow .desc-toggle { display: none; }
   .record .footer {
     display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
@@ -1148,7 +1169,7 @@ function recordCardHtml(r, opts) {
         ${r.release_date ? `<span><b>released</b> ${escapeHtml(r.release_date)}</span>` : ""}
         <span><b>size</b> ${fmtBytes(r.size_bytes)}</span>
       </div>
-      ${desc ? `<div class="desc">${escapeHtml(desc)}</div>` : ""}
+      ${desc ? `<div class="desc-wrap"><div class="desc">${escapeHtml(desc)}</div><button class="desc-toggle" type="button" data-action="toggle-desc">show more</button></div>` : ""}
       <div class="footer">
         ${sha ? `<span class="pill" title="${escapeHtml(r.sha256)}">sha256 ${escapeHtml(sha)}</span>` : ""}
         ${attestPill}
@@ -1190,7 +1211,30 @@ function renderRecords() {
   root.innerHTML = recs.map(recordCardHtml).join("");
   bindVerifyButtons(root);
   bindCaseLinks(root);
+  bindDescToggles(root);
   applyHighlight();
+}
+
+// Click-to-expand for clamped descriptions. `show more` only renders
+// when the desc actually overflows its 3-line clamp (measured after
+// layout); otherwise the toggle hides itself via `.no-overflow`.
+function bindDescToggles(root) {
+  const scope = root || document;
+  for (const wrap of scope.querySelectorAll(".desc-wrap")) {
+    const desc = wrap.querySelector(".desc");
+    if (!desc) continue;
+    if (desc.scrollHeight <= desc.clientHeight + 1) {
+      wrap.classList.add("no-overflow");
+      continue;
+    }
+    const btn = wrap.querySelector(".desc-toggle");
+    if (!btn || btn.dataset.bound) continue;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      const open = wrap.classList.toggle("expanded");
+      btn.textContent = open ? "show less" : "show more";
+    });
+  }
 }
 
 // ── Verify (live byte hashing + Ed25519 sig check in the browser) ─
@@ -1564,6 +1608,7 @@ function openLocation(locNames) {
   `;
   document.getElementById("modal").classList.add("open");
   bindVerifyButtons(body);
+  bindDescToggles(body);
 }
 
 // ── Interaction ────────────────────────────────────────────────
