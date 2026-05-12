@@ -281,6 +281,8 @@
       <p>Early access launches summer 2026. Join the waitlist for a free 14-day trial and 30-min onboarding consultation.</p>
       <form class="email-input" id="signup-form" style="justify-content: center;">
         <input type="email" name="email" placeholder="you@yourcompany.com" required autocomplete="email">
+        <!-- Honeypot: real users can't see/tab to this; bots auto-fill it. -->
+        <input type="text" name="hp_field" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none !important; position:absolute; left:-9999px;">
         <button type="submit" id="signup-btn">Request access</button>
       </form>
       <div class="signup-msg" id="signup-msg" style="display: none;"></div>
@@ -386,6 +388,8 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = form.querySelector('input[name="email"]').value.trim();
+    const hpEl = form.querySelector('input[name="hp_field"]');
+    const hp_field = hpEl ? hpEl.value : "";
     if (!email || !email.includes("@")) {
       msg.textContent = "Please enter a valid email.";
       msg.className = "signup-msg err";
@@ -399,7 +403,7 @@
       const r = await fetch("/api/intel/waitlist", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: email, ref: window.location.pathname })
+        body: JSON.stringify({ email: email, ref: window.location.pathname, hp_field: hp_field })
       });
       if (r.ok) {
         form.style.display = "none";

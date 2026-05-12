@@ -833,9 +833,31 @@ async function handleSite(request, env, url) {
     }
     const email = (body.email || "").trim().toLowerCase();
     const ref   = String(body.ref || "/intel").slice(0, 200);
+    // Honeypot: a hidden `hp_field` lives in the form; real browsers leave it
+    // empty, drive-by bots auto-fill every text input. Silently 200 so the bot
+    // doesn't learn to skip it next time.
+    const hp = (body.hp_field || "").toString();
+    if (hp.length > 0) {
+      return new Response(JSON.stringify({ ok: true, status: "added" }), {
+        headers: sec({ "content-type": "application/json" }),
+      });
+    }
     // Cheap email shape check — full RFC 5322 isn't worth it for a waitlist.
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
       return new Response(JSON.stringify({ error: "invalid email" }), {
+        status: 400, headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    // Disposable-mail denylist — 10 of the most common throwaway providers.
+    // Substring match catches subdomains like *.mailinator.com.
+    const DISPOSABLE_DOMAINS = [
+      "mailinator.com", "tempmail", "guerrillamail", "10minutemail",
+      "throwaway", "yopmail.com", "trashmail", "fakeinbox",
+      "sharklasers.com", "dispostable.com",
+    ];
+    const emailDomain = email.split("@")[1] || "";
+    if (DISPOSABLE_DOMAINS.some(d => emailDomain.includes(d))) {
+      return new Response(JSON.stringify({ error: "disposable email not accepted" }), {
         status: 400, headers: sec({ "content-type": "application/json" }),
       });
     }
@@ -1097,14 +1119,24 @@ async function handleSite(request, env, url) {
     if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
       return jsonResponse({ message: "Portal misconfigured server-side" }, 500);
     }
-    // Rate limit: counter keyed by token + UTC date
+    // Rate limit: defense in depth — token-wide bucket AND per-IP bucket.
+    // The token-wide bucket caps total abuse if the shared token leaks; the
+    // per-IP bucket protects against one bad actor exhausting the global cap.
     const today = new Date().toISOString().slice(0, 10);
-    const rateKey = `dda:rate:${env.DDA_PORTAL_TOKEN.slice(0, 8)}:${today}`;
+    const ddaIp = request.headers.get("cf-connecting-ip") || "0.0.0.0";
+    const rateKey   = `dda:rate:${env.DDA_PORTAL_TOKEN.slice(0, 8)}:${today}`;
+    const rateKeyIp = `dda:rate:${env.DDA_PORTAL_TOKEN.slice(0, 8)}:${ddaIp}:${today}`;
     const rawCount = await env.LEDATIC_KV.get(rateKey);
-    const count = rawCount ? parseInt(rawCount, 10) || 0 : 0;
+    const rawCountIp = await env.LEDATIC_KV.get(rateKeyIp);
+    const count   = rawCount   ? parseInt(rawCount,   10) || 0 : 0;
+    const countIp = rawCountIp ? parseInt(rawCountIp, 10) || 0 : 0;
     const cap = parseInt(env.DDA_RATE_PER_DAY || "50", 10);
+    const capIp = parseInt(env.DDA_RATE_PER_IP_PER_DAY || "20", 10);
     if (count >= cap) {
       return jsonResponse({ message: `Daily limit (${cap}) reached.` }, 429);
+    }
+    if (countIp >= capIp) {
+      return jsonResponse({ message: `Per-IP daily limit (${capIp}) reached.` }, 429);
     }
     let body;
     try { body = await request.json(); } catch { return jsonResponse({ message: "Bad JSON" }, 400); }
@@ -1131,8 +1163,9 @@ async function handleSite(request, env, url) {
     if (!upstream.ok) {
       return jsonResponse({ message: "Engine error: " + upstream.status }, 502);
     }
-    // Increment rate-limit counter only on successful answer
-    await env.LEDATIC_KV.put(rateKey, String(count + 1), { expirationTtl: 86400 * 2 });
+    // Increment both rate-limit counters only on successful answer
+    await env.LEDATIC_KV.put(rateKey,   String(count   + 1), { expirationTtl: 86400 * 2 });
+    await env.LEDATIC_KV.put(rateKeyIp, String(countIp + 1), { expirationTtl: 86400 * 2 });
     return new Response(text, {
       headers: sec({
         "content-type": "application/json",
