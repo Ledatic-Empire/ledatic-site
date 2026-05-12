@@ -797,6 +797,18 @@ async function handleSite(request, env, url) {
       if (m.kind !== "ledatic.report.provenance" || m.report_id !== reportId) {
         return new Response("bad manifest shape", { status: 400, headers: sec({ "content-type": "text/plain" }) });
       }
+      // Per-version structural sanity (security-b H5, 2026-05-12). Verifier
+      // logic lives in verify.html; here we just refuse manifests whose
+      // declared version disagrees with their inner_message prefix, so a
+      // freshly-signed v2 cannot be downgraded by PUTting a v1-prefixed body.
+      const version       = (m.version === 2 || m.format_version === "v2") ? 2
+                          : ((m.version === 1 || m.format_version === "v1") ? 1 : 0);
+      const innerMsg      = m && m.attest && typeof m.attest.inner_message === "string" ? m.attest.inner_message : "";
+      const innerPrefix   = innerMsg.startsWith("report|v2|") ? 2
+                          : (innerMsg.startsWith("report|v1|") ? 1 : 0);
+      if (version === 0 || innerPrefix === 0 || version !== innerPrefix) {
+        return new Response("version/inner_message disagreement", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
       await env.REPORTS_R2.put(r2Key, body, {
         httpMetadata: { contentType: "application/json" },
       });

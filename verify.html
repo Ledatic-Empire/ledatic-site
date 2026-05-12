@@ -295,9 +295,65 @@ async function main() {
     return;
   }
 
+  // ─── Format-version detection (security-b H5, 2026-05-12) ───────────
+  //
+  // v1 manifests bind nothing about the beacon pulse INSIDE the digested
+  // inner_message; the (digest, sig) pair is therefore replayable across
+  // any future pulse. v2 manifests append `|<pulse_id>` to inner_message
+  // so the digest commits to one specific pulse.
+  //
+  // We:
+  //   * read manifest.format_version (preferred) or fall back to .version
+  //   * cross-check against the inner_message's `report|vN|` prefix and
+  //     refuse any cross-version disagreement (= attempted downgrade)
+  //   * for v2, also rebuild inner_message from the individual manifest
+  //     fields including pulse_id and verify it equals what was signed —
+  //     stops field-level tampering with consistent re-digest
+  //   * for v1, accept the legacy path but flag it as replay-vulnerable.
+  const innerMsgStr   = (manifest.attest && manifest.attest.inner_message) || "";
+  const innerPrefixV  = innerMsgStr.startsWith("report|v2|") ? 2
+                       : (innerMsgStr.startsWith("report|v1|") ? 1 : 0);
+  const declaredV     = manifest.format_version === "v2" || manifest.version === 2 ? 2
+                       : (manifest.format_version === "v1" || manifest.version === 1 ? 1 : 0);
+  const formatVersion = declaredV || innerPrefixV;  // forgive missing version field on really-old manifests
+  const versionMismatch =
+    (declaredV !== 0 && innerPrefixV !== 0 && declaredV !== innerPrefixV) ||
+    formatVersion === 0;
+
+  // Per-version field rebuild — exact byte-for-byte mirror of
+  // tools/attest/report_attestation_publisher.sh.
+  const ge = manifest.generation_event || {};
+  const m  = (ge && ge.model)  || {};
+  const inp = (ge && ge.input)  || {};
+  const oup = (ge && ge.output) || {};
+  const pulseId = manifest.beacon && (manifest.beacon.pulse_id != null) ? manifest.beacon.pulse_id : "";
+  let rebuiltInner;
+  if (formatVersion === 2) {
+    rebuiltInner = "report|v2|"
+      + (manifest.report_id || "") + "|"
+      + (m.name || "") + "|"
+      + (m.weights_hash || "") + "|"
+      + (inp.prompt_sha256 || "") + "|"
+      + (oup.response_sha256 || "") + "|"
+      + (manifest.generated_at || "") + "|"
+      + (manifest.client_id || "") + "|"
+      + pulseId;
+  } else {
+    // v1 (or unknown) — pulse_id NOT in the digest input.
+    rebuiltInner = "report|v1|"
+      + (manifest.report_id || "") + "|"
+      + (m.name || "") + "|"
+      + (m.weights_hash || "") + "|"
+      + (inp.prompt_sha256 || "") + "|"
+      + (oup.response_sha256 || "") + "|"
+      + (manifest.generated_at || "") + "|"
+      + (manifest.client_id || "");
+  }
+  const innerRebuildOk = rebuiltInner === innerMsgStr;
+
   // Check 1: inner integrity. SHA-256(inner_message) must match inner_digest_sha256.
-  const innerComputed = await sha256Hex(manifest.attest.inner_message);
-  const innerOk = innerComputed === manifest.attest.inner_digest_sha256;
+  const innerComputed = await sha256Hex(innerMsgStr);
+  const innerOk = !versionMismatch && innerRebuildOk && innerComputed === manifest.attest.inner_digest_sha256;
 
   // Check 2: each witness's Ed25519 signature. Manifest format:
   //   - new shape: manifest.witnesses = [{...}, ...]
@@ -346,7 +402,7 @@ async function main() {
     overall = "INVALID"; klass = "invalid"; badge = "✗";
   }
 
-  const ge = manifest.generation_event;
+  // `ge` was bound earlier during format-version detection; reuse here.
 
   // Render. Built via array.join to avoid template-literal headaches.
   const parts = [];
@@ -354,6 +410,31 @@ async function main() {
   parts.push('  <div><div class="label">Verification Status</div><div class="value">' + overall + '</div></div>');
   parts.push('  <div class="badge">' + badge + '</div>');
   parts.push('</div>');
+
+  // Format-version banner (security-b H5).
+  if (versionMismatch) {
+    parts.push('<div class="field bad" style="margin-top:1rem;">');
+    parts.push('  <div class="label">Format version</div>');
+    parts.push('  <div class="check bad">✗ manifest.format_version disagrees with inner_message prefix — refusing to fall back. Likely tampered or replayed.</div>');
+    parts.push('</div>');
+  } else if (formatVersion === 1) {
+    parts.push('<div class="field" style="margin-top:1rem;">');
+    parts.push('  <div class="label">Format version</div>');
+    parts.push('  <div class="value mono">v1 — legacy</div>');
+    parts.push('  <div class="check bad">⚠ this manifest predates security-b (2026-05-12). The witness signature does NOT cryptographically bind the beacon pulse_id inside the digest, so a captured (digest, sig) pair is replayable against any future pulse. New reports are emitted as v2; verify the report_id is not being substituted.</div>');
+    parts.push('</div>');
+  } else if (formatVersion === 2) {
+    parts.push('<div class="field ok" style="margin-top:1rem;">');
+    parts.push('  <div class="label">Format version</div>');
+    parts.push('  <div class="value mono">v2</div>');
+    parts.push('  <div class="check ok">✓ pulse_id is bound inside the digested inner_message — capture-replay across pulses is detectable.</div>');
+    parts.push('  <div class="check ' + (innerRebuildOk ? 'ok' : 'bad') + '" style="margin-top:0.35rem;">' +
+               (innerRebuildOk
+                 ? '✓ inner_message rebuilt from individual manifest fields matches the stored inner_message byte-for-byte.'
+                 : '✗ inner_message rebuilt from manifest fields disagrees with manifest.attest.inner_message — fields were edited without re-signing.') +
+               '</div>');
+    parts.push('</div>');
+  }
 
   parts.push('<section>');
   parts.push('  <h2>Generation Event</h2>');
@@ -441,11 +522,11 @@ async function main() {
   // Footer narrative — refer to the primary witness (first in the array) by name
   // and call out multi-witness consensus if it applies.
   const primary = witnessResults[0] || null;
-  const pulseId = (primary && primary.w && primary.w.pulse_id) || (manifest.beacon && manifest.beacon.pulse_id) || "?";
+  const displayPulseId = (primary && primary.w && primary.w.pulse_id) || (manifest.beacon && manifest.beacon.pulse_id) || "?";
   const witnessNamesList = witnessResults.map(r => r.name).join(", ");
   parts.push('<div class="footer">');
   parts.push('  <p><strong>What does this prove?</strong></p>');
-  parts.push('  <p>At <code>' + esc(manifest.generated_at) + '</code>, the model <code>' + esc(ge.model.name) + '</code> processed an input with SHA-256 <code>' + esc(ge.input.prompt_sha256.slice(0, 16)) + '…</code> and produced an output with SHA-256 <code>' + esc(ge.output.response_sha256.slice(0, 16)) + '…</code>. Those fields plus the model identity and timestamp were composed into one canonical string, hashed, and Ed25519-signed by ' + (totalCount >= 2 ? totalCount + ' independent witnesses (' + esc(witnessNamesList) + ')' : '<a href="https://ledatic.org/witness/fleet0/latest">' + esc(primary ? primary.name : "fleet0") + '</a>') + ', chaining the signature(s) against pulse <code>' + esc(pulseId) + '</code> of the public <a href="https://ledatic.org/entropy/pulse">entropy beacon</a>. Your browser just verified each signature against the corresponding witness public key — no backend trust required.</p>');
+  parts.push('  <p>At <code>' + esc(manifest.generated_at) + '</code>, the model <code>' + esc(ge.model.name) + '</code> processed an input with SHA-256 <code>' + esc(ge.input.prompt_sha256.slice(0, 16)) + '…</code> and produced an output with SHA-256 <code>' + esc(ge.output.response_sha256.slice(0, 16)) + '…</code>. Those fields plus the model identity and timestamp were composed into one canonical string, hashed, and Ed25519-signed by ' + (totalCount >= 2 ? totalCount + ' independent witnesses (' + esc(witnessNamesList) + ')' : '<a href="https://ledatic.org/witness/fleet0/latest">' + esc(primary ? primary.name : "fleet0") + '</a>') + ', chaining the signature(s) against pulse <code>' + esc(displayPulseId) + '</code> of the public <a href="https://ledatic.org/entropy/pulse">entropy beacon</a>. Your browser just verified each signature against the corresponding witness public key — no backend trust required.</p>');
   if (totalCount >= 2) {
     parts.push('  <p><strong>Why multi-witness?</strong> Independent physical machines each holding a separate signing key. Forging a manifest would require compromising all of them simultaneously. Available on Provenance+Audit tier.</p>');
   }
