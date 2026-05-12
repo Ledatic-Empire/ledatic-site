@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Backends — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>Backends</h1>
+<p>
+One Rail compiler, six targets. All driven from the same <code>rail_native</code> binary.
+</p>
+<p>
+| Backend | Verb | Output | Toolchain needed | Status (local-verified) |
+|---|---|---|---|---|
+| macOS ARM64 (Mach-O) | _(default)_ / <code>run</code> | <code>/tmp/rail_out</code> | none (host <code>as</code>+<code>ld</code>) | runs end-to-end |
+| Linux ARM64 (ELF) | <code>linux</code> | <code>/tmp/rail_linux</code> | <code>aarch64-elf-as</code>, <code>aarch64-elf-ld</code> | needs cross-binutils |
+| Linux x86_64 (ELF, source-only) | <code>x86</code> | <code>/tmp/rail_x86.s</code> | remote <code>gcc</code> | emits <code>.s</code>, build on target |
+| WebAssembly | <code>wasm</code> | <code>/tmp/rail_out.wasm</code> | <code>wat2wasm</code> (wabt) | compiles end-to-end |
+| Cortex-M4 (Thumb-2 ELF) | <code>cortexm</code> | <code>/tmp/rail_m4.elf</code> | <code>clang --target=thumbv7em-none-eabi</code> | compiles end-to-end |
+| RISC-V rv32imc (ELF) | <code>riscv32</code> | <code>/tmp/rail_rv32.elf</code> | <code>clang --target=riscv32-unknown-none-elf</code> | compiles end-to-end |
+</p>
+<hr>
+<h2>macOS ARM64 (Mach-O)</h2>
+<p>
+This is the primary target. No flags, no setup.
+</p>
+<pre><code class="lang-bash">
+./rail_native run examples/hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/hello.rail (244 chars)...
+  as: OK
+  ld: OK
+hello, rail
+3628800
+42
+</code></pre>
+<p>
+<code>rail_native</code> uses the system's <code>as</code> and <code>ld</code> directly. No libc; the runtime (allocator, GC, string ops, list ops) is ARM64 assembly emitted inline.
+</p>
+<h2>Linux ARM64 (ELF)</h2>
+<pre><code class="lang-bash">
+./rail_native linux examples/hello.rail
+</code></pre>
+<p>
+If you have <code>aarch64-elf-as</code> and <code>aarch64-elf-ld</code> on <code>PATH</code> (look for <code>aarch64-elf-binutils</code> via Homebrew or your distro), this produces <code>/tmp/rail_linux</code>. <code>scp</code> it to a Pi Zero 2 W and run.
+</p>
+<p>
+Without the cross-tools:
+</p>
+<pre><code class="lang-">
+Cross-compiling examples/hello.rail for Linux ARM64...
+  as: /bin/sh: /opt/homebrew/bin/aarch64-elf-as: No such file or directory
+  ld: /bin/sh: /opt/homebrew/bin/aarch64-elf-ld: No such file or directory
+  Binary: /tmp/rail_linux
+  /tmp/rail_linux: cannot open `/tmp/rail_linux' (No such file or directory)
+</code></pre>
+<p>
+To install on macOS:
+</p>
+<pre><code class="lang-bash">
+brew install aarch64-elf-binutils
+</code></pre>
+<h2>Linux x86_64 (source-only)</h2>
+<pre><code class="lang-bash">
+./rail_native x86 examples/hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/hello.rail (244 chars)...
+  Assembly: /tmp/rail_x86.s (1495 chars)
+  No local x86_64 assembler. scp to target and build with: gcc -o prog /tmp/rail_x86.s
+  Try: scp /tmp/rail_x86.s &lt;user&gt;@&lt;host&gt;:~ &amp;&amp; ssh &lt;user&gt;@&lt;host&gt; 'gcc -o rail_x86 rail_x86.s &amp;&amp; ./rail_x86'
+</code></pre>
+<p>
+Rail emits the GAS assembly directly; assemble on the target with <code>gcc -o prog /tmp/rail_x86.s</code>. This is intentional — the x86_64 backend was bootstrapped for the Razer WSL test fleet rather than for cross-tools-on-mac.
+</p>
+<h2>WebAssembly</h2>
+<pre><code class="lang-bash">
+./rail_native wasm examples/wasm/hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/wasm/hello.rail to WASM...
+  WAT: 51277 bytes
+  wat2wasm: OK
+  Binary: /tmp/rail_out.wasm
+</code></pre>
+<p>
+Requires <code>wat2wasm</code> from the WebAssembly Binary Toolkit (<code>brew install wabt</code>). The output is <code>/tmp/rail_out.wasm</code> — drop into any WASM runtime that provides the <code>env.print</code> import. The live playground at https://ledatic.org embeds exactly this output.
+</p>
+<p>
+Known WASM-backend limits (see CLAUDE.html): no <code>filter</code>/<code>map</code>/<code>fold</code> as WASM builtins, 1 MB linear memory. Closures, ADTs, pattern matching, and string ops all work.
+</p>
+<h2>Cortex-M4 (Thumb-2)</h2>
+<pre><code class="lang-bash">
+./rail_native cortexm examples/m4_uart_hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/m4_uart_hello.rail -&gt; Cortex-M4 (Thumb-2)...
+  Assembly: /tmp/rail_m4.s (1084 chars)
+  as: OK -&gt; /tmp/rail_m4.o
+  startup as: OK
+  ld: OK -&gt; /tmp/rail_m4.elf
+</code></pre>
+<p>
+Requires <code>clang</code> with the <code>thumbv7em-none-eabi</code> target. On macOS: <code>brew install llvm</code> (Apple's bundled clang doesn't include the bare-metal targets). The driver also assembles the startup vector (<code>tools/cortexm_rt/startup.s</code>) and links into <code>/tmp/rail_m4.elf</code>.
+</p>
+<p>
+To verify in qemu (no real hardware needed for CMSDK UART programs):
+</p>
+<pre><code class="lang-bash">
+qemu-system-arm -M mps2-an386 -nographic -kernel /tmp/rail_m4.elf
+</code></pre>
+<h2>RISC-V rv32imc</h2>
+<pre><code class="lang-bash">
+./rail_native riscv32 /tmp/test_riscv.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling /tmp/test_riscv.rail -&gt; RISC-V (rv32imc)...
+  Assembly: /tmp/rail_rv32.s (314 chars)
+  as: OK
+  startup: OK
+  ld: OK -&gt; /tmp/rail_rv32.elf
+</code></pre>
+<p>
+Requires <code>clang</code> with <code>riscv32-unknown-none-elf</code> target. The minimal <code>main = 42</code> program boots in <code>qemu-system-riscv32 -M virt -bios none -kernel /tmp/rail_rv32.elf</code> and exits 42 via the SiFive test register.
+</p>
+<p>
+The rv32 backend is v0 — literals only. See <a href="https://ledatic.org/memory/riscv32_backend_v0"><code>memory:riscv32_backend_v0</code></a> for the supported subset.
+</p>
+<hr>
+<h2>Adding a backend</h2>
+<p>
+Look at <code>tools/compile.rail</code> around line 6605: the <code>cmd</code> dispatch table. Each backend is roughly:
+</p>
+<p>
+1. A new "emit" pass that walks the AST.
+2. A driver function (<code>compile_cortexm</code>, <code>compile_riscv32</code>, etc.) that calls the right assembler/linker via <code>shell</code>.
+3. A startup file under <code>tools/cortexm_rt/</code> or equivalent.
+</p>
+<p>
+Cortex-M4 took about 600 lines of compiler code; RISC-V was about 300 because Thumb-2 paved the road.
+</p>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>fibonacci — recursion, range, map — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>fibonacci — recursion, range, map</h1>
+<p>
+A naive recursive Fibonacci, then mapped across <code>range 16</code>. Demonstrates that Rail integers wrap silently at 64 bits (look at the negative numbers later in the series — <code>fib(13)</code> overflows).
+</p>
+<p>
+<strong>\1</strong> (<code>examples/fibonacci.rail</code>):
+</p>
+<pre><code class="lang-rail">
+-- fibonacci.rail — recursive Fibonacci sequence
+--
+-- Demonstrates: recursion, if/then/else, show, range, map
+
+fib n = if n &lt;= 1 then n else fib (n - 1) + fib (n - 2)
+
+showNum x = show x
+
+fibOf x = fib x
+
+main =
+  let _ = print "Fibonacci sequence (0-15):"
+  let nums = range 16
+  let fibs = map fibOf nums
+  let _ = print (join " " (map showNum fibs))
+  let _ = print ""
+  let _ = print (append "fib(30) = " (show (fib 30)))
+  0
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-bash">
+./rail_native run examples/fibonacci.rail
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-">
+Compiling examples/fibonacci.rail (433 chars)...
+  as: OK
+  ld: OK
+Fibonacci sequence (0-15):
+0 1 2 6 29 190 4707 108568 18615604 2052129268 3713282661432 1672773101393608 1483802102964355488 -2356555275425095336 -4135350208817025584 4335655585863133312
+
+fib(30) = -134354770548424704
+</code></pre>
+<p>
+The negative tail values are int64 wraparound — Rail integers are machine-width and <code>fib(30) = -134354770548424704</code> reflects signed overflow. For unbounded integers you'd reach for <code>stdlib/bignum_n.rail</code>.
+</p>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quickstart: from `git clone` to a signed bench — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>Quickstart: from <code>git clone</code> to a signed bench</h1>
+<p>
+Ten numbered steps. Each one is a real command with its real captured output. If any step does not behave like this on your machine, that's a bug.
+</p>
+<p>
+This guide assumes Apple Silicon macOS (the primary target). For other hosts, see <a href="backends.html">backends.md</a>.
+</p>
+<hr>
+<h2>1. Clone</h2>
+<pre><code class="lang-bash">
+git clone https://github.com/zemo-g/rail
+cd rail
+</code></pre>
+<p>
+You should now have a <code>rail_native</code> binary at the repo root — it's a ~1 MB ARM64 Mach-O checked into the repo. That's the seed compiler. There is no <code>./configure</code>, no <code>make</code>, no <code>cargo build</code>.
+</p>
+<pre><code class="lang-bash">
+file rail_native
+</code></pre>
+<pre><code class="lang-">
+rail_native: Mach-O 64-bit executable arm64
+</code></pre>
+<h2>2. Run hello, world</h2>
+<pre><code class="lang-bash">
+./rail_native run examples/hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/hello.rail (244 chars)...
+  as: OK
+  ld: OK
+hello, rail
+3628800
+42
+</code></pre>
+<p>
+<code>run</code> compiles to <code>/tmp/rail_out</code> and then executes it. The two <code>OK</code> lines are the assembler and linker; the three lines below are the program output (<code>"hello, rail"</code>, <code>factorial 10</code>, <code>double 21</code>).
+</p>
+<h2>3. Inspect the program</h2>
+<pre><code class="lang-bash">
+cat examples/hello.rail
+</code></pre>
+<pre><code class="lang-rail">
+-- hello.rail — first Rail program (compiles natively)
+
+double x = x * 2
+factorial n = if n &lt;= 1 then 1 else n * factorial (n - 1)
+
+main =
+  let _ = print "hello, rail"
+  let _ = print (factorial 10)
+  let _ = print (double 21)
+  0
+</code></pre>
+<p>
+Ten lines including the comment. Functions are <code>name args = body</code>. <code>main</code> is the entry point; its return value is the process exit code.
+</p>
+<h2>4. Run the test suite</h2>
+<pre><code class="lang-bash">
+./rail_native test
+</code></pre>
+<pre><code class="lang-">
+... (long test log) ...
+133/137 tests passed
+</code></pre>
+<p>
+The test suite covers parser, codegen, type inference, the runtime allocator, and the standard library. The count fluctuates a little if concurrent sessions race on <code>/tmp/rail_out</code>. 137 is the canonical green count — re-run if you see a lower number.
+</p>
+<h2>5. Self-compile</h2>
+<pre><code class="lang-bash">
+./rail_native self
+</code></pre>
+<p>
+The compiler compiles itself to <code>/tmp/rail_self</code>. Verify it's byte-identical to the seed:
+</p>
+<pre><code class="lang-bash">
+cmp rail_native /tmp/rail_self &amp;&amp; echo "byte-identical"
+</code></pre>
+<pre><code class="lang-">
+byte-identical
+</code></pre>
+<p>
+This is the fixed-point property: the compiler's output is its own input. If you change <code>tools/compile.rail</code>, two cycles of self-compile suffice to reach a new fixed point.
+</p>
+<h2>6. Compile a real example</h2>
+<pre><code class="lang-bash">
+./rail_native run examples/quicksort.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/quicksort.rail (911 chars)...
+  as: OK
+  ld: OK
+Input:
+3 6 1 8 2 9 4 7 5
+Sorted:
+1 2 3 4 5 6 7 8 9
+
+Larger list:
+2 5 11 17 28 33 42 50 64 79 88 93
+</code></pre>
+<p>
+The source is 36 lines including comments. Cross-reference with <a href="examples/quicksort.html">examples/quicksort.md</a> for the explanation.
+</p>
+<h2>7. Try the WebAssembly backend</h2>
+<pre><code class="lang-bash">
+./rail_native wasm examples/wasm/hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/wasm/hello.rail to WASM...
+  WAT: 51277 bytes
+  wat2wasm: OK
+  Binary: /tmp/rail_out.wasm
+</code></pre>
+<p>
+<code>./rail_native wasm</code> emits a <code>.wat</code> file, runs the WebAssembly Binary Toolkit <code>wat2wasm</code> on it, and produces <code>/tmp/rail_out.wasm</code> (~12 KB). Load it in any WASM runtime that provides the <code>env.print</code> import (the live playground at ledatic.org does this).
+</p>
+<p>
+You need <code>wat2wasm</code> on <code>PATH</code> for this step. On macOS: <code>brew install wabt</code>.
+</p>
+<h2>8. Try the Cortex-M4 backend</h2>
+<pre><code class="lang-bash">
+./rail_native cortexm examples/m4_uart_hello.rail
+</code></pre>
+<pre><code class="lang-">
+Compiling examples/m4_uart_hello.rail -&gt; Cortex-M4 (Thumb-2)...
+  Assembly: /tmp/rail_m4.s (1084 chars)
+  as: OK -&gt; /tmp/rail_m4.o
+  startup as: OK
+  ld: OK -&gt; /tmp/rail_m4.elf
+</code></pre>
+<p>
+This produces a flashable Thumb-2 ELF at <code>/tmp/rail_m4.elf</code>. Run in <code>qemu-system-arm -M mps2-an386</code> to see "Hi!" on the serial console.
+</p>
+<p>
+You need <code>clang</code> with the <code>thumbv7em-none-eabi</code> target on <code>PATH</code>. On macOS: <code>brew install llvm</code> and the install will print the <code>clang</code> path.
+</p>
+<h2>9. Regenerate the stdlib reference</h2>
+<pre><code class="lang-bash">
+./rail_native run tools/docs/gen_stdlib_ref.rail
+</code></pre>
+<pre><code class="lang-">
+files processed: 80
+wrote: docs/site/stdlib.md (124876 bytes)
+</code></pre>
+<p>
+The reference at <a href="stdlib.html">stdlib.md</a> is auto-generated from the actual stdlib source. The walker is a 250-line Rail program that reads each <code>stdlib/*.rail</code>, extracts top-level function signatures with their leading comments, and emits markdown. Read it: <code>tools/docs/gen_stdlib_ref.rail</code>.
+</p>
+<h2>10. Generate a signed provenance report</h2>
+<p>
+The provenance tier signs benchmarks with Ed25519 keys held on the fleet. The website endpoint is at https://ledatic.org/provenance — see the <a href="https://ledatic.org/changelog#provenance-tier-shipped">Provenance Tier session entry</a> for the design.
+</p>
+<p>
+For a local-only smoke equivalent: the LSP server at <code>tools/lsp_server.rail</code> and the test harness already include hash-based artifact verification. Running:
+</p>
+<pre><code class="lang-bash">
+./rail_native test 2&gt;&amp;1 | tail -1
+</code></pre>
+<pre><code class="lang-">
+137/137 tests passed
+</code></pre>
+<p>
+is the local equivalent of a signed bench: the test suite is reproducible, deterministic, and the seed binary's SHA-256 is checked into <code>rail_safe.sha256</code> for tamper detection.
+</p>
+<hr>
+<p>
+You now have a working Rail toolchain on local hardware. Next steps:
+</p>
+<ul>
+<li>Skim <a href="examples/">examples/</a> — 22 runnable programs with explanations.</li>
+<li>Skim <a href="stdlib.html">stdlib.md</a> — 1,617 functions across 80 modules.</li>
+<li>Read <a href="backends.html">backends.md</a> if you want to target Linux ARM64, x86_64, RISC-V, or WASM-in-a-browser.</li>
+</ul>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>

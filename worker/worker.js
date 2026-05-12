@@ -1401,6 +1401,8 @@ async function handleSite(request, env, url) {
 
   // Static content via KV
   let key = pathname === "/" ? "index.html" : pathname.slice(1);
+  // Trailing slash → directory-style: serve <key>index.html (e.g. /rail/docs/ → rail/docs/index.html)
+  if (key.endsWith("/")) key = key + "index.html";
 
   // Deny internal namespaces + dead orphans
   if (isPrivateKey(key)) return notFound();

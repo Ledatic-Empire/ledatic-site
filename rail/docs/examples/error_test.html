@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>error_test — what a Rail error looks like — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>error_test — what a Rail error looks like</h1>
+<p>
+This program is *supposed* to fail — it references an undefined variable <code>y</code>. The point is to see how Rail surfaces the error.
+</p>
+<p>
+<strong>\1</strong> (<code>examples/error_test.rail</code>):
+</p>
+<pre><code class="lang-rail">
+-- Error test: demonstrates line:col in error messages
+-- Run with: rail run examples/error_test.rail
+-- Check with: rail check examples/error_test.rail
+
+bad_func x =
+  x + y
+
+main =
+  bad_func 42
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-bash">
+./rail_native run examples/error_test.rail
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-">
+Compiling examples/error_test.rail (206 chars)...
+  as: OK
+  ld: Undefined symbols for architecture arm64:
+/bin/sh: /tmp/rail_out: No such file or directory
+</code></pre>
+<p>
+The assembler accepts the code (because Rail emits a label reference for <code>y</code> without checking), and the linker (<code>ld</code>) is the one that catches the missing symbol. The trailing <code>/bin/sh: /tmp/rail_out: ...</code> is the driver trying to execute a binary that was never produced.
+</p>
+<p>
+In normal practice, parse errors are caught earlier with <code>file:line:col: error:</code> formatting before assembly. This example demonstrates the late-stage "undefined symbol" path.
+</p>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>

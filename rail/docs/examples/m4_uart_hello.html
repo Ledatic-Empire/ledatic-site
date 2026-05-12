@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>m4_uart_hello — "Hi!" over UART on Cortex-M4 — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>m4_uart_hello — "Hi!" over UART on Cortex-M4</h1>
+<p>
+The hello-world of microcontroller programming: write four bytes (<code>H</code>, <code>i</code>, <code>!</code>, <code>\n</code>) to a UART data register. Runs in <code>qemu-system-arm -M mps2-an386</code>.
+</p>
+<p>
+<strong>\1</strong> (<code>examples/m4_uart_hello.rail</code>):
+</p>
+<pre><code class="lang-rail">
+-- examples/m4_uart_hello.rail
+-- Rail running on bare-metal Cortex-M4: writes "Hi!\n" to the CMSDK UART.
+--
+-- Build + run in qemu:
+--   tools/garmin/m4_qemu.sh examples/m4_uart_hello.rail
+--   (or use the smoke harness's qemu-uart case)
+--
+-- Compatible with qemu-system-arm -M mps2-an386. The actual Apollo2 chip in
+-- the Instinct uses a different UART (Apollo2 IOM peripheral) at a different
+-- address; that variant lives elsewhere.
+
+-- CMSDK UART0 register layout (mps2-an386):
+--   DATA  = 0x40004000  -- write byte to send
+--   STATE = 0x40004004  -- TX/RX status
+--   CTRL  = 0x40004008  -- bit 0 = TX enable
+
+write_char c = mmio_write 0x40004000 c
+init_uart   = mmio_write 0x40004008 1
+
+main =
+  let _ = init_uart in
+  let _ = write_char 72 in
+  let _ = write_char 105 in
+  let _ = write_char 33 in
+  let _ = write_char 10 in
+  0
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-bash">
+./rail_native cortexm examples/m4_uart_hello.rail
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-">
+Compiling examples/m4_uart_hello.rail -&gt; Cortex-M4 (Thumb-2)...
+  Assembly: /tmp/rail_m4.s (1084 chars)
+  as: OK -&gt; /tmp/rail_m4.o
+  startup as: OK
+  ld: OK -&gt; /tmp/rail_m4.elf
+</code></pre>
+<p>
+The <code>1084 chars</code> of assembly are the entire program — a startup vector, the four MMIO writes, and an infinite-loop epilogue. Run in qemu with <code>tools/garmin/m4_qemu.sh</code> to see <code>Hi!</code> on the serial console.
+</p>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>closures — lambdas and higher-order functions — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>closures — lambdas and higher-order functions</h1>
+<p>
+Single lambdas (<code>\x -&gt; ...</code>), nested lambdas (which Rail flattens into multi-parameter functions), captured locals, and the usual <code>map</code>/<code>fold</code>/<code>filter</code> story with named predicates.
+</p>
+<p>
+<strong>\1</strong> (<code>examples/closures.rail</code>):
+</p>
+<pre><code class="lang-rail">
+-- closures.rail — closures and higher-order functions
+--
+-- Demonstrates: lambdas, nested lambdas, closures capturing variables,
+--               higher-order functions (apply, map, fold, filter)
+
+double x = x * 2
+square x = x * x
+inc x = x + 1
+showNum x = show x
+
+apply f x = f x
+
+isPositive x = x &gt; 0
+
+doubleAll xs = map double xs
+squareAll xs = map square xs
+showAll xs = map showNum xs
+
+add a b = a + b
+
+main =
+  -- Simple higher-order: apply
+  let _ = print (show (apply double 21))
+  let _ = print (show (apply inc 99))
+
+  -- Lambda
+  let f = \x -&gt; x * x + 1
+  let _ = print (show (f 5))
+
+  -- Nested lambda
+  let g = \a -&gt; \b -&gt; a * b
+  let _ = print (show (g 6 7))
+
+  -- Closure capturing a variable
+  let offset = 100
+  let h = \x -&gt; x + offset
+  let _ = print (show (h 5))
+
+  -- Map and fold on lists
+  let xs = [1, 2, 3, 4, 5]
+  let _ = print (join " " (showAll (doubleAll xs)))
+  let _ = print (join " " (showAll (squareAll xs)))
+  let total = fold add 0 xs
+  let _ = print (show total)
+
+  -- Filter with named predicate
+  let mixed = [3, -1, 4, -1, 5, -9, 2, 6]
+  let positives = filter isPositive mixed
+  let _ = print (show (length positives))
+
+  0
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-bash">
+./rail_native run examples/closures.rail
+</code></pre>
+<p>
+<strong>\1</strong>
+</p>
+<pre><code class="lang-">
+42
+100
+26
+42
+105
+2 4 6 8 10
+1 4 9 16 25
+15
+5
+</code></pre>
+<p>
+The first five lines: <code>apply double 21 = 42</code>; <code>apply inc 99 = 100</code>; <code>5*5+1 = 26</code>; <code>g 6 7 = 42</code>; <code>h 5 = 5 + offset = 105</code>. Then <code>doubleAll</code>, <code>squareAll</code>, the fold-sum of <code>[1..5]</code>, and the count of positive elements.
+</p>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>
