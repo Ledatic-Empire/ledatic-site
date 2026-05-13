@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="The only AI vendor where third parties can cryptographically verify what was generated, when, by which model, from which input. Pi-Zero physical witness node, public entropy beacon, in-browser Ed25519 verification. EU AI Act ready.">
+<meta name="description" content="The only AI vendor with a separately controlled physical witness — a Pi Zero you can SSH into and inspect — chained to a public entropy beacon, browser-verifiable in any modern browser. EU AI Act log-retention ready (Article 26).">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/provenance">
 <meta property="og:title" content="Provenance Tier — Ledatic">
-<meta property="og:description" content="Cryptographically verifiable AI reports. Pi-Zero physical witness, public entropy beacon, in-browser Ed25519 verification. EU AI Act ready.">
+<meta property="og:description" content="Cryptographically verifiable AI reports. Separately controlled Pi-Zero physical witness, public entropy beacon, in-browser Ed25519 verification. EU AI Act log-retention ready (Article 26).">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <title>Provenance Tier — Ledatic</title>
@@ -291,8 +291,8 @@
       </div>
       <div class="prov-card">
         <span class="num">/02</span>
-        <h3>EU AI Act readiness</h3>
-        <p>Articles 13 (transparency) and 26 (high-risk deployer logs) demand "we used model X on data Y at time Z." Provenance answers it cryptographically; a checked box, not a paragraph.</p>
+        <h3>EU AI Act log-retention readiness (Article 26)</h3>
+        <p>Article 26 (deployer log retention) demands "we used model X on data Y at time Z" kept for ≥6 months. Provenance answers it cryptographically &mdash; a checked box, not a paragraph. Article 13 documentation and Article 26 human-oversight obligations are organizational deliverables, not crypto artifacts; Provenance Tier covers the log-retention slice.</p>
       </div>
       <div class="prov-card">
         <span class="num">/03</span>
@@ -389,7 +389,7 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
           <li>Public /verify/&lt;id&gt; verification page</li>
           <li>$320 per ad-hoc report</li>
           <li>7-year archive retention (legal-hold standard)</li>
-          <li>EU AI Act-ready logging</li>
+          <li>EU AI Act Article 26 log-retention</li>
         </ul>
       </div>
       <div class="prov-tier">
@@ -427,13 +427,13 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
       <dd>No. The witness signs over the current pulse_id of the public entropy beacon. Pulses are append-only and timestamp-anchored on Cloudflare. To backdate, we would have to forge the public beacon — which third parties read continuously. Not happening.</dd>
 
       <dt>Does the verify page need our backend?</dt>
-      <dd>No. /verify/&lt;id&gt; serves a static HTML/JS page that fetches the manifest JSON and runs <code>crypto.subtle.verify</code> in the visitor's browser. The fleet0 public key is a constant in the page. The only network call is to fetch the manifest. You can clone the page, change the manifest URL, run it from disk — same result.</dd>
+      <dd>No &mdash; with one honest qualifier. /verify/&lt;id&gt; serves a static HTML/JS page that fetches the manifest JSON and runs <code>crypto.subtle.verify</code> in the visitor's browser. The fleet0 public key is a constant in the page. The only network call is to fetch the manifest. You can clone the page, change the manifest URL, run it from disk — same result. <strong>For maximum independence, do that.</strong> Public verifications via the live URL trust Cloudflare's CDN to deliver the same JS to every visitor; that is industry-standard but not zero-trust. Belt-and-suspenders auditors should fetch a local copy of <code>verify.html</code>, verify its hash matches the published value, and run it from disk. We also publish a fully self-contained, zero-CDN verifier at <code>tools/verify/standalone.html</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site">ledatic-site</a> repo (SHA-256 <code>fe114e269380c5b47883a12ccf3c6740b414e98eadb7cc72a667ac8ae24df821</code>); download it, verify the hash with <code>shasum -a 256 standalone.html</code>, and open it in any modern browser to verify any manifest URL or pasted JSON without trusting our CDN at all.</dd>
 
       <dt>Browser support for Ed25519?</dt>
       <dd>Chrome 137+, Safari 17+, Firefox 138+. The verify page also displays the manifest fields and the inner-message integrity check independently of WebCrypto, so older browsers still see most of the chain — they just can't run the final signature check.</dd>
 
       <dt>EU AI Act — concretely?</dt>
-      <dd>Article 13 (transparency to deployers) demands documented model identity, data, and outputs. Article 26 (deployer obligations) demands logs retained ≥6 months. Provenance gives you a cryptographic, third-party-verifiable artifact for both — auditable in seconds rather than reconstructed from internal logs after the fact.</dd>
+      <dd>Article 26 (deployer obligations) demands logs retained ≥6 months. Provenance gives you a cryptographic, third-party-verifiable artifact for that requirement — auditable in seconds rather than reconstructed from internal logs after the fact. Article 13 (transparency to deployers — model identity, capabilities, intended use, training-data summary) and Article 26's human-oversight + monitoring obligations are organizational deliverables, not crypto artifacts. Provenance Tier covers the log-retention slice; we can scope the rest with you but do not produce them as crypto.</dd>
     </dl>
   </div>
 </section>
