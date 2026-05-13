@@ -82,8 +82,9 @@ const DENY_EXACT = new Set([
   "assets/index-De4AavCV.js",
   "css/style.css",
   "js/main.js",
-  "playground",
-  "playground.html",
+  // NOTE: "playground" and "playground.html" used to be denied here as
+  // dead-page orphans from a 2024 site incarnation. v0 playground (2026-05-13)
+  // re-uses the slug for the live editor + /api/playground/compile route.
 ]);
 
 function isPrivateKey(key) {
@@ -169,6 +170,141 @@ function notFound() {
       "cache-control": "public, max-age=60",
     }),
   });
+}
+
+// ── Playground per-IP rate limiter ───────────────────────────────────
+// KV-backed token bucket (Session C, 2026-05-13). Replaces the
+// per-isolate Map limiter that under-counted across isolates — CF
+// load-balances POSTs to multiple isolates so a 10/min cap could
+// effectively become Nx10/min when traffic spread out. Now globally
+// honest: the bucket lives in LEDATIC_KV under
+//   pg:rl:<ip>:<minute_bucket>
+// where minute_bucket = floor(now_ms / 60000). KV TTL is 70 s so a
+// fresh bucket auto-expires shortly after its window closes; no
+// cleanup pass needed.
+//
+// Function signature + return shape preserved (true=allow, false=deny)
+// so the call site doesn't have to change beyond awaiting it.
+//
+// Failure mode: if KV.get/put throws (e.g. KV namespace 5xx), we
+// FAIL OPEN — return true. Rationale: a flaky KV must not take down
+// the playground; the upstream compile_server's 5 s wall-time cap is
+// the real DoS backstop, and Worker isolate-affinity still soaks up
+// most repeat traffic. We log to console.warn so the metrics endpoint
+// can surface it later.
+const PG_RL_RATE   = 10;           // requests per window
+const PG_RL_WINDOW_MS = 60 * 1000; // 60 s
+const PG_RL_TTL    = 70;           // KV TTL seconds (must be > window/1000)
+
+async function playgroundRateLimit(ip, env) {
+  // Defensive: missing env binding (e.g. local wrangler dev without KV) =>
+  // fail open with a clear console mark so the metrics path can detect.
+  if (!env || !env.LEDATIC_KV) {
+    console.warn("pg-ratelimit: LEDATIC_KV missing, failing open");
+    return true;
+  }
+  const minuteBucket = Math.floor(Date.now() / PG_RL_WINDOW_MS);
+  const key = `pg:rl:${ip}:${minuteBucket}`;
+  try {
+    const raw = await env.LEDATIC_KV.get(key);
+    const count = raw ? parseInt(raw, 10) || 0 : 0;
+    if (count >= PG_RL_RATE) {
+      return false;
+    }
+    // Increment + write back. Race window: two concurrent requests can
+    // both read N and both write N+1 (we lose one count). At v0 traffic
+    // levels this under-rejects by at most 1 per IP per minute — strictly
+    // looser than intent, never tighter, which is the correct safety
+    // direction for a public playground.
+    await env.LEDATIC_KV.put(key, String(count + 1), { expirationTtl: PG_RL_TTL });
+    return true;
+  } catch (e) {
+    console.warn(`pg-ratelimit: KV error (${e && e.message || e}), failing open`);
+    return true;
+  }
+}
+
+// ── Playground metrics (KV-backed, best-effort) ─────────────────────
+// Spec/standalone copy: worker/playground_metrics.js. Inlined here
+// because the deployed Worker is a single-file ESM upload. Keep both
+// in sync if you change either.
+const PGM_COUNTERS_KEY = "pgm:counters";
+const PGM_TIMING_KEY   = "pgm:timing:build_ms";
+const PGM_REJECT_KEY   = "pgm:rejections";
+const PGM_LAST_KEY     = "pgm:last";
+const PGM_TIMING_CAP   = 256;
+const PGM_REJECT_CAP   = 10;
+const PGM_COUNTER_NAMES = [
+  "total_compiles", "ok_compiles", "sanitize_rejected", "compile_error",
+  "http_error", "timeout", "rate_limited", "upstream_unreachable",
+];
+async function pgMetricsInc(env, name) {
+  if (!env || !env.LEDATIC_KV) return;
+  if (!PGM_COUNTER_NAMES.includes(name)) return;
+  try {
+    const raw = await env.LEDATIC_KV.get(PGM_COUNTERS_KEY);
+    const c = raw ? JSON.parse(raw) : {};
+    c[name] = (c[name] || 0) + 1;
+    await env.LEDATIC_KV.put(PGM_COUNTERS_KEY, JSON.stringify(c));
+  } catch (_) {}
+}
+async function pgMetricsRecordBuildMs(env, ms) {
+  if (!env || !env.LEDATIC_KV) return;
+  if (typeof ms !== "number" || !isFinite(ms) || ms < 0) return;
+  try {
+    const raw = await env.LEDATIC_KV.get(PGM_TIMING_KEY);
+    const t = raw ? JSON.parse(raw) : { samples: [], total: 0 };
+    t.samples.push(ms | 0);
+    if (t.samples.length > PGM_TIMING_CAP) t.samples = t.samples.slice(-PGM_TIMING_CAP);
+    t.total = (t.total || 0) + 1;
+    await env.LEDATIC_KV.put(PGM_TIMING_KEY, JSON.stringify(t));
+  } catch (_) {}
+}
+async function pgMetricsRecordRejection(env, reason) {
+  if (!env || !env.LEDATIC_KV) return;
+  if (typeof reason !== "string" || reason.length === 0) return;
+  const key = reason.slice(0, 80);
+  try {
+    const raw = await env.LEDATIC_KV.get(PGM_REJECT_KEY);
+    const r = raw ? JSON.parse(raw) : {};
+    r[key] = (r[key] || 0) + 1;
+    const entries = Object.entries(r).sort((a, b) => b[1] - a[1]).slice(0, PGM_REJECT_CAP);
+    await env.LEDATIC_KV.put(PGM_REJECT_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch (_) {}
+}
+function pgmPercentile(sorted, p) {
+  if (!sorted.length) return 0;
+  const idx = Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length));
+  return sorted[idx];
+}
+async function pgMetricsRead(env) {
+  if (!env || !env.LEDATIC_KV) return { error: "no KV binding" };
+  const [cRaw, tRaw, rRaw, lRaw] = await Promise.all([
+    env.LEDATIC_KV.get(PGM_COUNTERS_KEY),
+    env.LEDATIC_KV.get(PGM_TIMING_KEY),
+    env.LEDATIC_KV.get(PGM_REJECT_KEY),
+    env.LEDATIC_KV.get(PGM_LAST_KEY),
+  ]);
+  const counters = cRaw ? JSON.parse(cRaw) : {};
+  for (const n of PGM_COUNTER_NAMES) if (counters[n] === undefined) counters[n] = 0;
+  const timing = tRaw ? JSON.parse(tRaw) : { samples: [], total: 0 };
+  const sorted = [...(timing.samples || [])].sort((a, b) => a - b);
+  return {
+    schema_version: 1,
+    counters,
+    build_ms: {
+      samples_in_window: sorted.length,
+      total_observed: timing.total || 0,
+      p50_ms: pgmPercentile(sorted, 50),
+      p95_ms: pgmPercentile(sorted, 95),
+      p99_ms: pgmPercentile(sorted, 99),
+      min_ms: sorted[0] || 0,
+      max_ms: sorted[sorted.length - 1] || 0,
+    },
+    top_rejections: rRaw ? JSON.parse(rRaw) : {},
+    last: lRaw ? JSON.parse(lRaw) : null,
+    note: "best-effort; KV last-writer-wins under concurrency",
+  };
 }
 
 async function serveFromKV(key, env) {
@@ -1310,6 +1446,134 @@ async function handleSite(request, env, url) {
         }),
       });
     }
+  }
+
+  // ── Playground compile proxy (v0, 2026-05-13) ───────────────────────
+  // POST /api/playground/compile  →  { src }  →  proxied to the Rail
+  // compile_server (tools/playground/compile_server.rail) running on
+  // Mini (or Studio fallback) over Tailscale. Returns the upstream
+  // JSON response verbatim with CORS headers.
+  //
+  // Caps:
+  //   - body ≤ 32 KB (matches sanitize.rail's source-size guard)
+  //   - per-IP rate limit: 10 compiles / minute (in-memory token bucket
+  //     scoped to the current Worker isolate — coarse enough for v0
+  //     "unannounced launch" traffic; KV-backed limiter is a v1 thing).
+  //   - upstream timeout: 8 s (compile_server itself uses 5 s)
+  if (pathname === "/api/playground/compile" && method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: sec({
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-headers": "Content-Type",
+        "access-control-max-age": "600",
+      }),
+    });
+  }
+  if (pathname === "/api/playground/compile" && method === "POST") {
+    const ip = request.headers.get("cf-connecting-ip") || "unknown";
+    if (!(await playgroundRateLimit(ip, env))) {
+      // Best-effort metrics increment; don't fail the response if it throws.
+      try { await pgMetricsInc(env, "rate_limited"); } catch (_) {}
+      return new Response(JSON.stringify({ ok: false, error: "rate limit (10/min)" }), {
+        status: 429,
+        headers: sec({
+          "content-type": "application/json",
+          "access-control-allow-origin": "*",
+          "retry-after": "60",
+        }),
+      });
+    }
+    // 32 KB cap on the POST body.
+    const cl = parseInt(request.headers.get("content-length") || "0", 10);
+    if (cl > 32 * 1024) {
+      return new Response(JSON.stringify({ ok: false, error: "source too large (>32 KB)" }), {
+        status: 413,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+    }
+    const body = await request.text();
+    if (body.length > 32 * 1024) {
+      return new Response(JSON.stringify({ ok: false, error: "source too large (>32 KB)" }), {
+        status: 413,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+    }
+    const upstreamBase = env.PLAYGROUND_BACKEND || "";
+    if (!upstreamBase) {
+      return new Response(JSON.stringify({ ok: false, error: "playground backend not configured" }), {
+        status: 503,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+    }
+    try { await pgMetricsInc(env, "total_compiles"); } catch (_) {}
+    try {
+      const upstream = await fetch(`${upstreamBase}/api/playground/compile`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body,
+        signal: AbortSignal.timeout(8000),
+      });
+      const upstreamText = await upstream.text();
+      // Best-effort: classify response for metrics. Don't fail the
+      // user request if metrics writes throw.
+      try {
+        const j = JSON.parse(upstreamText);
+        if (j && j.ok === true) {
+          await pgMetricsInc(env, "ok_compiles");
+          if (typeof j.build_ms === "number") {
+            await pgMetricsRecordBuildMs(env, j.build_ms);
+          }
+        } else if (j && j.ok === false && typeof j.error === "string") {
+          if (j.error.startsWith("sanitize:")) {
+            await pgMetricsInc(env, "sanitize_rejected");
+            await pgMetricsRecordRejection(env, j.error.slice("sanitize:".length).trim());
+          } else if (j.error.startsWith("compile failed:")) {
+            await pgMetricsInc(env, "compile_error");
+          } else {
+            await pgMetricsInc(env, "http_error");
+          }
+        }
+      } catch (_) { /* non-JSON upstream; skip metrics */ }
+      return new Response(upstreamText, {
+        status: upstream.status,
+        headers: sec({
+          "content-type": upstream.headers.get("content-type") || "application/json",
+          "access-control-allow-origin": "*",
+          "cache-control": "no-store",
+        }),
+      });
+    } catch (e) {
+      const msg = e && e.message || String(e);
+      // AbortSignal.timeout() throws TimeoutError / DOMException("...timed out").
+      const isTimeout = /timeout|aborted/i.test(msg);
+      try { await pgMetricsInc(env, isTimeout ? "timeout" : "upstream_unreachable"); } catch (_) {}
+      return new Response(JSON.stringify({ ok: false, error: `upstream unreachable: ${msg}` }), {
+        status: 502,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+    }
+  }
+
+  // GET /api/playground/metrics — bearer-token authed read of the
+  // KV-backed counters/timing/rejections. Same API_BEARER as
+  // /api/update + /api/intel/waitlist (read).
+  if (pathname === "/api/playground/metrics" && method === "GET") {
+    const auth = request.headers.get("Authorization") || "";
+    if (!env.API_BEARER || auth !== `Bearer ${env.API_BEARER}`) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: sec({ "content-type": "application/json" }),
+      });
+    }
+    const data = await pgMetricsRead(env);
+    return new Response(JSON.stringify(data, null, 2), {
+      headers: sec({
+        "content-type": "application/json",
+        "cache-control": "no-store",
+      }),
+    });
   }
 
   // API
