@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Standalone Provenance Verifier - Ledatic</title>
+<!--
+  Standalone Ledatic Provenance Verifier
+  =======================================
+  Self-contained, zero CDN dependency. No external scripts, no external
+  CSS, no font CDN. Runs from file:// directly. The only network call
+  this file may make is the user-initiated manifest fetch from a URL
+  the user pastes into the input box (or no network at all if the user
+  pastes the manifest JSON directly).
+
+  Crypto:        crypto.subtle (browser built-in WebCrypto, not a CDN dep)
+  Pubkeys:       baked-in constants below (same as live verify.html)
+  Trust path:    download this file, verify its SHA-256 against the
+                 hash published on https://ledatic.org/provenance, open
+                 in any modern browser. No backend involved.
+-->
+<style>
+  :root {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 96%;
+    --primary: 119 99% 46%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 20%;
+    --hero-bg: 0 0% 8%;
+    --panel: 0 0% 12%;
+    --bad: 0 80% 65%;
+    --warn: 38 90% 60%;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: hsl(var(--hero-bg));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    padding: 3rem 1.5rem;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 64rem; margin: 0 auto; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace; }
+  a { color: hsl(var(--primary)); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .crumb {
+    display: inline-block;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+  }
+  h1 {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+  h1 .accent { color: hsl(var(--primary)); }
+  .sub {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 2.5rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .input-card {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .input-card h2 {
+    font-size: 0.7rem;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+  .input-card label {
+    display: block;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 0.85rem 0 0.35rem 0;
+  }
+  .input-card input[type="text"], .input-card textarea {
+    width: 100%;
+    background: hsl(var(--hero-bg));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    border-radius: 0.25rem;
+    padding: 0.6rem 0.75rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.85rem;
+  }
+  .input-card textarea { min-height: 8rem; resize: vertical; }
+  .input-card input[type="text"]:focus, .input-card textarea:focus {
+    outline: none;
+    border-color: hsl(var(--primary) / 0.5);
+  }
+  .input-card .row { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
+  .input-card .row .grow { flex: 1; min-width: 16rem; }
+  .input-card button {
+    background: hsl(var(--primary));
+    color: hsl(0 0% 5%);
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: inherit;
+  }
+  .input-card button:hover { background: hsl(var(--primary) / 0.8); }
+  .input-card button.secondary {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+  }
+  .input-card .or {
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin: 1rem 0;
+  }
+  .status {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 1.75rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.3s ease;
+  }
+  .status .label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.25rem;
+  }
+  .status .value { font-size: 1.5rem; font-weight: 600; }
+  .status .badge {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 2.5rem;
+    font-weight: 500;
+  }
+  .status.verified { border-color: hsl(var(--primary) / 0.4); box-shadow: 0 0 30px hsl(var(--primary) / 0.06); }
+  .status.verified .value, .status.verified .badge { color: hsl(var(--primary)); }
+  .status.invalid  { border-color: hsl(var(--bad) / 0.5); }
+  .status.invalid  .value, .status.invalid .badge { color: hsl(var(--bad)); }
+  .status.partial  { border-color: hsl(var(--warn) / 0.5); }
+  .status.partial  .value, .status.partial .badge { color: hsl(var(--warn)); }
+  .status.loading  .value, .status.loading .badge { color: hsl(var(--muted-foreground)); }
+  section { margin-bottom: 2rem; }
+  section h2 {
+    font-size: 0.7rem;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .field {
+    background: hsl(var(--panel));
+    border: 1px solid hsl(var(--border));
+    border-left: 3px solid hsl(var(--border));
+    border-radius: 0.375rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .field.ok  { border-left-color: hsl(var(--primary)); }
+  .field.bad { border-left-color: hsl(var(--bad)); }
+  .field .label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.35rem;
+  }
+  .field .value { font-size: 0.9rem; }
+  .field .hash {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.72rem;
+    word-break: break-all;
+    color: hsl(var(--foreground) / 0.85);
+    margin-top: 0.25rem;
+    padding: 0.6rem 0.75rem;
+    background: hsl(var(--hero-bg));
+    border-radius: 0.25rem;
+    line-height: 1.5;
+  }
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.75rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 0.25rem;
+    margin-top: 0.75rem;
+  }
+  .check.ok   { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); border: 1px solid hsl(var(--primary) / 0.3); }
+  .check.bad  { background: hsl(var(--bad) / 0.1);     color: hsl(var(--bad));     border: 1px solid hsl(var(--bad) / 0.3); }
+  .check.warn { background: hsl(var(--warn) / 0.1);    color: hsl(var(--warn));    border: 1px solid hsl(var(--warn) / 0.3); }
+  .footer {
+    margin-top: 3rem;
+    padding: 1.75rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    background: hsl(var(--panel) / 0.5);
+  }
+  .footer p { margin-bottom: 0.85rem; }
+  .footer p:last-child { margin-bottom: 0; }
+  .footer code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--foreground));
+    background: hsl(var(--hero-bg));
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.2rem;
+  }
+  .err {
+    background: hsl(var(--bad) / 0.08);
+    border: 1px solid hsl(var(--bad) / 0.3);
+    color: hsl(var(--bad));
+    padding: 1.25rem;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .err code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85rem; }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid hsl(var(--border));
+    border-top-color: hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: -2px;
+    margin-right: 0.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .meta-card {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    background: hsl(var(--panel) / 0.5);
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.85rem;
+  }
+  .meta-card h2 {
+    font-size: 0.7rem;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .meta-card p { margin-bottom: 0.75rem; }
+  .meta-card code, .meta-card pre {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    color: hsl(var(--foreground));
+    background: hsl(var(--hero-bg));
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.2rem;
+  }
+  .meta-card pre {
+    display: block;
+    padding: 0.85rem 1rem;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb">Standalone Verifier &middot; Self-contained</div>
+  <h1>Verify Provenance <span class="accent">/</span></h1>
+  <div class="sub">Standalone build &middot; no CDN, no backend, runs from disk</div>
+
+  <div class="input-card">
+    <h2>Input</h2>
+    <div class="row">
+      <div class="grow">
+        <label for="murl">Manifest URL (e.g. https://ledatic.org/provenance/manifest/&lt;id&gt;)</label>
+        <input type="text" id="murl" placeholder="https://ledatic.org/provenance/manifest/rep_..." spellcheck="false" autocomplete="off">
+      </div>
+      <button id="fetchBtn">Fetch &amp; verify</button>
+    </div>
+    <div class="or">- or -</div>
+    <label for="mjson">Paste manifest JSON directly (no network call needed)</label>
+    <textarea id="mjson" placeholder='{"kind":"ledatic.report.provenance", ...}' spellcheck="false"></textarea>
+    <div style="margin-top:0.85rem;">
+      <button id="verifyJsonBtn" class="secondary">Verify pasted JSON</button>
+    </div>
+  </div>
+
+  <div id="root"></div>
+
+  <div class="meta-card">
+    <h2>How to verify this verifier</h2>
+    <p>This file is intentionally self-contained: no external scripts, no external CSS, no font CDN. The only thing it loads at runtime that is not in this file is the manifest you give it (either via the URL field above or pasted JSON).</p>
+    <p>To prove this file has not been tampered with, compute its SHA-256 and check it against the hash published at <a href="https://ledatic.org/provenance">ledatic.org/provenance</a>:</p>
+    <pre>shasum -a 256 standalone.html
+# or:  openssl dgst -sha256 standalone.html
+# or:  sha256sum standalone.html  (Linux)</pre>
+    <p>The expected hash is also published in this repo at <code>tools/verify/README.md</code>. If your local computation matches both publications, the file is what its author shipped.</p>
+    <p>The witness public keys baked in below are the same constants as the live verify.html on ledatic.org. They are also published on the provenance page footer; cross-check both.</p>
+    <p>Browser support: Chrome 137+, Safari 17+, Firefox 138+ for Ed25519 in WebCrypto. SHA-256 (used for the inner-digest check) works everywhere.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// Witness Ed25519 public keys (raw 32 bytes, base64). Re-derivable from
+//   openssl pkey -in <node>.sk -pubout -outform DER | tail -c 32 | base64
+// pk_fp = sha256(DER pubkey).hex[:16].
+//   fleet0  pk_fp cac5f21a70564aeb (Pi Zero 2W, Tailscale 100.87.231.45)
+//   studio  pk_fp 47cb7773241d8ac2 (Mac Studio, Detroit)
+const PUBKEYS = {
+  fleet0: "BYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=",
+  studio: "ltEzzr2LSBuVpsZ+eENt4z6JigMRDz2y96fz3ymZC18=",
+  mini:   "OHbTtDz3ivtia19IYac+/bHdTcqf1wWA7AyFoVig0/w=",
+};
+const WITNESS_DESCRIPTIONS = {
+  fleet0: "Pi Zero 2 W, Tailscale 100.87.231.45",
+  studio: "Mac Studio, Detroit",
+  mini:   "Mac Mini M4 Pro, Detroit",
+};
+
+function b64ToBytes(s) {
+  s = String(s || "").replace(/^base64:/, "");
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function bytesToHex(buf) {
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2, "0"); }).join("");
+}
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return bytesToHex(buf);
+}
+
+async function verifyEd25519(msgStr, sigB64, pubB64) {
+  let pubKey;
+  try {
+    pubKey = await crypto.subtle.importKey(
+      "raw",
+      b64ToBytes(pubB64),
+      { name: "Ed25519" },
+      false,
+      ["verify"]
+    );
+  } catch (e) {
+    return { ok: null, reason: "this browser doesn't expose Ed25519 in WebCrypto. Try Chrome 137+, Safari 17+, or Firefox 138+. (Manifest fields are still inspectable above.)" };
+  }
+  try {
+    const valid = await crypto.subtle.verify(
+      "Ed25519",
+      pubKey,
+      b64ToBytes(sigB64),
+      new TextEncoder().encode(msgStr)
+    );
+    return { ok: valid, reason: valid ? null : "signature did not validate against the witness public key" };
+  } catch (e) {
+    return { ok: null, reason: "verify error: " + (e && e.message || e) };
+  }
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+async function verifyManifest(manifest) {
+  const root = document.getElementById("root");
+
+  // --- Format-version detection (security-b H5, 2026-05-12) ---
+  // v1 manifests bind nothing about the beacon pulse INSIDE the digested
+  // inner_message; the (digest, sig) pair is therefore replayable across
+  // any future pulse. v2 manifests append `|<pulse_id>` to inner_message
+  // so the digest commits to one specific pulse.
+  const innerMsgStr   = (manifest.attest && manifest.attest.inner_message) || "";
+  const innerPrefixV  = innerMsgStr.startsWith("report|v2|") ? 2
+                       : (innerMsgStr.startsWith("report|v1|") ? 1 : 0);
+  const declaredV     = manifest.format_version === "v2" || manifest.version === 2 ? 2
+                       : (manifest.format_version === "v1" || manifest.version === 1 ? 1 : 0);
+  const formatVersion = declaredV || innerPrefixV;
+  const versionMismatch =
+    (declaredV !== 0 && innerPrefixV !== 0 && declaredV !== innerPrefixV) ||
+    formatVersion === 0;
+
+  // Per-version field rebuild - exact byte-for-byte mirror of
+  // tools/attest/report_attestation_publisher.sh.
+  const ge = manifest.generation_event || {};
+  const m  = (ge && ge.model)  || {};
+  const inp = (ge && ge.input)  || {};
+  const oup = (ge && ge.output) || {};
+  const pulseId = manifest.beacon && (manifest.beacon.pulse_id != null) ? manifest.beacon.pulse_id : "";
+  let rebuiltInner;
+  if (formatVersion === 2) {
+    rebuiltInner = "report|v2|"
+      + (manifest.report_id || "") + "|"
+      + (m.name || "") + "|"
+      + (m.weights_hash || "") + "|"
+      + (inp.prompt_sha256 || "") + "|"
+      + (oup.response_sha256 || "") + "|"
+      + (manifest.generated_at || "") + "|"
+      + (manifest.client_id || "") + "|"
+      + pulseId;
+  } else {
+    rebuiltInner = "report|v1|"
+      + (manifest.report_id || "") + "|"
+      + (m.name || "") + "|"
+      + (m.weights_hash || "") + "|"
+      + (inp.prompt_sha256 || "") + "|"
+      + (oup.response_sha256 || "") + "|"
+      + (manifest.generated_at || "") + "|"
+      + (manifest.client_id || "");
+  }
+  const innerRebuildOk = rebuiltInner === innerMsgStr;
+
+  // Check 1: inner integrity. SHA-256(inner_message) must match inner_digest_sha256.
+  const innerComputed = await sha256Hex(innerMsgStr);
+  const innerOk = !versionMismatch && innerRebuildOk && innerComputed === (manifest.attest && manifest.attest.inner_digest_sha256);
+
+  // Check 2: each witness's Ed25519 signature.
+  const witnesses = manifest.witnesses && manifest.witnesses.length
+    ? manifest.witnesses
+    : (manifest.witness ? [manifest.witness] : []);
+  const witnessResults = [];
+  for (const w of witnesses) {
+    const name = w.witness || "(unknown)";
+    const pubB64 = PUBKEYS[name];
+    const msg = "attest|v1|" + w.digest_sha256 + "|" + w.pulse_id + "|" + w.value_hex + "|" + w.witnessed_at;
+    const digestLink = w.digest_sha256 === (manifest.attest && manifest.attest.inner_digest_sha256);
+    let verify;
+    if (!pubB64) {
+      verify = { ok: null, reason: "no public key for witness '" + name + "' - not in known-witnesses table" };
+    } else {
+      verify = await verifyEd25519(msg, w.sig, pubB64);
+    }
+    witnessResults.push({ w, name, msg, digestLink, verify, pubB64 });
+  }
+
+  const verifiedCount = witnessResults.filter(r => r.verify.ok === true).length;
+  const linkedCount   = witnessResults.filter(r => r.digestLink).length;
+  const totalCount    = witnessResults.length;
+  const allLinked     = totalCount > 0 && linkedCount === totalCount;
+  const allVerified   = totalCount > 0 && verifiedCount === totalCount;
+
+  // Overall status.
+  let overall, klass, badge;
+  if (innerOk && allLinked && allVerified && totalCount >= 2) {
+    overall = "CONSENSUS"; klass = "verified"; badge = "OK OK";
+  } else if (innerOk && allLinked && allVerified) {
+    overall = "VERIFIED"; klass = "verified"; badge = "OK";
+  } else if (innerOk && allLinked && verifiedCount > 0) {
+    overall = "PARTIAL"; klass = "partial"; badge = "~";
+  } else if (innerOk && allLinked && verifiedCount === 0 && witnessResults.every(r => r.verify.ok === null)) {
+    overall = "UNVERIFIED"; klass = "partial"; badge = "?";
+  } else {
+    overall = "INVALID"; klass = "invalid"; badge = "X";
+  }
+
+  const parts = [];
+  parts.push('<div class="status ' + klass + '">');
+  parts.push('  <div><div class="label">Verification Status</div><div class="value">' + overall + '</div></div>');
+  parts.push('  <div class="badge">' + badge + '</div>');
+  parts.push('</div>');
+
+  if (versionMismatch) {
+    parts.push('<div class="field bad" style="margin-top:1rem;">');
+    parts.push('  <div class="label">Format version</div>');
+    parts.push('  <div class="check bad">X manifest.format_version disagrees with inner_message prefix - refusing to fall back. Likely tampered or replayed.</div>');
+    parts.push('</div>');
+  } else if (formatVersion === 1) {
+    parts.push('<div class="field" style="margin-top:1rem;">');
+    parts.push('  <div class="label">Format version</div>');
+    parts.push('  <div class="value mono">v1 - legacy</div>');
+    parts.push('  <div class="check bad">! this manifest predates security-b (2026-05-12). The witness signature does NOT cryptographically bind the beacon pulse_id inside the digest, so a captured (digest, sig) pair is replayable against any future pulse. New reports are emitted as v2; verify the report_id is not being substituted.</div>');
+    parts.push('</div>');
+  } else if (formatVersion === 2) {
+    parts.push('<div class="field ok" style="margin-top:1rem;">');
+    parts.push('  <div class="label">Format version</div>');
+    parts.push('  <div class="value mono">v2</div>');
+    parts.push('  <div class="check ok">OK pulse_id is bound inside the digested inner_message - capture-replay across pulses is detectable.</div>');
+    parts.push('  <div class="check ' + (innerRebuildOk ? 'ok' : 'bad') + '" style="margin-top:0.35rem;">' +
+               (innerRebuildOk
+                 ? 'OK inner_message rebuilt from individual manifest fields matches the stored inner_message byte-for-byte.'
+                 : 'X inner_message rebuilt from manifest fields disagrees with manifest.attest.inner_message - fields were edited without re-signing.') +
+               '</div>');
+    parts.push('</div>');
+  }
+
+  parts.push('<section>');
+  parts.push('  <h2>Generation Event</h2>');
+  parts.push('  <div class="field"><div class="label">Report ID</div><div class="value mono">' + esc(manifest.report_id) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Client</div><div class="value mono">' + esc(manifest.client_id) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Generated At (UTC)</div><div class="value mono">' + esc(manifest.generated_at) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Model</div><div class="value">' + esc(m.name) + '</div><div class="hash">weights_sha256: ' + esc(m.weights_hash) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Input Prompt - SHA-256</div><div class="hash">' + esc(inp.prompt_sha256) + '</div><div class="value mono" style="margin-top:0.5rem;color:hsl(var(--muted-foreground));font-size:0.75rem;">' + fmtBytes(inp.prompt_size_bytes) + '</div></div>');
+  parts.push('  <div class="field"><div class="label">Output Response - SHA-256</div><div class="hash">' + esc(oup.response_sha256) + '</div><div class="value mono" style="margin-top:0.5rem;color:hsl(var(--muted-foreground));font-size:0.75rem;">' + fmtBytes(oup.response_size_bytes) + '</div></div>');
+  parts.push('</section>');
+
+  parts.push('<section>');
+  parts.push('  <h2>Inner-Message Integrity</h2>');
+  parts.push('  <div class="field ' + (innerOk ? 'ok' : 'bad') + '">');
+  parts.push('    <div class="label">Composed Message (the bytes that were digested + signed)</div>');
+  parts.push('    <div class="hash">' + esc(innerMsgStr) + '</div>');
+  parts.push('    <div class="label" style="margin-top:0.85rem;">SHA-256 computed in your browser, just now</div>');
+  parts.push('    <div class="hash">' + innerComputed + '</div>');
+  parts.push('    <div class="label" style="margin-top:0.85rem;">SHA-256 declared in the manifest</div>');
+  parts.push('    <div class="hash">' + esc(manifest.attest && manifest.attest.inner_digest_sha256) + '</div>');
+  parts.push('    <div class="check ' + (innerOk ? 'ok' : 'bad') + '">' +
+             (innerOk ? 'OK inner_digest matches - manifest fields are unmodified since signing' : 'X inner_digest mismatch - fields were tampered after the witness signed') +
+             '</div>');
+  parts.push('  </div>');
+  parts.push('  <div class="field ' + (allLinked ? 'ok' : 'bad') + '">');
+  parts.push('    <div class="label">Each Witness Signed Over the Same Inner Digest?</div>');
+  parts.push('    <div class="check ' + (allLinked ? 'ok' : 'bad') + '">' +
+             (allLinked
+               ? 'OK all ' + totalCount + ' witness(es) signed over manifest.attest.inner_digest_sha256'
+               : 'X ' + (totalCount - linkedCount) + ' of ' + totalCount + ' witness(es) signed a different digest than this manifest declares') +
+             '</div>');
+  parts.push('  </div>');
+  parts.push('</section>');
+
+  parts.push('<section>');
+  let consensusBlurb;
+  if (totalCount === 0) {
+    consensusBlurb = 'no witnesses recorded - manifest is unsigned';
+  } else if (verifiedCount === totalCount && totalCount >= 2) {
+    consensusBlurb = 'OK consensus - ' + totalCount + ' independent witnesses each cryptographically attested this report';
+  } else if (verifiedCount === totalCount && totalCount === 1) {
+    consensusBlurb = 'OK single-witness signature verifies (consider Provenance+Audit for multi-witness consensus)';
+  } else if (verifiedCount > 0) {
+    consensusBlurb = '~ partial - ' + verifiedCount + ' of ' + totalCount + ' witness signatures verify';
+  } else {
+    consensusBlurb = 'X no witness signatures verify against known pubkeys';
+  }
+  parts.push('  <h2>Witness Attestations &middot; ' + verifiedCount + '/' + totalCount + '</h2>');
+  parts.push('  <div class="field ' + (verifiedCount === totalCount && totalCount >= 1 ? 'ok' : (verifiedCount > 0 ? '' : 'bad')) + '" style="margin-bottom:1.25rem;">');
+  parts.push('    <div class="label">Consensus</div>');
+  parts.push('    <div class="check ' + (verifiedCount === totalCount && totalCount >= 1 ? 'ok' : (verifiedCount > 0 ? 'warn' : 'bad')) + '">' + consensusBlurb + '</div>');
+  parts.push('  </div>');
+
+  for (let i = 0; i < witnessResults.length; i++) {
+    const r = witnessResults[i];
+    const w = r.w;
+    const desc = WITNESS_DESCRIPTIONS[r.name] || "";
+    const sigOk = r.verify.ok === true;
+    const sigBad = r.verify.ok === false;
+    const sigKlass = sigOk ? 'ok' : (sigBad ? 'bad' : 'warn');
+    const fieldKlass = sigOk ? 'ok' : (sigBad ? 'bad' : '');
+    parts.push('  <div style="margin-top:' + (i === 0 ? '0' : '1.5rem') + ';padding-top:' + (i === 0 ? '0' : '1.5rem') + ';' + (i === 0 ? '' : 'border-top:1px dashed hsl(var(--border));') + '">');
+    parts.push('    <div class="label" style="font-family:ui-monospace,Menlo,monospace;font-size:0.7rem;letter-spacing:0.2em;color:hsl(var(--primary));margin-bottom:0.75rem;">/' + ('0' + (i + 1)).slice(-2) + ' &middot; ' + esc(r.name) + '</div>');
+    parts.push('    <div class="field"><div class="label">Witness Node</div><div class="value mono">' + esc(r.name) + (desc ? ' <span style="color:hsl(var(--muted-foreground));font-weight:normal;">(' + esc(desc) + ')</span>' : '') + '</div></div>');
+    parts.push('    <div class="field"><div class="label">Public-Key Fingerprint</div><div class="hash">' + esc(w.pk_fp) + '</div></div>');
+    parts.push('    <div class="field"><div class="label">Witnessed At</div><div class="value mono">' + esc(w.witnessed_at) + ' <span style="color:hsl(var(--muted-foreground));font-weight:normal;font-size:0.78rem;">(' + new Date(w.witnessed_at * 1000).toUTCString() + ')</span></div></div>');
+    parts.push('    <div class="field ' + fieldKlass + '">');
+    parts.push('      <div class="label">Composed Message (rebuilt by your browser)</div>');
+    parts.push('      <div class="hash">' + esc(r.msg) + '</div>');
+    parts.push('      <div class="label" style="margin-top:0.85rem;">Ed25519 Signature</div>');
+    parts.push('      <div class="hash">' + esc(w.sig) + '</div>');
+    parts.push('      <div class="label" style="margin-top:0.85rem;">Verified against ' + esc(r.name) + ' pubkey ' + (r.pubB64 ? esc(r.pubB64) : '<em>(unknown)</em>') + '</div>');
+    parts.push('      <div class="check ' + sigKlass + '">' +
+               (sigOk ? 'OK signature verifies - ' + esc(r.name) + ' cryptographically attested this report' :
+                (sigBad ? 'X ' + esc(r.verify.reason) :
+                 '! ' + esc(r.verify.reason))) +
+               '</div>');
+    parts.push('    </div>');
+    parts.push('  </div>');
+  }
+  parts.push('</section>');
+
+  const primary = witnessResults[0] || null;
+  const displayPulseId = (primary && primary.w && primary.w.pulse_id) || (manifest.beacon && manifest.beacon.pulse_id) || "?";
+  const witnessNamesList = witnessResults.map(r => r.name).join(", ");
+  parts.push('<div class="footer">');
+  parts.push('  <p><strong>What does this prove?</strong></p>');
+  parts.push('  <p>At <code>' + esc(manifest.generated_at) + '</code>, the model <code>' + esc(m.name) + '</code> processed an input with SHA-256 <code>' + esc((inp.prompt_sha256 || "").slice(0, 16)) + '...</code> and produced an output with SHA-256 <code>' + esc((oup.response_sha256 || "").slice(0, 16)) + '...</code>. Those fields plus the model identity and timestamp were composed into one canonical string, hashed, and Ed25519-signed by ' + (totalCount >= 2 ? totalCount + ' independent witnesses (' + esc(witnessNamesList) + ')' : esc(primary ? primary.name : "(none)")) + ', chaining the signature(s) against pulse <code>' + esc(displayPulseId) + '</code> of the public entropy beacon. Your browser just verified each signature against the corresponding witness public key - no backend trust required.</p>');
+  if (totalCount >= 2) {
+    parts.push('  <p><strong>Why multi-witness?</strong> Independent physical machines each holding a separate signing key. Forging a manifest would require compromising all of them simultaneously.</p>');
+  }
+  parts.push('  <p>This verifier ran entirely from the file you opened. It made no requests other than the optional manifest fetch you initiated.</p>');
+  parts.push('</div>');
+
+  root.innerHTML = parts.join("\n");
+}
+
+async function loadFromUrl(url) {
+  const root = document.getElementById("root");
+  root.innerHTML = '<div class="status loading"><div><div class="label">Verification Status</div><div class="value"><span class="spinner"></span>Fetching manifest...</div></div><div class="badge">...</div></div>';
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const manifest = await r.json();
+    await verifyManifest(manifest);
+  } catch (e) {
+    root.innerHTML = '<div class="err">Could not load manifest: <code>' + esc(e.message || e) + '</code></div>';
+  }
+}
+
+async function loadFromJson(text) {
+  const root = document.getElementById("root");
+  let manifest;
+  try {
+    manifest = JSON.parse(text);
+  } catch (e) {
+    root.innerHTML = '<div class="err">Invalid JSON: <code>' + esc(e.message || e) + '</code></div>';
+    return;
+  }
+  root.innerHTML = '<div class="status loading"><div><div class="label">Verification Status</div><div class="value"><span class="spinner"></span>Verifying...</div></div><div class="badge">...</div></div>';
+  try {
+    await verifyManifest(manifest);
+  } catch (e) {
+    root.innerHTML = '<div class="err">Verifier crashed: <code>' + esc(e.message || e) + '</code></div>';
+  }
+}
+
+document.getElementById("fetchBtn").addEventListener("click", function() {
+  const url = document.getElementById("murl").value.trim();
+  if (!url) {
+    document.getElementById("root").innerHTML = '<div class="err">Enter a manifest URL or paste JSON below.</div>';
+    return;
+  }
+  loadFromUrl(url);
+});
+
+document.getElementById("verifyJsonBtn").addEventListener("click", function() {
+  const txt = document.getElementById("mjson").value.trim();
+  if (!txt) {
+    document.getElementById("root").innerHTML = '<div class="err">Paste manifest JSON in the box above first.</div>';
+    return;
+  }
+  loadFromJson(txt);
+});
+
+// Allow ?url= or ?manifest_url= query param for direct linking
+(function() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get("url") || params.get("manifest_url");
+    if (url) {
+      document.getElementById("murl").value = url;
+      loadFromUrl(url);
+    }
+  } catch (e) { /* file:// without query is fine */ }
+})();
+</script>
+</body>
+</html>
