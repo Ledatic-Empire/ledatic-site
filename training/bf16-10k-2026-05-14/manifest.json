@@ -1,0 +1,115 @@
+{
+  "schema": "ledatic-training-run-v1",
+  "claim": "Rail-native bf16 forward-only training, 10000 steps, zero NaN, on Apple Silicon Metal (M1 Ultra), no manual loss scaling.",
+  "id": "bf16-10k-2026-05-14",
+  "completed_at_utc": "2026-05-14T23:19:04Z",
+  "wall_seconds": 10082,
+
+  "model": {
+    "type": "decoder-only transformer (lm_v3_chunked)",
+    "blocks": 2,
+    "d_model": 64,
+    "d_ff": 192,
+    "seq_len": 512,
+    "vocab_size": 94,
+    "norm": "RMSNorm",
+    "pos_encoding": "RoPE",
+    "activation": "SwiGLU",
+    "tied_embeddings": true,
+    "optimizer": "AdamW",
+    "lr_schedule": "cosine 0 -> 0.02 (warmup 100) -> 5e-10 (9999)",
+    "params_total_approx": 113000
+  },
+
+  "precision": {
+    "forward_matmuls": "bf16 (9 of 9 in m_block_fwd)",
+    "backward_matmuls": "f64",
+    "embedding_and_lm_head_matmuls": "f64",
+    "accumulator_inside_matmul": "fp32",
+    "weights_and_optim_state": "f64"
+  },
+
+  "result": {
+    "max_step_reached": 9999,
+    "nan_count_in_log": 0,
+    "trajectory": {
+      "step_0":     8.01492801962747,
+      "step_500":   2.13999574822392,
+      "step_2759":  3.14062113114177,
+      "step_2863":  2.02789298973278,
+      "step_5000":  1.86660648618440,
+      "step_9999":  2.76719920384903
+    },
+    "final_eval_loss_held_out_chunk": 1.74742144556064,
+    "compare_baseline_lm_v3_multi_fixed_corpus": "1.546 at step 429"
+  },
+
+  "comparison_to_other_precisions": {
+    "all_fp16_forward_2026_05_09": {
+      "max_step_before_nan": 2759,
+      "verdict": "NaN propagated; rest of run zombie"
+    },
+    "fp16_with_attn_qk_attn_v_f64_2026_05_14": {
+      "max_step_before_nan": 2863,
+      "verdict": "NaN at step 2863, falsified hypothesis that attention scores cause overflow"
+    },
+    "f64_truth_line_2026_05_14": {
+      "max_step_reached": 9999,
+      "nan_count": 0,
+      "wall_seconds": 12300,
+      "final_eval_loss": 2.27,
+      "verdict": "stable; bf16 is ~17% faster wall + better held-out eval"
+    }
+  },
+
+  "artifacts": {
+    "training_binary": {
+      "filename": "bf16_training_binary.bin",
+      "sha256": "e4ec617c43408c1501a1d11c61d0e44ce2eb009cc93e4d62d8c1c67b0c9aedaa",
+      "size_bytes": 354096,
+      "format": "Mach-O arm64 native"
+    },
+    "metal_kernel_dylib": {
+      "filename": "libtensor_gpu.dylib",
+      "sha256": "a344b7ecd9f6e32e236bdd27c3b874256aa087d30c127de19b78caccff5a6c9b",
+      "size_bytes": 106144,
+      "exports_used": ["tgl_init", "tgl_matmul_f64", "tgl_matmul_bf16", "tgl_adam_update_f64", "tgl_layernorm_backward_f64", "tgl_softmax_backward_f64", "tgl_matmul_gelu_f64"]
+    },
+    "metal_source": {
+      "filename": "tensor_gpu.metal",
+      "sha256": "573725c13aa096bff7da32fc200b203a326e4208bcb8b176f0fef030a209db96",
+      "size_bytes": 39995,
+      "compile_options": "MTLLanguageVersion3_1 (required for bfloat type)"
+    },
+    "train_source": {
+      "filename": "train_source.rail",
+      "sha256": "2fae61aee1808c89e334937623256cad3cc292e6b56efde2d262a85d37b64ec7",
+      "size_bytes": 23449,
+      "language": "Rail v3.x"
+    },
+    "training_log": {
+      "filename": "training.log",
+      "sha256": "2b236144c407f17c175ae8866d63d42007064cf36bc7ae11e45348ee4c431682",
+      "size_bytes": 562344,
+      "lines": 10011
+    }
+  },
+
+  "hardware": {
+    "node": "studio",
+    "chip": "Apple M1 Ultra",
+    "memory_gb_unified": 64,
+    "os": "macOS 26.4.1",
+    "metal_version": "MSL 3.1",
+    "gpu_family": "Apple7"
+  },
+
+  "verification": "Rehash each artifact and compare to sha256 above; verify the accompanying manifest.json.attestation.json by checking the Ed25519 signature against fleet0's published public key at https://ledatic.org/witness/fleet0/pubkey, then cross-reference pulse_id and value_hex against https://ledatic.org/entropy/pulse/<id>.",
+
+  "related_work_memory": [
+    "rail-bf16-stable-10k-2026-05-14.md",
+    "rail-fp16-long-tail-blowup-2026-05-09.md",
+    "rail-f64-truth-line-2026-05-14.md",
+    "rail-fp16-attn-f64-falsified-2026-05-14.md"
+  ]
+}

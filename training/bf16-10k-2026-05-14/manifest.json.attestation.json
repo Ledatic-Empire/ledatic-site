@@ -1,0 +1,27 @@
+{
+  "kind": "ledatic.attestation",
+  "version": 1,
+  "artifact": {
+    "name": "manifest.json",
+    "size_bytes": 3977,
+    "sha256": "f2bd967ac605b48036c8fc74dda97b5ae03409775b82724e80a76621ecb2feb1"
+  },
+  "beacon": {
+    "url": "https://ledatic.org/entropy/pulse",
+    "pulse_id": 979976,
+    "value_hex": "93c0126f3484535390c2069a843db572946bebd4e06cd0d142e12b8d02dca55d",
+    "timestamp_utc": "2026-05-15T00:09:01Z"
+  },
+  "witness": {
+    "kind": "attestation",
+    "version": 1,
+    "digest_sha256": "f2bd967ac605b48036c8fc74dda97b5ae03409775b82724e80a76621ecb2feb1",
+    "pulse_id": 979976,
+    "value_hex": "93c0126f3484535390c2069a843db572946bebd4e06cd0d142e12b8d02dca55d",
+    "witnessed_at": 1778803741,
+    "sig": "tWSKJSeVuKS+Btlt867RRbtaKx/7mKq41eK42KqnrE7DGQxe72z9uUD0p03q2ebWbTNe1BzWNwEovndvfs8IAg==",
+    "pk_fp": "cac5f21a70564aeb",
+    "witness": "fleet0"
+  },
+  "created_at": 1778803742
+}
