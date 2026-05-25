@@ -690,6 +690,79 @@ async function handleSite(request, env, url) {
     });
   }
 
+  // ── /greatlakes — password-gated commercial demo ──────────────────────
+  // Page + AIS attestation feed for the Great Lakes logistics POC.  Gated
+  // by HTTP Basic over env.GREATLAKES_PASS (single shared password, user
+  // "demo").  Server-to-server PUTs use the existing BEACON_TOKEN secret
+  // and bypass Basic auth.
+  if (pathname === "/greatlakes" || pathname.startsWith("/greatlakes/")) {
+    // 1. Publisher PUTs (token-guarded, no basic auth) — must come first.
+    if (pathname.startsWith("/greatlakes/ais/") && method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const tail = pathname.slice("/greatlakes/ais/".length);
+      if (!/^(latest|\d{8}T\d{6}Z)\.(jsonl|attestation\.json)$/.test(tail)) {
+        return new Response("bad path", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const ct = tail.endsWith(".jsonl") ? "application/x-ndjson" : "application/json";
+      const body = await request.arrayBuffer();
+      if (body.byteLength === 0 || body.byteLength > 4 * 1024 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      await env.REPORTS_R2.put("greatlakes/ais/" + tail, body, { httpMetadata: { contentType: ct } });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+
+    // 2. Everything else under /greatlakes — HTTP Basic gate.
+    if (!env.GREATLAKES_PASS) {
+      return new Response("demo not configured", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const expected = "Basic " + btoa("demo:" + env.GREATLAKES_PASS);
+    if (request.headers.get("Authorization") !== expected) {
+      return new Response("Authentication required.\n", {
+        status: 401,
+        headers: sec({
+          "WWW-Authenticate": 'Basic realm="Lakes Demo", charset="UTF-8"',
+          "content-type": "text/plain",
+          "cache-control": "no-store",
+        }),
+      });
+    }
+
+    // 3a. Authenticated page request.
+    if (pathname === "/greatlakes" || pathname === "/greatlakes/") {
+      const html = await env.LEDATIC_KV.get("greatlakes.html");
+      if (!html) {
+        return new Response("demo page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+      }
+      return new Response(html, {
+        headers: sec({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }),
+      });
+    }
+
+    // 3b. Authenticated GET on /greatlakes/ais/* — read R2.
+    if (pathname.startsWith("/greatlakes/ais/") && method === "GET") {
+      const tail = pathname.slice("/greatlakes/ais/".length);
+      if (!/^(latest|\d{8}T\d{6}Z)\.(jsonl|attestation\.json)$/.test(tail)) {
+        return new Response("bad path", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const obj = await env.REPORTS_R2.get("greatlakes/ais/" + tail);
+      if (!obj) {
+        return new Response('{"error":"no data yet"}', {
+          status: 503,
+          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+        });
+      }
+      const ct = tail.endsWith(".jsonl") ? "application/x-ndjson" : "application/json";
+      return new Response(await obj.arrayBuffer(), {
+        headers: sec({ "content-type": ct, "cache-control": "no-store" }),
+      });
+    }
+
+    return new Response("not found", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+  }
+
   // Entropy beacon page is now served by site2030 as entropy.html via the
   // extension-less → .html routing below. Legacy entropy:index KV key ignored.
   if (pathname === "/entropy/pulse" && method === "PUT") {
