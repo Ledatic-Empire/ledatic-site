@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#ffffff" />
+<meta name="description" content="Vessel detail — Great Lakes logistics demo.">
+<meta name="robots" content="noindex,nofollow">
+<title>Vessel — Ledatic Lakes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root {
+    --bg: #fff; --bg-soft: #f7f9fc; --bg-soft-2: #eef3f8;
+    --surface: #fff;
+    --ink: #0a2540; --ink-2: #425466; --ink-3: #697386; --ink-4: #8898aa;
+    --hairline: #e6ebf1; --hairline-2: #d3dce6;
+    --accent: #1e6fda; --accent-soft: #eaf2fd;
+    --good: #00875a; --good-soft: #e3fcef;
+    --warn: #b76e00; --warn-soft: #fff7ea;
+    --bad:  #c4314b; --bad-soft:  #ffeef0;
+    --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
+    --shadow-sm: 0 1px 2px rgba(10,37,64,.04), 0 1px 1px rgba(10,37,64,.06);
+    --shadow-md: 0 4px 12px rgba(10,37,64,.06), 0 1px 3px rgba(10,37,64,.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg-soft); color: var(--ink);
+    -webkit-font-smoothing: antialiased; line-height: 1.5;
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .nav {
+    background: rgba(255,255,255,.86);
+    backdrop-filter: saturate(1.6) blur(20px); -webkit-backdrop-filter: saturate(1.6) blur(20px);
+    border-bottom: 1px solid var(--hairline);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .nav-inner { display: flex; align-items: center; gap: 16px; height: 56px; font-size: 14px; }
+  .nav-back { color: var(--ink-2); font-weight: 500; }
+  .nav-back:hover { color: var(--ink); text-decoration: none; }
+  .nav-divider { color: var(--ink-4); }
+  .nav-title { color: var(--ink); font-weight: 600; }
+  .nav-cta { margin-left: auto; }
+
+  .hero {
+    padding: 32px 0 16px;
+  }
+  .hero-row { display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+  .hero h1 {
+    margin: 0;
+    font-size: 36px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 700;
+    color: var(--ink);
+  }
+  .hero-sub { color: var(--ink-3); font-size: 14px; margin-top: 6px; }
+  .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; background: var(--bg-soft-2); border-radius: 999px;
+    font-size: 12px; color: var(--ink-2); font-weight: 500;
+  }
+  .badge.good { background: var(--good-soft); color: var(--good); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+
+  .grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; padding: 20px 0 32px; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; border-bottom: 1px solid var(--hairline);
+    font-size: 13px; font-weight: 600; color: var(--ink-2); text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .card-tag {
+    margin-left: auto; font-weight: 500; color: var(--ink-3); text-transform: none;
+    letter-spacing: 0; font-size: 12px;
+  }
+
+  #map { height: 480px; width: 100%; background: var(--bg-soft-2); }
+
+  .particulars { padding: 0; }
+  .row { display: flex; align-items: baseline; padding: 11px 18px; border-bottom: 1px solid var(--hairline); font-size: 14px; }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--ink-3); flex: 0 0 130px; font-size: 13px; }
+  .row .v { color: var(--ink); font-weight: 500; }
+  .row .v.dim { color: var(--ink-4); font-weight: 400; }
+
+  .calls { padding: 0; max-height: 320px; overflow-y: auto; }
+  .call { padding: 12px 18px; border-bottom: 1px solid var(--hairline); }
+  .call:last-child { border-bottom: 0; }
+  .call .head { display: flex; align-items: center; gap: 8px; }
+  .call .port { font-weight: 600; color: var(--ink); font-size: 14px; }
+  .call .status { font-size: 11px; padding: 2px 7px; border-radius: 999px; }
+  .call .status.in { background: var(--good-soft); color: var(--good); }
+  .call .status.done { background: var(--bg-soft-2); color: var(--ink-3); }
+  .call .times { color: var(--ink-3); font-size: 12px; margin-top: 4px; }
+  .call .dwell { color: var(--ink-2); font-size: 12px; margin-top: 2px; }
+
+  .empty { padding: 22px; color: var(--ink-3); font-size: 13px; text-align: center; }
+  .err { padding: 60px 24px; color: var(--ink-3); font-size: 14px; text-align: center; }
+  .err .big { color: var(--ink-2); font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+
+  .foot {
+    border-top: 1px solid var(--hairline); padding: 18px 0;
+    color: var(--ink-3); font-size: 12px;
+  }
+  .foot-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .foot .mono { font-size: 11px; color: var(--ink-4); }
+
+  .vessel-dot {
+    width: 14px; height: 14px;
+    border-radius: 50% 50% 50% 0;
+    background: var(--accent);
+    border: 2px solid #fff; box-shadow: 0 0 0 1px var(--accent);
+  }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="nav-back" href="/greatlakes">← Lakes</a>
+    <span class="nav-divider">/</span>
+    <span class="nav-title" id="nav-vessel">Vessel</span>
+    <span class="nav-cta"><a class="mono" id="nav-mmsi" href="#">—</a></span>
+  </div>
+</nav>
+
+<div class="container hero">
+  <div class="hero-row">
+    <div style="flex: 1;">
+      <h1 id="v-name">Loading…</h1>
+      <div class="hero-sub mono" id="v-subline">—</div>
+      <div class="hero-badges" id="v-badges"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="content">
+    <div class="grid">
+      <div class="card">
+        <div class="card-head">Track <span class="card-tag" id="track-tag">—</span></div>
+        <div id="map"></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-head">Particulars</div>
+          <div class="particulars" id="particulars"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">Recent port calls <span class="card-tag" id="calls-tag">—</span></div>
+          <div class="calls" id="calls"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container foot">
+  <div class="foot-row">
+    <span>Signed batch attestation chains back to <a href="/entropy">ledatic.org/entropy</a>.</span>
+    <span class="mono" id="foot-stamp">—</span>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const MMSI = (window.location.pathname.match(/\/greatlakes\/vessel\/(\d+)/) || [])[1];
+  const VESSEL_URL = MMSI ? `/greatlakes/data/vessels/${MMSI}.json` : null;
+  const ATT_URL    = "/greatlakes/ais/latest.attestation.json";
+
+  // AIS vessel type codes — common ones for Great Lakes traffic.
+  const VESSEL_TYPES = {
+    0: "Unknown",
+    30: "Fishing", 31: "Towing", 32: "Towing (long)", 33: "Dredging",
+    34: "Diving ops", 35: "Military ops", 36: "Sailing", 37: "Pleasure craft",
+    40: "High-speed craft", 50: "Pilot vessel", 51: "Search & Rescue",
+    52: "Tug", 53: "Port tender", 54: "Anti-pollution", 55: "Law enforcement",
+    58: "Medical transport",
+    60: "Passenger", 69: "Passenger (other)",
+    70: "Cargo", 71: "Cargo (hazA)", 72: "Cargo (hazB)", 73: "Cargo (hazC)",
+    74: "Cargo (hazD)", 79: "Cargo (other)",
+    80: "Tanker", 81: "Tanker (hazA)", 82: "Tanker (hazB)", 89: "Tanker (other)",
+    90: "Other", 99: "Other",
+  };
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  function fmtTs(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts.replace(" UTC", "Z").replace(" +0000", "Z"));
+    if (isNaN(d.getTime())) return ts;
+    return d.toISOString().replace("T", " ").slice(0, 16) + " UTC";
+  }
+  function showError(msg) {
+    document.getElementById("content").innerHTML = `<div class="err"><div class="big">${esc(msg)}</div><div>Vessel may have left Great Lakes coverage, or there's no recent data.</div></div>`;
+  }
+
+  async function load() {
+    if (!MMSI) { showError("No MMSI in URL"); return; }
+    document.getElementById("nav-mmsi").textContent = `MMSI ${MMSI}`;
+    document.getElementById("nav-mmsi").href = `#${MMSI}`;
+
+    let snap;
+    try {
+      const r = await fetch(VESSEL_URL, { cache: "no-store" });
+      if (!r.ok) { showError(`No data for MMSI ${MMSI}`); return; }
+      snap = await r.json();
+    } catch (e) {
+      showError("Network error loading vessel.");
+      return;
+    }
+
+    const name = snap.name || `MMSI ${snap.mmsi}`;
+    document.title = `${name} — Ledatic Lakes`;
+    document.getElementById("nav-vessel").textContent = name;
+    document.getElementById("v-name").textContent = name;
+
+    const parts = [];
+    if (snap.imo) parts.push(`IMO ${snap.imo}`);
+    if (snap.callsign) parts.push(snap.callsign);
+    parts.push(`MMSI ${snap.mmsi}`);
+    document.getElementById("v-subline").textContent = parts.join(" · ");
+
+    const badges = [];
+    const type = VESSEL_TYPES[snap.type] || (snap.type ? `Type ${snap.type}` : null);
+    if (type) badges.push(`<span class="badge">${esc(type)}</span>`);
+    if (snap.length_m) badges.push(`<span class="badge">${snap.length_m} m LOA</span>`);
+    if (snap.beam_m) badges.push(`<span class="badge">${snap.beam_m} m beam</span>`);
+    if (snap.destination) badges.push(`<span class="badge good">→ ${esc(snap.destination)}</span>`);
+    document.getElementById("v-badges").innerHTML = badges.join("");
+
+    // Particulars
+    const last = snap.last || {};
+    const sog = (last.sog != null && last.sog < 102.4) ? last.sog.toFixed(1) + " kt" : "—";
+    const cog = (last.cog != null && last.cog < 360)   ? Math.round(last.cog) + "°"  : "—";
+    const rows = [
+      ["Type",        type || "—"],
+      ["Length",      snap.length_m ? `${snap.length_m} m` : "—"],
+      ["Beam",        snap.beam_m ? `${snap.beam_m} m` : "—"],
+      ["Draught",     snap.draught ? `${snap.draught} m` : "—"],
+      ["Destination", snap.destination || "—"],
+      ["ETA (broadcast)", snap.eta || "—"],
+      ["Speed",       sog],
+      ["Course",      cog],
+      ["Last fix",    fmtTs(last.ts)],
+    ];
+    document.getElementById("particulars").innerHTML = rows.map(([k, v]) =>
+      `<div class="row"><span class="k">${esc(k)}</span><span class="v${v === "—" ? " dim" : ""}">${esc(v)}</span></div>`
+    ).join("");
+
+    // Map + track
+    const mapEl = document.getElementById("map");
+    if (last.lat == null || last.lon == null) {
+      mapEl.innerHTML = `<div class="empty">No position fix.</div>`;
+    } else {
+      const map = L.map("map", { zoomControl: true, attributionControl: true, preferCanvas: true });
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: "abcd", maxZoom: 14, minZoom: 4,
+      }).addTo(map);
+
+      const track = (snap.track || []).filter(p => p.lat != null && p.lon != null);
+      if (track.length > 1) {
+        const latlngs = track.map(p => [p.lat, p.lon]);
+        L.polyline(latlngs, { color: "#1e6fda", weight: 2, opacity: 0.75 }).addTo(map);
+        const bounds = L.latLngBounds(latlngs);
+        bounds.extend([last.lat, last.lon]);
+        map.fitBounds(bounds, { padding: [30, 30] });
+      } else {
+        map.setView([last.lat, last.lon], 9);
+      }
+      L.marker([last.lat, last.lon], {
+        icon: L.divIcon({ className: "", html: '<div class="vessel-dot"></div>', iconSize: [14,14], iconAnchor: [7,7] }),
+      }).addTo(map).bindTooltip(name, { permanent: false });
+
+      document.getElementById("track-tag").textContent = `${track.length} fixes · 7d window`;
+    }
+
+    // Calls
+    const calls = snap.calls || [];
+    document.getElementById("calls-tag").textContent = `${calls.length} shown`;
+    if (calls.length === 0) {
+      document.getElementById("calls").innerHTML = `<div class="empty">No port calls detected yet.</div>`;
+    } else {
+      document.getElementById("calls").innerHTML = calls.map(c => {
+        const closed = !!c.departed_at;
+        const dwell = c.dwell_min != null ? `${c.dwell_min} min` : (closed ? "—" : "ongoing");
+        return `<div class="call">
+          <div class="head">
+            <span class="port">${esc(c.port_name || c.port_key)}</span>
+            <span class="status ${closed ? 'done' : 'in'}">${closed ? 'departed' : 'in port'}</span>
+          </div>
+          <div class="times">arrived ${fmtTs(c.arrived_at)}${closed ? ' · departed ' + fmtTs(c.departed_at) : ''}</div>
+          <div class="dwell">dwell ${esc(dwell)}</div>
+        </div>`;
+      }).join("");
+    }
+
+    // Foot — pull attestation pulse + pk_fp.
+    try {
+      const a = await fetch(ATT_URL, { cache: "no-store" });
+      if (a.ok) {
+        const att = await a.json();
+        document.getElementById("foot-stamp").textContent =
+          `signed batch ${att.batch?.id ?? "—"} · pulse ${att.beacon?.pulse_id ?? "—"} · pk_fp ${att.witness?.pk_fp ?? "—"}`;
+      }
+    } catch (_) {}
+  }
+
+  load();
+  // Light auto-refresh every 90s for live updates.
+  setInterval(() => { if (!document.hidden) load(); }, 90000);
+</script>
+</body>
+</html>

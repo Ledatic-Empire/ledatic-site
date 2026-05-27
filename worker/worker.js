@@ -48,6 +48,25 @@ const CSP = [
   "upgrade-insecure-requests",
 ].join("; ");
 
+// Per-route CSP for the /greatlakes demo. Loosens script-src + style-src to
+// allow Leaflet from unpkg (with SRI), and img-src to allow CARTO basemap
+// tiles. Scoped to this one page so the strict CSP stays intact everywhere
+// else. Eventually replace Leaflet with hand-rolled canvas + self-hosted
+// tiles, then retire this override.
+const GREATLAKES_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://unpkg.com https://static.cloudflareinsights.com",
+  "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://pub-e9d7c87d3a1b43bea50d3bd0d8ba9ffb.r2.dev",
+  "connect-src 'self' https://cloudflareinsights.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
 const SECURITY_HEADERS = {
   "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
   "x-content-type-options": "nosniff",
@@ -714,6 +733,28 @@ async function handleSite(request, env, url) {
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
 
+    // 1b. Derived data PUTs (vessels/, calls.json, brief.json, anomalies.json)
+    // Same token guard as /greatlakes/ais/. Allowed sub-paths are validated.
+    if (pathname.startsWith("/greatlakes/data/") && method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const tail = pathname.slice("/greatlakes/data/".length);
+      const ok =
+        /^vessels\/\d{6,10}\.json$/.test(tail) ||
+        /^(vessels\/index|calls|brief|anomalies)\.json$/.test(tail);
+      if (!ok) {
+        return new Response("bad path", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.arrayBuffer();
+      if (body.byteLength === 0 || body.byteLength > 8 * 1024 * 1024) {
+        return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      await env.REPORTS_R2.put("greatlakes/data/" + tail, body,
+        { httpMetadata: { contentType: "application/json" } });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+
     // 2. Everything else under /greatlakes — HTTP Basic gate.
     if (!env.GREATLAKES_PASS) {
       return new Response("demo not configured", { status: 503, headers: sec({ "content-type": "text/plain" }) });
@@ -737,7 +778,102 @@ async function handleSite(request, env, url) {
         return new Response("demo page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
       }
       return new Response(html, {
-        headers: sec({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }),
+        headers: sec({
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": GREATLAKES_CSP,
+        }),
+      });
+    }
+
+    // 3a'. Per-vessel detail page. /greatlakes/vessel/<mmsi> serves vessel.html;
+    // the page reads the MMSI from window.location and fetches the snapshot.
+    {
+      const mVessel = pathname.match(/^\/greatlakes\/vessel\/(\d{6,10})\/?$/);
+      if (mVessel) {
+        const html = await env.LEDATIC_KV.get("vessel.html");
+        if (!html) {
+          return new Response("vessel page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+        }
+        return new Response(html, {
+          headers: sec({
+            "content-type": "text/html; charset=utf-8",
+            "cache-control": "no-store",
+            "content-security-policy": GREATLAKES_CSP,
+          }),
+        });
+      }
+    }
+
+    // 3a''. Anomaly board page.
+    if (pathname === "/greatlakes/anomalies" || pathname === "/greatlakes/anomalies/") {
+      const html = await env.LEDATIC_KV.get("anomalies.html");
+      if (!html) {
+        return new Response("anomaly page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+      }
+      return new Response(html, {
+        headers: sec({
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": GREATLAKES_CSP,
+        }),
+      });
+    }
+
+    // 3a'''. Derived-data GETs (vessels, calls, brief, anomalies JSON) — R2 read.
+    if (pathname.startsWith("/greatlakes/data/") && method === "GET") {
+      const tail = pathname.slice("/greatlakes/data/".length);
+      const ok =
+        /^vessels\/\d{6,10}\.json$/.test(tail) ||
+        /^(vessels\/index|calls|brief|anomalies)\.json$/.test(tail);
+      if (!ok) {
+        return new Response("bad path", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const obj = await env.REPORTS_R2.get("greatlakes/data/" + tail);
+      if (!obj) {
+        return new Response('{"error":"no data yet"}', {
+          status: 404,
+          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+        });
+      }
+      return new Response(await obj.arrayBuffer(), {
+        headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+      });
+    }
+
+    // 3a''''. AI proxy — page POSTs natural-language queries; Worker forwards
+    // to the Mini fleet tunnel which then talks to Studio's 122B over TB mesh.
+    // env.LAKES_FLEET_URL is the Cloudflare Tunnel public hostname for the
+    // Mini's AI proxy endpoint (set as a secret_text binding). If unset, this
+    // route returns a friendly "AI offline" instead of crashing.
+    if (pathname.startsWith("/greatlakes/api/ai/") && method === "POST") {
+      if (!env.LAKES_FLEET_URL || !env.LAKES_FLEET_TOKEN) {
+        return new Response('{"error":"ai offline"}', {
+          status: 503,
+          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+        });
+      }
+      const subpath = pathname.slice("/greatlakes/api/ai/".length);
+      if (!/^(ask|brief)$/.test(subpath)) {
+        return new Response("bad path", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const upstream = env.LAKES_FLEET_URL.replace(/\/+$/, "") + "/ai/" + subpath;
+      const body = await request.arrayBuffer();
+      const resp = await fetch(upstream, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-lakes-token": env.LAKES_FLEET_TOKEN,
+        },
+        body,
+      });
+      const respBody = await resp.arrayBuffer();
+      return new Response(respBody, {
+        status: resp.status,
+        headers: sec({
+          "content-type": resp.headers.get("content-type") || "application/json",
+          "cache-control": "no-store",
+        }),
       });
     }
 

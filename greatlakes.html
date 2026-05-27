@@ -317,6 +317,36 @@
   </div>
 </header>
 
+<div class="container" style="padding: 24px 24px 4px;">
+  <div id="brief-card" style="display:none; background: linear-gradient(135deg, var(--bg-soft-2), var(--bg-soft)); border: 1px solid var(--hairline); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 18px 22px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.06em;">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--good);"></span>
+      <span>Daily fleet brief</span>
+      <span style="margin-left:auto;color:var(--ink-4);text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;">via Qwen3.5-122B on shore station</span>
+    </div>
+    <div id="brief-body" style="color:var(--ink); font-size:15px; line-height:1.55;"></div>
+    <div id="brief-foot" style="margin-top:12px; padding-top:10px; border-top:1px solid var(--hairline); color:var(--ink-4); font-size:11px; font-family:'JetBrains Mono',ui-monospace,monospace;"></div>
+  </div>
+</div>
+
+<div class="container" style="padding: 14px 24px 4px;">
+  <div style="background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow-sm);">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.06em;">
+      <span>Ask the fleet</span>
+      <span style="margin-left:auto;color:var(--ink-4);text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;">live grounding · 122B answer in ~10s</span>
+    </div>
+    <form id="ask-form" style="display:flex; gap:8px;">
+      <input id="ask-q" type="text" maxlength="500" required
+             placeholder="e.g. What Algoma vessels are visible right now? Who's in Hamilton?"
+             style="flex:1; padding:10px 14px; border:1px solid var(--hairline-2); border-radius:var(--radius-sm); font-family:inherit; font-size:14px; color:var(--ink); background:var(--bg-soft); outline:none;">
+      <button type="submit" id="ask-btn"
+              style="padding:10px 18px; background:var(--ink); color:#fff; border:none; border-radius:var(--radius-sm); font:inherit; font-weight:500; font-size:14px; cursor:pointer;">Ask</button>
+    </form>
+    <div id="ask-out" style="display:none; margin-top:14px; padding:14px 16px; background:var(--bg-soft); border-radius:var(--radius-sm); color:var(--ink); font-size:14px; line-height:1.6; white-space:pre-wrap;"></div>
+    <div id="ask-meta" style="display:none; margin-top:8px; color:var(--ink-4); font-size:11px; font-family:'JetBrains Mono',ui-monospace,monospace;"></div>
+  </div>
+</div>
+
 <div class="container layout">
   <div class="card">
     <div class="card-head">
@@ -327,12 +357,20 @@
   </div>
 
   <aside class="side">
-    <div class="card">
+    <div class="card" style="margin-bottom:20px;">
       <div class="card-head">
         <span>Upcoming service calls</span>
         <span class="tag" id="calls-tag">—</span>
       </div>
       <div class="calls-list" id="calls-list"><div style="padding:18px; color: var(--ink-3); font-size:13px;">loading…</div></div>
+    </div>
+
+    <div class="card" id="anomaly-card" style="display:none;">
+      <div class="card-head">
+        <span>Anomaly board</span>
+        <span class="tag" id="anomaly-tag">—</span>
+      </div>
+      <div id="anomaly-list" style="max-height:420px; overflow-y:auto;"></div>
     </div>
   </aside>
 </div>
@@ -381,7 +419,7 @@
   const LAKES_BOUNDS = [[41.5, -93.0], [49.0, -75.0]];
 
   const map = L.map('map', { zoomControl: true, attributionControl: true, preferCanvas: true }).fitBounds(LAKES_BOUNDS);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd', maxZoom: 12, minZoom: 5,
   }).addTo(map);
@@ -491,6 +529,9 @@
             ${bar("Provisions", Math.min(100, (ops.provisions_days ?? 0)*12.5))}
           </div>
           ${chips(ops.services_due)}
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--hairline);">
+            <a href="/greatlakes/vessel/${v.mmsi}" style="font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;">View vessel detail →</a>
+          </div>
         </div>`);
     }
 
@@ -534,8 +575,94 @@
 
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
 
+  async function loadBrief() {
+    try {
+      const r = await fetch("/greatlakes/data/brief.json", { cache: "no-store" });
+      if (!r.ok) return;
+      const b = await r.json();
+      const body = document.getElementById("brief-body");
+      body.innerHTML = (b.content || "").split(/\n\n+/).map(p => `<p style="margin:0 0 10px;">${esc(p)}</p>`).join("");
+      document.getElementById("brief-foot").textContent = `generated ${b.generated_at} · model ${b.model}`;
+      document.getElementById("brief-card").style.display = "";
+    } catch (_) {}
+  }
+
+  // ── Anomaly board ──────────────────────────────────────────────────
+  async function loadAnomalies() {
+    try {
+      const r = await fetch("/greatlakes/data/anomalies.json", { cache: "no-store" });
+      if (!r.ok) return;
+      const d = await r.json();
+      const list = document.getElementById("anomaly-list");
+      const card = document.getElementById("anomaly-card");
+      const tag  = document.getElementById("anomaly-tag");
+      if (!d.anomalies || d.anomalies.length === 0) {
+        card.style.display = "none"; return;
+      }
+      tag.textContent = `${d.count} active`;
+      const kindLabel = { going_dark: "AIS gap", loitering: "Loitering", speed_spike: "Speed spike" };
+      const kindColor = { going_dark: "var(--warn)", loitering: "var(--ink-2)", speed_spike: "var(--bad)" };
+      list.innerHTML = d.anomalies.map(a => `
+        <div style="padding:14px 18px; border-bottom:1px solid var(--hairline);">
+          <div style="display:flex; gap:8px; align-items:baseline; margin-bottom:4px;">
+            <span style="font-weight:600; color:var(--ink); font-size:14px;">${esc(a.data?.name || ('MMSI '+a.mmsi))}</span>
+            <span style="font-size:11px; padding:2px 7px; border-radius:999px; background:var(--bg-soft-2); color:${kindColor[a.kind] || 'var(--ink-3)'};">${esc(kindLabel[a.kind] || a.kind)}</span>
+            <a href="/greatlakes/vessel/${a.mmsi}" style="margin-left:auto; font-size:11px; color:var(--accent);">detail →</a>
+          </div>
+          <div style="color:var(--ink-2); font-size:13px; line-height:1.5;">${esc(a.narrative || '(no narrative)')}</div>
+          <div style="margin-top:6px; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:10px; color:var(--ink-4);">first seen ${esc(a.first_seen)}</div>
+        </div>
+      `).join("");
+      card.style.display = "";
+    } catch (_) {}
+  }
+
   loadAll();
   setInterval(loadAll, 30000);
+  loadBrief();
+  setInterval(loadBrief, 5 * 60 * 1000);
+  loadAnomalies();
+  setInterval(loadAnomalies, 60000);
+
+  // ── Ask-the-fleet ──────────────────────────────────────────────────
+  const askForm = document.getElementById("ask-form");
+  const askInput = document.getElementById("ask-q");
+  const askBtn = document.getElementById("ask-btn");
+  const askOut = document.getElementById("ask-out");
+  const askMeta = document.getElementById("ask-meta");
+  askForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const q = askInput.value.trim();
+    if (!q) return;
+    askBtn.disabled = true;
+    askBtn.textContent = "Thinking…";
+    askOut.style.display = "";
+    askMeta.style.display = "";
+    askOut.textContent = "";
+    askMeta.textContent = "querying 122B over Tailscale mesh…";
+    const t0 = performance.now();
+    try {
+      const r = await fetch("/greatlakes/api/ai/ask", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question: q }),
+      });
+      const d = await r.json();
+      if (!r.ok) {
+        askOut.textContent = "Error: " + (d.error || r.status);
+        askMeta.textContent = "—";
+      } else {
+        askOut.textContent = d.answer || "(no answer)";
+        const wall = ((performance.now() - t0) / 1000).toFixed(1);
+        askMeta.textContent = `answered in ${d.elapsed_s}s server-side (${wall}s wall) · ${d.context_chars} chars of live SQL context grounded the response`;
+      }
+    } catch (err) {
+      askOut.textContent = "Network error: " + err;
+    } finally {
+      askBtn.disabled = false;
+      askBtn.textContent = "Ask";
+    }
+  });
 </script>
 </body>
 </html>
