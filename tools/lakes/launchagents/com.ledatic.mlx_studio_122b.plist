@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Studio plist (lives on Mac Studio, NOT Mini). Hosts Qwen3.5-122B at
+  10.42.0.2:8082 for the Great Lakes brief + ai_proxy. Survives reboot.
+
+  Install:
+    scp tools/lakes/launchagents/com.ledatic.mlx_studio_122b.plist studio:~/Library/LaunchAgents/
+    ssh studio "launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.ledatic.mlx_studio_122b.plist"
+
+  Memory pressure rule: only one MLX model on Studio's GPU at a time. Bootout
+  any other mlx_studio_* agent before bootstrapping this one.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ledatic.mlx_studio_122b</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/python3.11</string>
+        <string>-m</string>
+        <string>mlx_lm.server</string>
+        <string>--model</string>
+        <string>/Users/user/models/Qwen3.5-122B-A10B-heretic-v2-2.34bit-msq</string>
+        <string>--host</string>
+        <string>10.42.0.2</string>
+        <string>--port</string>
+        <string>8082</string>
+        <string>--trust-remote-code</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>NetworkState</key>
+        <true/>
+    </dict>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/mlx_122b.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/mlx_122b.log</string>
+</dict>
+</plist>
