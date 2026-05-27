@@ -61,11 +61,9 @@
   <div class="navlinks">
     <a href="rail.html">Rail</a>
     <a href="entropy.html" class="active">Entropy</a>
-    <a href="plasma.html">Plasma</a>
-    <a href="fleet.html">Fleet</a>
     <a href="aliens.html">Aliens</a>
+    <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a>
   </div>
   <a class="nav-cta" href="#verify">Verify</a>
 </nav>
@@ -136,6 +134,48 @@
   </div>
 </section>
 
+<section class="section" id="source">
+  <div class="wrap">
+    <span class="eyebrow reveal">// The source</span>
+    <h2 class="reveal">See what's being hashed.</h2>
+    <p class="body reveal" style="max-width: 52rem;">
+      An Orszag-Tang vortex on a 128&sup2; periodic grid. Ideal-MHD,
+      Lax-Friedrichs, conservation to machine precision
+      (&Delta;m/m &lt; 10<sup>-15</sup>, &Delta;E/E &lt; 10<sup>-15</sup>,
+      &nabla;&middot;B at 10<sup>-15</sup> by construction). The frame
+      you're looking at is the same frame that just got SHA-256'd into
+      the chain row above. Plasma is chaotic &mdash; small perturbations
+      blow up fast &mdash; which is exactly the property an honest
+      entropy beacon needs.
+    </p>
+
+    <div class="mhd-viewport reveal" style="margin-top: 2rem;">
+      <canvas id="mhd-canvas"
+              data-mhd-live="https://liveplasma.ledatic.org/frame"
+              data-mhd-shader="_shared/shaders/mhd_live.frag"
+              data-mhd-fallback="_shared/shaders/mhd.frag"
+              aria-hidden="true"></canvas>
+      <div class="mhd-frame" aria-hidden="true"></div>
+      <div class="mhd-overlay">
+        <span class="live-dot"></span>
+        <span>Orszag-Tang</span>
+        <span class="mhd-kernel">// live</span>
+      </div>
+      <div class="mhd-readouts">
+        <span>Grid <span class="mhd-num">128&times;128</span></span>
+        <span>Var <span class="mhd-num">&rho;</span></span>
+        <span>Step <span class="mhd-num" data-live="mhd-step">&mdash;</span></span>
+      </div>
+    </div>
+    <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
+      Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; 128&times;128
+      solver grid on a 2&pi; periodic domain, refreshed every ~250&nbsp;ms, min-max normalized, color-mapped
+      in your GPU. Every frame you see has been hashed and signed into the entropy chain.
+      Deeper write-up on <a href="plasma.html">the plasma page</a>.
+    </p>
+  </div>
+</section>
+
 <section class="section" id="feed">
   <div class="wrap">
     <span class="eyebrow reveal">Feed</span>
@@ -189,16 +229,16 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
       <div>
-        <h4>Run</h4>
+        <h4>Verify</h4>
         <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
-          <li><a href="plasma.html">Plasma</a></li>
-          <li><a href="fleet.html">Fleet</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
         </ul>
       </div>
       <div>
@@ -212,7 +252,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v5.1.0 &middot; 140/140</span>
     </div>
   </div>
 </footer>

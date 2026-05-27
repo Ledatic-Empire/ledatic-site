@@ -1,7 +1,8 @@
 #!/bin/bash
 # deploy_worker.sh — push worker/worker.js to Cloudflare as the `ledatic`
 # Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN +
-# API_BEARER) exactly as configured.
+# API_BEARER + DDA_FLEET_TOKEN + DDA_PORTAL_TOKEN + GREATLAKES_PASS) exactly
+# as configured. Each new secret needs its source file + a binding entry.
 #
 # Usage: ./worker/deploy_worker.sh   (run from ledatic-site/ or anywhere)
 # Env:   CF_TOKEN read from ~/Desktop/rings (must have Account:Workers:Edit)
@@ -28,6 +29,9 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 echo "> Writing metadata"
 BEACON_TOKEN_VAL=$(cat ~/.ledatic/entropy/beacon_token)
 API_BEARER_VAL=$(cat ~/.ledatic/api/bearer_token)
+DDA_FLEET_TOKEN_VAL=$(cat ~/.ledatic/dda_portal/fleet_token)
+DDA_PORTAL_TOKEN_VAL=$(cat ~/.ledatic/dda_portal/portal_token)
+GREATLAKES_PASS_VAL=$(cat ~/.ledatic/greatlakes_pass)
 cat > "$META" <<JSON
 {
   "main_module": "worker.js",
@@ -36,7 +40,10 @@ cat > "$META" <<JSON
     {"type":"kv_namespace","name":"LEDATIC_KV","namespace_id":"be34022eeedc4d6fb802087156eb1aae"},
     {"type":"r2_bucket","name":"REPORTS_R2","bucket_name":"ledatic-reports"},
     {"type":"secret_text","name":"BEACON_TOKEN","text":"$BEACON_TOKEN_VAL"},
-    {"type":"secret_text","name":"API_BEARER","text":"$API_BEARER_VAL"}
+    {"type":"secret_text","name":"API_BEARER","text":"$API_BEARER_VAL"},
+    {"type":"secret_text","name":"DDA_FLEET_TOKEN","text":"$DDA_FLEET_TOKEN_VAL"},
+    {"type":"secret_text","name":"DDA_PORTAL_TOKEN","text":"$DDA_PORTAL_TOKEN_VAL"},
+    {"type":"secret_text","name":"GREATLAKES_PASS","text":"$GREATLAKES_PASS_VAL"}
   ]
 }
 JSON

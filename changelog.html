@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Every tagged Rail release, in order. Twelve releases in six weeks — from v2.0's 512 MB allocator and GC to v3.10.0's Rail-native Pi signer. Each entry points at the commit that ships it.">
+<meta name="description" content="Every tagged Rail release, in order. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. Each entry points at the commit that ships it.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/changelog">
 <meta property="og:title" content="Changelog — Ledatic">
-<meta property="og:description" content="Every tagged Rail release, in order. Twelve releases in six weeks — from v2.0's 512 MB allocator and GC to v3.10.0's Rail-native Pi signer. Each entry points at the commit that ships it.">
+<meta property="og:description" content="Every tagged Rail release, in order. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. Each entry points at the commit that ships it.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Changelog — Ledatic">
-<meta name="twitter:description" content="Every tagged Rail release, in order. Twelve releases in six weeks — from v2.0's 512 MB allocator and GC to v3.10.0's Rail-native Pi signer. Each entry points at the commit that ships it.">
+<meta name="twitter:description" content="Every tagged Rail release, in order. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. Each entry points at the commit that ships it.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Changelog — Ledatic</title>
@@ -81,11 +81,9 @@
   <div class="navlinks">
     <a href="rail.html">Rail</a>
     <a href="entropy.html">Entropy</a>
-    <a href="plasma.html">Plasma</a>
-    <a href="fleet.html">Fleet</a>
     <a href="aliens.html">Aliens</a>
+    <a href="system.html">System</a>
     <a href="changelog.html" class="active">Changelog</a>
-    <a href="work.html">Work</a>
   </div>
   <a class="nav-cta" href="https://github.com/zemo-g/rail/releases" target="_blank" rel="noopener">Releases</a>
 </nav>
@@ -113,6 +111,53 @@
 <section class="section">
   <div class="wrap" style="max-width: 62rem;">
 
+    <div class="release reveal" data-attest-tag="v5.1.0">
+      <div class="meta">
+        <div class="ver">v5.1.0</div>
+        <div>2026-05-15</div>
+      </div>
+      <div>
+        <h3>Rail emits its own GPU kernels</h3>
+        <p>Rail now generates Metal Shading Language source from its op-DAG, JIT-compiles it via Metal's <code>newLibraryWithSource:</code>, and dispatches the kernel at runtime. Every kernel the GPU executes is emitted by an attested Rail binary &mdash; the substrate piece needed for end-to-end attested GPU training.</p>
+        <ul>
+          <li>Auto-emission pipeline: <code>stdlib/jit_node.rail</code> (op-DAG types) + <code>stdlib/jit_tape.rail</code> (tracers) + <code>stdlib/jit_match.rail</code> (DAG matcher) + <code>stdlib/jit_emit.rail</code> (MSL emitter)</li>
+          <li>Hand-fused Metal kernels: <code>fused_rmsnorm_qkv</code> (RMSNorm + 3 matmul in one threadgroup-per-row dispatch, <strong>35&times; faster</strong> at training shapes), <code>fused_silu_hadamard</code> (SiLU(gate) * up elementwise, <strong>18&times; faster</strong>)</li>
+          <li>bf16 numerics regime: <code>tgl_matmul_bf16</code> + <code>matmul_bf16</code> Rail wrapper. f32 exponent range sidesteps fp16's step-2759 NaN cliff. 10k-step training stable</li>
+          <li>JIT compile foundation: <code>tgl_jit_compile_from_tmp_file</code> drives Metal's <code>newLibraryWithSource:</code> from a Rail-emitted <code>.metal</code> file; pipeline IDs cached for reuse</li>
+          <li>200-step matched-seed pilot vs bf16 baseline: trajectory shape preserved, no NaN, both converge. Wall-clock bench (3&times;3 alternating runs): <strong>2.85% step-throughput improvement</strong> at seq=512 d=64 d_ff=192</li>
+          <li>140/140 still green; 2-pass byte-identical self-bootstrap unchanged</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release reveal" data-attest-tag="v5.0.0">
+      <div class="meta">
+        <div class="ver">v5.0.0</div>
+        <div>2026-05-14</div>
+      </div>
+      <div>
+        <h3>Self-hosted toolchain (Linux ELF substrate)</h3>
+        <p>Rail produces its own aarch64 Linux ELF binaries. Encoder, assembler, static linker, and ELF writer are all pure Rail. On the supported subset of inputs, the build pipeline invokes no external <code>as</code>, <code>ld</code>, or <code>codesign</code>.</p>
+        <ul>
+          <li><code>jit/arm64.rail</code>: 23 new encoders for the Linux mnemonic set (<code>ldrb</code>/<code>strb</code>, <code>clz</code>, <code>neg</code>, <code>cmn</code>, <code>rev</code>, <code>fneg</code>, <code>fcvt</code>, <code>tbnz</code>, <code>stp</code>/<code>ldp</code> pre/post-index, <code>asr</code>/<code>lsr</code>/<code>lsl</code> immediate)</li>
+          <li><code>stdlib/elf.rail</code>: 175-line <code>Elf64_Ehdr</code> + program-header writer for static aarch64 binaries</li>
+          <li><code>tools/v5/elf_asm.rail</code>: 567-line section-aware ARM64 assembler + static linker with <code>adrp</code> / <code>:lo12:</code> symbol resolution</li>
+          <li>Four hand programs (exit42, fib, hello, BSS counter) run byte-equivalent to canonical <code>as</code> + <code>ld</code> output on Pi Zero 2 W via Tailscale</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release reveal" data-attest-tag="v4.0.0">
+      <div class="meta">
+        <div class="ver">v4.0.0</div>
+        <div>2026-05-13</div>
+      </div>
+      <div>
+        <h3>Substrate parity + in-process JIT</h3>
+        <p>ARM64 and x86_64 backends reach full parity (140/140 and 136/136). JIT-first REPL at 0.1 ms/line. Single-program agentic loop: Rail calls Anthropic, JIT-lowers the response, executes, returns &mdash; no shell, no Python, no subprocess. Public reproducible hard-bench: frontier LLM + 1 KB Rail spec scores 30/30 on a held-out suite. Multi-witness Ed25519 provenance with pulse_id binding closes the prior session-replay gap.</p>
+      </div>
+    </div>
+
     <div class="release reveal">
       <div class="meta">
         <div class="ver">advisory</div>
@@ -135,7 +180,7 @@
         <ul>
           <li><code>tools/attest/pi_sign_server.rail</code>: HTTP signer on <code>fleet0:9102</code>. Replaces the ~110 LOC Python signer with a 118 KB ELF. Same wire format, same backing shell signer, end-to-end verified</li>
           <li><code>linux_libc.s</code>: three real implementations replacing silent stubs &mdash; <code>_atof</code> (real number parser, the previous stub returned 0.0 for every Rail float literal), <code>_snprintf</code> %.15g formatter (real digit-extract, the previous stub wrote literal "0"), <code>_rail_print_float</code> (Linux-ABI clone of the Mac stub)</li>
-          <li>137/137 green; byte-identical self-bootstrap verified</li>
+          <li>140/140 green; byte-identical self-bootstrap verified</li>
         </ul>
       </div>
     </div>
@@ -184,7 +229,7 @@
       </div>
       <div>
         <h3>Float-TCO root fix, mixed-precision inference, parallel rerank</h3>
-        <p>Substrate work + new inference paths + diagnostic infrastructure. Three real bugs (one fixed at root, one workaround'd at source, one falsified). 137/137 green; byte-identical self-bootstrap verified.</p>
+        <p>Substrate work + new inference paths + diagnostic infrastructure. Three real bugs (one fixed at root, one workaround'd at source, one falsified). 140/140 green; byte-identical self-bootstrap verified.</p>
         <ul>
           <li>Float-TCO root fix: re-added <code>body_has_float</code> guard to <code>all_params_int</code>. Closes a 17-day silent wrong-result bug that reinterpreted float bits as ints in tail-recursive register-ABI calls (RMSNorm CPU, AdamW weight decay, LayerNorm CPU backward)</li>
           <li>Runtime-mmap arena via <code>RAIL_ARENA_MB</code> env var (default 1 GB, scales to 4 GB+). Long-context training (seq=2048+) now mechanically tractable on macOS</li>
@@ -208,7 +253,7 @@
           <li>Undefined identifiers now fail at link time with a named symbol (<code>_RAIL_UNDEFINED_IDENT_&lt;name&gt;</code>) instead of silently producing a binary that segfaults at runtime</li>
           <li>Parser accepts multi-line compound expressions (cons chains, nested calls, list literals) inside unclosed <code>(...)</code>/<code>[...]</code> or before strictly-greater-indented <code>(</code>/<code>[</code></li>
           <li><code>returns_float</code> tracks let-bound floats through V (variable) AST nodes, fixing two latent miscompile bugs in MHD axisym + MPD source-term paths</li>
-          <li>137/137 green, byte-identical self-bootstrap verified (<code>14af7d5d&hellip;</code>)</li>
+          <li>140/140 green, byte-identical self-bootstrap verified (<code>14af7d5d&hellip;</code>)</li>
         </ul>
       </div>
     </div>
@@ -225,7 +270,7 @@
           <li>Trust-store SPKI cache: O(N) walk &rarr; O(1) lookup</li>
           <li>New <code>asn1_find_spki</code> / <code>ts_has_spki_hash</code></li>
           <li>Amazon (DigiCert/RSA) + Slack (ISRG/RSA) strict verified live</li>
-          <li>137/137 green, 2-pass byte-identical</li>
+          <li>140/140 green, 2-pass byte-identical</li>
         </ul>
       </div>
     </div>
@@ -321,16 +366,16 @@
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
       <div>
-        <h4>Run</h4>
+        <h4>Verify</h4>
         <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
-          <li><a href="plasma.html">Plasma</a></li>
-          <li><a href="fleet.html">Fleet</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
         </ul>
       </div>
       <div>
@@ -344,7 +389,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v5.1.0 &middot; 140/140</span>
     </div>
   </div>
 </footer>
