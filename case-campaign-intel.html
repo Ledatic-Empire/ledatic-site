@@ -107,11 +107,9 @@
   <div class="navlinks">
     <a href="rail.html">Rail</a>
     <a href="entropy.html">Entropy</a>
-    <a href="plasma.html">Plasma</a>
-    <a href="fleet.html">Fleet</a>
     <a href="aliens.html">Aliens</a>
+    <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a>
   </div>
   <a class="nav-cta" href="mailto:z3m0g@icloud.com">Get in touch</a>
 </nav>
@@ -126,15 +124,16 @@
   <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
     <span class="eyebrow fade-up" style="animation-delay: 0.1s">Notes &mdash; Campaign intelligence POC</span>
     <h1 class="hero-title fade-up" style="animation-delay: 0.2s">
-      What we're <span class="accent">working on</span>.
+      What we <span class="accent">shipped</span>.
     </h1>
     <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      A 30-day POC, in flight.
+      A 30-day POC, closed 2026-05-12.
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      An honest write-up of the campaign-intelligence engagement we're running
-      right now. Not a closed case study. Here's the shape, what we're
-      shipping, and what we're learning while we ship it.
+      An honest write-up of a campaign-intelligence engagement that ran
+      April 13 &ndash; May 12, 2026. Apr 13 kickoff, Mon/Wed/Fri briefs,
+      19-page handoff on day 30. Here's the shape, what we shipped, and
+      what we learned doing it.
     </p>
   </div>
 </section>
@@ -144,21 +143,22 @@
     <article class="case">
 
       <div class="case-meta reveal">
-        <div class="row"><span class="lab">Status</span><span class="val">In flight</span></div>
-        <div class="row"><span class="lab">Engagement</span><span class="val">30-day fixed-scope POC</span></div>
+        <div class="row"><span class="lab">Status</span><span class="val ok">Closed 2026-05-12</span></div>
+        <div class="row"><span class="lab">Engagement</span><span class="val">30-day fixed-scope POC &middot; Apr 13 &ndash; May 12, 2026</span></div>
         <div class="row"><span class="lab">Cadence</span><span class="val">Mon &middot; Wed &middot; Fri</span></div>
         <div class="row"><span class="lab">Compute</span><span class="val">Local, on our hardware</span></div>
         <div class="row"><span class="lab">Attestation</span><span class="val ok">every brief signed against pulse_id</span></div>
+        <div class="row"><span class="lab">Handoff</span><span class="val">19-page closing doc on day 30, plus a live Q&amp;A engine over the corpus as leave-behind</span></div>
       </div>
 
-      <h2 class="reveal">What we're doing</h2>
+      <h2 class="reveal">What we did</h2>
       <p class="reveal">
-        We're running a 30-day campaign-intelligence POC for a regional
-        client. They wanted a regular drumbeat of intel on a market they
-        compete in, without burning an analyst's full week on manual
-        scraping, and without sending their clients' material through a
-        third-party AI vendor. We thought we could put a small pipeline in
-        front of those three constraints. The POC is how we find out.
+        We ran a 30-day campaign-intelligence POC for a regional client.
+        They wanted a regular drumbeat of intel on a market they compete in,
+        without burning an analyst's full week on manual scraping, and
+        without sending their clients' material through a third-party AI
+        vendor. We put a small pipeline in front of those three constraints
+        and let the POC settle the question.
       </p>
 
       <h2 class="reveal">The brief shape</h2>
@@ -208,29 +208,38 @@
         and <a href="/system">/system</a>.
       </p>
 
-      <h2 class="reveal">What we're learning</h2>
+      <h2 class="reveal">What we learned</h2>
       <p class="reveal">
-        We're still mid-engagement, so we'll be careful with claims. What
-        we'll say honestly: the discipline of shipping a structured brief
-        three times a week sharpens the questions we ask of the data more
-        than we expected, and the attestation step has been less of a tax
-        than we thought it would be once the cron was wired. We'll write
-        more about both after the POC closes.
+        Two things honestly. First: the discipline of shipping a structured
+        brief three times a week sharpened the questions we asked of the
+        data more than we expected &mdash; the cadence forced clarity the
+        analysis would not have produced on its own. Second: the attestation
+        step turned out to be a smaller tax than we feared once the cron
+        was wired, and the client never had to think about it. The
+        cryptographic floor was there if anyone ever wanted to inspect it;
+        nobody had to in the moment.
+      </p>
+      <p class="reveal">
+        One quieter learning: the client consumed the briefs but didn't
+        engage in real-time. Reactions and follow-ups happened on their
+        own internal cadence. That's not a failure mode &mdash; it's a
+        signal about who actually pays for delivered intelligence vs. who
+        pays for interactive analysis. Useful to know.
       </p>
 
-      <h2 class="reveal">If this fits your shop</h2>
+      <h2 class="reveal">If a shape like this is useful to you</h2>
       <p class="reveal">
-        We're early. We're not pretending to be a powerhouse. This page is
-        about one engagement, but most of what we do is smaller &mdash; a
+        This was one engagement. Most of what we ship is smaller &mdash; a
         weekend script, a one-day tool, a tiny watcher for one thing you
-        care about. If anything here resembles a thing you wish were
-        easier, tell us about it and we'll figure out the smallest version
-        that would actually help. If we're not the right fit, we'll say so.
+        care about. The cryptographic floor underneath is the same one
+        Ledatic uses for itself, so anything we hand you can be verified
+        the same way every Rail release can. If anything here resembles
+        a thing you wish were easier, tell us about it and we'll figure
+        out the smallest version that would actually help.
       </p>
 
       <div class="cta-row reveal" style="margin-top: 2.5rem;">
-        <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Campaign%20intelligence%20POC">Start a conversation</a>
-        <a class="btn btn-secondary" href="work.html">See all engagements</a>
+        <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Campaign%20intelligence">Start a conversation</a>
       </div>
 
     </article>
@@ -252,11 +261,12 @@
         </ul>
       </div>
       <div>
-        <h4>Run</h4>
+        <h4>Verify</h4>
         <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
-          <li><a href="plasma.html">Plasma</a></li>
-          <li><a href="fleet.html">Fleet</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
         </ul>
       </div>
       <div>
@@ -270,7 +280,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v3.10.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v5.1.0 &middot; 140/140</span>
     </div>
   </div>
 </footer>

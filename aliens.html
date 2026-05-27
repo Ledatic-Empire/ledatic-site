@@ -553,11 +553,9 @@
   <div class="navlinks">
     <a href="rail.html">Rail</a>
     <a href="entropy.html">Entropy</a>
-    <a href="plasma.html">Plasma</a>
-    <a href="fleet.html">Fleet</a>
     <a href="aliens.html" class="active">Aliens</a>
+    <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a>
   </div>
   <a class="nav-cta" href="https://github.com/Ledatic-Empire/pursue" target="_blank" rel="noopener">Source</a>
 </nav>
@@ -629,6 +627,7 @@
         <span>showing <span class="count" id="visible-count">0</span></span>
       </div>
       <div class="type-chips" id="type-chips" role="group" aria-label="Filter by file type"></div>
+      <div class="type-chips" id="release-chips" role="group" aria-label="Filter by release wave"></div>
     </div>
     </div><!-- /view-timeline -->
 
@@ -698,11 +697,12 @@
         </ul>
       </div>
       <div>
-        <h4>Run</h4>
+        <h4>Verify</h4>
         <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
-          <li><a href="witness.html">Witness</a></li>
-          <li><a href="fleet.html">Fleet</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html" class="active">Aliens archive</a></li>
         </ul>
       </div>
       <div>
@@ -828,6 +828,7 @@ const STATE = {
   yearCounts: new Map(),
   agencyFilter: "",
   typeFilter: "",   // "" | "doc" | "photo" | "video"
+  releaseFilter: "",  // "" | "wave1" | "wave2"
   query: "",
   sort: "date_desc",
 };
@@ -844,6 +845,15 @@ function recordType(r) {
     if (exts.includes(ext)) return g;
   }
   return "other";
+}
+
+// PURSUE release waves: mapped by Department of War "Release Date" field.
+// New waves get a new entry here; the URL also embeds the wave path
+// (release_1 / release_02) but the release_date is the canonical key.
+const RELEASE_MAP = { "5/8/26": "wave1", "5/22/26": "wave2" };
+const RELEASE_LABELS = { wave1: "Wave 1", wave2: "Wave 2" };
+function recordRelease(r) {
+  return RELEASE_MAP[(r.release_date || "").trim()] || "";
 }
 
 // ── Loading ────────────────────────────────────────────────────
@@ -1084,6 +1094,7 @@ function recordsInWindow() {
     if (e < STATE.windowMin || s > STATE.windowMax) return false;
     if (STATE.agencyFilter && r.agency !== STATE.agencyFilter) return false;
     if (STATE.typeFilter && recordType(r) !== STATE.typeFilter) return false;
+    if (STATE.releaseFilter && recordRelease(r) !== STATE.releaseFilter) return false;
     if (q) {
       const hay = (
         (r.title || "") + " " +
@@ -1762,6 +1773,34 @@ function buildTypeChips() {
   }
 }
 
+function buildReleaseChips() {
+  const root = document.getElementById("release-chips");
+  if (!root) return;
+  const counts = { all: STATE.records.length };
+  for (const r of STATE.records) {
+    const w = recordRelease(r);
+    if (!w) continue;
+    counts[w] = (counts[w] || 0) + 1;
+  }
+  // Only show the chips row if we've actually got more than one wave —
+  // otherwise the row is noise.
+  const waveKeys = Object.keys(counts).filter(k => k !== "all").sort();
+  if (waveKeys.length < 2) { root.style.display = "none"; return; }
+  const buckets = [["", "All", counts.all]].concat(
+    waveKeys.map(k => [k, RELEASE_LABELS[k] || k, counts[k] || 0])
+  );
+  root.innerHTML = buckets.map(([v, label, n]) =>
+    `<button data-release="${v}" class="${v === STATE.releaseFilter ? "active" : ""}">${label}<span class="ct">${n}</span></button>`
+  ).join("");
+  for (const btn of root.querySelectorAll("button")) {
+    btn.addEventListener("click", () => {
+      STATE.releaseFilter = btn.dataset.release || "";
+      for (const b of root.querySelectorAll("button")) b.classList.toggle("active", b === btn);
+      renderRecords();
+    });
+  }
+}
+
 // ── Init ───────────────────────────────────────────────────────
 (async function init() {
   bindTimeline();
@@ -1780,6 +1819,7 @@ function buildTypeChips() {
   summary();
   renderWatchdog(watchdog);
   buildTypeChips();
+  buildReleaseChips();
   drawTimeline();
   renderRecords();
 })();

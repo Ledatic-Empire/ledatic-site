@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIT — Rail Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#0b0b0c; color:#dcdcde; font-family:'Sora',system-ui,sans-serif; }
+nav.topnav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid #222; background:#0b0b0c; position:sticky; top:0; z-index:10; }
+nav.topnav .logo { color:#dcdcde; text-decoration:none; font-weight:600; font-size:1.05rem; }
+nav.topnav .accent { color:#9b6bff; }
+nav.topnav .navlinks a { color:#9095a0; text-decoration:none; margin:0 .8rem; font-size:.95rem; }
+nav.topnav .navlinks a.active, nav.topnav .navlinks a:hover { color:#fff; }
+nav.topnav .nav-cta { color:#9b6bff; border:1px solid #9b6bff; padding:.35rem .8rem; border-radius:.3rem; text-decoration:none; font-size:.9rem; }
+main { max-width:820px; margin:2rem auto; padding:0 1.5rem 4rem; line-height:1.65; }
+main h1, main h2, main h3 { font-weight:600; line-height:1.25; }
+main h1 { font-size:2rem; margin:1.5rem 0 1rem; border-bottom:1px solid #222; padding-bottom:.4rem; }
+main h2 { font-size:1.4rem; margin:2rem 0 .8rem; color:#fff; }
+main h3 { font-size:1.1rem; margin:1.6rem 0 .5rem; color:#cfd0d4; }
+main p { margin:.7rem 0; color:#c2c4ca; }
+main a { color:#a98bff; text-decoration:none; border-bottom:1px solid #9b6bff44; }
+main a:hover { border-bottom-color:#9b6bff; color:#cdb8ff; }
+main code { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.92em; background:#1a1a1d; color:#e0d0ff; padding:.1em .35em; border-radius:.25em; }
+main pre { background:#121214; border:1px solid #1f1f23; border-left:3px solid #9b6bff; padding:1rem 1.2rem; overflow-x:auto; border-radius:.4rem; margin:1.2rem 0; }
+main pre code { background:transparent; padding:0; color:#dcdcde; font-size:.88em; line-height:1.55; }
+main ul { padding-left:1.6rem; color:#c2c4ca; }
+main li { margin:.25rem 0; }
+main blockquote { border-left:3px solid #444; padding:.3rem 1rem; color:#9aa; margin:1rem 0; background:#0e0e10; }
+main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
+.docfooter { max-width:820px; margin:3rem auto 1rem; padding:0 1.5rem; color:#666; font-size:.85rem; border-top:1px solid #1c1c1f; padding-top:1.5rem; }
+.docfooter a { color:#888; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/rail/docs/" class="active">Docs</a>
+    <a href="/plasma.html">Plasma</a>
+    <a href="/fleet.html">Fleet</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+</nav>
+<main>
+<h1>JIT</h1>
+<p>
+Rail ships its own JIT compiler, written in Rail, in <code>jit/</code>. It lowers a small bytecode IR to ARM64 machine code, <code>mmap</code>s the bytes executable, and calls them via a foreign-call trampoline. About 6,600 lines across 20 source files. No C extensions, no LLVM, no external dependency beyond <code>libSystem</code> (for <code>mprotect</code> and <code>pthread_create</code>).
+</p>
+<h2>Why it's here</h2>
+<p>
+If the claim is *substrate, not model* — the substrate is the verifier, the substrate is the compiler, the substrate is what the language can do for itself — then a self-hosted JIT is the bluntest version of that claim. The compiler can not just produce machine code from disk; from within a running Rail program, it can produce machine code for a new function, install it, and call it. The verifier isn't a black box you query — it's a library you import.
+</p>
+<p>
+This is the difference between *a small language that compiles to native code* and *a substrate*.
+</p>
+<h2>End-to-end demo</h2>
+<pre><code class="lang-bash">
+./rail_native run jit/test_codegen.rail
+</code></pre>
+<pre><code class="lang-">
+[fact5] emitted 196 bytes
+JIT WORKS: 120
+[fact1] emitted 196 bytes
+JIT WORKS: 1
+[fact0] emitted 196 bytes
+JIT WORKS: 1
+[fib10] emitted 216 bytes
+JIT WORKS: 55
+[fib0] emitted 216 bytes
+JIT WORKS: 0
+[fib1] emitted 216 bytes
+JIT WORKS: 1
+ALL PASS
+</code></pre>
+<p>
+Each line is a Rail program lowered to IR, emitted as ARM64 bytes, <code>mmap</code>ed executable, called, and the result returned to the running Rail process. <code>196 bytes</code> is the entire compiled <code>fact</code> (8-instruction loop including prologue and epilogue). <code>JIT WORKS: 120</code> is <code>fact 5</code> computed by the JIT-emitted code.
+</p>
+<h2>What works</h2>
+<p>
+| Feature | Status |
+|---|---|
+| Integer arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, <code>&lt;</code>, <code>==</code>, etc.) | shipped |
+| Branches, loops, recursion | shipped |
+| Multi-argument user functions | shipped |
+| String literals + <code>print</code>/<code>str_eq</code>/<code>str_len</code>/<code>str_at</code> | shipped |
+| Cons cells / <code>head</code> / <code>tail</code> / <code>is_nil</code> (lowering only) | partial — execution blocked on foreign-pointer ABI |
+| Float arithmetic, float user-fn args, float returns | shipped (P4) |
+| Lambdas (compile-time inline substitution) | shipped (P3) |
+| Higher-order functions via <code>op_apply</code> | shipped |
+| Builtins: <code>not</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>read_file</code> | shipped |
+</p>
+<p>
+Per-stage history is in <a href="https://github.com/zemo-g/rail/blob/main/jit/CHANGELOG.md"><code>jit/CHANGELOG.md</code></a>.
+</p>
+<h2>Verify the floor</h2>
+<pre><code class="lang-bash">
+./rail_native run jit/test_codegen.rail   # 8 end-to-end fixtures
+./rail_native run jit/test_enc.rail       # 17 ARM64 encoder unit tests + 8 ldp/stp
+./rail_native run jit/test_opt.rail       # 29 optimizer + profiler + icache assertions
+./rail_native run jit/test_lower.rail     # 26 source → JIT tests (multi-stage)
+./rail_native run jit/test_print.rail     # 5 stdout fixtures
+./rail_native run jit/test_parse.rail     # 5 IR-roundtrip tests
+</code></pre>
+<p>
+All six are exit-0 + last-line <code>PASS</code>/<code>OK</code>-shaped on macOS ARM64.
+</p>
+<h2>How it's structured</h2>
+<p>
+| File | Role |
+|---|---|
+| <code>jit/ir.rail</code> | Opcodes (21 ops), accessors, IR struct helpers |
+| <code>jit/parse.rail</code> | Parser for the in-tree IR text format |
+| <code>jit/lex.rail</code> | Source-text lexer for lower-from-source flow |
+| <code>jit/lower.rail</code> | Source AST → IR lowering, register allocation, liveness |
+| <code>jit/opt_const_fold.rail</code> | Per-block constant propagation + folding |
+| <code>jit/opt_dce.rail</code> | Dead-code elimination + block-offset remap |
+| <code>jit/arm64.rail</code> | 39 ARM64 instruction encoders, all verified against <code>as</code>+<code>objdump</code> |
+| <code>jit/codebuf.rail</code> | Byte-granular code buffer (little-endian word emit) |
+| <code>jit/emit.rail</code> | Two-pass IR → bytes; per-op size budget keeps block offsets stable |
+| <code>jit/loader.rail</code> | <code>mprotect</code> + <code>sys_icache_invalidate</code> + indirect-call trampoline |
+| <code>jit/ffi.rail</code> | Foreign bindings for <code>mprotect</code>, <code>pthread_create</code>, <code>pthread_join</code>, <code>read_u64</code>, <code>write_u64</code> |
+| <code>jit/heap.rail</code> | Bump-pointer cons-cell heap (64 KB mmap'd page) |
+| <code>jit/icache.rail</code> | Monomorphic inline cache (3-int records) |
+| <code>jit/profile.rail</code> | Per-site hot-counter primitives |
+| <code>jit/grade.rail</code> | Bench grader using JIT for compatible programs |
+| <code>jit/parity_check.rail</code> | Differential check: interpreter result vs JIT result |
+</p>
+<p>
+The IR contract (opcode table, <code>op_call</code> packed-arg encoding, block layout) is documented in <a href="https://github.com/zemo-g/rail/blob/main/jit/README.md"><code>jit/README.md</code></a>.
+</p>
+<h2>The trampoline trick</h2>
+<p>
+Calling JIT-emitted code from a host language usually needs either inline assembly or a C shim. Rail does it through <code>pthread_create</code>: the executable page address is passed as the thread start-routine, the argument is passed as the user data pointer, and the result comes back via <code>pthread_join</code>'s join-value. No <code>compile.rail</code> edits, no extra dylib link. <code>jit/loader.rail</code> is ~50 lines.
+</p>
+<p>
+A direct-call trampoline (<code>tools/jit_call.c</code>, ~20 lines of C) is checked in as an option but unused on the default path; the pthread approach avoids the cross-language link entirely.
+</p>
+<h2>Limitations (honest)</h2>
+<ul>
+<li><strong>\1</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/zemo-g/rail/blob/main/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
+<li><strong>\1</strong> No x86 JIT yet. The encoders, the loader, and the trampoline are all macOS-ARM64-specific.</li>
+<li><strong>\1</strong> No ADTs, no effect handlers, no full pattern matching. List-pattern <code>match</code> is supported. The covered subset is what the bench grader's "lower-hit" set runs JIT-fast; the rest falls back to the regular compiler path.</li>
+</ul>
+<p>
+The 2.06× real-corpus wall-clock speedup in <code>jit/grade.rail</code> over the regular compile path is on the covered subset; full coverage would change the multiplier.
+</p>
+<h2>Where to start reading</h2>
+<p>
+If you want to convince yourself the JIT is real, the shortest path is:
+</p>
+<p>
+1. <code>jit/test_codegen.rail:build_fact</code> — hand-built IR for <code>factorial</code>.
+2. <code>jit/emit.rail</code> — find <code>emit_op_add</code> (~20 LoC) to see one opcode → bytes.
+3. <code>jit/loader.rail</code> — <code>make_executable</code> + <code>call_jit</code>, ~50 LoC total.
+</p>
+<p>
+That's the substrate-honesty argument compressed to three files.
+</p>
+</main>
+<div class="docfooter">
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+</div>
+</body>
+</html>

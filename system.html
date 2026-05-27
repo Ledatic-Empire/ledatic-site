@@ -79,11 +79,9 @@
   <div class="navlinks">
     <a href="rail.html">Rail</a>
     <a href="entropy.html">Entropy</a>
-    <a href="plasma.html">Plasma</a>
-    <a href="fleet.html">Fleet</a>
     <a href="aliens.html">Aliens</a>
+    <a href="system.html" class="active">System</a>
     <a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a>
   </div>
   <a class="nav-cta" href="#verify">Verify</a>
 </nav>
@@ -191,8 +189,8 @@
       <div class="verify-recipe">
 <span class="c"># Pull the verifier and a release attestation, then verify locally.</span><br>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/verify.sh &amp;&amp; chmod +x /tmp/verify.sh<br>
-curl -sf https://ledatic.org/releases/v3.10.0/rail_native -o /tmp/rail_native<br>
-curl -sf https://ledatic.org/releases/v3.10.0/rail_native.attestation.json -o /tmp/rn.att.json<br>
+curl -sf https://ledatic.org/releases/v5.1.0/rail_native -o /tmp/rail_native<br>
+curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tmp/rn.att.json<br>
 /tmp/verify.sh /tmp/rail_native /tmp/rn.att.json<br>
 <span class="c"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span>
       </div>
@@ -212,17 +210,16 @@ curl -sf https://ledatic.org/releases/v3.10.0/rail_native.attestation.json -o /t
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
       <div>
-        <h4>Run</h4>
+        <h4>Verify</h4>
         <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
-          <li><a href="plasma.html">Plasma</a></li>
-          <li><a href="fleet.html">Fleet</a></li>
-          <li><a href="system.html">System</a></li>
+          <li><a href="system.html" class="active">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
         </ul>
       </div>
       <div>
@@ -236,7 +233,7 @@ curl -sf https://ledatic.org/releases/v3.10.0/rail_native.attestation.json -o /t
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v3.10.0 &middot; 137/137</span>
+      <span data-live="rail-version">RAIL v5.1.0 &middot; 140/140</span>
     </div>
   </div>
 </footer>

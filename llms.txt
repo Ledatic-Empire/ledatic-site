@@ -1,41 +1,37 @@
 # LEDATIC
 
-> One-operator shop in Detroit, MI building small, practical AI workflows for everyday businesses. Plus Rail, a self-hosting compiler with zero C dependencies, and a public attestation chain anchored to a live plasma physics beacon.
+> Ledatic builds the verifiable layer — from the doorstep to the monolith. A self-hosting compiler in Rail, a live MHD plasma beacon, a Pi-hosted Ed25519 witness chain, and a Rail-native verifier you can run yourself. Every release, every fleet snapshot, every client deliverable is bound to a live physics process and signed by a key Ledatic does not control alone.
 
-LEDATIC is the engineering practice of Reilly Gomez. Two pipes share one site:
+LEDATIC is the engineering practice of Reilly Gomez, in Detroit, MI. The thesis: the post-AI internet needs an independent third-party trust layer for compute, and the same primitive scales from one artifact at your doorstep to every record in a government archive.
 
-1. **Work** — small AI projects for small businesses, local shops, and one-person operations. A weekend script, a one-day tool, a modest weekly digest. We're not trying to dominate any market; we're trying to save shop owners a few hours a week.
-2. **Rail** — the language and runtime that makes the work durable. Self-hosting compiler, byte-identical fixed point, attested releases.
+## The four working surfaces
 
-## Hire us
+1. **[Rail](https://ledatic.org/rail)** — the substrate. Self-hosting compiler, v4.0.0, 140/140 tests, 921 KB ARM64 seed binary, byte-identical 2-pass fixed point. Pure-Rail TLS 1.3 (verified live against Amazon and Slack). Four backends: native ARM64, Linux ARM64, Linux x86_64, WASM. BSL 1.1 on GitHub at `zemo-g/rail`.
 
-- [Work with Ledatic](https://ledatic.org/work) — three common shapes: a little workflow help (auto-draft replies, sort receipts, tag inventory, summarize notes), watch one thing (a competitor, a regulator, a supplier's prices), or a weekly intelligence brief. Small projects welcome. No minimum.
-- [Notes from a current POC](https://ledatic.org/case-campaign-intel) — honest in-flight write-up of the campaign-intelligence engagement we're running right now. The shape, what we ship, what we're learning.
-- [Email](mailto:z3m0g@icloud.com) — z3m0g@icloud.com. One short paragraph is enough. Usually a same-day reply.
+2. **[Entropy](https://ledatic.org/entropy)** — the beacon. A live 2D ideal-MHD Orszag-Tang simulation on a 128² grid hashes its state every ~2 seconds into a public chain you can walk in one shell line. Conservation to machine precision. The plasma viewer is embedded on the page so you can see the bytes that just got SHA-256'd into the row above.
 
-## Rail — the substrate
+3. **[Aliens](https://ledatic.org/aliens)** — the demo. A byte-for-byte mirror of the U.S. Dept. of War PURSUE UAP archive (gov.uap), each file Ed25519-signed against the beacon by an independent Pi witness (`pk_fp cac5f21a70564aeb`) and verifiable per-record in your own browser. The whole verifier chain (mirror + beacon + witness + browser-side Ed25519) is original.
 
-- [Rail on GitHub](https://github.com/zemo-g/rail): self-hosting language, BSL 1.1. Latest tag v3.10.0. 6,039 lines of Rail in the compiler, 925 KB ARM64 seed binary, 137/137 tests, 2-pass byte-identical self-compile. Four backends: native ARM64, Linux ARM64, Linux x86_64, and WASM (Metal GPU tensor kernels in stdlib).
-- [Rail page](https://ledatic.org/rail): language pitch, stdlib surface, recent releases.
-- [Sandboxed online compiler](https://compile.ledatic.org): public Rail compiler with AST whitelist and WASM import validation. Try real Rail without leaving the tab.
-- [Changelog](https://ledatic.org/changelog): every tagged release in order, each signed against a live entropy beacon.
+4. **[System](https://ledatic.org/system)** — mission control. Five live panels — beacon, witness, fleet, build, self-host. Every cell is a current value fetched from a signed JSON artifact at page load. If any of it's stale, this page shows it.
 
-## Attestation (the moat)
+## Direction: proof-of-human-authorship
 
-Every Rail release, every test pass, every 2-pass self-compile fixed point, and every client deliverable is signed against a live plasma physics beacon by a Pi-hosted Ed25519 witness key (`pk_fp = cac5f21a70564aeb`). Anyone can verify any output we ever published, on any future date.
+Where the verifiable layer extends next: hardware-rooted, human-bound, time-anchored signing of creative artifacts so the open internet keeps a way to tell humans from AI. The primitive is built; the human-binding layer (Secure Enclave + proof-of-personhood) is the work ahead. See [/provenance](https://ledatic.org/provenance) for the buyer-side framing.
 
-- [Entropy beacon](https://ledatic.org/entropy): live plasma pulses, public.
-- [Plasma](https://ledatic.org/plasma): the 2D ideal-MHD solver behind the beacon. Orszag-Tang vortex on a 128² grid, conservation to machine precision.
-- [System / mission control](https://ledatic.org/system): five live panels — beacon, witness, fleet, build, self-host. Each refresh re-derives a signed JSON artifact.
-- [Verifier](https://ledatic.org/attest/verify.sh) + [public key](https://ledatic.org/attest/fleet0.pub.pem): five-line verification recipe published on every release.
+## Attestation primitive
 
-## Fleet
+Every public Ledatic surface — every release binary, every test pass, every fleet snapshot, every plasma frame, every client deliverable — is signed against a live entropy pulse by a Pi-hosted Ed25519 witness key (`pk_fp = cac5f21a70564aeb`). Anyone can verify any output, on any future date, with no Ledatic trust required. The verifier itself is 143 lines of Rail.
 
-- [Fleet](https://ledatic.org/fleet): four-node compute fleet (Mac Mini M4 Pro, Mac Studio M1 Ultra, MacBook Air M1, Pi Zero 2 W). Thunderbolt mesh + Tailscale. Pure-Rail HTTP control plane on `:9101`.
+- [Verifier source](https://ledatic.org/attest/verify.sh) + [public key](https://ledatic.org/attest/fleet0.pub.pem) — published on every release
+- [Changelog](https://ledatic.org/changelog) — every tagged release, each with an attestation badge
+
+## Work
+
+The recent campaign-intelligence engagement closed 2026-05-12 after 30 days. Notes and the cryptographic floor underneath at [/case-campaign-intel](https://ledatic.org/case-campaign-intel). For new engagements, write Reilly directly.
 
 ## Manifesto
 
-- [Manifesto](https://ledatic.org/manifesto): "Rail runs on Rail. The rest runs on physics." Two load-bearing claims: a compiler that rebuilds itself byte-for-byte, and a stack answerable to a verifiable physical clock.
+- [/manifesto](https://ledatic.org/manifesto) — "Rail runs on Rail. The rest runs on physics." Two load-bearing claims: a compiler that rebuilds itself byte-for-byte, and a stack answerable to a verifiable physical clock.
 
 ## Contact
 
