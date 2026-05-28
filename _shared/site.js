@@ -394,11 +394,16 @@
       }
       // Mark canvas so the procedural mount can't clobber it later.
       canvas.setAttribute('data-live-mounted', '1');
-      // Poll cadence: was 2100 ms when fed by the CF-cached
-      // /entropy/frame/current endpoint (1 Hz upstream cap).  The
-      // liveplasma.ledatic.org/frame endpoint is uncached and the
-      // beacon writes ~9 fps, so bring the canvas refresh in line.
-      setInterval(fetchFrame, 120);
+      // Self-pacing poll: each frame is ~0.5 MB and can take >250 ms, so a
+      // fixed setInterval stacked overlapping fetches and saturated the
+      // connection pool. Await the prior fetch before scheduling the next,
+      // and don't poll while the tab is hidden.
+      const FRAME_GAP_MS = 250;
+      const pumpFrame = async () => {
+        if (!document.hidden) await fetchFrame();
+        setTimeout(pumpFrame, FRAME_GAP_MS);
+      };
+      setTimeout(pumpFrame, FRAME_GAP_MS);
 
       const resize = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
