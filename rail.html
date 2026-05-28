@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A self-hosting compiler in 921K. Four backends, 140 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, Metal GPU tensor math, plasma MHD — all in the same language.">
+<meta name="description" content="A self-hosting compiler in ~1.0 MB. Six backends, 141 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, JIT-emitted Metal GPU kernels, plasma MHD — all in the same language.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/rail">
 <meta property="og:title" content="Rail — Ledatic">
-<meta property="og:description" content="A self-hosting compiler in 921K. Four backends, 140 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, Metal GPU tensor math, plasma MHD — all in the same language.">
+<meta property="og:description" content="A self-hosting compiler in ~1.0 MB. Six backends, 141 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, JIT-emitted Metal GPU kernels, plasma MHD — all in the same language.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Rail — Ledatic">
-<meta name="twitter:description" content="A self-hosting compiler in 921K. Four backends, 140 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, Metal GPU tensor math, plasma MHD — all in the same language.">
+<meta name="twitter:description" content="A self-hosting compiler in ~1.0 MB. Six backends, 141 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, JIT-emitted Metal GPU kernels, plasma MHD — all in the same language.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Rail — Ledatic</title>
@@ -52,9 +52,10 @@
       A self-hosting compiler. Zero C dependencies.
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Rail compiles itself to a 921K ARM64 binary. Four backends: native,
-      Linux ARM64, Linux x86_64, Metal GPU. One language for the whole
-      stack &mdash; compiler, TLS, plasma sim, site generator, training loop.
+      Rail compiles itself to a ~1.0 MB ARM64 binary. Six backends: native
+      ARM64, Linux ARM64, Linux x86_64, WASM, Cortex-M4, RISC-V &mdash; and it
+      JIT-emits its own Metal GPU kernels. One language for the whole stack
+      &mdash; compiler, TLS, plasma sim, site generator, training loop.
     </p>
     <div class="cta-row fade-up" style="animation-delay: 0.7s">
       <a class="btn btn-primary" href="/rail/docs/">Read the docs</a>
@@ -63,7 +64,7 @@
     </div>
     <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
       <span class="visor-label">Rail</span>
-      <span class="visor-value">v5.1.0 <span class="dim">//</span> 140/140</span>
+      <span class="visor-value">v5.1.0 <span class="dim">//</span> 141/141</span>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.9s">
       2-pass byte-identical self-compile &middot; BSL 1.1 &middot; Detroit, MI
@@ -78,15 +79,15 @@
 
     <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
       <div class="stat reveal">
-        <div class="value">921K</div>
+        <div class="value">1.0 MB</div>
         <div class="label">ARM64 seed binary</div>
       </div>
       <div class="stat reveal">
-        <div class="value">72</div>
+        <div class="value">94</div>
         <div class="label">Stdlib modules</div>
       </div>
       <div class="stat reveal">
-        <div class="value">140</div>
+        <div class="value">141</div>
         <div class="label">Tests passing</div>
       </div>
       <div class="stat reveal">
@@ -103,7 +104,7 @@
     <h2 class="reveal">What ships in the box.</h2>
     <p class="lead reveal">
       Every module below is Rail source, compiled by Rail, running on the
-      same 921K binary. No FFI. No shims.
+      same ~1.0 MB binary. No FFI. No shims.
     </p>
 
     <div class="grid grid-2 grid-3" style="margin-top: 2rem;">
@@ -169,7 +170,7 @@
       <div class="card">
         <span class="eyebrow">2026-05-15</span>
         <h3>v5.1.0 &mdash; Rail emits its own GPU kernels</h3>
-        <p>Rail now generates Metal Shading Language source from its op-DAG, JIT-compiles it via Metal's <code>newLibraryWithSource:</code>, and dispatches the kernel at runtime. Every kernel the GPU executes is emitted by an attested Rail binary. Two hand-fused kernels land on the same dispatch path: RMSNorm + Q/K/V matmul fused (<strong>35&times; faster</strong> at training shapes), SiLU(gate)&middot;up fused (<strong>18&times; faster</strong>). bf16 numerics regime sidesteps fp16's step-2759 NaN cliff &mdash; 10k-step training stable. 140/140 still green; 2-pass byte-identical self-bootstrap unchanged.</p>
+        <p>Rail now generates Metal Shading Language source from its op-DAG, JIT-compiles it via Metal's <code>newLibraryWithSource:</code>, and dispatches the kernel at runtime. Every kernel the GPU executes is emitted by an attested Rail binary. Two hand-fused kernels land on the same dispatch path: RMSNorm + Q/K/V matmul fused (<strong>35&times; faster</strong> at training shapes), SiLU(gate)&middot;up fused (<strong>18&times; faster</strong>). bf16 numerics regime sidesteps fp16's step-2759 NaN cliff &mdash; 10k-step training stable. 141/141 still green; 2-pass byte-identical self-bootstrap unchanged.</p>
       </div>
       <div class="card">
         <span class="eyebrow">2026-05-14</span>
@@ -300,7 +301,7 @@ curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tm
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 140/140</span>
+      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
     </div>
   </div>
 </footer>

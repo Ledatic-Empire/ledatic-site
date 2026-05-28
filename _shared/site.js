@@ -449,7 +449,7 @@
       const title = xml.querySelector('entry > title')?.textContent || '';
       const m = title.match(/v(\d+\.\d+\.\d+)/);
       if (!m) return;
-      els.forEach(el => { el.textContent = `RAIL v${m[1]} · 137/137`; });
+      els.forEach(el => { el.textContent = `RAIL v${m[1]} · 141/141`; });
     } catch {}
   }
 

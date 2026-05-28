@@ -125,7 +125,7 @@
           <li>bf16 numerics regime: <code>tgl_matmul_bf16</code> + <code>matmul_bf16</code> Rail wrapper. f32 exponent range sidesteps fp16's step-2759 NaN cliff. 10k-step training stable</li>
           <li>JIT compile foundation: <code>tgl_jit_compile_from_tmp_file</code> drives Metal's <code>newLibraryWithSource:</code> from a Rail-emitted <code>.metal</code> file; pipeline IDs cached for reuse</li>
           <li>200-step matched-seed pilot vs bf16 baseline: trajectory shape preserved, no NaN, both converge. Wall-clock bench (3&times;3 alternating runs): <strong>2.85% step-throughput improvement</strong> at seq=512 d=64 d_ff=192</li>
-          <li>140/140 still green; 2-pass byte-identical self-bootstrap unchanged</li>
+          <li>141/141 still green; 2-pass byte-identical self-bootstrap unchanged</li>
         </ul>
       </div>
     </div>
@@ -389,7 +389,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 140/140</span>
+      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
     </div>
   </div>
 </footer>
