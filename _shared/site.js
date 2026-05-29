@@ -273,10 +273,11 @@
     if (!el) return;
     const tick = async () => {
       const data = await fetchJson('/fleet/status.json');
-      if (data && typeof data.up === 'number' && typeof data.total === 'number') {
-        const state = data.up === data.total ? 'ONLINE' : 'DEGRADED';
-        el.innerHTML = `${data.up}/${data.total} <span class="dim">//</span> ${state}`;
-      }
+      if (!data || !Array.isArray(data.nodes) || data.nodes.length === 0) return;
+      const up = data.nodes.filter(n => n.alive).length;
+      const total = data.nodes.length;
+      const state = up === total ? 'ONLINE' : 'DEGRADED';
+      el.innerHTML = `${up}/${total} <span class="dim">//</span> ${state}`;
     };
     await tick();
     setInterval(tick, 15000);

@@ -1,6 +1,6 @@
 // ot-cite.js — populate the live citation block on /ot.
 //
-// Polls /entropy/pulse and /entropy/frame/latest.attestation.json,
+// Polls /entropy/pulse and /entropy/frame/ot256/latest.attestation.json,
 // fills the [data-sys=...] placeholders.  Refreshes every 5 s.
 
 (() => {
@@ -19,7 +19,7 @@
   async function tick() {
     const [pulse, frame] = await Promise.all([
       fetchJson("/entropy/pulse"),
-      fetchJson("/entropy/frame/latest.attestation.json"),
+      fetchJson("/entropy/frame/ot256/latest.attestation.json"),
     ]);
     if (pulse) set("pulse.id", pulse.pulse_id);
     if (frame) {
