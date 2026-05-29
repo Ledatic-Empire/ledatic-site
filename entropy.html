@@ -136,7 +136,7 @@
 
 <section class="section" id="source">
   <div class="wrap">
-    <span class="eyebrow reveal">// The source</span>
+    <span class="eyebrow reveal">The source</span>
     <h2 class="reveal">See what's being hashed.</h2>
     <p class="body reveal" style="max-width: 52rem;">
       An Orszag-Tang vortex on a 128&sup2; periodic grid. Ideal-MHD,
@@ -168,10 +168,11 @@
       </div>
     </div>
     <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
-      Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; 128&times;128
-      solver grid on a 2&pi; periodic domain, refreshed every ~250&nbsp;ms, min-max normalized, color-mapped
-      in your GPU. Every frame you see has been hashed and signed into the entropy chain.
-      Deeper write-up on <a href="plasma.html">the plasma page</a>.
+      Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the 128&times;128
+      solver grid on a 2&pi; periodic domain, min-max normalized and color-mapped in your GPU. A new
+      attested frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
+      cross-dissolves between them for smooth motion. Every keyframe has been hashed and signed into the
+      entropy chain. Deeper write-up on <a href="plasma.html">the plasma page</a>.
     </p>
   </div>
 </section>

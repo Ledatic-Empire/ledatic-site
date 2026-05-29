@@ -347,6 +347,21 @@
       let hasFrame = false;
       let frameW = 64, frameH = 128;
 
+      // The attested frame at /entropy/frame/current advances ~once per beacon
+      // pulse (~2 s), not per animation tick. Hard-cutting between those
+      // keyframes is the visible "lurch". Instead we cross-dissolve: keep the
+      // frame we're fading FROM (prevU8) and the newest attested frame (curU8),
+      // and the render loop blends them over FADE_MS. Every keyframe shown is a
+      // real signed frame; the in-between is a display dissolve, like a video
+      // fade — no fabricated physics.
+      let curU8 = null;     // newest attested frame (min-max normalized density)
+      let prevU8 = null;    // frame we're dissolving from
+      let blendU8 = null;   // what's actually on screen this tick
+      let fadeStart = 0;
+      let settled = true;   // true once the current frame is fully shown
+      let lastStep = -1;
+      const FADE_MS = 1600;
+
       // Binary frame header (48 bytes):
       //   u32 w, u32 h, u32 c, u32 step, then 8 × f32 metrics
       // Body: c planes of w × h float32 — ρ, vx, vy, p, Bx, By.
@@ -363,6 +378,7 @@
           const c = view.getUint32(8, true);
           const step = view.getUint32(12, true);
           if (w <= 0 || h <= 0 || c <= 0) return;
+          if (step === lastStep) return;   // same signed frame — nothing new to show
           const nCells = w * h;
           if (buffer.byteLength < 48 + nCells * c * 4) return;
           // Density = first planar channel (canonical Orszag-Tang viz).
@@ -374,14 +390,19 @@
             if (v > max) max = v;
           }
           const range = (max - min) || 1;
-          const u8 = new Uint8Array(nCells);
+          const newU8 = new Uint8Array(nCells);
           for (let i = 0; i < nCells; i++) {
-            u8[i] = Math.round(((floats[i] - min) / range) * 255);
+            newU8[i] = Math.round(((floats[i] - min) / range) * 255);
           }
-          gl.bindTexture(gl.TEXTURE_2D, tex);
-          gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, u8);
+          // Dissolve FROM whatever is on screen right now so a frame arriving
+          // mid-fade doesn't pop. null on the very first frame → no fade.
+          prevU8 = (blendU8 && blendU8.length === nCells) ? blendU8.slice() : null;
+          curU8 = newU8;
+          if (!blendU8 || blendU8.length !== nCells) blendU8 = new Uint8Array(nCells);
           frameW = w; frameH = h;
+          fadeStart = performance.now();
+          settled = false;
+          lastStep = step;
           hasFrame = true;
           if (stepEl) stepEl.textContent = step.toLocaleString();
         } catch (_) { /* silent fallback */ }
@@ -399,7 +420,12 @@
       // fixed setInterval stacked overlapping fetches and saturated the
       // connection pool. Await the prior fetch before scheduling the next,
       // and don't poll while the tab is hidden.
-      const FRAME_GAP_MS = 250;
+      // The attested frame only changes ~every 2 s, so a 250 ms poll refetched
+      // the same object ~8× per real update — wasteful, and a likely
+      // Cloudflare rate-limit trigger (the cause of the original "won't load").
+      // ~1 s still catches each new frame promptly at a quarter of the request
+      // volume; the cross-dissolve in the render loop is what smooths motion.
+      const FRAME_GAP_MS = 1000;
       const pumpFrame = async () => {
         if (!document.hidden) await fetchFrame();
         setTimeout(pumpFrame, FRAME_GAP_MS);
@@ -424,6 +450,23 @@
       const tick = () => {
         if (!paused) {
           resize();
+          // Cross-dissolve the on-screen density between the two most recent
+          // attested frames, then upload the blend (128² R8 = 16 KB, trivial).
+          // Stops uploading once the fade lands (settled) until the next frame.
+          if (curU8 && !settled) {
+            const mix = Math.min((performance.now() - fadeStart) / FADE_MS, 1);
+            if (prevU8 && mix < 1) {
+              for (let i = 0; i < blendU8.length; i++) {
+                blendU8[i] = prevU8[i] + (curU8[i] - prevU8[i]) * mix;
+              }
+            } else {
+              blendU8.set(curU8);
+              settled = true;
+            }
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, frameW, frameH, 0, gl.RED, gl.UNSIGNED_BYTE, blendU8);
+          }
           gl.useProgram(prog);
           gl.enableVertexAttribArray(aPos);
           gl.bindBuffer(gl.ARRAY_BUFFER, buf);
