@@ -111,7 +111,10 @@ upload() {
 compute_asset_versions() {
   CSS_VER=$(shasum -a 256 _shared/site.css | cut -c1-8)
   JS_VER=$(shasum -a 256 _shared/site.js | cut -c1-8)
-  echo "asset versions: css=$CSS_VER  js=$JS_VER"
+  # One hash over all .frag → a shader edit busts every shader ref. Shaders
+  # are tiny so over-busting is free; closes the bare-path stale-edge gap.
+  SHADER_VER=$(cat _shared/shaders/*.frag | shasum -a 256 | cut -c1-8)
+  echo "asset versions: css=$CSS_VER  js=$JS_VER  shaders=$SHADER_VER"
 }
 
 # Rewrite _shared/site.{css,js} refs in $1 to include ?v=<hash>, upload result.
@@ -121,6 +124,7 @@ upload_html_versioned() {
   tmp=$(mktemp)
   sed -e "s|_shared/site\.css|_shared/site.css?v=${CSS_VER}|g" \
       -e "s|_shared/site\.js|_shared/site.js?v=${JS_VER}|g" \
+      -e "s|\(_shared/shaders/[A-Za-z0-9_-]*\.frag\)|\1?v=${SHADER_VER}|g" \
       "$rel" > "$tmp"
   upload "$tmp" "$rel"
   rm -f "$tmp"
