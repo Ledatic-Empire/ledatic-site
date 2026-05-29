@@ -2,8 +2,11 @@
 # deploy_worker.sh — push worker/worker.js to Cloudflare as the `ledatic`
 # Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN +
 # API_BEARER + DDA_FLEET_TOKEN + DDA_PORTAL_TOKEN + GREATLAKES_PASS +
-# LAKES_FLEET_URL + LAKES_FLEET_TOKEN) exactly as configured. Each new secret
-# needs its source file + a binding entry.
+# LAKES_FLEET_URL + LAKES_FLEET_TOKEN + SDK_WITNESS_KEY) exactly as configured.
+# This is a full-replace upload: a binding omitted here is WIPED on deploy, so
+# every secret must be re-listed. Each new secret needs its source file + a
+# binding entry. SDK_WITNESS_KEY is the verifiability-SDK witness seed (32-byte
+# Ed25519 seed, 64 hex) — a dedicated key, NOT fleet0's.
 #
 # Usage: ./worker/deploy_worker.sh   (run from ledatic-site/ or anywhere)
 # Env:   CF_TOKEN read from ~/Desktop/rings (must have Account:Workers:Edit)
@@ -35,6 +38,7 @@ DDA_PORTAL_TOKEN_VAL=$(cat ~/.ledatic/dda_portal/portal_token)
 GREATLAKES_PASS_VAL=$(cat ~/.ledatic/greatlakes_pass)
 LAKES_FLEET_URL_VAL=https://lakes-fleet.ledatic.org
 LAKES_FLEET_TOKEN_VAL=$(cat ~/.ledatic/lakes_fleet_token)
+SDK_WITNESS_KEY_VAL=$(cat ~/.ledatic/sdk_witness/key.hex | tr -d '\n\r ')
 cat > "$META" <<JSON
 {
   "main_module": "worker.js",
@@ -48,7 +52,8 @@ cat > "$META" <<JSON
     {"type":"secret_text","name":"DDA_PORTAL_TOKEN","text":"$DDA_PORTAL_TOKEN_VAL"},
     {"type":"secret_text","name":"GREATLAKES_PASS","text":"$GREATLAKES_PASS_VAL"},
     {"type":"secret_text","name":"LAKES_FLEET_URL","text":"$LAKES_FLEET_URL_VAL"},
-    {"type":"secret_text","name":"LAKES_FLEET_TOKEN","text":"$LAKES_FLEET_TOKEN_VAL"}
+    {"type":"secret_text","name":"LAKES_FLEET_TOKEN","text":"$LAKES_FLEET_TOKEN_VAL"},
+    {"type":"secret_text","name":"SDK_WITNESS_KEY","text":"$SDK_WITNESS_KEY_VAL"}
   ]
 }
 JSON

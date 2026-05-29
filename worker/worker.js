@@ -583,6 +583,39 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+// ─── Verifiability SDK witness counter-signer (WebCrypto Ed25519) ────────────
+// Backs POST /attest/witness. The pubkey is public and pinned in the SDK
+// verifier (rail repo: tools/verify_sdk/sdk.rail); only the 32-byte seed is
+// secret, held as the SDK_WITNESS_KEY env binding — a DEDICATED key, not
+// fleet0's, so a CF-secret leak is contained to this product. Verified
+// byte-identical to the Rail reference signer (tools/verify_sdk/witness_sign.rail)
+// over RFC 8032, so prod is a drop-in for the selftest's offline oracle.
+const SDK_WITNESS_PUBKEY = "45ad2e2d671eab439f1e201b9b52bc40803c3f09fd2553d1e751e4a9afe768a7";
+const SDK_WITNESS_PK_FP  = SDK_WITNESS_PUBKEY.slice(0, 16);
+// PKCS8 DER header for an Ed25519 private key: SEQUENCE(version=0,
+// AlgorithmId(1.3.101.112), OCTET STRING(OCTET STRING(seed))). Fixed 16 bytes,
+// then the raw 32-byte seed — the standard way to feed a seed to WebCrypto.
+const ED25519_PKCS8_PREFIX = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);
+function sdkHexToBytes(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
+}
+function sdkBytesToHex(bytes) {
+  let s = "";
+  for (const b of bytes) s += b.toString(16).padStart(2, "0");
+  return s;
+}
+async function sdkWitnessSign(seedHex, msg) {
+  const seed = sdkHexToBytes(seedHex);
+  const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + 32);
+  pkcs8.set(ED25519_PKCS8_PREFIX, 0);
+  pkcs8.set(seed, ED25519_PKCS8_PREFIX.length);
+  const key = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign({ name: "Ed25519" }, key, new TextEncoder().encode(msg));
+  return sdkBytesToHex(new Uint8Array(sig));
+}
+
 async function handleAPI(request, env) {
   if (!env.API_BEARER || request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
     return new Response("Unauthorized", { status: 401, headers: sec({ "content-type": "text/plain" }) });
@@ -921,6 +954,19 @@ async function handleSite(request, env, url) {
       if (log.length > 50) log.splice(0, log.length - 50);
       await env.LEDATIC_KV.put("entropy:pulse:log", JSON.stringify(log));
     } catch (e) { /* swallow — primary write already succeeded */ }
+    // Persist this pulse under a by-id key so a verifier can confirm a
+    // receipt's cited pulse_id -> value_hex on the public chain. This is what
+    // lights up the SDK's already-built `verify --check-beacon` membership
+    // proof (forward time-binding). Best-effort; forward-only — pulses from
+    // before this write path shipped are not backfilled.
+    try {
+      const p = JSON.parse(body);
+      if (p && Number.isInteger(p.pulse_id)) {
+        await env.REPORTS_R2.put(`entropy/pulse/${p.pulse_id}.json`, body, {
+          httpMetadata: { contentType: "application/json" },
+        });
+      }
+    } catch (e) { /* swallow — primary write already succeeded */ }
     return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
   }
   if (pathname === "/entropy/pulse") {
@@ -939,6 +985,19 @@ async function handleSite(request, env, url) {
   if (pathname === "/entropy/pulse/log") {
     const log = await env.LEDATIC_KV.get("entropy:pulse:log");
     return new Response(log || "[]", {
+      headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
+    });
+  }
+  // Pulse-by-id (free, public): the membership oracle for `verify --check-beacon`.
+  // Digits-only, so it never shadows /entropy/pulse or /entropy/pulse/log above.
+  const pulseByIdMatch = pathname.match(/^\/entropy\/pulse\/(\d+)$/);
+  if (pulseByIdMatch && method === "GET") {
+    const obj = await env.REPORTS_R2.get(`entropy/pulse/${pulseByIdMatch[1]}.json`);
+    if (!obj) return new Response('{"error":"no pulse for that id"}', {
+      status: 404,
+      headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+    });
+    return new Response(await obj.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
@@ -1011,6 +1070,83 @@ async function handleSite(request, env, url) {
         }),
       });
     }
+  }
+
+  // ─── Verifiability SDK: metered witness counter-signature ────────────────
+  // The paid grade of the SDK (rail repo: tools/verify_sdk). A "bare" receipt
+  // is the caller's own Ed25519 sig, verified fully offline and never touching
+  // us — the free distribution flywheel. An ANCHORED receipt additionally
+  // carries OUR counter-signature over the same canonical attest message the
+  // rest of the attest infra uses:
+  //   attest|v1|<sha256>|<pulse_id>|<value_hex>|<witnessed_at>
+  // proving "Ledatic observed digest D at pulse N at server-time T". We set
+  // witnessed_at, so an anchored receipt cannot be backdated. We sign the
+  // tuple as presented (no PII, opaque digests only); whether value_hex truly
+  // belongs to pulse_id is the verifier's job via the free /entropy/pulse/<id>
+  // chain — that separation keeps this endpoint cheap and stateless.
+  //
+  // PHASING: ship token-gated first (un-metered beta) by minting keys with a
+  // large balance. The balance check below IS the metering, so beta vs paid is
+  // a provisioning choice, not a code change.
+  if (pathname === "/attest/witness" && method === "POST") {
+    const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
+    if (!(await playgroundRateLimit(ip, env))) return jsonResponse({ error: "rate_limited" }, 429);
+
+    const apiKey = request.headers.get("x-sdk-key") || "";
+    if (!apiKey) return jsonResponse({ error: "unauthorized" }, 401);
+    const acctRaw = await env.LEDATIC_KV.get(`account:${apiKey}`);
+    if (!acctRaw) return jsonResponse({ error: "unauthorized" }, 401);
+    let acct;
+    try { acct = JSON.parse(acctRaw); } catch { return jsonResponse({ error: "unauthorized" }, 401); }
+    const now = Math.floor(Date.now() / 1000);
+    if ((acct.expires_at && now > acct.expires_at) || (acct.balance || 0) <= 0) {
+      return jsonResponse({ error: "payment_required" }, 402);
+    }
+
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ error: "bad_request" }, 400); }
+    const sha256 = String(body.sha256 || "");
+    const value_hex = String(body.value_hex || "");
+    const pulse_id = body.pulse_id;
+    if (!/^[0-9a-f]{64}$/.test(sha256) || !/^[0-9a-f]{64}$/.test(value_hex) || !Number.isInteger(pulse_id)) {
+      return jsonResponse({ error: "bad_request" }, 400);
+    }
+    if (!env.SDK_WITNESS_KEY || !/^[0-9a-f]{64}$/.test(env.SDK_WITNESS_KEY)) {
+      return jsonResponse({ error: "witness_unconfigured" }, 503);
+    }
+
+    const witnessed_at = now;
+    const msg = `attest|v1|${sha256}|${pulse_id}|${value_hex}|${witnessed_at}`;
+    const sig = await sdkWitnessSign(env.SDK_WITNESS_KEY, msg);
+
+    // Commit the spend. A race can under-charge by <=1 (two requests read the
+    // same balance), never over — the same safety direction as the limiter.
+    acct.balance = (acct.balance || 0) - 1;
+    await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
+
+    return jsonResponse({ witnessed_at, alg: "ed25519", pk_fp: SDK_WITNESS_PK_FP, sig }, 200);
+  }
+
+  // POST /attest/admin/mint {pack} — manual provisioning, Bearer API_BEARER.
+  // Zero-human-compatible: no signup flow. Reilly mints a key out of band and
+  // hands it to the buyer; the 402 wall above is the whole retention mechanism.
+  // Stripe self-serve top-up is a later phase, not this.
+  if (pathname === "/attest/admin/mint" && method === "POST") {
+    if (!env.API_BEARER || request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
+      return jsonResponse({ error: "forbidden" }, 403);
+    }
+    let body;
+    try { body = await request.json(); } catch { body = {}; }
+    const PACKS = { starter: 10000, growth: 100000, scale: 1000000 };
+    const pack = String(body.pack || "starter");
+    const credits = PACKS[pack];
+    if (!credits) return jsonResponse({ error: "unknown_pack", packs: Object.keys(PACKS) }, 400);
+    const apiKey = "lsk_" + sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
+    const now = Math.floor(Date.now() / 1000);
+    const expires_at = now + 365 * 24 * 3600; // ~12 months
+    const acct = { balance: credits, expires_at, pack, created_at: now };
+    await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
+    return jsonResponse({ api_key: apiKey, pack, balance: credits, expires_at }, 200);
   }
 
   // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
