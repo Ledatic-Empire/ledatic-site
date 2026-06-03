@@ -2,7 +2,7 @@
 corpus chars=10901  vocab size=94
 corpus encoded to arr (10901 ids)
 seq_len=512  max offset=10388
-[tgl_init] dylib=/Users/user/projects/rail/tools/metal/libtensor_gpu.dylib src_path=/Users/user/projects/rail/tools/metal/tensor_gpu.metal
+[tgl_init] dylib=$HOME/projects/rail/tools/metal/libtensor_gpu.dylib src_path=$HOME/projects/rail/tools/metal/tensor_gpu.metal
 [tgl_init] OK — 38 functions
 initial loss (on one sampled chunk)=8.62960223571262  uniform=4.54329478227
 training 10000 steps...

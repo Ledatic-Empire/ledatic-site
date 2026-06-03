@@ -23,7 +23,7 @@ set -u
 set -o pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-RAIL_ROOT="${RAIL_ROOT:-/Users/user/projects/rail}"
+RAIL_ROOT="${RAIL_ROOT:-$HOME/projects/rail}"
 PORT="${PORT:-8765}"
 JSC="${JSC:-/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc}"
 SHIM="${REPO_ROOT}/_shared/rail_playground.js"

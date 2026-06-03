@@ -8,7 +8,7 @@
 
 Ledatic introduces **Provenance Tier**: a cryptographically signed, independently verifiable report layer that chains model identity, input, output, timestamp, and witness attestation into an immutable proof-of-generation record. Unlike OpenAI, Anthropic, and Google—which have no third-party witness to their AI outputs—Ledatic clients can prove to regulators, courts, and auditors exactly what model produced what result at what time.
 
-**Core Value Proposition**: Not just "here's a report signed by Ledatic" but "here's proof the Claude 3.5 Sonnet v2 model hash abcdef...1234 processed input hash XYZ at 2026-05-09T14:37:22Z and produced output hash DEF..., witnessed and cryptographically verified by the Pi Zero 2 W physical node fleet0 at Tailscale 100.87.231.45."
+**Core Value Proposition**: Not just "here's a report signed by Ledatic" but "here's proof the Claude 3.5 Sonnet v2 model hash abcdef...1234 processed input hash XYZ at 2026-05-09T14:37:22Z and produced output hash DEF..., witnessed and cryptographically verified by the Pi Zero 2 W physical node fleet0 at on the tailnet."
 
 **Target**: Regulated enterprises, legal firms, financial institutions, and government agencies where AI output must survive courtroom scrutiny, EU AI Act compliance audits, or adversarial discovery.
 
@@ -186,11 +186,11 @@ LEDATIC ATTEST SIGNER (on Studio, com.ledatic.attest_sign service)
          │
          ├─ inner_digest = SHA-256(composite_payload)
          │
-         ├─ SSH to fleet0 witness: /home/zemog/.ledatic/witness/sign_attestation.sh
+         ├─ SSH to fleet0 witness: $HOME/.ledatic/witness/sign_attestation.sh
          │    $ sign_attestation.sh <inner_digest> <pulse_id> <value_hex>
          │
          ▼
-FLEET0 WITNESS (Pi Zero 2W, Tailscale 100.87.231.45)
+FLEET0 WITNESS (Pi Zero 2W, on the tailnet)
          │
          ├─ Read /entropy/pulse → { pulse_id, value_hex }
          ├─ chain_verify(pulse_id) → chain_verified: true/false
@@ -775,7 +775,7 @@ THIRD-PARTY VERIFIER (ledatic.org/verify/<report_id>)
             (weights hash above) on ${new Date(manifest.generated_at).toLocaleDateString()}.
             The input prompt, output text, and model identity are cryptographically
             bound to an Ed25519 signature from the fleet0 witness node (Pi Zero 2W at
-            Tailscale 100.87.231.45). The witness signature chains to a public entropy
+            on the tailnet). The witness signature chains to a public entropy
             beacon at <a href="https://ledatic.org/entropy/pulse">ledatic.org/entropy/pulse</a>,
             preventing backdating or tampering.
           </p>
@@ -1398,7 +1398,7 @@ Ledatic + select law firms (Cravath, Wachtell, etc.) co-create a new legal artif
 - **Provenance**: Origin and custody history of an artifact (here, an AI report).
 - **Witness Node**: A Pi Zero 2W running `com.ledatic.attest_sign`, signing entropy observations.
 - **Manifest**: JSON-LD file containing model identity, input/output hashes, witness signature, and chain-of-custody.
-- **Fleet0**: Specific physical Pi Zero at Tailscale 100.87.231.45, primary witness node.
+- **Fleet0**: Specific physical Pi Zero at on the tailnet, primary witness node.
 - **Entropy Pulse**: Public beacon at ledatic.org/entropy/pulse, updated every 30s with randomness from Qwen 122B.
 - **Ed25519**: Elliptic curve signature scheme, 64-byte signature, verifiable via Web Crypto API in-browser.
 - **Chain Verified**: Boolean flag indicating the witness node's entropy chain is unbroken (no backdating).

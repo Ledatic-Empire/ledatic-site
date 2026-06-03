@@ -170,7 +170,7 @@ Identical to the live verifier (same algorithm, same baked-in pubkeys):
 ## Witness pubkeys (also baked into the HTML)
 
 \`\`\`
-fleet0  pk_fp cac5f21a70564aeb  Pi Zero 2 W,        Tailscale 100.87.231.45
+fleet0  pk_fp cac5f21a70564aeb  Pi Zero 2 W,        on the tailnet
 studio  pk_fp 47cb7773241d8ac2  Mac Studio,         Detroit
 mini    pk_fp <see verify.html>  Mac Mini M4 Pro,    Detroit
 \`\`\`

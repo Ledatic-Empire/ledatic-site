@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build static HTML for Rail docs from /Users/user/projects/rail/docs/site/*.md
-# Outputs to /Users/user/projects/ledatic-site/rail/docs/*.html
+# Build static HTML for Rail docs from $HOME/projects/rail/docs/site/*.md
+# Outputs to $HOME/projects/ledatic-site/rail/docs/*.html
 # Deploy keys then become "rail/docs/<name>.html" → served at /rail/docs/<name>.
 
 set -euo pipefail
 
-SRC=/Users/user/projects/rail/docs/site
-OUT=/Users/user/projects/ledatic-site/rail/docs
+SRC=$HOME/projects/rail/docs/site
+OUT=$HOME/projects/ledatic-site/rail/docs
 
 mkdir -p "$OUT" "$OUT/examples"
 

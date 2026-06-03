@@ -198,7 +198,7 @@
 // Witness Ed25519 public keys (raw 32 bytes, base64). Re-derivable from
 //   openssl pkey -in <node>.sk -pubout -outform DER | tail -c 32 | base64
 // pk_fp = sha256(DER pubkey).hex[:16].
-//   fleet0  pk_fp cac5f21a70564aeb (Pi Zero 2W, Tailscale 100.87.231.45)
+//   fleet0  pk_fp cac5f21a70564aeb (Pi Zero 2W, on the tailnet)
 //   studio  pk_fp 47cb7773241d8ac2 (Mac Studio, Detroit)
 const PUBKEYS = {
   fleet0: "BYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=",
@@ -206,7 +206,7 @@ const PUBKEYS = {
   mini:   "OHbTtDz3ivtia19IYac+/bHdTcqf1wWA7AyFoVig0/w=",
 };
 const WITNESS_DESCRIPTIONS = {
-  fleet0: "Pi Zero 2 W, Tailscale 100.87.231.45",
+  fleet0: "Pi Zero 2 W, on the tailnet",
   studio: "Mac Studio, Detroit",
   mini:   "Mac Mini M4 Pro, Detroit",
 };

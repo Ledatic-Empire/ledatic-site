@@ -9,9 +9,12 @@
 
 set -euo pipefail
 
-CF_ACCOUNT="2acd6ceb3a0c57f1f2b470433d94bc87"
-CF_KV_NS="be34022eeedc4d6fb802087156eb1aae"
-CF_ZONE="81e23388aca8fee359f7c40b09828b29"
+# CF resource IDs from a local, gitignored config (not committed). Create
+# ~/.ledatic/cf_ids.env with: CF_ACCOUNT=... CF_KV_NS=... CF_ZONE=...
+[ -f "$HOME/.ledatic/cf_ids.env" ] && . "$HOME/.ledatic/cf_ids.env"
+: "${CF_ACCOUNT:?set CF_ACCOUNT (in ~/.ledatic/cf_ids.env)}"
+: "${CF_KV_NS:?set CF_KV_NS (in ~/.ledatic/cf_ids.env)}"
+: "${CF_ZONE:?set CF_ZONE (in ~/.ledatic/cf_ids.env)}"
 SITE_ORIGIN="https://ledatic.org"
 
 : "${CF_TOKEN:?set CF_TOKEN (e.g. CF_TOKEN=\$(cat ~/Desktop/rings))}"

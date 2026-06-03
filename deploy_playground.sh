@@ -9,11 +9,11 @@
 #   grep -n '# AUTHORIZED?' deploy_playground.sh
 #
 # ## Pre-flight
-#   - CF_TOKEN must be readable (default: ssh ledaticempire@mini.tb 'cat ~/Desktop/rings')
+#   - CF_TOKEN must be readable (default: ssh the Mini 'cat ~/Desktop/rings')
 #   - wrangler installed (or curl-only fallback used; see notes per step)
-#   - Mini reachable on Tailscale (100.79.50.108)
+#   - Mini reachable on Tailscale (its Tailscale IP)
 #   - Session A binary built on Mini at
-#     /Users/ledaticempire/projects/rail/tools/playground/compile_server
+#     $HOME/projects/rail/tools/playground/compile_server
 #
 # ## Steps (each --from-step N skippable)
 #   1. Mini service: scp plist, launchctl load, verify port :8090 listens
@@ -33,15 +33,18 @@
 set -euo pipefail
 
 # ─── Config ────────────────────────────────────────────────────────────
-CF_ACCOUNT="2acd6ceb3a0c57f1f2b470433d94bc87"
-CF_KV_NS="be34022eeedc4d6fb802087156eb1aae"
+# CF resource IDs + Mini host from a local, gitignored config (not committed).
+# ~/.ledatic/cf_ids.env: CF_ACCOUNT=... CF_KV_NS=... MINI_HOST=... MINI_TS_IP=...
+[ -f "$HOME/.ledatic/cf_ids.env" ] && . "$HOME/.ledatic/cf_ids.env"
+: "${CF_ACCOUNT:?set CF_ACCOUNT (in ~/.ledatic/cf_ids.env)}"
+: "${CF_KV_NS:?set CF_KV_NS (in ~/.ledatic/cf_ids.env)}"
 CF_SCRIPT="ledatic"
-MINI_HOST="ledaticempire@mini.tb"
-MINI_TS_IP="100.79.50.108"
+: "${MINI_HOST:?set MINI_HOST (in ~/.ledatic/cf_ids.env)}"
+: "${MINI_TS_IP:?set MINI_TS_IP (in ~/.ledatic/cf_ids.env)}"
 MINI_PORT="8090"
 PLAYGROUND_BACKEND_URL="http://${MINI_TS_IP}:${MINI_PORT}"
 PROD_HOST="https://ledatic.org"
-RAIL_REPO_MINI="/Users/ledaticempire/projects/rail"
+RAIL_REPO_MINI="$HOME/projects/rail"
 PLAYGROUND_BIN="${RAIL_REPO_MINI}/tools/playground/compile_server"
 LAUNCHD_PLIST_NAME="com.ledatic.playground.plist"
 
@@ -114,7 +117,7 @@ step1_mini_service() {
   gate scp -p "${RAIL_REPO_MINI}/tools/playground/${LAUNCHD_PLIST_NAME}" "${MINI_HOST}:~/Library/LaunchAgents/${LAUNCHD_PLIST_NAME}" || {
     say "  NOTE: plist not in Mini repo yet — scp from Studio worktree:"
     # AUTHORIZED?  fallback scp from studio repo
-    gate scp -p "/Users/user/projects/rail/tools/playground/${LAUNCHD_PLIST_NAME}" "${MINI_HOST}:~/Library/LaunchAgents/${LAUNCHD_PLIST_NAME}"
+    gate scp -p "$HOME/projects/rail/tools/playground/${LAUNCHD_PLIST_NAME}" "${MINI_HOST}:~/Library/LaunchAgents/${LAUNCHD_PLIST_NAME}"
   }
   say "  Loading via launchctl..."
   # AUTHORIZED?  unload-then-load avoids stale "already loaded" errors

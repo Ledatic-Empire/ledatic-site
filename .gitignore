@@ -5,3 +5,4 @@
 node_modules/
 .wrangler/
 .vercel/
+cf_ids.env

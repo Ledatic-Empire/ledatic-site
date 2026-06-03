@@ -1,0 +1,43 @@
+name: Leak guard
+
+# Fail the build if operator-recon / internal-infra strings land in the public
+# tree. Patterns are mostly shape-based (CGNAT IP ranges, 32-hex CF IDs) so the
+# guard itself doesn't re-expose the literals it protects.
+#
+# Intentionally-public identifiers are NOT matched: the business contact
+# z3m0g@icloud.com, the public name "Reilly Gomez", and the witness node
+# "fleet0" (its pubkey/fingerprint are published; only its tailnet IP is recon).
+#
+# To intentionally include one of these strings (e.g. a note describing the
+# scrub), put `leak-guard-allow` on the same line and the matcher skips it.
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  grep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pattern scan
+        shell: bash
+        run: |
+          set -e
+          patterns='100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}|/Users/(ledaticempire|user|reillygomez)|/home/zemog|reillygomez[0-9]*@|zemog@|ledaticempire@|user@100|namespace_id"?[[:space:]]*:?[[:space:]]*"?[0-9a-f]{32}|CF_(ACCOUNT|ZONE|KV_NS|TOKEN)[[:space:]]*=[[:space:]]*"?[0-9a-f]{32}|^ACC=[0-9a-f]{32}|\bbrockbro2\b|D0ATHQ1BQD7'
+          # -I skip binaries. Exclude: the guard itself; training/ (frozen
+          # run logs/attestations); worker_backups/ (snapshots of live Worker).
+          hits=$(git grep -InE "$patterns" -- \
+            ':(exclude).github/workflows/leak-guard.yml' \
+            ':(exclude)training/' \
+            ':(exclude)worker_backups/' \
+            | grep -v 'leak-guard-allow' || true)
+          if [ -n "$hits" ]; then
+            echo "::error::operator-recon / internal-infra pattern detected in public tree"
+            echo "$hits"
+            exit 1
+          fi
+          echo "leak guard: clean"

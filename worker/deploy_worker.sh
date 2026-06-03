@@ -12,7 +12,8 @@ set -e
 cd "$(dirname "$0")/.."
 
 TOKEN=$(cat ~/Desktop/rings)
-ACC=2acd6ceb3a0c57f1f2b470433d94bc87
+[ -f "$HOME/.ledatic/cf_ids.env" ] && . "$HOME/.ledatic/cf_ids.env"
+ACC="${CF_ACCOUNT:?set CF_ACCOUNT (in ~/.ledatic/cf_ids.env)}"
 SCRIPT=ledatic
 SRC=worker/worker.js
 META=$(mktemp -t ledatic_worker_meta.XXXXXX)
@@ -40,7 +41,7 @@ cat > "$META" <<JSON
   "main_module": "worker.js",
   "compatibility_date": "2024-01-01",
   "bindings": [
-    {"type":"kv_namespace","name":"LEDATIC_KV","namespace_id":"be34022eeedc4d6fb802087156eb1aae"},
+    {"type":"kv_namespace","name":"LEDATIC_KV","namespace_id":"${CF_KV_NS:?set CF_KV_NS}"},
     {"type":"r2_bucket","name":"REPORTS_R2","bucket_name":"ledatic-reports"},
     {"type":"secret_text","name":"BEACON_TOKEN","text":"$BEACON_TOKEN_VAL"},
     {"type":"secret_text","name":"API_BEARER","text":"$API_BEARER_VAL"},
