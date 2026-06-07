@@ -80,6 +80,15 @@ function sec(headers) {
   return { ...SECURITY_HEADERS, ...headers };
 }
 
+// Defense-in-depth noindex for the gated /greatlakes demo. The engagement
+// redline requires the page stay out of search indexes; today that rests on
+// the Basic-auth gate plus an unverified <meta name=robots> inside the KV
+// HTML. Stamp X-Robots-Tag at the layer the Worker controls so the page is
+// non-indexable even if the gate ever regresses or the password leaks.
+function secGreatlakes(headers) {
+  return sec({ "X-Robots-Tag": "noindex, nofollow, noarchive", ...headers });
+}
+
 // ─── Deny list ───────────────────────────────────────────────────────────────
 
 // Any KV key whose raw value must never be exposed via a public URL.
@@ -759,7 +768,20 @@ async function handleSite(request, env, url) {
     if (!env.GREATLAKES_PASS) {
       return new Response("demo not configured", { status: 503, headers: sec({ "content-type": "text/plain" }) });
     }
-    const expected = "Basic " + btoa("demo:" + env.GREATLAKES_PASS);
+    // btoa() throws on non-Latin1 input, so a malformed secret (emoji/accented
+    // char/smart-quote pasted into the password file) would 500 on EVERY
+    // /greatlakes request and brick the demo. Encode UTF-8 → binary string
+    // first (byte-identical to btoa for ASCII), and fail closed with a clean
+    // 503 if the secret can't be encoded.
+    let expected;
+    try {
+      const credBytes = new TextEncoder().encode("demo:" + env.GREATLAKES_PASS);
+      let bin = "";
+      for (const b of credBytes) bin += String.fromCharCode(b);
+      expected = "Basic " + btoa(bin);
+    } catch (e) {
+      return new Response("demo misconfigured", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+    }
     if (request.headers.get("Authorization") !== expected) {
       return new Response("Authentication required.\n", {
         status: 401,
@@ -778,7 +800,7 @@ async function handleSite(request, env, url) {
         return new Response("demo page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
       }
       return new Response(html, {
-        headers: sec({
+        headers: secGreatlakes({
           "content-type": "text/html; charset=utf-8",
           "cache-control": "no-store",
           "content-security-policy": GREATLAKES_CSP,
@@ -796,7 +818,7 @@ async function handleSite(request, env, url) {
           return new Response("vessel page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
         }
         return new Response(html, {
-          headers: sec({
+          headers: secGreatlakes({
             "content-type": "text/html; charset=utf-8",
             "cache-control": "no-store",
             "content-security-policy": GREATLAKES_CSP,
@@ -812,7 +834,7 @@ async function handleSite(request, env, url) {
         return new Response("anomaly page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
       }
       return new Response(html, {
-        headers: sec({
+        headers: secGreatlakes({
           "content-type": "text/html; charset=utf-8",
           "cache-control": "no-store",
           "content-security-policy": GREATLAKES_CSP,
@@ -833,11 +855,11 @@ async function handleSite(request, env, url) {
       if (!obj) {
         return new Response('{"error":"no data yet"}', {
           status: 404,
-          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+          headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }),
         });
       }
       return new Response(await obj.arrayBuffer(), {
-        headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+        headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }),
       });
     }
 
@@ -859,19 +881,37 @@ async function handleSite(request, env, url) {
       }
       const upstream = env.LAKES_FLEET_URL.replace(/\/+$/, "") + "/ai/" + subpath;
       const body = await request.arrayBuffer();
-      const resp = await fetch(upstream, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-lakes-token": env.LAKES_FLEET_TOKEN,
-        },
-        body,
-      });
+      // Never pass an upstream error body straight through — it may carry a
+      // stack trace, internal hostname, model name, or prompt that the
+      // engagement redline forbids on the client surface. Fail closed: a
+      // generic 502/503 JSON on throw or non-2xx; only proxy the body on 2xx.
+      let resp;
+      try {
+        resp = await fetch(upstream, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-lakes-token": env.LAKES_FLEET_TOKEN,
+          },
+          body,
+        });
+      } catch (e) {
+        return new Response('{"error":"ai upstream error"}', {
+          status: 503,
+          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+        });
+      }
+      if (!resp.ok) {
+        return new Response('{"error":"ai upstream error"}', {
+          status: 502,
+          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+        });
+      }
       const respBody = await resp.arrayBuffer();
       return new Response(respBody, {
         status: resp.status,
         headers: sec({
-          "content-type": resp.headers.get("content-type") || "application/json",
+          "content-type": "application/json",
           "cache-control": "no-store",
         }),
       });
@@ -887,12 +927,12 @@ async function handleSite(request, env, url) {
       if (!obj) {
         return new Response('{"error":"no data yet"}', {
           status: 503,
-          headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
+          headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }),
         });
       }
       const ct = tail.endsWith(".jsonl") ? "application/x-ndjson" : "application/json";
       return new Response(await obj.arrayBuffer(), {
-        headers: sec({ "content-type": ct, "cache-control": "no-store" }),
+        headers: secGreatlakes({ "content-type": ct, "cache-control": "no-store" }),
       });
     }
 
