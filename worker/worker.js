@@ -764,6 +764,49 @@ async function handleSite(request, env, url) {
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
 
+    // 1c. Nightly DB backup PUTs — token-guarded, no basic auth.
+    // Accepts gzip archives from the housekeeping curl; validates name +
+    // content-length before streaming to R2 so stray writes can't land garbage.
+    if (pathname.startsWith("/greatlakes/backup/") && method === "PUT") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const name = pathname.slice("/greatlakes/backup/".length);
+      if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+        return new Response("bad name", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const clHeader = request.headers.get("content-length");
+      if (!clHeader) {
+        return new Response("content-length required", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const contentLength = parseInt(clHeader, 10);
+      if (isNaN(contentLength) || contentLength <= 0 || contentLength >= 100 * 1024 * 1024) {
+        return new Response("content-length out of range", { status: 413, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const body = await request.arrayBuffer();
+      await env.REPORTS_R2.put("greatlakes/backup/" + name, body,
+        { httpMetadata: { contentType: "application/octet-stream" } });
+      return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
+    }
+
+    // 1c'. Nightly DB backup GETs — token-guarded (never public).
+    if (pathname.startsWith("/greatlakes/backup/") && method === "GET") {
+      if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
+        return new Response("forbidden", { status: 401, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const name = pathname.slice("/greatlakes/backup/".length);
+      if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+        return new Response("bad name", { status: 400, headers: sec({ "content-type": "text/plain" }) });
+      }
+      const obj = await env.REPORTS_R2.get("greatlakes/backup/" + name);
+      if (!obj) {
+        return new Response("not found", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+      }
+      return new Response(await obj.arrayBuffer(), {
+        headers: sec({ "content-type": "application/octet-stream", "cache-control": "no-store" }),
+      });
+    }
+
     // 2. Everything else under /greatlakes — HTTP Basic gate.
     if (!env.GREATLAKES_PASS) {
       return new Response("demo not configured", { status: 503, headers: sec({ "content-type": "text/plain" }) });
