@@ -1397,6 +1397,40 @@ async function handleSite(request, env, url) {
     });
   }
 
+  // Canonical "what is the current attested state" pointer — one URL that
+  // names the freshest builds/selfhost records.  Composes the existing R2
+  // latest pointers (same data the badges read); read-only, no new writer
+  // surface.  Wired 2026-06-09: the PAOS audit found /attest/latest fell
+  // through to the homepage.
+  if (pathname === "/attest/latest" && method === "GET") {
+    const fetchJson = async (path) => {
+      const obj = await env.REPORTS_R2.get(`attest${path}`);
+      if (!obj) return null;
+      try { return JSON.parse(await obj.text()); } catch { return null; }
+    };
+    const out = { kind: "ledatic.attest.latest", version: 1 };
+    for (const k of ["builds", "selfhost"]) {
+      const ptr = await fetchJson(`/${k}/latest/index.json`);
+      const rec = ptr ? await fetchJson(`/${k}/${ptr.short}/result.json`) : null;
+      out[k] = ptr ? {
+        short: ptr.short,
+        updated_utc: ptr.updated_utc ?? null,
+        record: rec ? `https://ledatic.org/${k}/${ptr.short}/result.json` : null,
+        status: rec
+          ? (k === "builds" ? rec.status : ((rec.fixed_point && rec.seed_match) ? "ok" : "drift"))
+          : null,
+        pulse_end: rec ? (rec.pulse_end ?? null) : null,
+      } : null;
+    }
+    return new Response(JSON.stringify(out), {
+      headers: sec({
+        "content-type": "application/json",
+        "cache-control": "public, max-age=60",
+        "access-control-allow-origin": "*",
+      }),
+    });
+  }
+
   // Attestation surfaces — releases, builds, selfhost.
   // Authoring path = R2.  Public reads, BEACON_TOKEN-gated writes.
   // Each attestation.json was signed by fleet0's Ed25519 witness key,
