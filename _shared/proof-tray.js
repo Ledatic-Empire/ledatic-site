@@ -387,12 +387,24 @@ export async function verifyManifestObject(m, opts = {}) {
     try {
       const got = await filesDigest(m.files || []);
       if (got !== m.files_digest) {
-        emit({ id: 'HASH', label: 'files_digest', status: 'fail', note: `recomputed files digest ${got.slice(0, 16)}… disagrees with the manifest's ${String(m.files_digest).slice(0, 16)}…` });
-        skipRest(['KEY', 'SIG', 'CHAIN']);
-        return finish('fail', 'HASH', 'file list does not match its digest');
+        /* Deploys 1-4 digested their file list under macOS locale collation
+           (deploy.sh `sort` without LC_ALL=C) — an ordering a browser cannot
+           reproduce. From deploy #5 the rule is canonical byte order and
+           says so. For the legacy four: the binding of list→digest is
+           unverifiable here, so report it honestly and still check the
+           signature over the attested digest. Never for byte-order rules. */
+        const legacyRule = Number(m.n) <= 4 && !/byte order/.test(String(m.files_digest_rule || ''));
+        if (legacyRule) {
+          emit({ id: 'HASH', label: 'files_digest', status: 'info', res: 'unverifiable in-browser', note: `deploys 1–4 sorted the file list under machine-local collation, which a browser cannot reproduce — signature still checked over the attested digest ${String(m.files_digest).slice(0, 16)}…` });
+        } else {
+          emit({ id: 'HASH', label: 'files_digest', status: 'fail', note: `recomputed files digest ${got.slice(0, 16)}… disagrees with the manifest's ${String(m.files_digest).slice(0, 16)}…` });
+          skipRest(['KEY', 'SIG', 'CHAIN']);
+          return finish('fail', 'HASH', 'file list does not match its digest');
+        }
+      } else {
+        r.hashed = true;
+        emit({ id: 'HASH', label: `files_digest (${(m.files || []).length} files)`, status: 'ok', res: `${groupHex(got.slice(0, 16))} …` });
       }
-      r.hashed = true;
-      emit({ id: 'HASH', label: `files_digest (${(m.files || []).length} files)`, status: 'ok', res: `${groupHex(got.slice(0, 16))} …` });
     } catch (e) {
       emit({ id: 'HASH', label: 'files_digest', status: e && e.unavailable ? 'info' : 'fail', note: String(e && e.message || e) });
       if (!(e && e.unavailable)) { skipRest(['KEY', 'SIG', 'CHAIN']); return finish('fail', 'HASH', String(e && e.message || e)); }

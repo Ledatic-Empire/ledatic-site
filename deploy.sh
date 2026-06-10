@@ -280,7 +280,9 @@ stage_html_versioned() {
 #
 # Canonical signed message (exact bytes, no trailing newline):
 #   site-deploy|v1|<n>|<files_digest>|<pulse_id>|<deployed_at>
-# where files_digest = sha256 over "key<SP>sha256<LF>" lines sorted by key.
+# where files_digest = sha256 over "key<SP>sha256<LF>" lines sorted by key
+# in BYTE ORDER (LC_ALL=C). Locale collation is machine-dependent and broke
+# the in-browser recompute for deploys 1-4 (caught live 2026-06-10).
 publish_signed_manifest() {
   [ -f "$SIGN_KEY" ] || {
     echo "deploy: signing key missing at $SIGN_KEY — every full deploy must be signed." >&2
@@ -322,7 +324,7 @@ publish_signed_manifest() {
   deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
   local files_digest msg sig_b64 pub_fp
-  files_digest=$(sort "$MANIFEST_TSV" | awk -F'\t' '{printf "%s %s\n", $1, $2}' | shasum -a 256 | cut -d' ' -f1)
+  files_digest=$(LC_ALL=C sort "$MANIFEST_TSV" | awk -F'\t' '{printf "%s %s\n", $1, $2}' | shasum -a 256 | cut -d' ' -f1)
   msg="site-deploy|v1|$n|$files_digest|$pulse|$deployed_at"
   printf '%s' "$msg" > "$STAGE_DIR/.sign_msg"
   openssl pkeyutl -sign -inkey "$SIGN_KEY" -rawin -in "$STAGE_DIR/.sign_msg" -out "$STAGE_DIR/.sign_sig"
@@ -356,7 +358,7 @@ out = {
     "pulse_value_hex": os.environ["VHEX"],
     "files": files,
     "files_digest": os.environ["FILES_DIGEST"],
-    "files_digest_rule": "sha256 over 'key<SP>sha256<LF>' lines sorted by key",
+    "files_digest_rule": "sha256 over 'key<SP>sha256<LF>' lines sorted by key (byte order)",
     "signed_message": os.environ["MSG"],
     "signature_b64": os.environ["SIG_B64"],
     "pubkey": "https://ledatic.org/attest/site_deploy.pub.pem",
