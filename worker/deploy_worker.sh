@@ -2,8 +2,14 @@
 # deploy_worker.sh — push worker/worker.js to Cloudflare as the `ledatic`
 # Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN +
 # API_BEARER + DDA_FLEET_TOKEN + DDA_PORTAL_TOKEN + GREATLAKES_PASS +
-# LAKES_FLEET_URL + LAKES_FLEET_TOKEN) exactly as configured. Each new secret
-# needs its source file + a binding entry.
+# LAKES_FLEET_URL + LAKES_FLEET_TOKEN + SDK_WITNESS_KEY) exactly as
+# configured. Each new secret needs its source file + a binding entry.
+#
+# BINDING-DRIFT RULE (earned 2026-05-29, validated 2026-06-09): this is a
+# full-replace deploy — any live binding NOT listed below gets WIPED. Before
+# adding/removing bindings, diff against the live list:
+#   curl -s -H "Authorization: Bearer $(cat ~/Desktop/rings)" \
+#     "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts/ledatic/bindings"
 #
 # Usage: ./worker/deploy_worker.sh   (run from ledatic-site/ or anywhere)
 # Env:   CF_TOKEN read from ~/Desktop/rings (must have Account:Workers:Edit)
@@ -36,6 +42,11 @@ DDA_PORTAL_TOKEN_VAL=$(cat ~/.ledatic/dda_portal/portal_token)
 GREATLAKES_PASS_VAL=$(cat ~/.ledatic/greatlakes_pass)
 LAKES_FLEET_URL_VAL=https://lakes-fleet.ledatic.org
 LAKES_FLEET_TOKEN_VAL=$(cat ~/.ledatic/lakes_fleet_token)
+# SDK witness signing key (verifiability SDK, shipped 2026-05-29). The Worker's
+# Ed25519 key — derives pinned pubkey 45ad2e2d… . NOT ~/.ledatic/sdk/key.hex
+# (that's the CALLER's key). Was live-only until 2026-06-09; a deploy without
+# this line wipes it.
+SDK_WITNESS_KEY_VAL=$(cat ~/.ledatic/sdk_witness/key.hex)
 cat > "$META" <<JSON
 {
   "main_module": "worker.js",
@@ -49,7 +60,8 @@ cat > "$META" <<JSON
     {"type":"secret_text","name":"DDA_PORTAL_TOKEN","text":"$DDA_PORTAL_TOKEN_VAL"},
     {"type":"secret_text","name":"GREATLAKES_PASS","text":"$GREATLAKES_PASS_VAL"},
     {"type":"secret_text","name":"LAKES_FLEET_URL","text":"$LAKES_FLEET_URL_VAL"},
-    {"type":"secret_text","name":"LAKES_FLEET_TOKEN","text":"$LAKES_FLEET_TOKEN_VAL"}
+    {"type":"secret_text","name":"LAKES_FLEET_TOKEN","text":"$LAKES_FLEET_TOKEN_VAL"},
+    {"type":"secret_text","name":"SDK_WITNESS_KEY","text":"$SDK_WITNESS_KEY_VAL"}
   ]
 }
 JSON
