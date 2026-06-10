@@ -20,12 +20,21 @@
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Manifesto — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<style>
+  /* Manifesto: Plex body at essay measure, chain spine in the margin. */
+  .essay { max-width: 64ch; margin: 0 auto; }
+  .essay .chain-spine { padding-left: var(--sp-6); }
+  .essay .chain-link { display: block; margin: var(--sp-8) 0 var(--sp-4) calc(-1 * var(--sp-6) - 0.5em); background: var(--ink-0); padding: 0.25em 0; }
+  .essay p.body, .essay p.lead { font-family: var(--font-body); }
+  .essay hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
+</style>
 </head>
-<body data-shader="_shared/shaders/porthole.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -36,80 +45,95 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
+  <pulse-clock data-endpoint="/entropy/pulse"></pulse-clock>
   <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
 </nav>
 
-<section class="hero" style="align-items: center;">
+<section class="hero" style="align-items: center; min-height: 60vh;">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
-  <div class="hero-content" style="max-width: 50rem; padding-top: 10rem; padding-bottom: 10rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Manifesto &mdash; v1.0</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s; font-size: clamp(2.5rem, 6vw, 4.5rem);">
+  <div class="hero-content fade-up" style="max-width: 50rem; padding-top: 10rem; padding-bottom: 6rem;">
+    <span class="eyebrow">Manifesto &mdash; v1.0</span>
+    <h1 class="hero-title" style="font-size: clamp(2.5rem, 6vw, 4.5rem);">
       Rail runs on Rail.<br>
       The rest runs on<span class="accent"> physics.</span>
     </h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.55s; max-width: 36rem;">
+    <p class="hero-sub" style="max-width: 36rem;">
       Two claims. Both load-bearing.
     </p>
   </div>
 </section>
 
 <section class="section section--wide">
-  <div class="wrap" style="max-width: 48rem;">
-    <p class="lead reveal">
-      A compiler that cannot recompile itself is a rumor. Rail is not a
-      rumor. The binary you hold rebuilds itself byte-for-byte from its
-      own source, every release. That's the first claim.
-    </p>
+  <div class="wrap essay">
+    <div class="chain-spine">
 
-    <p class="body reveal">
-      The second is harder to defend. It says that everything else in
-      this stack &mdash; the TLS handshake, the plasma sim, the site you're
-      reading &mdash; is answerable to physics. Not to npm, not to
-      dependencies you can't audit, not to a runtime that might change
-      under you. When a primitive runs, it runs on transistors you can
-      point at. The distance between the source and the silicon is
-      short and legible.
-    </p>
+      <span class="chain-link" aria-hidden="true"></span>
+      <p class="lead reveal">
+        A compiler that cannot recompile itself is a rumor. Rail is not a
+        rumor. The binary you hold rebuilds itself byte-for-byte from its
+        own source, every release. That's the first claim.
+      </p>
 
-    <p class="body reveal">
-      Most software companies grow by accretion. A library calls a
-      library that calls a runtime that calls a kernel. Each layer
-      promises to hide the one below. Ledatic is built the other way.
-      We remove layers until what's left is small enough to carry in
-      your head.
-    </p>
+      <p class="body reveal">
+        The second is harder to defend. It says that everything else in
+        this stack &mdash; the TLS handshake, the plasma sim, the site you're
+        reading &mdash; is answerable to physics. Not to npm, not to
+        dependencies you can't audit, not to a runtime that might change
+        under you. When a primitive runs, it runs on transistors you can
+        point at. The distance between the source and the silicon is
+        short and legible.
+      </p>
 
-    <p class="body reveal">
-      What's left, in our case, is: a 1.2 megabyte binary that speaks
-      TLS 1.3, verifies X.509 chains, runs a 2D magnetohydrodynamics
-      simulation, trains a small transformer, and generates this
-      webpage. Written in a language that compiles itself. Zero C
-      dependencies. Zero invisible runtime.
-    </p>
+      <span class="chain-link" aria-hidden="true"></span>
+      <p class="body reveal">
+        Most software companies grow by accretion. A library calls a
+        library that calls a runtime that calls a kernel. Each layer
+        promises to hide the one below. Ledatic is built the other way.
+        We remove layers until what's left is small enough to carry in
+        your head.
+      </p>
 
-    <p class="body reveal">
-      We don't think this is the only way to build software. We think
-      it's the way worth building the next decade's software in. The
-      world is filling up with code nobody owns. We'd rather own ours.
-    </p>
+      <p class="body reveal">
+        What's left, in our case, is: a <data class="fig" data-src="repo:rail_native" data-fmt="mb">small</data> binary that speaks
+        TLS 1.3, verifies X.509 chains, runs a 2D magnetohydrodynamics
+        simulation, trains a small transformer, and generates this
+        webpage. Written in a language that compiles itself. Zero C
+        dependencies. Zero invisible runtime.
+      </p>
 
-    <hr style="margin: 3rem 0; border: 0; border-top: 1px solid hsl(var(--border));">
+      <p class="body reveal">
+        We don't think this is the only way to build software. We think
+        it's the way worth building the next decade's software in. The
+        world is filling up with code nobody owns. We'd rather own ours.
+      </p>
 
-    <p class="body reveal" style="color: hsl(var(--foreground) / 0.9);">
-      If you want to watch us do it, the source is public. If you want
-      to verify we're doing it, the entropy beacon ticks every two
-      seconds and signs what we've been up to. The two doors below
-      are how to start.
-    </p>
+      <hr>
 
-    <div class="cta-row reveal" style="margin-top: 2rem;">
-      <a class="btn btn-primary" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">See the Source</a>
-      <a class="btn btn-ghost" href="entropy.html">Verify the Beacon</a>
+      <span class="chain-link" aria-hidden="true"></span>
+      <p class="body reveal">
+        Here is the long bet, counted backwards from 2040. The entropy
+        beacon signs a pulse <data class="fig" data-src="beacon:cadence" data-fmt="words">on a steady cadence</data>, each one chained
+        to the last. Kept unbroken, that is roughly 220 million pulses
+        by 2040 &mdash; a record no one can retro-fabricate, because every
+        link commits to the one before it. You cannot buy a backlog of
+        time. It has to start somewhere, and it started here.
+      </p>
+
+      <p class="body reveal" style="color: var(--tx-hi);">
+        If you want to watch us do it, the source is public. If you want
+        to verify we're doing it, the beacon signs what we've been up to.
+        The two doors below are how to start.
+      </p>
+
+      <div class="cta-row reveal" style="margin-top: 2rem;">
+        <a class="btn btn-primary" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">See the Source</a>
+        <a class="btn btn-ghost" href="entropy.html">Verify the Beacon</a>
+      </div>
+
     </div>
   </div>
 </section>
@@ -148,7 +172,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span>Rail <data class="fig" data-src="repo:version">release</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">tests</data> &middot; <data class="fig" data-src="repo:rail_native" data-fmt="mb">binary</data></span>
     </div>
   </div>
 </footer>

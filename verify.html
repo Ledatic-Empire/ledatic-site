@@ -1,544 +1,1119 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Verify Provenance — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Drop an artifact and its signed record — your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side. Includes a deliberately corrupted sample so you can watch failure before you trust success.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/verify">
+<meta property="og:title" content="Verify — Ledatic">
+<meta property="og:description" content="Drop an artifact and its signed record — your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side. Includes a deliberately corrupted sample so you can watch failure before you trust success.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Verify — Ledatic">
+<meta name="twitter:description" content="Drop an artifact and its signed record — your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Verify — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/verify">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests.
+     Paths are ABSOLUTE: this page is also served at /verify/<report_id>. -->
+<link rel="preload" href="/_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="/_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="/_shared/tokens.css">
+<link rel="stylesheet" href="/_shared/fonts.css">
+<link rel="stylesheet" href="/_shared/site.css">
+<link rel="stylesheet" href="/_shared/proof.css">
 <style>
-  :root {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 96%;
-    --primary: 119 99% 46%;
-    --muted-foreground: 0 0% 60%;
-    --border: 0 0% 20%;
-    --hero-bg: 0 0% 8%;
-    --panel: 0 0% 12%;
-    --bad: 0 80% 65%;
-    --warn: 38 90% 60%;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: hsl(var(--hero-bg));
-    color: hsl(var(--foreground));
-    -webkit-font-smoothing: antialiased;
-    line-height: 1.6;
-    padding: 3rem 1.5rem;
-    min-height: 100vh;
-  }
-  .wrap { max-width: 64rem; margin: 0 auto; }
-  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-  a { color: hsl(var(--primary)); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .crumb {
-    display: inline-block;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin-bottom: 1.5rem;
-  }
-  .crumb a { color: hsl(var(--muted-foreground)); }
-  h1 {
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.25rem;
-  }
-  h1 .accent { color: hsl(var(--primary)); }
-  .sub {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    margin-bottom: 2.5rem;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-  .status {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.5rem;
-    padding: 1.75rem;
-    margin-bottom: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: border-color 0.3s ease;
-  }
-  .status .label {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin-bottom: 0.25rem;
-  }
-  .status .value { font-size: 1.5rem; font-weight: 600; }
-  .status .badge {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 2.5rem;
-    font-weight: 500;
-  }
-  .status.verified { border-color: hsl(var(--primary) / 0.4); box-shadow: 0 0 30px hsl(var(--primary) / 0.06); }
-  .status.verified .value, .status.verified .badge { color: hsl(var(--primary)); }
-  .status.invalid  { border-color: hsl(var(--bad) / 0.5); }
-  .status.invalid  .value, .status.invalid .badge { color: hsl(var(--bad)); }
-  .status.partial  { border-color: hsl(var(--warn) / 0.5); }
-  .status.partial  .value, .status.partial .badge { color: hsl(var(--warn)); }
-  .status.loading  .value, .status.loading .badge { color: hsl(var(--muted-foreground)); }
-  section { margin-bottom: 2rem; }
-  section h2 {
-    font-size: 0.7rem;
-    color: hsl(var(--primary));
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-  .field {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-left: 3px solid hsl(var(--border));
-    border-radius: 0.375rem;
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.75rem;
-  }
-  .field.ok  { border-left-color: hsl(var(--primary)); }
-  .field.bad { border-left-color: hsl(var(--bad)); }
-  .field .label {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 0.35rem;
-  }
-  .field .value { font-size: 0.9rem; }
-  .field .hash {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    word-break: break-all;
-    color: hsl(var(--foreground) / 0.85);
-    margin-top: 0.25rem;
-    padding: 0.6rem 0.75rem;
-    background: hsl(var(--hero-bg));
-    border-radius: 0.25rem;
-    line-height: 1.5;
-  }
-  .check {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    padding: 0.55rem 0.85rem;
-    border-radius: 0.25rem;
-    margin-top: 0.75rem;
-  }
-  .check.ok   { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); border: 1px solid hsl(var(--primary) / 0.3); }
-  .check.bad  { background: hsl(var(--bad) / 0.1);     color: hsl(var(--bad));     border: 1px solid hsl(var(--bad) / 0.3); }
-  .check.warn { background: hsl(var(--warn) / 0.1);    color: hsl(var(--warn));    border: 1px solid hsl(var(--warn) / 0.3); }
-  .footer {
-    margin-top: 3rem;
-    padding: 1.75rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.5rem;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.875rem;
-    background: hsl(var(--panel) / 0.5);
-  }
-  .footer p { margin-bottom: 0.85rem; }
-  .footer p:last-child { margin-bottom: 0; }
-  .footer code {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    color: hsl(var(--foreground));
-    background: hsl(var(--hero-bg));
-    padding: 0.1rem 0.35rem;
-    border-radius: 0.2rem;
-  }
-  .err {
-    background: hsl(var(--bad) / 0.08);
-    border: 1px solid hsl(var(--bad) / 0.3);
-    color: hsl(var(--bad));
-    padding: 1.25rem;
-    border-radius: 0.375rem;
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
-  .err code { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; }
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid hsl(var(--border));
-    border-top-color: hsl(var(--primary));
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    display: inline-block;
-    vertical-align: -2px;
-    margin-right: 0.5rem;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ── /verify page styles — consumes tokens only ── */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* No shader (§6 Ledger class): the proof tray is the spectacle. */
+.hero.compact { min-height: 42vh; }
+.hero.compact .hero-content { padding-top: 7rem; padding-bottom: 2rem; }
+.hero-content a { pointer-events: auto; }
+
+data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
+
+/* ── the loader ── */
+.loader { margin-top: var(--sp-8); }
+.dropzone {
+  border: 1px dashed var(--line);
+  border-radius: var(--r-0);
+  padding: var(--sp-12) var(--sp-6);
+  text-align: center;
+  color: var(--tx-dim);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.8;
+  transition: border-color var(--hover-out) var(--ease), color var(--hover-out) var(--ease);
+}
+.dropzone[data-js] { cursor: pointer; }
+.dropzone[data-over] { border-color: var(--ph-700); color: var(--tx-lo); transition-duration: var(--hover-in); }
+.dropzone a { color: var(--ph-700); }
+.dropzone a:hover { color: var(--ph-600); }
+.loader-controls {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+.loader-controls .col { display: flex; flex-direction: column; gap: var(--sp-3); flex: 0 1 auto; }
+#file-in {
+  color: var(--tx-lo);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  max-width: 100%;
+}
+#paste-in {
+  flex: 1 1 18rem;
+  min-height: 5rem;
+  background: var(--ink-1);
+  color: var(--tx-hi);
+  border: 1px solid var(--line);
+  border-radius: var(--r-0);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.6;
+  padding: var(--sp-3);
+  resize: vertical;
+}
+#paste-in:focus-visible { outline: 2px solid var(--ph-700); outline-offset: 1px; }
+#paste-in::placeholder { color: var(--tx-dim); }
+.loader .btn { padding: 0.6rem 1.1rem; font-size: 0.8rem; }
+.loader [disabled] { opacity: 0.45; cursor: not-allowed; }
+.slots {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+}
+.slots > div { display: flex; gap: var(--sp-3); }
+.slots dt {
+  color: var(--tx-dim);
+  flex: 0 0 7ch;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  padding-top: 2px;
+}
+.slots dd { margin: 0; color: var(--tx-lo); overflow-wrap: anywhere; }
+.loader .tray { margin-top: var(--sp-4); }
+
+.fine, .nojs {
+  font-size: 0.8rem;
+  color: var(--tx-dim);
+  line-height: 1.6;
+  margin-top: var(--sp-4);
+  max-width: 64ch;
+}
+.nojs a, .fine a { color: var(--ph-700); }
+.nojs code, .fine code { font-family: var(--font-body); color: var(--tx-lo); }
+
+/* ── sample triad ── */
+.triad { margin-top: var(--sp-8); }
+.triad .card h3 { font-size: 1.1rem; }
+.triad .card [data-state] { font-size: 0.75rem; }
+.triad .tray { margin-top: var(--sp-3); }
+.triad .prove-row { margin-top: var(--sp-3); }
+.card.panel-replay { padding: 1.75rem; }
+.card.panel-replay > * { position: relative; z-index: 1; }
+
+/* ── verifier + keys ── */
+.vtv .tray { margin-top: var(--sp-3); }
+.keytable { display: grid; gap: var(--sp-3); margin-top: var(--sp-6); }
+.keyrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  align-items: baseline;
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-4) var(--sp-6);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+}
+.keyrow .kname { color: var(--ph-600); font-family: var(--font-display); font-weight: 600; }
+.keyrow .krole { color: var(--tx-lo); }
+.keyrow .kfp { color: var(--tx-hi); letter-spacing: 0.05em; overflow-wrap: anywhere; }
+.keyrow a { color: var(--ph-700); }
+
+/* ── report mode (route /verify/<report_id>) ── */
+#report .tray { margin-top: var(--sp-6); }
+.mono-id { font-family: var(--font-body); color: var(--ph-600); overflow-wrap: anywhere; }
+.meta {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-6) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+}
+.meta > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--sp-2);
+}
+.meta dt {
+  color: var(--tx-dim);
+  flex: 0 0 14ch;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  padding-top: 2px;
+}
+.meta dd { margin: 0; color: var(--tx-lo); overflow-wrap: anywhere; }
+.report-links { margin-top: var(--sp-4); font-family: var(--font-body); font-size: var(--t-data); }
+.report-links a { color: var(--ph-700); }
 </style>
+<script type="speculationrules">
+{
+  "prerender": [
+    { "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+  ]
+}
+</script>
 </head>
 <body>
-<div class="wrap">
-  <div class="crumb"><a href="/">Ledatic</a> &middot; <a href="/provenance">Provenance</a> &middot; Verify</div>
-  <h1>Verify Report <span class="accent">/</span></h1>
-  <div class="sub" id="sub">REPORT_ID: <span id="rid">…</span></div>
-  <div id="root"></div>
-</div>
 
-<script>
-"use strict";
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail.html">Rail</a>
+    <a href="/entropy.html">Entropy</a>
+    <a href="/aliens.html">Aliens</a>
+    <a href="/system.html">System</a>
+    <a href="/changelog.html">Changelog</a>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="https://github.com/zemo-g/rail/releases" target="_blank" rel="noopener">Releases</a>
+  </div>
+</nav>
 
-// Witness Ed25519 public keys (raw 32 bytes, base64). Re-derivable from
-//   openssl pkey -in <node>.sk -pubout -outform DER | tail -c 32 | base64
-// pk_fp = sha256(DER pubkey).hex[:16].
-//   fleet0  pk_fp cac5f21a70564aeb (Pi Zero 2W, on the tailnet)
-//   studio  pk_fp 47cb7773241d8ac2 (Mac Studio, Detroit)
-const PUBKEYS = {
-  fleet0: "BYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=",
-  studio: "ltEzzr2LSBuVpsZ+eENt4z6JigMRDz2y96fz3ymZC18=",
-  mini:   "OHbTtDz3ivtia19IYac+/bHdTcqf1wWA7AyFoVig0/w=",
+<section class="hero compact">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Proof tray</span>
+    <h1 class="hero-title fade-up">Verify it yourself.</h1>
+    <p class="hero-sub fade-up">Every green mark on this site is computed in your browser, never asserted by ours.</p>
+    <p class="hero-desc fade-up">Drop an artifact and its attestation below. Your machine re-hashes the bytes, checks the witness signature against a pinned public key, and reports what it found — including when the honest answer is &ldquo;nothing can be proven here.&rdquo;</p>
+    <p class="fade-up"><a class="btn btn-primary" href="#byo">Drop an artifact</a> <a class="btn btn-ghost" href="#samples">Try a sample &rarr;</a></p>
+  </div>
+</section>
+
+<main>
+
+<!-- ════ Provenance report mode — revealed by JS only when the URL is /verify/<report_id> ════ -->
+<section class="section" id="report" hidden>
+  <div class="wrap">
+    <span class="eyebrow">Provenance report</span>
+    <h2>Report <span class="mono-id" id="report-id">—</span></h2>
+    <p class="lead">This URL names a generated report. Its manifest is fetched below and every check re-runs locally: the signed message is rebuilt from the manifest&rsquo;s own fields, hashed, and each witness signature is verified against keys pinned in this page&rsquo;s source.</p>
+    <div class="tray" id="tray-report" role="log" aria-live="polite" hidden></div>
+    <dl class="meta" id="report-meta" hidden></dl>
+    <p class="report-links" id="report-links" hidden></p>
+  </div>
+</section>
+
+<!-- ════ Bring your own ════ -->
+<section class="section" id="byo">
+  <div class="wrap">
+    <span class="eyebrow">Bring your own</span>
+    <h2>The loader</h2>
+    <p class="lead">Feed it any pair: artifact bytes plus the attestation JSON that claims them. Either order, drag or paste. The artifact never leaves your machine — hashing and signature checks run in this tab.</p>
+
+    <div class="card loader">
+      <div class="dropzone" id="dropzone">
+        <p class="zone-state" id="zone-state">no artifact loaded &middot; drop one or <a href="#samples">try a sample ▸</a></p>
+      </div>
+      <div class="loader-controls">
+        <div class="col">
+          <label for="file-in" class="fine" style="margin-top:0;">files (artifact, attestation JSON, or both)</label>
+          <input type="file" id="file-in" multiple disabled>
+          <div>
+            <button class="btn btn-secondary" id="run-byo" type="button" disabled>run the proof</button>
+            <button class="btn btn-ghost" id="clear-byo" type="button" disabled>clear</button>
+          </div>
+        </div>
+        <textarea id="paste-in" rows="4" placeholder="…or paste attestation JSON here" aria-label="paste attestation JSON" disabled></textarea>
+      </div>
+      <dl class="slots">
+        <div><dt>manifest</dt><dd id="slot-manifest">none held</dd></div>
+        <div><dt>artifact</dt><dd id="slot-artifact">none held — a signature can still be checked over its attested digest</dd></div>
+      </dl>
+      <div class="tray" id="tray-byo" role="log" aria-live="polite" hidden></div>
+      <p class="fine">Attestation records on this site end in <code>.attestation.json</code> — <a href="/releases/v5.1.0/rail_native.attestation.json">here is a real one</a> to inspect. Provenance-report manifests verify here too.</p>
+      <noscript>
+        <p class="nojs">These checks run in <em>your</em> browser — with JavaScript off there is no machine on this page to run them, and this loader stays honestly inert. Offline fallback: <code>attest/verify.sh</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">public site repo</a> reproduces every check with openssl. Report manifests are plain JSON at <code>/provenance/manifest/&lt;report_id&gt;</code>.</p>
+      </noscript>
+    </div>
+  </div>
+</section>
+
+<!-- ════ The sample triad ════ -->
+<section class="section" id="samples">
+  <div class="wrap">
+    <span class="eyebrow">The sample triad</span>
+    <h2>Meet all three verdicts before trusting any of them</h2>
+    <p class="lead">A verifier you have only watched succeed proves nothing. Press all three — the third one is the only red on this site, and it earns it.</p>
+
+    <div class="grid grid-3 triad">
+      <div class="card">
+        <span class="eyebrow">/01 &middot; expect green</span>
+        <h3>The current release</h3>
+        <p>The genuine record for the latest Rail compiler binary, signed by the artifact witness when it shipped. The bytes are fetched, re-hashed, and the signature checked — here, by you.</p>
+        <p class="prove-row"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; v5.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <div class="tray" hidden></div>
+      </div>
+
+      <div class="card panel-replay">
+        <span class="eyebrow">/02 &middot; expect green, older</span>
+        <h3>A record from the archive</h3>
+        <p><span data-state="unknown" id="chip-v3">recorded 2026-04-28</span></p>
+        <p>An attestation signed against beacon pulse p#360,389 still verifies today — that is the point. Age changes nothing about the math; the chain anchor tells you exactly how old it is.</p>
+        <p class="prove-row"><button class="prove" aria-expanded="false" data-manifest="/releases/v3.0.0/rail_native.attestation.json" data-name="rail_native &middot; v3.0.0 (archive)"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <div class="tray" hidden></div>
+      </div>
+
+      <div class="card">
+        <span class="eyebrow">/03 &middot; expect red</span>
+        <h3>The sabotaged copy</h3>
+        <p><span data-state="unknown" id="chip-fail">not yet run</span></p>
+        <p>A copy of /01&rsquo;s record embedded in this page with one character of the witness signature changed. The bytes hash clean — and the signature collapses. Failure, in a sandbox, on purpose.</p>
+        <p class="prove-row"><button class="prove" id="prove-fail" aria-expanded="false" data-name="rail_native &middot; sabotaged copy" disabled><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <div class="tray" id="tray-fail" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ Verify the verifier ════ -->
+<section class="section vtv" id="verifier">
+  <div class="wrap">
+    <span class="eyebrow">Verify the verifier</span>
+    <h2>Who checks the checker?</h2>
+    <p class="lead">There is no black box here. The cryptography is your browser&rsquo;s own WebCrypto; the choreography is one readable JavaScript file served by this site. Both are checkable.</p>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>The engine</h3>
+        <p>Hashing and Ed25519 verification call <code>crypto.subtle</code> — code that ships inside your browser and is maintained by its vendor, not by us. We could not alter it if we wanted to.</p>
+        <p>If your browser lacks an Ed25519 engine, this page says so and refuses to guess — outcomes go to &ldquo;unverified,&rdquo; never to green.</p>
+      </div>
+      <div class="card">
+        <h3>The choreography</h3>
+        <p>The module at <a href="/_shared/proof-tray.js"><code>/_shared/proof-tray.js</code></a> decides what to fetch and what counts as a pass. Press the button to re-fetch its served bytes and compare them against the site&rsquo;s signed deploy record — the same self-check every page footer runs.</p>
+        <p><button class="btn btn-secondary" id="run-vtv" type="button" disabled>check the module</button></p>
+        <div class="tray" id="vtv-out" role="log" aria-live="polite" hidden></div>
+        <p class="fine">Until the first signed deploy record is published at <code>/attest/site/latest.json</code>, this check reports honestly unknown — it will not show green on faith. Source is public in the <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">site repo</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ The key pin ════ -->
+<section class="section" id="keys">
+  <div class="wrap">
+    <span class="eyebrow">The honest part</span>
+    <h2>One thing is taken on faith</h2>
+    <p class="lead">Pin the key once — verify everything after. Every proof above reduces to trusting the public-key fingerprints pinned in this site&rsquo;s source. A forger who could rewrite both this page <em>and</em> the keys it pins could forge the green — which is exactly why the keys are also published out-of-band, where this page cannot touch them.</p>
+
+    <div class="keytable">
+      <div class="keyrow">
+        <span class="kname">fleet0</span>
+        <span class="krole">artifact witness</span>
+        <span class="kfp">pk_fp cac5 f21a 7056 4aeb</span>
+        <a href="/attest/fleet0.pub.pem">public key</a>
+      </div>
+      <div class="keyrow">
+        <span class="kname">site_deploy</span>
+        <span class="krole">site deploy signer</span>
+        <span class="kfp">pk_fp 7b43 91d6 4aec b9ac</span>
+        <a href="/attest/site_deploy.pub.pem">public key</a>
+      </div>
+      <div class="keyrow">
+        <span class="kname">report witnesses</span>
+        <span class="krole">provenance reports name their witnesses; this page pins raw verifying keys for <code>fleet0</code>, <code>studio</code> and <code>mini</code> in its source</span>
+      </div>
+    </div>
+
+    <p class="fine">Out-of-band copies live in the <a href="https://github.com/Ledatic-Empire/ledatic-site/tree/master/attest" rel="noopener">public site repo</a>. Compare fingerprints from a different machine, a different network, a different day — that one comparison is the entire trust decision.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="/rail.html">Rail</a></li>
+          <li><a href="/changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="/verify.html">Verify an artifact</a></li>
+          <li><a href="/entropy.html">Entropy beacon</a></li>
+          <li><a href="/system.html">System</a></li>
+          <li><a href="/aliens.html">Aliens archive</a></li>
+          <li><a href="/replay.html">Replay</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="/manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
+    </div>
+  </div>
+</footer>
+
+<!-- /03's sandbox: a byte-true copy of the genuine record above, except the
+     first character of witness.sig (A→B). Tampering is the demo. -->
+<script type="application/json" id="sample-fail">
+{
+  "kind": "ledatic.attestation",
+  "version": 1,
+  "artifact": {
+    "name": "rail_native",
+    "size_bytes": 1085136,
+    "sha256": "3b89d0f5dc65d21e5c25b2c8cd10780472dd87496d58da65449da7d0240eab7d"
+  },
+  "beacon": {
+    "url": "https://ledatic.org/entropy/pulse",
+    "pulse_id": 1004625,
+    "value_hex": "f122b9dd75435e9ec617e24fdb7dcfc5bcab884eaec36e716bcf9ca5da7dfb98",
+    "timestamp_utc": "2026-05-15T15:47:51Z"
+  },
+  "witness": {"kind":"attestation","version":1,"digest_sha256":"3b89d0f5dc65d21e5c25b2c8cd10780472dd87496d58da65449da7d0240eab7d","pulse_id":1004625,"value_hex":"f122b9dd75435e9ec617e24fdb7dcfc5bcab884eaec36e716bcf9ca5da7dfb98","witnessed_at":1778860072,"sig":"BMyL7EujHL7eFWYOKjf9Q7NibFlp/5tl1Pht4eMI7rp6N6NLpc2W1hhmwc7aarLkglzQ0o9AxZWR3T6OpcG0DA==","pk_fp":"cac5f21a70564aeb","witness":"fleet0"},
+  "created_at": 1778860072
+}
+</script>
+
+<script src="/_shared/site.js" defer></script>
+<script type="module" src="/_shared/pulse-clock.js"></script>
+<script type="module" src="/_shared/proof-tray.js"></script>
+<script type="module">
+/* ── /verify page wiring (§6) — everything here is additive;
+   the page is complete and honest with zero JS. D's module owns the
+   engine; its DOM helpers are private, so the tray renderer is
+   cloned here against the same proof.css contract. */
+
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+const prm = matchMedia('(prefers-reduced-motion: reduce)');
+
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+const $ = (s, r) => (r || document).querySelector(s);
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+const REPO_KEYS_URL = 'https://github.com/Ledatic-Empire/ledatic-site/tree/master/attest';
+
+/* Report-witness Ed25519 verifying keys (raw 32 bytes, base64).
+   Public material — re-derivable from the pem files in the repo. */
+const REPORT_KEYS = {
+  fleet0: 'BYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=',
+  studio: 'ltEzzr2LSBuVpsZ+eENt4z6JigMRDz2y96fz3ymZC18=',
+  mini:   'OHbTtDz3ivtia19IYac+/bHdTcqf1wWA7AyFoVig0/w=',
 };
-const WITNESS_DESCRIPTIONS = {
-  fleet0: "Pi Zero 2 W, on the tailnet",
-  studio: "Mac Studio, Detroit",
-  mini:   "Mac Mini M4 Pro, Detroit",
-};
-// Backward-compat alias used by older code paths in this file:
-const FLEET0_PUBKEY_B64 = PUBKEYS.fleet0;
-const REPORT_ID = decodeURIComponent(window.location.pathname.split("/").filter(Boolean).pop() || "");
 
-document.getElementById("rid").textContent = REPORT_ID || "(missing)";
-
-function b64ToBytes(s) {
-  s = String(s || "").replace(/^base64:/, "");
-  const bin = atob(s);
+/* ── crypto helpers (report path only; artifact path uses D's engine) ── */
+const te = new TextEncoder();
+function rawB64(b64) {
+  const bin = atob(String(b64 || ''));
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
-
-function bytesToHex(buf) {
-  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2, "0"); }).join("");
+function hexOf(buf) {
+  const v = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < v.length; i++) s += v[i].toString(16).padStart(2, '0');
+  return s;
 }
-
-async function sha256Hex(str) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return bytesToHex(buf);
+async function sha256s(str) {
+  return hexOf(await crypto.subtle.digest('SHA-256', te.encode(str)));
 }
-
-async function verifyEd25519(msgStr, sigB64, pubB64) {
-  let pubKey;
+async function edVerify(msg, sigB64, pubB64) {
+  let key;
   try {
-    pubKey = await crypto.subtle.importKey(
-      "raw",
-      b64ToBytes(pubB64),
-      { name: "Ed25519" },
-      false,
-      ["verify"]
-    );
-  } catch (e) {
-    return { ok: null, reason: "this browser doesn't expose Ed25519 in WebCrypto. Try Chrome 137+, Safari 17+, or Firefox 138+. (Manifest fields are still inspectable above.)" };
+    key = await crypto.subtle.importKey('raw', rawB64(pubB64), { name: 'Ed25519' }, false, ['verify']);
+  } catch {
+    return { ok: null, why: 'this browser has no Ed25519 engine — the fields above are still inspectable; the shell recipe verifies out-of-band' };
   }
   try {
-    const valid = await crypto.subtle.verify(
-      "Ed25519",
-      pubKey,
-      b64ToBytes(sigB64),
-      new TextEncoder().encode(msgStr)
-    );
-    return { ok: valid, reason: valid ? null : "signature did not validate against fleet0's public key" };
+    const ok = await crypto.subtle.verify('Ed25519', key, rawB64(sigB64), te.encode(msg));
+    return { ok, why: ok ? '' : 'signature did not verify against the pinned key — the record or its signature has been altered' };
   } catch (e) {
-    return { ok: null, reason: "verify error: " + (e && e.message || e) };
+    return { ok: null, why: 'verify error: ' + String((e && e.message) || e) };
   }
 }
 
-function esc(s) {
-  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+/* ── tray renderer clones (proof.css contract) ── */
+function tickSvg() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'tick');
+  svg.setAttribute('viewBox', '0 0 12 12');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(NS, 'path');
+  path.setAttribute('d', 'M2 6.5 5 9.5 10 3');
+  svg.appendChild(path);
+  return svg;
+}
+
+function stepRow(tray, rows, s) {
+  let row = rows.get(s.id);
+  if (!row) {
+    row = el('div', 'tray-step');
+    row.append(
+      el('span', 'st-name', s.id),
+      el('span', 'st-label', s.label || ''),
+      el('span', 'st-dots'),
+      el('span', 'st-res'),
+    );
+    tray.appendChild(row);
+    rows.set(s.id, row);
+  }
+  row.dataset.status = s.status;
+  if (s.label) row.querySelector('.st-label').textContent = s.label;
+  const res = row.querySelector('.st-res');
+  res.textContent = '';
+  if (s.status === 'run') {
+    res.textContent = '◌';
+  } else if (s.status === 'ok') {
+    const tick = tickSvg();
+    res.append(tick, ` ${s.res || ''}`);
+    requestAnimationFrame(() => tick.classList.add('draw'));
+  } else if (s.status === 'fail') {
+    res.textContent = `✗ ${s.res || ''}`;
+  } else if (s.status === 'skip') {
+    res.textContent = '– skipped';
+  } else {
+    res.textContent = s.res || '–';
+  }
+  const oldNote = row.nextElementSibling;
+  if (oldNote && oldNote.classList.contains('tray-note') && oldNote.dataset.for === s.id) oldNote.remove();
+  if (s.note) {
+    const note = el('div', 'tray-note', s.note);
+    note.dataset.for = s.id;
+    if (s.status !== 'fail') note.dataset.tone = 'info';
+    row.insertAdjacentElement('afterend', note);
+  }
+}
+
+function copyControls(text) {
+  const wrap = el('span');
+  if (!(navigator.clipboard && navigator.clipboard.writeText)) return wrap;
+  const btn = el('button', 'copy-btn', 'copy');
+  btn.type = 'button';
+  const echo = el('span', 'copy-echo', 'copied');
+  echo.setAttribute('aria-hidden', 'true');
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.classList.add('copied');
+      echo.classList.add('show');
+      setTimeout(() => { btn.classList.remove('copied'); echo.classList.remove('show'); }, 2000);
+    } catch { /* clipboard refused — the text is still selectable */ }
+  });
+  wrap.append(btn, echo);
+  return wrap;
+}
+
+function trayTitle(tray, name) {
+  const t = el('div', 'tray-title');
+  const affix = el('span', 'affix', '⌁');
+  affix.setAttribute('aria-hidden', 'true');
+  t.append(affix, `PROVE  ${name}`);
+  tray.appendChild(t);
+}
+
+function prepTray(tray) {
+  tray.hidden = false;
+  tray.textContent = '';
+  delete tray.dataset.outcome;
+  if (!prm.matches) {
+    tray.classList.remove('sweep');
+    void tray.offsetWidth;
+    tray.classList.add('sweep');
+  }
+  return new Map();
+}
+
+function settle(tray, outcome) {
+  if (outcome === 'ok' || outcome === 'fail') tray.dataset.outcome = outcome;
+  if (outcome === 'ok' && !prm.matches) {
+    tray.classList.add('bloom');
+    requestAnimationFrame(() => requestAnimationFrame(() => tray.classList.remove('bloom')));
+  }
+}
+
+function appendReceipt(tray, receipt) {
+  if (!receipt) return;
+  const rec = el('details', 'receipt');
+  const sum = el('summary', '', 'receipt');
+  sum.appendChild(copyControls(receipt));
+  const pre = el('pre', '', receipt);
+  rec.append(sum, pre);
+  tray.appendChild(rec);
+}
+
+function appendKeypin(tray, P, witnessName, pkFp) {
+  const pin = el('div', 'tray-keypin');
+  pin.append('pin the key once — verify everything after');
+  if (pkFp) pin.append(` · ${witnessName || 'key'} ${P.groupHex(pkFp, 4)}`);
+  const entry = P.PINNED_KEYS[witnessName];
+  if (entry && entry.pem_url) {
+    pin.append(' · ');
+    const a = el('a', '', 'public key');
+    a.href = entry.pem_url;
+    pin.appendChild(a);
+  }
+  pin.append(' · ');
+  const repo = el('a', '', 'out-of-band copy');
+  repo.href = REPO_KEYS_URL;
+  repo.rel = 'noopener';
+  pin.appendChild(repo);
+  tray.appendChild(pin);
+}
+
+function verdictBlock(P, tray, r) {
+  const v = el('div', 'tray-verdict');
+  if (r.outcome === 'ok') {
+    const secs = (r.ms / 1000).toFixed(2);
+    const gloss = r.hashed ? ''
+      : r.rotatedLive ? ' · attested digest verified, served bytes have rotated on'
+      : ' · artifact bytes not fetched';
+    v.textContent = `verified in your browser · ${secs} s · nothing executed server-side${gloss}`;
+  } else if (r.outcome === 'fail') {
+    v.dataset.tone = 'fail';
+    v.textContent = `proof FAILED at ${r.failedAt} — ${r.note}`;
+  } else {
+    v.dataset.tone = 'unverified';
+    v.textContent = `could not verify here — ${r.note}`;
+  }
+  tray.appendChild(v);
+  appendReceipt(tray, r.receipt);
+  appendKeypin(tray, P, r.witnessName, r.pkFp);
+  settle(tray, r.outcome);
+}
+
+/* ── the loader (§6: drag-and-drop + paste-a-manifest) ── */
+function isReport(m) {
+  return !!(m && typeof m === 'object' && m.attest
+    && typeof m.attest.inner_message === 'string'
+    && (m.witnesses || m.witness) && m.report_id);
+}
+
+function initLoader(P) {
+  const zone = $('#dropzone'); const state = $('#zone-state');
+  const fileIn = $('#file-in'); const paste = $('#paste-in');
+  const runBtn = $('#run-byo'); const clearBtn = $('#clear-byo');
+  const tray = $('#tray-byo');
+  const slotM = $('#slot-manifest'); const slotA = $('#slot-artifact');
+  if (!zone || !tray) return;
+  [fileIn, paste, clearBtn].forEach((c) => { if (c) c.disabled = false; });
+  zone.dataset.js = '';
+  const emptyState = state.innerHTML;           // authored honest empty state
+  const MAX_HOLD = 256 * 1024 * 1024;
+  const held = { manifest: null, manifestName: '', bytes: null, bytesName: '' };
+
+  function refresh() {
+    slotM.textContent = held.manifest ? `held · ${held.manifestName}` : 'none held';
+    slotA.textContent = held.bytes
+      ? `held · ${held.bytesName} · ${P.fmtPulse(held.bytes.byteLength)} B`
+      : 'none held — a signature can still be checked over its attested digest';
+    runBtn.disabled = !(held.manifest || (paste && paste.value.trim()));
+    if (held.manifest && held.bytes) state.textContent = 'pair held · run the proof';
+    else if (held.manifest) state.textContent = 'manifest held · drop the artifact too, or run on the attested digest alone';
+    else if (held.bytes) state.textContent = 'artifact held · now give it a claim to check against — drop or paste the attestation JSON';
+    else state.innerHTML = emptyState;
+  }
+
+  function takeJson(text, name) {
+    let obj = null;
+    try { obj = JSON.parse(text); } catch { return false; }
+    if (!obj || typeof obj !== 'object') return false;
+    held.manifest = obj;
+    held.manifestName = name;
+    return true;
+  }
+
+  async function takeFile(f) {
+    const buf = await f.arrayBuffer();
+    if (/\.json$/i.test(f.name) || f.type === 'application/json') {
+      const text = new TextDecoder().decode(buf);
+      if (takeJson(text, f.name)) return;
+    }
+    if (buf.byteLength > MAX_HOLD) {
+      state.textContent = `${f.name} is larger than the in-browser cap — verify it offline with the shell recipe`;
+      return;
+    }
+    held.bytes = buf;
+    held.bytesName = f.name;
+  }
+
+  async function run() {
+    const pasted = paste && paste.value.trim();
+    if (pasted && !takeJson(pasted, 'pasted JSON')) {
+      const rows = prepTray(tray);
+      trayTitle(tray, 'your paste');
+      stepRow(tray, rows, { id: 'FETCH', label: 'pasted text', status: 'info', res: 'not JSON', note: 'could not parse the paste as JSON — nothing was checked' });
+      const v = el('div', 'tray-verdict', 'could not verify here — the paste is not JSON');
+      v.dataset.tone = 'unverified';
+      tray.appendChild(v);
+      return;
+    }
+    refresh();
+    if (!held.manifest) return;
+    const rows = prepTray(tray);
+    if (isReport(held.manifest)) {
+      trayTitle(tray, `report ${held.manifest.report_id}`);
+      stepRow(tray, rows, { id: 'FETCH', label: `manifest (${held.manifestName} · supplied by you)`, status: 'info', res: 'not fetched' });
+      await runReportChecks(P, held.manifest, tray, rows);
+      return;
+    }
+    if (!P.detectSchema(held.manifest)) {
+      trayTitle(tray, held.manifestName);
+      stepRow(tray, rows, { id: 'HASH', label: 'manifest schema', status: 'info', res: 'unrecognized', note: 'not a recognized record (artifact witness, site deploy, or provenance report) — nothing was checked' });
+      const v = el('div', 'tray-verdict', 'could not verify here — unrecognized schema; nothing was checked, so nothing is red');
+      v.dataset.tone = 'unverified';
+      tray.appendChild(v);
+      return;
+    }
+    const subject = (held.manifest.artifact || held.manifest.frame || {});
+    trayTitle(tray, subject.name || held.manifestName);
+    const r = await P.verifyManifestObject(held.manifest, {
+      artifactBytes: held.bytes || undefined,
+      manifestStep: { id: 'FETCH', label: `manifest (${held.manifestName} · supplied by you)`, status: 'info', res: 'not fetched' },
+      onStep: (s) => stepRow(tray, rows, s),
+    });
+    verdictBlock(P, tray, r);
+  }
+
+  function clear() {
+    held.manifest = null; held.manifestName = '';
+    held.bytes = null; held.bytesName = '';
+    if (paste) paste.value = '';
+    if (fileIn) fileIn.value = '';
+    tray.hidden = true;
+    tray.textContent = '';
+    delete tray.dataset.outcome;
+    refresh();
+  }
+
+  ['dragenter', 'dragover'].forEach((ev) => zone.addEventListener(ev, (e) => {
+    e.preventDefault();
+    zone.dataset.over = '';
+  }));
+  ['dragleave', 'drop'].forEach((ev) => zone.addEventListener(ev, (e) => {
+    e.preventDefault();
+    delete zone.dataset.over;
+  }));
+  zone.addEventListener('drop', async (e) => {
+    const files = e.dataTransfer && e.dataTransfer.files ? [...e.dataTransfer.files] : [];
+    for (const f of files) await takeFile(f);
+    if (!files.length && e.dataTransfer) {
+      const t = e.dataTransfer.getData('text/plain');
+      if (t) takeJson(t.trim(), 'dropped text');
+    }
+    refresh();
+  });
+  zone.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    if (fileIn) fileIn.click();
+  });
+  if (fileIn) fileIn.addEventListener('change', async () => {
+    for (const f of [...fileIn.files]) await takeFile(f);
+    refresh();
+  });
+  if (paste) paste.addEventListener('input', () => {
+    runBtn.disabled = !(held.manifest || paste.value.trim());
+  });
+  runBtn.addEventListener('click', run);
+  clearBtn.addEventListener('click', clear);
+  refresh();
+}
+
+/* ── provenance-report checks (ported from the legacy verifier;
+   format downgrade refusal + per-witness consensus preserved) ── */
+function reportVerdict(tray, outcome, at, note, man, stats) {
+  const v = el('div', 'tray-verdict');
+  if (outcome === 'ok') {
+    v.textContent = `verified in your browser · ${stats.gloss} · nothing executed server-side`;
+  } else if (outcome === 'fail') {
+    v.dataset.tone = 'fail';
+    v.textContent = `proof FAILED at ${at} — ${note}`;
+  } else {
+    v.dataset.tone = 'unverified';
+    v.textContent = `could not verify here — ${note}`;
+  }
+  tray.appendChild(v);
+  const lines = [
+    'ledatic report receipt',
+    `result:    ${outcome === 'ok' ? 'OK — ' + stats.gloss : outcome === 'fail' ? 'FAIL at ' + at + ' — ' + note : 'UNVERIFIED — ' + note}`,
+    `report:    ${(man && man.report_id) || '—'}`,
+    `witnesses: ${stats ? `${stats.verified}/${stats.total} verified` : '—'}`,
+    `pulse:     ${stats && stats.pulse ? 'p#' + stats.pulse : '—'}`,
+    `checked:   ${new Date().toISOString()}`,
+    'recipe:    attest/verify.sh in the public site repo reproduces this offline',
+  ];
+  appendReceipt(tray, lines.join('\n'));
+  const pin = el('div', 'tray-keypin');
+  pin.append('pin the key once — verify everything after · ');
+  const a = el('a', '', 'pinned fingerprints');
+  a.href = '#keys';
+  pin.appendChild(a);
+  pin.append(' · ');
+  const repo = el('a', '', 'out-of-band copy');
+  repo.href = REPO_KEYS_URL;
+  repo.rel = 'noopener';
+  pin.appendChild(repo);
+  tray.appendChild(pin);
+  settle(tray, outcome);
+}
+
+async function runReportChecks(P, man, tray, rows) {
+  const att = man.attest || {};
+  const inner = att.inner_message || '';
+  const skipRest = (ids) => ids.forEach((id) => stepRow(tray, rows, { id, label: '', status: 'skip' }));
+  const stats = { verified: 0, total: 0, pulse: null, gloss: '' };
+
+  /* FORM — format version + downgrade refusal */
+  stepRow(tray, rows, { id: 'FORM', label: 'format version', status: 'run' });
+  const prefV = inner.startsWith('report|v2|') ? 2 : inner.startsWith('report|v1|') ? 1 : 0;
+  const declV = (man.format_version === 'v2' || man.version === 2) ? 2
+    : (man.format_version === 'v1' || man.version === 1) ? 1 : 0;
+  const fv = declV || prefV;
+  if ((declV && prefV && declV !== prefV) || !fv) {
+    stepRow(tray, rows, { id: 'FORM', label: 'format version', status: 'fail', note: 'declared format version disagrees with the signed message prefix — refusing the downgrade. Likely tampered or replayed.' });
+    skipRest(['REBLD', 'HASH', 'SIG', 'LINK', 'CHAIN']);
+    return reportVerdict(tray, 'fail', 'FORM', 'format downgrade refused', man, stats);
+  }
+  if (fv === 2) {
+    stepRow(tray, rows, { id: 'FORM', label: 'format version', status: 'ok', res: 'v2 · pulse-bound' });
+  } else {
+    stepRow(tray, rows, { id: 'FORM', label: 'format version', status: 'info', res: 'v1 · legacy', note: 'this record predates pulse binding: its signature does not commit to a beacon pulse, so a captured record can be replayed against any later pulse. Treat the verdict accordingly.' });
+  }
+
+  /* REBLD — rebuild the signed message from the manifest's own fields */
+  stepRow(tray, rows, { id: 'REBLD', label: 'fields → signed message', status: 'run' });
+  const ge = man.generation_event || {};
+  const mo = ge.model || {}; const inp = ge.input || {}; const oup = ge.output || {};
+  const pulseId = man.beacon && man.beacon.pulse_id != null ? man.beacon.pulse_id : '';
+  let rebuilt = `report|v${fv}|` + [
+    man.report_id || '', mo.name || '', mo.weights_hash || '',
+    inp.prompt_sha256 || '', oup.response_sha256 || '',
+    man.generated_at || '', man.client_id || '',
+  ].join('|');
+  if (fv === 2) rebuilt += '|' + pulseId;
+  if (rebuilt !== inner) {
+    stepRow(tray, rows, { id: 'REBLD', label: 'fields → signed message', status: 'fail', note: 'the signed message rebuilt from the manifest fields disagrees with the stored one — fields were edited without re-signing' });
+    skipRest(['HASH', 'SIG', 'LINK', 'CHAIN']);
+    return reportVerdict(tray, 'fail', 'REBLD', 'manifest fields disagree with the signed message', man, stats);
+  }
+  stepRow(tray, rows, { id: 'REBLD', label: 'fields → signed message', status: 'ok', res: 'byte-identical' });
+
+  /* HASH — sha256(inner_message) vs declared digest */
+  stepRow(tray, rows, { id: 'HASH', label: 'sha256(signed message)', status: 'run' });
+  const got = await sha256s(inner);
+  if (got !== att.inner_digest_sha256) {
+    stepRow(tray, rows, { id: 'HASH', label: 'sha256(signed message)', status: 'fail', note: `computed ${got.slice(0, 16)}…, manifest declares ${String(att.inner_digest_sha256 || '').slice(0, 16)}… — tampered after signing` });
+    skipRest(['SIG', 'LINK', 'CHAIN']);
+    return reportVerdict(tray, 'fail', 'HASH', 'digest mismatch', man, stats);
+  }
+  stepRow(tray, rows, { id: 'HASH', label: 'sha256(signed message)', status: 'ok', res: `${P.groupHex(got.slice(0, 16))} …` });
+
+  /* SIG — every witness, against keys pinned in this page */
+  const ws = man.witnesses && man.witnesses.length ? man.witnesses : (man.witness ? [man.witness] : []);
+  stats.total = ws.length;
+  if (!ws.length) {
+    stepRow(tray, rows, { id: 'SIG', label: 'witness signatures', status: 'fail', note: 'no witnesses recorded — the manifest is unsigned' });
+    skipRest(['LINK', 'CHAIN']);
+    return reportVerdict(tray, 'fail', 'SIG', 'unsigned manifest', man, stats);
+  }
+  let anyFalse = false; let linked = 0; let firstWhy = '';
+  for (let i = 0; i < ws.length; i++) {
+    const w = ws[i];
+    const id = ws.length > 1 ? `SIG${i + 1}` : 'SIG';
+    const name = w.witness || 'unknown';
+    stepRow(tray, rows, { id, label: `Ed25519.verify (${name})`, status: 'run' });
+    if (w.digest_sha256 === att.inner_digest_sha256) linked++;
+    const msg = `attest|v1|${w.digest_sha256}|${w.pulse_id}|${w.value_hex}|${w.witnessed_at}`;
+    const pub = REPORT_KEYS[name];
+    const res = pub ? await edVerify(msg, w.sig, pub)
+      : { ok: null, why: `no pinned key for witness '${name}' — cannot verify in this browser; check out-of-band` };
+    if (res.ok === true) {
+      stats.verified++;
+      stepRow(tray, rows, { id, label: `Ed25519.verify (${name})`, status: 'ok', res: '✓' });
+    } else if (res.ok === false) {
+      anyFalse = true;
+      stepRow(tray, rows, { id, label: `Ed25519.verify (${name})`, status: 'fail', note: res.why });
+    } else {
+      if (!firstWhy) firstWhy = res.why;
+      stepRow(tray, rows, { id, label: `Ed25519.verify (${name})`, status: 'info', res: 'unchecked', note: res.why });
+    }
+  }
+
+  /* LINK — every witness signed over THIS manifest's digest */
+  stepRow(tray, rows, { id: 'LINK', label: 'witness digests ↔ manifest digest', status: 'run' });
+  const allLinked = linked === ws.length;
+  if (!allLinked) {
+    stepRow(tray, rows, { id: 'LINK', label: 'witness digests ↔ manifest digest', status: 'fail', note: `${ws.length - linked} of ${ws.length} witnesses signed a different digest than this manifest declares` });
+    skipRest(['CHAIN']);
+    return reportVerdict(tray, 'fail', 'LINK', 'witness signed a different digest', man, stats);
+  }
+  stepRow(tray, rows, { id: 'LINK', label: 'witness digests ↔ manifest digest', status: 'ok', res: `all ${ws.length}` });
+
+  /* CHAIN — pulse anchor sanity vs the confirmed chain (never extrapolated) */
+  stepRow(tray, rows, { id: 'CHAIN', label: 'anchored', status: 'run' });
+  const anchor = Number(ws[0].pulse_id);
+  const bus = window.LedaticPulse && window.LedaticPulse.bus && window.LedaticPulse.bus.latest;
+  const cur = bus ? Number(bus.pulse_id) : null;
+  if (!Number.isFinite(anchor) || anchor <= 0) {
+    stepRow(tray, rows, { id: 'CHAIN', label: 'anchored', status: 'info', res: 'no anchor', note: 'no pulse anchor in the witness record' });
+  } else if (cur && anchor > cur + 30) {
+    stepRow(tray, rows, { id: 'CHAIN', label: 'anchored', status: 'fail', note: `anchor p#${P.fmtPulse(anchor)} is ahead of the confirmed chain (p#${P.fmtPulse(cur)})` });
+    return reportVerdict(tray, 'fail', 'CHAIN', 'anchored in the future of the confirmed chain', man, stats);
+  } else {
+    stats.pulse = P.fmtPulse(anchor);
+    const age = cur ? ` · +${P.fmtPulse(Math.max(0, cur - anchor))} pulses old` : ' · age unknown (no confirmed pulse this session)';
+    stepRow(tray, rows, { id: 'CHAIN', label: 'anchored', status: 'ok', res: `@ p#${P.fmtPulse(anchor)}${age}` });
+  }
+
+  /* verdict — consensus semantics */
+  if (anyFalse) return reportVerdict(tray, 'fail', 'SIG', 'a witness signature did not verify', man, stats);
+  if (stats.verified === stats.total && stats.total >= 2) {
+    stats.gloss = `${stats.total} independent witnesses · consensus`;
+    return reportVerdict(tray, 'ok', null, '', man, stats);
+  }
+  if (stats.verified === stats.total && stats.total === 1) {
+    stats.gloss = 'single witness';
+    return reportVerdict(tray, 'ok', null, '', man, stats);
+  }
+  if (stats.verified > 0) {
+    return reportVerdict(tray, 'unverified', null, `partial — ${stats.verified} of ${stats.total} signatures verify here; the rest could not be checked in this browser`, man, stats);
+  }
+  return reportVerdict(tray, 'unverified', null, firstWhy || 'no signature could be checked in this browser', man, stats);
+}
+
+/* ── /03: the sabotaged sample — red is earned, never authored ── */
+function initFailSample(P) {
+  const btn = $('#prove-fail');
+  const tray = $('#tray-fail');
+  const src = document.getElementById('sample-fail');
+  if (!btn || !tray || !src) return;
+  btn.disabled = false;
+  btn.addEventListener('click', async () => {
+    if (btn.getAttribute('aria-expanded') === 'true') {
+      btn.setAttribute('aria-expanded', 'false');
+      tray.hidden = true;
+      return;
+    }
+    btn.setAttribute('aria-expanded', 'true');
+    const rows = prepTray(tray);
+    trayTitle(tray, btn.dataset.name.replace('&middot;', '·'));
+    let m;
+    try { m = JSON.parse(src.textContent); } catch { return; }
+    const r = await P.verifyManifestObject(m, {
+      artifactUrl: '/releases/v5.1.0/rail_native',
+      manifestStep: { id: 'FETCH', label: 'manifest (sandbox copy · embedded in this page)', status: 'info', res: 'not fetched' },
+      onStep: (s) => stepRow(tray, rows, s),
+    });
+    verdictBlock(P, tray, r);
+    if (r.outcome === 'ok' || r.outcome === 'fail') btn.dataset.proved = r.outcome;
+    const chip = $('#chip-fail');
+    if (chip && r.outcome === 'fail') {
+      P.sentinel(chip).set('fail', { at: r.failedAt, note: 'sandbox sabotage, as designed' });
+    }
   });
 }
 
-function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n < 1024) return n + " B";
-  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
-  return (n / (1024 * 1024)).toFixed(2) + " MB";
-}
-
-async function main() {
-  const root = document.getElementById("root");
-  root.innerHTML = '<div class="status loading"><div><div class="label">Verification Status</div><div class="value"><span class="spinner"></span>Loading manifest…</div></div><div class="badge">…</div></div>';
-
-  if (!REPORT_ID) {
-    root.innerHTML = '<div class="err">No report_id in URL. Visit <code>/verify/&lt;report_id&gt;</code>.</div>';
-    return;
-  }
-
-  let manifest;
-  try {
-    const r = await fetch("/provenance/manifest/" + encodeURIComponent(REPORT_ID), { cache: "no-store" });
-    if (r.status === 404) {
-      root.innerHTML = '<div class="err">No manifest found for report_id <code>' + esc(REPORT_ID) + '</code>. Either the report is on the Standard Tier (no provenance) or the ID is wrong.</div>';
-      return;
-    }
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    manifest = await r.json();
-  } catch (e) {
-    root.innerHTML = '<div class="err">Could not load manifest: <code>' + esc(e.message || e) + '</code></div>';
-    return;
-  }
-
-  // ─── Format-version detection (security-b H5, 2026-05-12) ───────────
-  //
-  // v1 manifests bind nothing about the beacon pulse INSIDE the digested
-  // inner_message; the (digest, sig) pair is therefore replayable across
-  // any future pulse. v2 manifests append `|<pulse_id>` to inner_message
-  // so the digest commits to one specific pulse.
-  //
-  // We:
-  //   * read manifest.format_version (preferred) or fall back to .version
-  //   * cross-check against the inner_message's `report|vN|` prefix and
-  //     refuse any cross-version disagreement (= attempted downgrade)
-  //   * for v2, also rebuild inner_message from the individual manifest
-  //     fields including pulse_id and verify it equals what was signed —
-  //     stops field-level tampering with consistent re-digest
-  //   * for v1, accept the legacy path but flag it as replay-vulnerable.
-  const innerMsgStr   = (manifest.attest && manifest.attest.inner_message) || "";
-  const innerPrefixV  = innerMsgStr.startsWith("report|v2|") ? 2
-                       : (innerMsgStr.startsWith("report|v1|") ? 1 : 0);
-  const declaredV     = manifest.format_version === "v2" || manifest.version === 2 ? 2
-                       : (manifest.format_version === "v1" || manifest.version === 1 ? 1 : 0);
-  const formatVersion = declaredV || innerPrefixV;  // forgive missing version field on really-old manifests
-  const versionMismatch =
-    (declaredV !== 0 && innerPrefixV !== 0 && declaredV !== innerPrefixV) ||
-    formatVersion === 0;
-
-  // Per-version field rebuild — exact byte-for-byte mirror of
-  // tools/attest/report_attestation_publisher.sh.
-  const ge = manifest.generation_event || {};
-  const m  = (ge && ge.model)  || {};
-  const inp = (ge && ge.input)  || {};
-  const oup = (ge && ge.output) || {};
-  const pulseId = manifest.beacon && (manifest.beacon.pulse_id != null) ? manifest.beacon.pulse_id : "";
-  let rebuiltInner;
-  if (formatVersion === 2) {
-    rebuiltInner = "report|v2|"
-      + (manifest.report_id || "") + "|"
-      + (m.name || "") + "|"
-      + (m.weights_hash || "") + "|"
-      + (inp.prompt_sha256 || "") + "|"
-      + (oup.response_sha256 || "") + "|"
-      + (manifest.generated_at || "") + "|"
-      + (manifest.client_id || "") + "|"
-      + pulseId;
-  } else {
-    // v1 (or unknown) — pulse_id NOT in the digest input.
-    rebuiltInner = "report|v1|"
-      + (manifest.report_id || "") + "|"
-      + (m.name || "") + "|"
-      + (m.weights_hash || "") + "|"
-      + (inp.prompt_sha256 || "") + "|"
-      + (oup.response_sha256 || "") + "|"
-      + (manifest.generated_at || "") + "|"
-      + (manifest.client_id || "");
-  }
-  const innerRebuildOk = rebuiltInner === innerMsgStr;
-
-  // Check 1: inner integrity. SHA-256(inner_message) must match inner_digest_sha256.
-  const innerComputed = await sha256Hex(innerMsgStr);
-  const innerOk = !versionMismatch && innerRebuildOk && innerComputed === manifest.attest.inner_digest_sha256;
-
-  // Check 2: each witness's Ed25519 signature. Manifest format:
-  //   - new shape: manifest.witnesses = [{...}, ...]
-  //   - legacy:    manifest.witness = {...}
-  const witnesses = manifest.witnesses && manifest.witnesses.length
-    ? manifest.witnesses
-    : (manifest.witness ? [manifest.witness] : []);
-  // For each witness: rebuild the message exactly, verify against the
-  // pubkey we have for that witness name, also cross-check the digest_sha256
-  // matches the manifest's declared inner_digest.
-  const witnessResults = [];
-  for (const w of witnesses) {
-    const name = w.witness || "(unknown)";
-    const pubB64 = PUBKEYS[name];
-    const msg = "attest|v1|" + w.digest_sha256 + "|" + w.pulse_id + "|" + w.value_hex + "|" + w.witnessed_at;
-    const digestLink = w.digest_sha256 === manifest.attest.inner_digest_sha256;
-    let verify;
-    if (!pubB64) {
-      verify = { ok: null, reason: "no public key for witness '" + name + "' — not in known-witnesses table" };
+/* ── verify the verifier — the module vs the signed deploy record ── */
+function initSelfProof(P) {
+  const btn = $('#run-vtv');
+  const out = $('#vtv-out');
+  if (!btn || !out) return;
+  btn.disabled = false;
+  btn.addEventListener('click', async () => {
+    const rows = prepTray(out);
+    trayTitle(out, 'the verifier itself');
+    stepRow(out, rows, { id: 'FETCH', label: 'signed deploy record (/attest/site/latest.json)', status: 'run' });
+    const sc = await P.selfCheck({ pagePath: '/_shared/proof-tray.js' });
+    if (sc.proof && sc.proof.steps && sc.proof.steps.length) {
+      stepRow(out, rows, { id: 'FETCH', label: 'signed deploy record (/attest/site/latest.json)', status: 'ok', res: 'found' });
+      for (const s of sc.proof.steps) stepRow(out, rows, s);
     } else {
-      verify = await verifyEd25519(msg, w.sig, pubB64);
+      stepRow(out, rows, { id: 'FETCH', label: 'signed deploy record (/attest/site/latest.json)', status: 'info', res: 'none yet', note: sc.reason || 'no signed deploy manifest published yet' });
+      ['HASH', 'KEY', 'SIG', 'CHAIN'].forEach((id) => stepRow(out, rows, { id, label: '', status: 'skip' }));
     }
-    witnessResults.push({ w, name, msg, digestLink, verify, pubB64 });
-  }
-
-  // Consensus across witnesses:
-  //   verifiedCount = how many sigs cryptographically pass
-  //   linkedCount   = how many digest_sha256 fields match manifest.attest.inner_digest
-  const verifiedCount = witnessResults.filter(r => r.verify.ok === true).length;
-  const linkedCount   = witnessResults.filter(r => r.digestLink).length;
-  const totalCount    = witnessResults.length;
-  const allLinked     = totalCount > 0 && linkedCount === totalCount;
-  const allVerified   = totalCount > 0 && verifiedCount === totalCount;
-
-  // Overall status.
-  let overall, klass, badge;
-  if (innerOk && allLinked && allVerified && totalCount >= 2) {
-    overall = "CONSENSUS"; klass = "verified"; badge = "✓✓";
-  } else if (innerOk && allLinked && allVerified) {
-    overall = "VERIFIED"; klass = "verified"; badge = "✓";
-  } else if (innerOk && allLinked && verifiedCount > 0) {
-    overall = "PARTIAL"; klass = "partial"; badge = "◐";
-  } else if (innerOk && allLinked && verifiedCount === 0 && witnessResults.every(r => r.verify.ok === null)) {
-    overall = "UNVERIFIED"; klass = "partial"; badge = "?";
-  } else {
-    overall = "INVALID"; klass = "invalid"; badge = "✗";
-  }
-
-  // `ge` was bound earlier during format-version detection; reuse here.
-
-  // Render. Built via array.join to avoid template-literal headaches.
-  const parts = [];
-  parts.push('<div class="status ' + klass + '">');
-  parts.push('  <div><div class="label">Verification Status</div><div class="value">' + overall + '</div></div>');
-  parts.push('  <div class="badge">' + badge + '</div>');
-  parts.push('</div>');
-
-  // Format-version banner (security-b H5).
-  if (versionMismatch) {
-    parts.push('<div class="field bad" style="margin-top:1rem;">');
-    parts.push('  <div class="label">Format version</div>');
-    parts.push('  <div class="check bad">✗ manifest.format_version disagrees with inner_message prefix — refusing to fall back. Likely tampered or replayed.</div>');
-    parts.push('</div>');
-  } else if (formatVersion === 1) {
-    parts.push('<div class="field" style="margin-top:1rem;">');
-    parts.push('  <div class="label">Format version</div>');
-    parts.push('  <div class="value mono">v1 — legacy</div>');
-    parts.push('  <div class="check bad">⚠ this manifest predates security-b (2026-05-12). The witness signature does NOT cryptographically bind the beacon pulse_id inside the digest, so a captured (digest, sig) pair is replayable against any future pulse. New reports are emitted as v2; verify the report_id is not being substituted.</div>');
-    parts.push('</div>');
-  } else if (formatVersion === 2) {
-    parts.push('<div class="field ok" style="margin-top:1rem;">');
-    parts.push('  <div class="label">Format version</div>');
-    parts.push('  <div class="value mono">v2</div>');
-    parts.push('  <div class="check ok">✓ pulse_id is bound inside the digested inner_message — capture-replay across pulses is detectable.</div>');
-    parts.push('  <div class="check ' + (innerRebuildOk ? 'ok' : 'bad') + '" style="margin-top:0.35rem;">' +
-               (innerRebuildOk
-                 ? '✓ inner_message rebuilt from individual manifest fields matches the stored inner_message byte-for-byte.'
-                 : '✗ inner_message rebuilt from manifest fields disagrees with manifest.attest.inner_message — fields were edited without re-signing.') +
-               '</div>');
-    parts.push('</div>');
-  }
-
-  parts.push('<section>');
-  parts.push('  <h2>Generation Event</h2>');
-  parts.push('  <div class="field"><div class="label">Report ID</div><div class="value mono">' + esc(manifest.report_id) + '</div></div>');
-  parts.push('  <div class="field"><div class="label">Client</div><div class="value mono">' + esc(manifest.client_id) + '</div></div>');
-  parts.push('  <div class="field"><div class="label">Generated At (UTC)</div><div class="value mono">' + esc(manifest.generated_at) + '</div></div>');
-  parts.push('  <div class="field"><div class="label">Model</div><div class="value">' + esc(ge.model.name) + '</div><div class="hash">weights_sha256: ' + esc(ge.model.weights_hash) + '</div></div>');
-  parts.push('  <div class="field"><div class="label">Input Prompt — SHA-256</div><div class="hash">' + esc(ge.input.prompt_sha256) + '</div><div class="value mono" style="margin-top:0.5rem;color:hsl(var(--muted-foreground));font-size:0.75rem;">' + fmtBytes(ge.input.prompt_size_bytes) + '</div></div>');
-  parts.push('  <div class="field"><div class="label">Output Response — SHA-256</div><div class="hash">' + esc(ge.output.response_sha256) + '</div><div class="value mono" style="margin-top:0.5rem;color:hsl(var(--muted-foreground));font-size:0.75rem;">' + fmtBytes(ge.output.response_size_bytes) + '</div></div>');
-  parts.push('</section>');
-
-  parts.push('<section>');
-  parts.push('  <h2>Inner-Message Integrity</h2>');
-  parts.push('  <div class="field ' + (innerOk ? 'ok' : 'bad') + '">');
-  parts.push('    <div class="label">Composed Message (the bytes that were digested + signed)</div>');
-  parts.push('    <div class="hash">' + esc(manifest.attest.inner_message) + '</div>');
-  parts.push('    <div class="label" style="margin-top:0.85rem;">SHA-256 computed in your browser, just now</div>');
-  parts.push('    <div class="hash">' + innerComputed + '</div>');
-  parts.push('    <div class="label" style="margin-top:0.85rem;">SHA-256 declared in the manifest</div>');
-  parts.push('    <div class="hash">' + esc(manifest.attest.inner_digest_sha256) + '</div>');
-  parts.push('    <div class="check ' + (innerOk ? 'ok' : 'bad') + '">' +
-             (innerOk ? '✓ inner_digest matches — manifest fields are unmodified since signing' : '✗ inner_digest mismatch — fields were tampered after the witness signed') +
-             '</div>');
-  parts.push('  </div>');
-  parts.push('  <div class="field ' + (allLinked ? 'ok' : 'bad') + '">');
-  parts.push('    <div class="label">Each Witness Signed Over the Same Inner Digest?</div>');
-  parts.push('    <div class="check ' + (allLinked ? 'ok' : 'bad') + '">' +
-             (allLinked
-               ? '✓ all ' + totalCount + ' witness(es) signed over manifest.attest.inner_digest_sha256'
-               : '✗ ' + (totalCount - linkedCount) + ' of ' + totalCount + ' witness(es) signed a different digest than this manifest declares') +
-             '</div>');
-  parts.push('  </div>');
-  parts.push('</section>');
-
-  // Witnesses — render one block per witness, with a header that summarizes
-  // consensus state at the top of the section.
-  parts.push('<section>');
-  let consensusBlurb;
-  if (totalCount === 0) {
-    consensusBlurb = 'no witnesses recorded — manifest is unsigned';
-  } else if (verifiedCount === totalCount && totalCount >= 2) {
-    consensusBlurb = '✓ consensus — ' + totalCount + ' independent witnesses each cryptographically attested this report';
-  } else if (verifiedCount === totalCount && totalCount === 1) {
-    consensusBlurb = '✓ single-witness signature verifies (consider Provenance+Audit for multi-witness consensus)';
-  } else if (verifiedCount > 0) {
-    consensusBlurb = '◐ partial — ' + verifiedCount + ' of ' + totalCount + ' witness signatures verify';
-  } else {
-    consensusBlurb = '✗ no witness signatures verify against known pubkeys';
-  }
-  parts.push('  <h2>Witness Attestations &middot; ' + verifiedCount + '/' + totalCount + '</h2>');
-  parts.push('  <div class="field ' + (verifiedCount === totalCount && totalCount >= 1 ? 'ok' : (verifiedCount > 0 ? '' : 'bad')) + '" style="margin-bottom:1.25rem;">');
-  parts.push('    <div class="label">Consensus</div>');
-  parts.push('    <div class="check ' + (verifiedCount === totalCount && totalCount >= 1 ? 'ok' : (verifiedCount > 0 ? 'warn' : 'bad')) + '">' + consensusBlurb + '</div>');
-  parts.push('  </div>');
-
-  for (let i = 0; i < witnessResults.length; i++) {
-    const r = witnessResults[i];
-    const w = r.w;
-    const desc = WITNESS_DESCRIPTIONS[r.name] || "";
-    const sigOk = r.verify.ok === true;
-    const sigBad = r.verify.ok === false;
-    const sigKlass = sigOk ? 'ok' : (sigBad ? 'bad' : 'warn');
-    const fieldKlass = sigOk ? 'ok' : (sigBad ? 'bad' : '');
-    parts.push('  <div style="margin-top:' + (i === 0 ? '0' : '1.5rem') + ';padding-top:' + (i === 0 ? '0' : '1.5rem') + ';' + (i === 0 ? '' : 'border-top:1px dashed hsl(var(--border));') + '">');
-    parts.push('    <div class="label" style="font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem;letter-spacing:0.2em;color:hsl(var(--primary));margin-bottom:0.75rem;">/' + ('0' + (i + 1)).slice(-2) + ' &middot; ' + esc(r.name) + '</div>');
-    parts.push('    <div class="field"><div class="label">Witness Node</div><div class="value mono">' + esc(r.name) + (desc ? ' <span style="color:hsl(var(--muted-foreground));font-weight:normal;">(' + esc(desc) + ')</span>' : '') + '</div></div>');
-    parts.push('    <div class="field"><div class="label">Public-Key Fingerprint</div><div class="hash">' + esc(w.pk_fp) + '</div></div>');
-    parts.push('    <div class="field"><div class="label">Witnessed At</div><div class="value mono">' + esc(w.witnessed_at) + ' <span style="color:hsl(var(--muted-foreground));font-weight:normal;font-size:0.78rem;">(' + new Date(w.witnessed_at * 1000).toUTCString() + ')</span></div></div>');
-    parts.push('    <div class="field ' + fieldKlass + '">');
-    parts.push('      <div class="label">Composed Message (rebuilt by your browser)</div>');
-    parts.push('      <div class="hash">' + esc(r.msg) + '</div>');
-    parts.push('      <div class="label" style="margin-top:0.85rem;">Ed25519 Signature</div>');
-    parts.push('      <div class="hash">' + esc(w.sig) + '</div>');
-    parts.push('      <div class="label" style="margin-top:0.85rem;">Verified against ' + esc(r.name) + ' pubkey ' + (r.pubB64 ? esc(r.pubB64) : '<em>(unknown)</em>') + '</div>');
-    parts.push('      <div class="check ' + sigKlass + '">' +
-               (sigOk ? '✓ signature verifies — ' + esc(r.name) + ' cryptographically attested this report' :
-                (sigBad ? '✗ ' + esc(r.verify.reason) :
-                 '⚠ ' + esc(r.verify.reason))) +
-               '</div>');
-    parts.push('    </div>');
-    parts.push('  </div>');
-  }
-  parts.push('</section>');
-
-  // Footer narrative — refer to the primary witness (first in the array) by name
-  // and call out multi-witness consensus if it applies.
-  const primary = witnessResults[0] || null;
-  const displayPulseId = (primary && primary.w && primary.w.pulse_id) || (manifest.beacon && manifest.beacon.pulse_id) || "?";
-  const witnessNamesList = witnessResults.map(r => r.name).join(", ");
-  parts.push('<div class="footer">');
-  parts.push('  <p><strong>What does this prove?</strong></p>');
-  parts.push('  <p>At <code>' + esc(manifest.generated_at) + '</code>, the model <code>' + esc(ge.model.name) + '</code> processed an input with SHA-256 <code>' + esc(ge.input.prompt_sha256.slice(0, 16)) + '…</code> and produced an output with SHA-256 <code>' + esc(ge.output.response_sha256.slice(0, 16)) + '…</code>. Those fields plus the model identity and timestamp were composed into one canonical string, hashed, and Ed25519-signed by ' + (totalCount >= 2 ? totalCount + ' independent witnesses (' + esc(witnessNamesList) + ')' : '<a href="https://ledatic.org/witness/fleet0/latest">' + esc(primary ? primary.name : "fleet0") + '</a>') + ', chaining the signature(s) against pulse <code>' + esc(displayPulseId) + '</code> of the public <a href="https://ledatic.org/entropy/pulse">entropy beacon</a>. Your browser just verified each signature against the corresponding witness public key — no backend trust required.</p>');
-  if (totalCount >= 2) {
-    parts.push('  <p><strong>Why multi-witness?</strong> Independent physical machines each holding a separate signing key. Forging a manifest would require compromising all of them simultaneously. Available on Provenance+Audit tier.</p>');
-  }
-  parts.push('  <p><a href="/provenance">About Provenance Tier</a> &nbsp;·&nbsp; <a href="/provenance/manifest/' + encodeURIComponent(REPORT_ID) + '">Raw manifest JSON</a> &nbsp;·&nbsp; <a href="https://ledatic.org/witness/fleet0/latest">Latest fleet0 attestation</a></p>');
-  parts.push('</div>');
-
-  root.innerHTML = parts.join("\n");
+    if (sc.outcome === 'ok') {
+      stepRow(out, rows, { id: 'PAGE', label: 'module bytes vs deploy record', status: 'ok', res: `deploy #${sc.n}` });
+      const v = el('div', 'tray-verdict', `the verifier you just ran matches the bytes the deploy signer signed · deploy #${sc.n}${sc.pulse ? ` @ p#${P.fmtPulse(sc.pulse)}` : ''}`);
+      out.appendChild(v);
+      appendKeypin(out, P, 'site_deploy', P.PINNED_KEYS.site_deploy.pk_fp);
+      settle(out, 'ok');
+    } else if (sc.outcome === 'alarm') {
+      stepRow(out, rows, { id: 'PAGE', label: 'module bytes vs deploy record', status: 'fail', note: sc.reason });
+      const a = el('p', 'alarm', `THE VERIFIER DOES NOT MATCH ITS DEPLOY RECORD — do not trust green marks on this page. ${sc.reason || ''}`);
+      a.setAttribute('role', 'alert');
+      out.appendChild(a);
+      settle(out, 'fail');
+    } else {
+      stepRow(out, rows, { id: 'PAGE', label: 'module bytes vs deploy record', status: 'skip' });
+      const v = el('div', 'tray-verdict', `could not verify here — ${sc.reason || 'unknown'} · this check refuses to show green on faith`);
+      v.dataset.tone = 'unverified';
+      out.appendChild(v);
+    }
+  });
 }
 
-main().catch(function(e) {
-  document.getElementById("root").innerHTML =
-    '<div class="err">Unhandled error: <code>' + esc(e && e.message || e) + '</code></div>';
+/* ── report mode: this same page serves /verify/<report_id> ── */
+function fmtBytesLocal(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function metaRow(dl, label, value, sub) {
+  const div = el('div');
+  div.append(el('dt', '', label), el('dd', '', value || '—'));
+  if (sub) div.append(el('dd', '', sub));
+  dl.appendChild(div);
+}
+
+function renderReportMeta(man, id) {
+  const dl = $('#report-meta');
+  const links = $('#report-links');
+  if (!dl || !links) return;
+  const ge = man.generation_event || {};
+  const mo = ge.model || {}; const inp = ge.input || {}; const oup = ge.output || {};
+  dl.textContent = '';
+  metaRow(dl, 'report id', man.report_id);
+  metaRow(dl, 'client', man.client_id);
+  metaRow(dl, 'generated at', man.generated_at);
+  metaRow(dl, 'model', mo.name, mo.weights_hash ? `weights sha256 ${mo.weights_hash}` : '');
+  metaRow(dl, 'input sha256', inp.prompt_sha256, inp.prompt_size_bytes ? fmtBytesLocal(inp.prompt_size_bytes) : '');
+  metaRow(dl, 'output sha256', oup.response_sha256, oup.response_size_bytes ? fmtBytesLocal(oup.response_size_bytes) : '');
+  if (man.beacon && man.beacon.pulse_id != null) metaRow(dl, 'pulse anchor', `p#${man.beacon.pulse_id}`);
+  dl.hidden = false;
+  links.textContent = '';
+  const raw = el('a', '', 'raw manifest JSON');
+  raw.href = `/provenance/manifest/${encodeURIComponent(id)}`;
+  const prov = el('a', '', 'about provenance');
+  prov.href = '/provenance';
+  const wit = el('a', '', 'latest fleet0 attestation');
+  wit.href = 'https://ledatic.org/witness/fleet0/latest';
+  links.append(raw, ' · ', prov, ' · ', wit);
+  links.hidden = false;
+}
+
+function initReportMode(P) {
+  const match = location.pathname.match(/^\/verify\/([A-Za-z0-9_-]{1,64})\/?$/);
+  if (!match) return;
+  const id = match[1];
+  const sec = $('#report');
+  const tray = $('#tray-report');
+  if (!sec || !tray) return;
+  sec.hidden = false;
+  $('#report-id').textContent = id;
+  document.title = `Verify report ${id} — Ledatic`;
+  const rows = prepTray(tray);
+  trayTitle(tray, `report ${id}`);
+  (async () => {
+    stepRow(tray, rows, { id: 'FETCH', label: 'manifest (/provenance/manifest/…)', status: 'run' });
+    let man = null;
+    try {
+      const res = await fetch(`/provenance/manifest/${encodeURIComponent(id)}`, { cache: 'no-store' });
+      if (res.status === 404) {
+        stepRow(tray, rows, { id: 'FETCH', label: 'manifest', status: 'info', res: 'none', note: 'no manifest published for this id — the report is on a tier without provenance, or the id is wrong. Nothing was checked.' });
+        ['FORM', 'REBLD', 'HASH', 'SIG', 'LINK', 'CHAIN'].forEach((s) => stepRow(tray, rows, { id: s, label: '', status: 'skip' }));
+        return reportVerdict(tray, 'unverified', null, 'no manifest published for this id', null, { verified: 0, total: 0, pulse: null, gloss: '' });
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = await res.arrayBuffer();
+      man = JSON.parse(new TextDecoder().decode(buf));
+      stepRow(tray, rows, { id: 'FETCH', label: 'manifest', status: 'ok', res: `${P.fmtPulse(buf.byteLength)} B` });
+    } catch (e) {
+      stepRow(tray, rows, { id: 'FETCH', label: 'manifest', status: 'fail', note: `manifest unreachable: ${String((e && e.message) || e)}` });
+      ['FORM', 'REBLD', 'HASH', 'SIG', 'LINK', 'CHAIN'].forEach((s) => stepRow(tray, rows, { id: s, label: '', status: 'skip' }));
+      return reportVerdict(tray, 'unverified', null, 'the manifest could not be fetched', null, { verified: 0, total: 0, pulse: null, gloss: '' });
+    }
+    if (!isReport(man)) {
+      stepRow(tray, rows, { id: 'FORM', label: 'manifest shape', status: 'info', res: 'unrecognized', note: 'this is not a recognized report manifest — nothing was checked' });
+      ['REBLD', 'HASH', 'SIG', 'LINK', 'CHAIN'].forEach((s) => stepRow(tray, rows, { id: s, label: '', status: 'skip' }));
+      return reportVerdict(tray, 'unverified', null, 'unrecognized manifest shape', man, { verified: 0, total: 0, pulse: null, gloss: '' });
+    }
+    await runReportChecks(P, man, tray, rows);
+    renderReportMeta(man, id);
+  })();
+  sec.scrollIntoView();
+}
+
+/* ── boot ── */
+whenProof((P) => {
+  /* /02's chip: recorded data says so in the liveness grammar */
+  const chip = $('#chip-v3');
+  if (chip) P.sentinel(chip).set('replay', { note: 'recorded p#360,389 · 2026-04-28' });
+
+  initLoader(P);
+  initFailSample(P);
+  initSelfProof(P);
+  initReportMode(P);
+
+  /* footer self-check (§5.4) — automatic fetch, so reduced-data gated */
+  if (!SAVE) {
+    const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+    if (strip) P.mountSelfCheck(strip);
+  }
 });
 </script>
 </body>

@@ -1,0 +1,153 @@
+/* ============================================================
+   LEDATIC 2040 — tokens.css
+   Owns ALL custom properties. site.css owns layout/components.
+   Link order contract (every page, no exceptions):
+     <link rel="stylesheet" href="_shared/tokens.css">
+     <link rel="stylesheet" href="_shared/site.css">
+     ...page <style> blocks after both.
+   All color oklch; hsl appears only in the DEPRECATED legacy
+   compatibility block at the bottom (un-migrated page styles).
+   ============================================================ */
+
+:root {
+  /* ── Phosphor ramp (hue drifts 142→146 as it dims — real CRT decay) ───────── */
+  --ph-50:  oklch(0.97 0.04 142);   /* terminal flash, ≤1 frame                 */
+  --ph-100: oklch(0.93 0.09 142);
+  --ph-200: oklch(0.88 0.16 142);   /* scanline sweep gradient                  */
+  --ph-300: oklch(0.84 0.22 142);
+  --ph-400: oklch(0.81 0.25 142);
+  --ph-500: oklch(0.79 0.27 142);   /* BRAND. live, verified, earned            */
+  --ph-600: oklch(0.66 0.21 143);   /* headings, copy accents                   */
+  --ph-700: oklch(0.53 0.15 144);   /* interactive borders, links at rest       */
+  --ph-800: oklch(0.40 0.10 145);
+  --ph-900: oklch(0.30 0.06 146);
+  --ph-950: oklch(0.24 0.04 146);   /* shader floor                             */
+
+  /* ── Inks — near-black with a green cast (never pure neutral) ─────────────── */
+  --ink-0: oklch(0.13 0.008 145);   /* page                                     */
+  --ink-1: oklch(0.16 0.010 145);   /* hero / recessed                          */
+  --ink-2: oklch(0.19 0.012 145);   /* panel                                    */
+  --ink-3: oklch(0.23 0.014 145);   /* raised panel / proof tray                */
+  --line:  oklch(0.34 0.020 145 / 0.55);  /* hairlines                          */
+
+  /* ── Text ──────────────────────────────────────────────────────────────────── */
+  --tx-hi:  oklch(0.95 0.012 145);
+  --tx-lo:  oklch(0.72 0.020 145);
+  --tx-dim: oklch(0.55 0.020 145);  /* min font-size 0.8rem at this value       */
+
+  /* ── Liveness grammar (§4) — each pairs hue + glyph + word, never color-only ─ */
+  --st-live:   var(--ph-500);
+  --st-paused: oklch(0.80 0.16 85);    /* hold amber                            */
+  --st-replay: oklch(0.82 0.12 195);   /* archive cyan                          */
+  --st-stale:  oklch(0.65 0.045 145);  /* ash green — desaturated phosphor      */
+  --st-stale-ghost: oklch(0.65 0.045 145 / 0.55); /* burn-in double-print       */
+  --st-fail:   oklch(0.64 0.23 27);    /* proof-failure red. NEVER decorative   */
+
+  /* ── Self-check alarm — inverse video. Rarer than red. (§0 rule 2) ─────────── */
+  --alarm-bg: var(--ph-500);
+  --alarm-fg: var(--ink-0);
+
+  /* ── Spacing (8px baseline grid) ───────────────────────────────────────────── */
+  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem;
+  --sp-6: 1.5rem;  --sp-8: 2rem;   --sp-12: 3rem;   --sp-16: 4rem;
+  --sp-24: 6rem;   --sp-32: 8rem;          /* section rhythm: 24/32             */
+
+  /* ── Radius — data is square, chrome barely rounded ────────────────────────── */
+  --r-0: 0;        /* data surfaces: pulse feed, proof trays, code              */
+  --r-1: 2px;      /* chips, badges                                             */
+  --r-2: 6px;      /* cards, buttons                                            */
+  --r-3: 10px;     /* viewports (MHD canvas frame) — the maximum                */
+
+  /* ── Elevation = glow, and glow is EARNED. No drop shadows, ever. ──────────── */
+  --e0: none;                                              /* flat copy          */
+  --e1: inset 0 0 0 1px var(--line);                       /* panel              */
+  --e2: inset 0 0 0 1px oklch(0.53 0.15 144 / 0.5),
+        0 0 12px oklch(0.79 0.27 142 / 0.07);              /* interactive        */
+  --e3: inset 0 0 0 1px var(--ph-500),
+        0 0 24px oklch(0.79 0.27 142 / 0.16),
+        0 0 64px oklch(0.79 0.27 142 / 0.06);              /* VERIFIED. earned   */
+
+  /* ── Motion ─────────────────────────────────────────────────────────────────── */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover-in: 60ms;       /* phosphor charges fast…                              */
+  --hover-out: 450ms;     /* …and decays slow. THE CRT curve. (terminal graft)   */
+}
+
+/* Wide gamut: the phosphor gets physically hotter where hardware allows */
+@media (color-gamut: p3) {
+  :root { --ph-500: oklch(0.81 0.31 142); }
+}
+
+/* ============================================================
+   EXTENSIONS (spec §2, §3.5, §9.8) — still tokens only
+   ============================================================ */
+
+:root {
+  /* ── Type scale (§2 — ratio 1.25, clamped, 8px rhythm) ─────────────────────── */
+  --t-0: clamp(0.9375rem, 0.4vw + 0.8rem, 1rem);      /* body 15–16px, lh 1.65   */
+  --t-1: clamp(1.125rem, 0.8vw + 0.9rem, 1.3125rem);  /* lead, lh 1.5            */
+  --t-2: clamp(1.5rem, 1.6vw + 1rem, 1.9375rem);      /* h3                      */
+  --t-3: clamp(2rem, 3vw + 1rem, 2.875rem);           /* h2, wdth 87.5           */
+  --t-hero: clamp(2.75rem, 7vw, 5.5rem);              /* h1, wght 700            */
+  --t-data: 0.8125rem;                                /* hashes/feeds, lh 1.8    */
+
+  /* ── Families (§2 — two faces; @font-face ships from the fonts module) ─────── */
+  --font-display: 'Martian Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-body: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ── Nav ink (§9.8 — solid, no backdrop-filter) ────────────────────────────── */
+  --nav-bg: oklch(0.13 0.008 145 / 0.92);
+
+  /* ── Textures (§1 token laws) — CSS-only scanline; no noise rasters ────────── */
+  /* One static 2px scanline: 1px clear, 1px dark. Opacity is set at the
+     usage site: body::after at 3%, stale/burn-in panels at 6%. Always static. */
+  --tex-scanline: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1px,
+    oklch(0.05 0.01 145) 1px,
+    oklch(0.05 0.01 145) 2px
+  );
+}
+
+/* ── prefers-contrast: more (§3.5) — token-level lifts.
+      Component-level glow→outline swaps live in site.css. ─────────────────────── */
+@media (prefers-contrast: more) {
+  :root {
+    --tx-lo:  oklch(0.85 0.020 145);          /* lifted                          */
+    --tx-dim: oklch(0.70 0.020 145);
+    --line:   oklch(0.34 0.020 145);          /* hairlines to full opacity       */
+    --e2: inset 0 0 0 2px var(--ph-700);      /* glow → solid outline            */
+    --e3: inset 0 0 0 2px var(--ph-500);
+  }
+}
+
+/* ============================================================
+   DEPRECATED — legacy compatibility aliases
+   Un-migrated page <style> blocks consume these as
+   hsl(var(--primary)) / hsl(var(--border) / 0.5) etc.
+   Values are the new oklch tokens converted to sRGB hsl triplets,
+   so the whole estate snaps to the 2040 palette in one move.
+   Page agents migrate to the oklch tokens above, then this block
+   dies. Do not author NEW styles against anything below.
+   ============================================================ */
+:root {
+  --background:         120 15% 5%;     /* ≈ --ink-1                            */
+  --foreground:         119 20% 93%;    /* ≈ --tx-hi                            */
+  --primary:            122 71% 40%;    /* ≈ --ph-600 (ph-500 is earned-only)   */
+  --primary-foreground: 120 17% 3%;     /* ≈ --ink-0                            */
+  --secondary:          120 11% 11%;    /* ≈ --ink-3                            */
+  --muted:              120 11% 11%;    /* ≈ --ink-3                            */
+  --muted-foreground:   119 6% 64%;     /* ≈ --tx-lo                            */
+  --border:             120 9% 21%;     /* ≈ --line at full opacity             */
+  --nav-button:         120 11% 11%;    /* ≈ --ink-3                            */
+  --hero-bg:            120 17% 3%;     /* ≈ --ink-0                            */
+  --panel:              120 13% 7%;     /* ≈ --ink-2                            */
+  --radius: 6px;                        /* = --r-2 (radius law)                 */
+
+  --step-0: var(--t-0);
+  --step-1: var(--t-1);
+  --step-2: var(--t-2);
+  --step-3: var(--t-3);
+  --step-hero: var(--t-hero);
+}

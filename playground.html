@@ -3,120 +3,44 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Rail playground — a browser editor for the Rail language. Programs compile to WebAssembly and run in-tab when the compile service is online.">
+<meta name="description" content="Rail playground — paused. No compiler is wired to this page yet. The native one-liner below gets you a real Rail toolchain in under a minute.">
+<link rel="canonical" href="https://ledatic.org/playground">
 <title>Playground &mdash; Rail &mdash; Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
 <style>
-  /* Playground-specific layout. Inherits tokens + typography from site.css. */
-  body { background: hsl(var(--hero-bg)); }
-  .pg-page {
-    padding: 5.5rem 1.5rem 2rem;
-    max-width: 80rem;
-    margin: 0 auto;
-  }
-  .pg-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;
-  }
+  .pg-page { padding: 8rem 1.5rem 4rem; max-width: 52rem; margin: 0 auto; }
   .pg-head h1 {
-    font-family: 'Sora', sans-serif; font-weight: 600;
-    font-size: var(--step-2); margin: 0; color: hsl(var(--foreground));
+    font-family: var(--font-display); font-weight: 600;
+    font-size: var(--fs-3, 1.6rem); margin: 0 0 0.25rem; color: var(--tx-hi);
   }
-  .pg-head .sub {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75rem; color: hsl(var(--muted-foreground));
+  .pg-head .sub { font-family: var(--font-body); font-size: 0.78rem; color: var(--tx-dim); }
+  .pg-placard h2 {
+    font-family: var(--font-display); font-size: 1rem;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--st-paused); margin: 0 0 0.75rem;
   }
-  .pg-grid {
-    display: grid;
-    grid-template-columns: 14rem 1fr 1fr;
-    gap: 1rem;
-    min-height: 70vh;
-  }
-  @media (max-width: 900px) {
-    .pg-grid { grid-template-columns: 1fr; }
-    .pg-side { order: 3; }
-  }
-  .pg-panel {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    overflow: hidden;
-    display: flex; flex-direction: column;
-  }
-  .pg-panel-h {
-    padding: 0.5rem 0.75rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    color: hsl(var(--muted-foreground));
-    border-bottom: 1px solid hsl(var(--border));
-    text-transform: uppercase; letter-spacing: 0.08em;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .pg-side ul { list-style: none; padding: 0.4rem 0; margin: 0; }
-  .pg-side li {
-    padding: 0.4rem 0.75rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  .pg-placard p { font-family: var(--font-body); font-size: 0.9rem; line-height: 1.7; color: var(--tx-lo); margin: 0 0 1rem; }
+  .pg-placard p:last-child { margin-bottom: 0; }
+  .pg-cmd {
+    background: var(--ink-0);
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-body);
     font-size: 0.78rem;
-    color: hsl(var(--foreground));
-    cursor: pointer;
-    border-left: 2px solid transparent;
+    line-height: 1.6;
+    color: var(--tx-hi);
+    overflow-x: auto;
+    white-space: pre;
+    margin: 1rem 0;
   }
-  .pg-side li:hover {
-    background: hsl(var(--muted));
-    border-left-color: hsl(var(--primary));
-  }
-  textarea.pg-editor {
-    width: 100%; flex: 1;
-    background: #0a0a0a; color: #e4e4e7;
-    border: none; outline: none;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.85rem; line-height: 1.55;
-    padding: 0.85rem;
-    resize: none;
-    tab-size: 2;
-  }
-  pre.pg-out {
-    flex: 1; margin: 0;
-    background: #0a0a0a; color: #e4e4e7;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.8rem; line-height: 1.5;
-    padding: 0.85rem; white-space: pre-wrap; word-break: break-word;
-    overflow-y: auto;
-  }
-  pre.pg-out.err  { color: #f97316; }
-  pre.pg-out.warn { color: #facc15; }
-  .pg-actions {
-    display: flex; gap: 0.5rem; align-items: center;
-    margin: 0.75rem 0;
-  }
-  button.pg-run {
-    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
-    border: none; border-radius: var(--radius);
-    padding: 0.55rem 1.25rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-weight: 600; font-size: 0.85rem;
-    cursor: pointer;
-    text-transform: uppercase; letter-spacing: 0.04em;
-  }
-  button.pg-run:hover { filter: brightness(1.1); }
-  button.pg-run:disabled { opacity: 0.5; cursor: wait; }
-  .pg-status {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem; color: hsl(var(--muted-foreground));
-  }
-  .pg-status.ok  { color: hsl(var(--primary)); }
-  .pg-status.err { color: #f97316; }
-  .pg-foot {
-    margin-top: 1.5rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    color: hsl(var(--muted-foreground));
-    text-align: center;
-  }
-  .pg-foot a { color: hsl(var(--primary)); }
+  .pg-cmd .lab { color: var(--tx-dim); }
+  .pg-links { margin-top: 2rem; font-family: var(--font-body); font-size: 0.78rem; color: var(--tx-dim); }
+  .pg-links a { color: var(--ph-600); }
 </style>
 </head>
 <body>
@@ -126,171 +50,91 @@
   <div class="navlinks">
     <a href="rail.html">Rail</a>
     <a href="entropy.html">Entropy</a>
-    <a href="plasma.html">Plasma</a>
-    <a href="fleet.html">Fleet</a>
     <a href="aliens.html">Aliens</a>
+    <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
-    <a href="work.html">Work</a>
   </div>
+  <pulse-clock data-endpoint="/entropy/pulse"></pulse-clock>
   <a class="nav-cta" href="rail/docs/">Docs</a>
 </nav>
 
 <main class="pg-page">
-  <div class="pg-head">
-    <h1>Rail playground <span style="color:hsl(var(--muted-foreground));font-weight:400">v0</span></h1>
-    <span class="sub">browser editor for the Rail language</span>
+  <div class="pg-head" style="margin-bottom: 1.5rem;">
+    <h1>Rail playground</h1>
+    <span class="sub">browser editor for the Rail language &mdash; not yet</span>
   </div>
 
-  <div class="pg-grid">
-    <aside class="pg-panel pg-side">
-      <div class="pg-panel-h">starters</div>
-      <ul id="starters">
-        <!-- populated by JS at load -->
-      </ul>
-    </aside>
-
-    <section class="pg-panel">
-      <div class="pg-panel-h">
-        <span>source</span>
-        <span class="sub" id="src-meta">0 chars</span>
-      </div>
-      <textarea class="pg-editor" id="editor" spellcheck="false" autocomplete="off"
-        autocapitalize="off" autocorrect="off">main = let _ = print "Hello, Rail" in 0</textarea>
-    </section>
-
-    <section class="pg-panel">
-      <div class="pg-panel-h">
-        <span>output</span>
-        <span class="sub" id="out-meta"></span>
-      </div>
-      <pre class="pg-out" id="output">(click Run)</pre>
-    </section>
+  <div class="placard-paused pg-placard">
+    <h2>Forging</h2>
+    <p>
+      No compiler is wired to this page yet. An earlier version shipped an
+      editor whose Run button depended on a compile service that wasn't
+      running &mdash; a dead button dressed as a live one. We took it down.
+      This placard stays until source typed here actually compiles and runs
+      in your tab.
+    </p>
+    <p>
+      Meanwhile, the real thing takes about a minute. On an Apple-silicon
+      Mac, the seed binary in the repo compiles and runs Rail directly
+      &mdash; no toolchain to install:
+    </p>
+    <div class="pg-cmd"><span class="lab"># clone, write a program, run it</span>
+git clone https://github.com/zemo-g/rail &amp;&amp; cd rail
+printf 'main = let _ = print "Hello, Rail" in 0\n' &gt; hello.rail
+./rail_native run hello.rail</div>
+    <p>
+      The same binary rebuilds itself from its own source
+      (<code>./rail_native self</code>) and runs the full test suite
+      (<code>./rail_native test</code>). That is the playground, for now:
+      the actual compiler, on actual hardware you own.
+    </p>
   </div>
 
-  <div class="pg-actions">
-    <button class="pg-run" id="run-btn">Run</button>
-    <span class="pg-status" id="status">idle</span>
-  </div>
-
-  <p class="pg-foot">
-    When the compile service is online, source compiles to WebAssembly server-side
-    and runs in this tab. <a href="rail/docs/">Docs</a> &middot; <a href="rail.html">About Rail</a>
+  <p class="pg-links">
+    <a href="rail/docs/">Docs</a> &middot; <a href="rail.html">About Rail</a>
+    &middot; <a href="https://github.com/zemo-g/rail" rel="noopener">Source</a>
   </p>
 </main>
 
-<script type="module">
-  const editor = document.getElementById('editor');
-  const output = document.getElementById('output');
-  const runBtn = document.getElementById('run-btn');
-  const status = document.getElementById('status');
-  const srcMeta = document.getElementById('src-meta');
-  const outMeta = document.getElementById('out-meta');
-  const startersUl = document.getElementById('starters');
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span>Rail <data class="fig" data-src="repo:version">release</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">tests</data> &middot; <data class="fig" data-src="repo:rail_native" data-fmt="mb">binary</data></span>
+    </div>
+  </div>
+</footer>
 
-  function updateMeta() {
-    srcMeta.textContent = `${editor.value.length} chars`;
-  }
-  editor.addEventListener('input', updateMeta);
-  updateMeta();
-
-  function setStatus(msg, kind) {
-    status.textContent = msg;
-    status.className = 'pg-status' + (kind ? ' ' + kind : '');
-  }
-
-  // Load the runner module dynamically so a missing file degrades to an
-  // honest "unavailable" state instead of a silently dead Run button.
-  let runRailSource = null;
-  try {
-    const mod = await import('./_shared/rail_playground.js');
-    runRailSource = mod.runRailSource;
-    // Populate starter snippets — pulled from the same 8 demos shipped on /rail.
-    for (const s of mod.STARTERS) {
-      const li = document.createElement('li');
-      li.textContent = s.label;
-      li.title = s.label;
-      li.addEventListener('click', () => {
-        editor.value = s.src;
-        updateMeta();
-        output.className = 'pg-out';
-        output.textContent = '(click Run)';
-      });
-      startersUl.appendChild(li);
-    }
-  } catch (e) {
-    runBtn.disabled = true;
-    setStatus('playground unavailable', 'err');
-    output.className = 'pg-out err';
-    output.textContent = 'Playground unavailable.\n\nThe playground code did not load on this page, so Run is disabled.';
-  }
-
-  // The server returns 503 when the compile service behind this page is
-  // down. Surface that honestly — it is not a problem with your code.
-  function isBackendOffline(result) {
-    return !!(result && result.reason &&
-      (/backend not configured/i.test(result.reason) || /HTTP 503/.test(result.reason)));
-  }
-
-  runBtn.addEventListener('click', async () => {
-    if (!runRailSource) return;
-    runBtn.disabled = true;
-    setStatus('compiling...');
-    output.className = 'pg-out';
-    output.textContent = '';
-    outMeta.textContent = '';
-    const t0 = performance.now();
-    try {
-      const result = await runRailSource(editor.value, { endpoint: '/api/playground/compile' });
-      const wall = (performance.now() - t0) | 0;
-      if (isBackendOffline(result)) {
-        setStatus('compiler backend offline', 'err');
-        output.className = 'pg-out err';
-        output.textContent = 'Compiler backend offline.\n\nThe compile service behind this page is not running right now, so nothing was compiled or run. Your code is fine to keep editing — Run will work again once the service is back.';
-      } else if (result.kind === 'sanitize-rejected') {
-        setStatus('rejected', 'err');
-        output.className = 'pg-out err';
-        output.textContent = `Rejected by sanitizer:\n${result.reason}`;
-      } else if (result.kind === 'compile-error') {
-        setStatus('compile error', 'err');
-        output.className = 'pg-out err';
-        output.textContent = `Compile error:\n${result.reason}`;
-      } else if (result.kind === 'http-error') {
-        setStatus('server error', 'err');
-        output.className = 'pg-out err';
-        output.textContent = `Server error: ${result.reason}`;
-      } else if (result.kind === 'timeout') {
-        setStatus('timeout', 'warn');
-        output.className = 'pg-out warn';
-        output.textContent = (result.stdout || '') + '\n[Stopped after 5s]';
-      } else if (result.kind === 'ok') {
-        setStatus(`ok (${wall} ms, build ${result.buildMs} ms)`, 'ok');
-        outMeta.textContent = `exit: ${result.exit}`;
-        const text = result.stdout.length === 0
-          ? '(no output)'
-          : result.stdout;
-        output.textContent = text;
-      } else {
-        setStatus('error', 'err');
-        output.className = 'pg-out err';
-        output.textContent = `Runtime error:\n${result.reason || 'unknown'}`;
-      }
-    } catch (e) {
-      setStatus('error', 'err');
-      output.className = 'pg-out err';
-      output.textContent = `Client error: ${e.message || e}`;
-    } finally {
-      runBtn.disabled = false;
-    }
-  });
-
-  // Cmd/Ctrl-Enter as a Run shortcut.
-  editor.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      runBtn.click();
-    }
-  });
-</script>
-
+<script src="_shared/site.js"></script>
 </body>
 </html>

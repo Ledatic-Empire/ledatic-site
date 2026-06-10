@@ -1,0 +1,37 @@
+# honesty_allowlist.txt — prose allowlist for tools/honesty_gate.sh (spec §5.4).
+#
+# Format: one "glob|ERE" per line. A gate hit is exempt when the file path
+# matches the glob AND the offending line matches the ERE. Keep every entry
+# CONTENT-ANCHORED (a phrase from the real line), never blanket.
+#
+# Most entries below exist so the gate is green on day one of the 2040
+# build-out, while the managed stats are still hand-typed. As Wave 2 page
+# agents convert each literal to a <data class="fig"> Figure, delete the
+# matching entry. Entries marked [keep] are permanently legitimate.
+
+# ── <head> meta descriptions — attribute text can't hold <data> elements.
+#    [keep] but page agents must update them when stats move. ─────────────
+*.html|<meta (name|property)="(description|og:description|twitter:description)"
+
+# ── Stat display blocks — Wave 2 converts each value to a Figure ─────────
+*.html|<div class="value">(v5\.1\.0|141|94|45|1\.2 MB|0)</div>
+
+# ── Release-pinned URLs + recipes [keep]: they name the tagged artifact ──
+*.html|/releases/v5\.1\.0/
+rail.html|latest tagged release \(v5\.1\.0\)
+
+# ── /changelog + /rail release ledger — HISTORICAL release notes. Each
+#    states what was true AT that release (140/140, 141/141, v5.1.0 …).
+#    [keep] until /changelog is deploy-regenerated from CHANGELOG.md. ─────
+changelog.html|<(li|p|h3)>
+rail.html|140/140
+
+# ── Surviving authored prose (content-anchored) ──────────────────────────
+index.html|seed binary you can
+rail.html|visor-value
+
+# ── Cadence prose ─────────────────────────────────────────────────────────
+entropy.html|pulsing every two seconds
+
+# ── Non-managed numbers that collide with drift values [keep] ────────────
+dda.html|~140 distinct advertisers

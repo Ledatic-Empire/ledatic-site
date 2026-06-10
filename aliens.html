@@ -3,554 +3,339 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A content-addressed mirror of the U.S. Department of War's Presidential Unsealing and Reporting System for UAP Encounters (PURSUE). Every byte hashed, signed against a live entropy beacon, and browsable across the timeline of the records.">
+<meta name="description" content="A content-addressed mirror of the U.S. Department of War's Presidential Unsealing and Reporting System for UAP Encounters (PURSUE). Every byte hashed, signed against a live entropy beacon, and provable in your own browser.">
+<!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/aliens">
 <meta property="og:title" content="Aliens — Ledatic">
 <meta property="og:description" content="Attested mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
-<meta property="og:image" content="https://ledatic.org/_shared/img/aliens-og.png">
+<meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Aliens — Ledatic">
 <meta name="twitter:description" content="Attested mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
-<meta name="twitter:image" content="https://ledatic.org/_shared/img/aliens-og.png">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
 <title>Aliens — UAP Records by Year — Ledatic PURSUE Mirror</title>
 <link rel="canonical" href="https://ledatic.org/aliens">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_shared/site.css?v=fef8b5f2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests. -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
-  /* /aliens — date-driven archive scroll. */
+/* ── /aliens page styles — consumes tokens only ── */
 
-  section.hero { min-height: 50vh; }
-  .hero-content { padding-bottom: 3rem; }
-  .hero-desc { max-width: 44rem; }
+.nav-side { display: flex; align-items: center; gap: 1rem; }
 
-  .archive-meta {
-    display: flex; flex-wrap: wrap; gap: 0.5rem 1.75rem;
-    margin-top: 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .archive-meta .v   { color: hsl(var(--foreground)); }
-  .archive-meta .v.ok   { color: hsl(var(--primary)); }
-  .archive-meta .v.warn { color: #ffb84d; }
-  .archive-meta .v.fail { color: #ff7d6b; }
-  .archive-meta a.v     { text-decoration: none; border-bottom: 1px dotted hsl(var(--muted-foreground) / 0.5); }
+/* No shader (§6 /aliens): the records themselves are the texture. */
+.hero.compact { min-height: 52vh; }
+.hero.compact .hero-content { padding-top: 7rem; padding-bottom: 2rem; }
+.hero-content a { pointer-events: auto; }
+.hero-desc { max-width: 64ch; color: var(--tx-lo); font-size: var(--t-0); line-height: 1.65; }
+.hero-desc code { color: var(--ph-600); }
 
-  .source-badge {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    padding: 0.25rem 0.7rem; border-radius: 999px;
-    border: 1px solid hsl(var(--border));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-    color: hsl(var(--muted-foreground));
-  }
-  .source-badge.live    { color: hsl(var(--primary));   border-color: hsl(var(--primary) / 0.5); }
-  .source-badge.empty   { color: hsl(var(--muted-foreground)); }
-  .source-badge .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: currentColor; box-shadow: 0 0 6px currentColor;
-  }
+data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 
-  /* ── Timeline ─────────────────────────────────────────── */
-  .timeline-wrap {
-    margin-top: 2.5rem;
-    padding: 1.5rem 1.5rem 1.25rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    background: hsl(var(--muted) / 0.18);
-  }
-  .timeline-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 0.85rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75rem;
-  }
-  .timeline-head .left { color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.1em; }
-  .timeline-head .right { color: hsl(var(--primary)); }
-  .timeline-svg { width: 100%; height: 110px; display: block; }
-  .timeline-svg .axis { stroke: hsl(var(--border)); stroke-width: 1; }
-  .timeline-svg .tick-line { stroke: hsl(var(--border)); stroke-width: 1; }
-  .timeline-svg .tick-label { fill: hsl(var(--muted-foreground)); font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9.5px; }
-  .timeline-svg .bar { fill: hsl(var(--primary) / 0.55); }
-  .timeline-svg .bar.dim { fill: hsl(var(--muted-foreground) / 0.35); }
-  .timeline-svg .window { fill: hsl(var(--primary) / 0.10); stroke: hsl(var(--primary) / 0.6); stroke-width: 1; }
-  .timeline-svg .handle { fill: hsl(var(--primary)); cursor: ew-resize; pointer-events: none; }
-  /* `pointer-events: all` makes the transparent hit target clickable —
-     SVG's default `visiblePainted` skips elements with transparent fill. */
-  .timeline-svg .handle-hit { fill: transparent; cursor: ew-resize; pointer-events: all; }
-  .timeline-svg .handle-line { stroke: hsl(var(--primary)); stroke-width: 1; }
-  .timeline-svg .handle-label {
-    fill: hsl(var(--primary)); font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 10.5px; font-weight: 600; pointer-events: none;
-  }
+/* ── archive-meta: liveness chips + counters ── */
+.archive-meta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: var(--sp-6);
+  font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-dim);
+}
+.archive-meta .v { color: var(--tx-hi); }
+.archive-meta .chip {
+  display: inline-block; padding: 0.15rem 0.6rem;
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  background: var(--ink-2);
+}
+.watch-detail a { color: var(--tx-lo); text-decoration: none; border-bottom: 1px dotted var(--ph-800); }
+.watch-detail.warn a { color: var(--st-paused); border-bottom-color: var(--st-paused); }
 
-  .timeline-controls {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
-    margin-top: 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .timeline-controls .preset,
-  .timeline-controls .undated-toggle {
-    padding: 0.3rem 0.65rem;
-    border: 1px solid hsl(var(--border));
-    background: transparent;
-    color: hsl(var(--muted-foreground));
-    font-family: inherit; font-size: 0.72rem;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    border-radius: 4px; cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-  }
-  .timeline-controls .preset:hover,
-  .timeline-controls .undated-toggle:hover { color: hsl(var(--foreground)); }
-  .timeline-controls .preset.active,
-  .timeline-controls .undated-toggle.active { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.5); }
-  .timeline-controls select {
-    background: hsl(var(--muted) / 0.3);
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--foreground));
-    font-family: inherit; font-size: 0.78rem;
-    padding: 0.32rem 0.6rem; border-radius: 4px;
-  }
-  .timeline-controls .spacer { flex: 1; }
-  .timeline-controls .count { color: hsl(var(--primary)); }
-  .timeline-controls input[type=search] {
-    background: hsl(var(--muted) / 0.3);
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--foreground));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    padding: 0.32rem 0.7rem;
-    border-radius: 4px;
-    min-width: 12rem;
-  }
-  .timeline-controls input[type=search]::placeholder {
-    color: hsl(var(--muted-foreground));
-  }
-  .type-chips {
-    display: flex; flex-wrap: wrap; gap: 0.4rem;
-    margin-top: 0.5rem;
-  }
-  .type-chips button {
-    padding: 0.28rem 0.7rem;
-    border: 1px solid hsl(var(--border));
-    background: transparent;
-    color: hsl(var(--muted-foreground));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    border-radius: 999px; cursor: pointer;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
-  }
-  .type-chips button:hover { color: hsl(var(--foreground)); }
-  .type-chips button.active {
-    color: hsl(var(--primary));
-    border-color: hsl(var(--primary) / 0.5);
-    background: hsl(var(--primary) / 0.12);
-  }
-  .type-chips .ct {
-    margin-left: 0.4rem; opacity: 0.6;
-  }
+/* ── view tabs ── */
+.view-tabs { display: flex; gap: 0.5rem; margin-bottom: var(--sp-4); }
+.view-tabs button {
+  font-family: var(--font-body); font-size: var(--t-data);
+  background: var(--ink-2); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 0.35rem 1rem; cursor: pointer;
+  transition: color var(--hover-out) var(--ease), border-color var(--hover-out) var(--ease);
+}
+.view-tabs button:hover { color: var(--tx-hi); transition-duration: var(--hover-in); }
+.view-tabs button.active { color: var(--ph-500); border-color: var(--ph-700); }
+.view-panel.hidden { display: none; }
 
-  /* ── View tabs (Timeline / Map) ───────────────────────── */
-  .view-tabs {
-    display: inline-flex;
-    margin-bottom: 1rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: hsl(var(--muted) / 0.18);
-  }
-  .view-tabs button {
-    background: transparent;
-    border: none;
-    color: hsl(var(--muted-foreground));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.6rem 1.4rem;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-  .view-tabs button:hover { color: hsl(var(--foreground)); }
-  .view-tabs button.active {
-    background: hsl(var(--primary) / 0.16);
-    color: hsl(var(--primary));
-  }
-  .view-panel.hidden { display: none; }
+/* ── timeline ── */
+.timeline-wrap {
+  border: 1px solid var(--line); border-radius: var(--r-2);
+  background: var(--ink-1);
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+}
+.timeline-head {
+  display: flex; justify-content: space-between; gap: 1rem;
+  font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-dim); margin-bottom: var(--sp-2);
+}
+.timeline-head .right { color: var(--tx-lo); }
+.timeline-svg { width: 100%; height: 120px; display: block; cursor: crosshair; }
+.timeline-svg .axis { stroke: var(--line); stroke-width: 1; }
+.timeline-svg .tick-line { stroke: var(--line); }
+.timeline-svg .tick-label { fill: var(--tx-dim); font-size: 10px; font-family: var(--font-body); }
+.timeline-svg .bar { fill: var(--ph-700); }
+.timeline-svg .bar.dim { fill: var(--ph-900); }
+.timeline-svg .window { fill: oklch(0.79 0.27 142 / 0.07); stroke: var(--ph-700); stroke-dasharray: 4 3; }
+.timeline-svg .handle { fill: var(--ph-600); cursor: ew-resize; }
+.timeline-svg .handle-hit { fill: transparent; }
+.timeline-svg .handle-line { stroke: var(--ph-600); stroke-width: 1; }
+.timeline-svg .handle-label { fill: var(--ph-500); font-size: 11px; font-family: var(--font-body); }
 
-  /* ── Map view ─────────────────────────────────────────── */
-  .map-wrap {
-    padding: 1.25rem 1.25rem 1rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    background: hsl(var(--muted) / 0.18);
-  }
-  .map-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    flex-wrap: wrap; gap: 0.5rem;
-    margin-bottom: 0.85rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75rem;
-  }
-  .map-head .left { color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.1em; }
-  .map-head .right { color: hsl(var(--primary)); }
-  .map-svg {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 2 / 1;
-    display: block;
-    background: #06080a;
-    border-radius: 4px;
-  }
-  .map-svg .land { fill: hsl(var(--primary) / 0.10); stroke: hsl(var(--primary) / 0.35); stroke-width: 0.4; }
-  .map-svg .grid { stroke: hsl(var(--border) / 0.55); stroke-width: 0.4; fill: none; }
-  .map-svg .grid.major { stroke: hsl(var(--border)); stroke-width: 0.7; }
-  .map-svg .gridlabel {
-    fill: hsl(var(--muted-foreground) / 0.6);
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 7px;
-  }
-  .map-svg .pin-glow { fill: hsl(var(--primary) / 0.18); stroke: none; }
-  .map-svg .pin {
-    fill: hsl(var(--primary));
-    stroke: hsl(var(--primary) / 0.7);
-    stroke-width: 0.5;
-    transition: fill 0.15s ease;
-    pointer-events: none;
-  }
-  .map-svg .pin:hover { fill: #f3ffe6; }
-  /* Invisible touch target — sits over each pin so taps register on
-     mobile even though the visual marker is small.  Carries the click
-     handler. `pointer-events: all` is load-bearing: SVG's default for
-     transparent fills is `visiblePainted`, which means the element
-     doesn't respond to clicks unless it has a visible fill. */
-  .map-svg .pin-hit { fill: transparent; cursor: pointer; pointer-events: all; }
-  .map-svg .pin-count {
-    fill: #06080a;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 7.5px;
-    font-weight: 700;
-    pointer-events: none;
-    text-anchor: middle;
-    dominant-baseline: central;
-  }
-  .map-svg .pin-label {
-    fill: hsl(var(--foreground) / 0.85);
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 6.5px;
-    pointer-events: none;
-    text-anchor: middle;
-  }
-  .map-svg .offearth-bar {
-    fill: hsl(var(--muted) / 0.4);
-    stroke: hsl(var(--border));
-    stroke-width: 0.4;
-  }
-  .map-svg .offearth-label {
-    fill: hsl(var(--muted-foreground));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 7px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-  .map-tooltip {
-    position: absolute;
-    pointer-events: none;
-    background: rgba(0,0,0,0.92);
-    border: 1px solid hsl(var(--primary) / 0.5);
-    border-radius: 4px;
-    padding: 0.45rem 0.7rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
-    color: hsl(var(--foreground));
-    transform: translate(-50%, -110%);
-    white-space: nowrap;
-    z-index: 50;
-    display: none;
-  }
-  .map-tooltip .loc { color: hsl(var(--primary)); display: block; margin-bottom: 0.15rem; }
-  .map-tooltip .count { color: hsl(var(--muted-foreground)); }
+.timeline-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem;
+  margin-top: var(--sp-3);
+  font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-dim);
+}
+.timeline-controls .spacer { flex: 1; }
+.timeline-controls .preset, .timeline-controls .undated-toggle {
+  background: var(--ink-2); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  font: inherit; padding: 0.25rem 0.7rem; cursor: pointer;
+}
+.timeline-controls .preset:hover, .timeline-controls .undated-toggle:hover { color: var(--tx-hi); }
+.timeline-controls .preset.active { color: var(--ph-500); border-color: var(--ph-700); }
+.timeline-controls .undated-toggle.active { color: var(--st-paused); border-color: var(--st-paused); }
+.timeline-controls input[type="search"] {
+  background: var(--ink-0); color: var(--tx-hi);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  font: inherit; padding: 0.3rem 0.6rem; min-width: 16rem;
+}
+.timeline-controls input[type="search"]:focus-visible { outline: 2px solid var(--ph-700); outline-offset: 1px; }
+.timeline-controls select {
+  background: var(--ink-0); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  font: inherit; padding: 0.25rem 0.4rem;
+}
+.timeline-controls label { display: inline-flex; align-items: center; gap: 0.4rem; }
+.timeline-controls .count { color: var(--tx-hi); }
 
-  /* ── Modal ────────────────────────────────────────────── */
-  .modal {
-    position: fixed; inset: 0; z-index: 100;
-    background: rgba(0,0,0,0.86);
-    display: none;
-    align-items: flex-start; justify-content: center;
-    overflow-y: auto;
-    padding: 4rem 1.5rem;
-  }
-  .modal.open { display: flex; }
-  .modal .frame {
-    max-width: 880px; width: 100%;
-    background: hsl(var(--hero-bg));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 1.75rem 1.75rem 1.5rem;
-    color: hsl(var(--foreground));
-  }
-  .modal .close {
-    float: right;
-    background: none;
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--muted-foreground));
-    padding: 0.3rem 0.7rem; border-radius: 4px;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75rem; cursor: pointer;
-  }
-  .modal .close:hover { color: hsl(var(--foreground)); }
-  .modal h3 { margin-bottom: 0.25rem; }
-  .modal .subline {
-    color: hsl(var(--muted-foreground));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    margin-bottom: 1rem;
-  }
-  .modal .record { margin-bottom: 1rem; }
+/* ── type / release chips ── */
+.type-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: var(--sp-3); }
+.type-chips button {
+  font-family: var(--font-body); font-size: var(--t-data);
+  background: transparent; color: var(--tx-dim);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 0.2rem 0.7rem; cursor: pointer;
+}
+.type-chips button:hover { color: var(--tx-lo); }
+.type-chips button.active { color: var(--ph-500); border-color: var(--ph-700); }
+.type-chips .ct { color: var(--tx-dim); margin-left: 0.45em; }
 
-  /* Inline video player for video records inside the modal — replaces
-     the thumbnail column with a 16:9 frame that streams the mirrored
-     mp4 from R2.  preload=metadata so the file doesn't actually start
-     downloading until the user hits play. */
-  .modal .record.has-video {
-    grid-template-columns: 1fr;
-  }
-  .modal .record .video-frame {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #000;
-    border: 1px solid hsl(var(--border));
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .modal .record .video-frame video {
-    width: 100%; height: 100%; display: block; background: #000;
-  }
+/* ── map ── */
+.map-wrap { border: 1px solid var(--line); border-radius: var(--r-2); background: var(--ink-1); padding: var(--sp-3); }
+.map-head {
+  display: flex; justify-content: space-between; gap: 1rem;
+  font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-dim); margin-bottom: var(--sp-2);
+}
+.map-scroller { overflow-x: auto; }
+.map-svg { width: 100%; min-width: 640px; display: block; }
+.map-svg .land { fill: var(--ink-3); stroke: var(--ph-900); stroke-width: 0.6; }
+.map-svg .grid { stroke: var(--line); stroke-width: 0.5; }
+.map-svg .grid.major { stroke: var(--ph-900); stroke-width: 0.8; }
+.map-svg .gridlabel { fill: var(--tx-dim); font-size: 9px; font-family: var(--font-body); }
+.map-svg .pin { fill: var(--ph-600); }
+.map-svg .pin-glow { fill: oklch(0.79 0.27 142 / 0.12); }
+.map-svg .pin-hit { fill: transparent; cursor: pointer; }
+.map-svg .pin-count {
+  fill: var(--ink-0); font-size: 9px; font-weight: 700;
+  text-anchor: middle; dominant-baseline: central;
+  font-family: var(--font-body); pointer-events: none;
+}
+.map-svg .pin-label { fill: var(--tx-dim); font-size: 9px; text-anchor: middle; font-family: var(--font-body); }
+.map-svg .offearth-bar { fill: var(--ink-2); }
+.map-svg .offearth-label { fill: var(--tx-dim); font-size: 9px; letter-spacing: 0.18em; font-family: var(--font-body); }
+.map-tooltip {
+  display: none; position: absolute; transform: translate(-50%, -110%);
+  background: var(--ink-3); border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 0.4rem 0.7rem; font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-lo); pointer-events: none; white-space: nowrap; z-index: 5;
+}
+.map-tooltip .loc { color: var(--tx-hi); display: block; }
+.map-tooltip .count { color: var(--tx-dim); }
 
-  /* ── Records list ─────────────────────────────────────── */
-  .records {
-    margin-top: 1.5rem;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  .record {
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    gap: 1rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 1rem 1.1rem;
-    background: hsl(var(--muted) / 0.18);
-    transition: border-color 0.15s ease, transform 0.15s ease;
-  }
-  @media (min-width: 720px) { .record { grid-template-columns: 110px 1fr; } }
-  .record:hover { border-color: hsl(var(--primary) / 0.55); transform: translateY(-1px); }
-  .record .thumb {
-    aspect-ratio: 1 / 1.3;
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
-    border-radius: 4px;
-    overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .record .thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .record .thumb .placeholder {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    color: hsl(var(--muted-foreground));
-    text-align: center; padding: 0.5rem;
-  }
-  .record .body { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
-  .record .titleline {
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.7rem;
-  }
-  .record .agency-badge {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.66rem; letter-spacing: 0.08em;
-    color: hsl(var(--primary));
-    background: hsl(var(--primary) / 0.12);
-    padding: 0.15rem 0.55rem; border-radius: 3px;
-    text-transform: uppercase;
-  }
-  .record .ttl {
-    font-size: 0.95rem;
-    color: hsl(var(--foreground));
-    font-weight: 500;
-    line-height: 1.3;
-    word-break: break-word;
-  }
-  .record .ttl a { color: inherit; }
-  .record .ttl a:hover { color: hsl(var(--primary)); }
-  .record .meta {
-    display: flex; flex-wrap: wrap; gap: 0.3rem 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .record .meta b { color: hsl(var(--foreground)); font-weight: 500; }
-  .record .meta .yr { color: hsl(var(--primary)); }
-  .record .desc {
-    color: hsl(var(--foreground) / 0.84);
-    font-size: 0.9rem;
-    line-height: 1.55;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .record .desc-wrap.expanded .desc {
-    display: block;
-    -webkit-line-clamp: unset;
-    overflow: visible;
-  }
-  .record .desc-toggle {
-    margin-top: 0.25rem;
-    padding: 0;
-    background: none;
-    border: none;
-    color: hsl(var(--primary));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    border-bottom: 1px dotted hsl(var(--primary) / 0.5);
-    line-height: 1;
-  }
-  .record .desc-toggle:hover { color: hsl(var(--foreground)); border-bottom-color: hsl(var(--foreground) / 0.5); }
-  .record .desc-wrap.no-overflow .desc-toggle { display: none; }
-  .record .footer {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .record .footer .pill {
-    padding: 0.18rem 0.55rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: 999px;
-  }
-  .record .footer .pill.attest { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.4); }
-  .record .footer .pill.drift  { color: #ff7d6b; border-color: rgba(255,125,107,0.6); background: rgba(255,125,107,0.08); text-decoration: none; }
-  .record .footer .pill.drift:hover { background: rgba(255,125,107,0.15); }
-  .record .footer a {
-    color: hsl(var(--primary));
-    text-decoration: none;
-  }
-  .record .footer a:hover { text-decoration: underline; }
-  .record .footer .verify-btn {
-    background: transparent;
-    border: 1px solid hsl(var(--primary) / 0.4);
-    color: hsl(var(--primary));
-    font-family: inherit; font-size: inherit;
-    padding: 0.18rem 0.55rem;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
-  }
-  .record .footer .verify-btn:hover { background: hsl(var(--primary) / 0.1); }
-  .record .footer .verify-btn.checking { color: #ffd86b; border-color: rgba(255,216,107,0.4); }
-  .record .footer .verify-btn.match    { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.6); background: hsl(var(--primary) / 0.12); }
-  .record .footer .verify-btn.partial  { color: #ffb84d; border-color: rgba(255,184,77,0.6); background: rgba(255,184,77,0.12); }
-  .record .footer .verify-btn.fail     { color: #ff7d6b; border-color: rgba(255,125,107,0.6); background: rgba(255,125,107,0.12); }
-  .record.highlight {
-    border-color: hsl(var(--primary)) !important;
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.25);
-  }
+/* ── records ── */
+.records { display: grid; grid-template-columns: 1fr; gap: var(--sp-3); margin-top: var(--sp-6); }
+.record {
+  display: grid; grid-template-columns: 132px 1fr; gap: var(--sp-4);
+  border: 1px solid var(--line); border-radius: var(--r-2);
+  background: var(--ink-1); padding: var(--sp-4);
+}
+.record.highlight { border-color: var(--ph-600); box-shadow: var(--e2); }
+.record .thumb {
+  width: 132px; height: 96px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  background: var(--ink-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.record .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.record .thumb .placeholder {
+  font-family: var(--font-body); font-size: 0.7rem;
+  color: var(--tx-dim); text-align: center; letter-spacing: 0.1em;
+}
+.record .titleline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.8rem; }
+.agency-badge {
+  font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 0.08em;
+  color: var(--ph-600); border: 1px solid var(--ph-800); border-radius: var(--r-1);
+  padding: 0.1rem 0.45rem; white-space: nowrap;
+}
+.record .ttl { font-family: var(--font-display); font-size: var(--t-0); font-weight: 600; }
+.record .ttl a { color: var(--tx-hi); text-decoration: none; }
+.record .ttl a:hover { color: var(--ph-500); }
+.record .anchor {
+  margin-left: auto; font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-dim); white-space: nowrap;
+}
+.record .anchor-none { font-style: italic; }
+.record .meta {
+  display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem;
+  font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-dim); margin-top: 0.35rem;
+}
+.record .meta b { color: var(--tx-lo); font-weight: 500; }
+.record .meta .yr { color: var(--tx-hi); }
+.desc-wrap { margin-top: 0.45rem; }
+.desc {
+  font-size: var(--t-data); line-height: 1.65; color: var(--tx-lo);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.desc-wrap.expanded .desc { display: block; -webkit-line-clamp: unset; }
+.desc-toggle {
+  background: none; border: none; color: var(--ph-700);
+  font: inherit; font-size: var(--t-data); cursor: pointer; padding: 0.15rem 0;
+}
+.desc-toggle:hover { color: var(--ph-500); }
+.desc-wrap.no-overflow .desc-toggle { display: none; }
+.record .footer {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.9rem;
+  margin-top: 0.6rem; font-family: var(--font-body); font-size: var(--t-data);
+}
+.record .footer a { color: var(--ph-700); text-decoration: none; }
+.record .footer a:hover { color: var(--ph-500); }
+.pill {
+  display: inline-block; border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 0.1rem 0.5rem; color: var(--tx-dim);
+}
+/* DRIFT is a checked-and-wrong verdict: the watcher re-fetched the
+   source and its bytes no longer match the attested digest. The red
+   is earned by that failed verification; the link is the evidence. */
+.pill.drift { color: var(--st-fail); border-color: var(--st-fail); }
+a.pill.drift:hover { color: var(--st-fail); }
 
-  /* ── Empty state ──────────────────────────────────────── */
-  .empty-state {
-    margin-top: 1.5rem;
-    padding: 2.25rem 1.75rem;
-    border: 1px dashed hsl(var(--border));
-    border-radius: var(--radius);
-    color: hsl(var(--muted-foreground));
-    line-height: 1.6;
-    text-align: center;
-  }
-  .empty-state .head {
-    color: hsl(var(--primary));
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    text-transform: uppercase; letter-spacing: 0.1em;
-    margin-bottom: 0.6rem;
-  }
+.records-more {
+  margin: var(--sp-4) auto 0; display: block;
+  font-family: var(--font-body); font-size: var(--t-data);
+  background: var(--ink-2); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 0.5rem 1.4rem; cursor: pointer;
+}
+.records-more:hover { color: var(--tx-hi); border-color: var(--ph-700); }
 
-  .honesty {
-    margin-top: 4rem;
-    padding: 1.6rem 1.7rem 1.4rem;
-    border: 1px solid hsl(var(--border));
-    border-left: 3px solid hsl(var(--primary) / 0.7);
-    border-radius: var(--radius);
-    background: hsl(var(--muted) / 0.18);
-  }
-  .honesty h3 {
-    font-size: 0.85rem; color: hsl(var(--primary));
-    text-transform: uppercase; letter-spacing: 0.1em;
-    margin-bottom: 0.75rem;
-  }
-  .honesty p {
-    color: hsl(var(--foreground) / 0.92);
-    font-size: 0.9rem; line-height: 1.6;
-    margin-bottom: 0.55rem;
-  }
-  .honesty .links {
-    margin-top: 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-  }
-  .honesty .links a { color: hsl(var(--primary)); }
-  .honesty .links a + a { margin-left: 1rem; }
+/* inline fallback for browsers without the Popover API */
+.proof-pop-inline { position: static; inset: auto; display: block; margin-top: var(--sp-2); max-width: none; }
 
-  /* ── Mobile / coarse-pointer adjustments ──────────────── */
-  @media (pointer: coarse) {
-    /* Bump invisible hit targets so taps reliably land.  Visible
-       markers stay the same — only the touch surface grows. */
-    .map-svg .pin-hit { r: 32; }
-    .map-svg .pin { stroke-width: 0.8; }
-    .timeline-svg .handle-hit { width: 56; }
-  }
-  @media (max-width: 600px) {
-    section.hero { min-height: 60vh; }
-    .archive-meta { gap: 0.4rem 1rem; font-size: 0.72rem; }
-    .timeline-wrap, .map-wrap { padding: 1rem 1rem 0.85rem; }
-    .timeline-svg { height: 130px; }
-    .timeline-controls { gap: 0.4rem 0.7rem; font-size: 0.72rem; }
-    .timeline-controls .preset { padding: 0.45rem 0.75rem; font-size: 0.7rem; }
-    .timeline-controls .spacer { display: none; }
-    .timeline-controls label { display: flex; align-items: center; gap: 0.4rem; }
-    /* Below this width, SVG would shrink each pin to a few px.  Wrap
-       it in a horizontal scroller and pin a sensible minimum width so
-       continents stay readable; the user pans laterally to see
-       far-east records. */
-    .map-scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .map-scroller .map-svg { min-width: 720px; }
-    .map-tooltip { max-width: 78vw; white-space: normal; line-height: 1.35; }
-    .modal { padding: 1.25rem 0.85rem; }
-    .modal .frame { padding: 1.25rem 1.1rem 1rem; }
-    .record { padding: 0.85rem 0.85rem; gap: 0.7rem; grid-template-columns: 64px 1fr; }
-    .record .body { gap: 0.4rem; }
-    .record .ttl { font-size: 0.88rem; }
-    .record .meta { font-size: 0.68rem; gap: 0.2rem 0.7rem; }
-    .record .desc { font-size: 0.85rem; -webkit-line-clamp: 4; }
-    .record .footer { font-size: 0.66rem; gap: 0.35rem 0.6rem; }
-    .record .footer .verify-btn { padding: 0.32rem 0.7rem; }
-    .empty-state { padding: 1.5rem 1.1rem; }
-    .honesty { padding: 1.2rem 1.1rem 1rem; margin-top: 2.5rem; }
-  }
+/* video records inside the modal */
+.video-frame { border: 1px solid var(--line); border-radius: var(--r-1); overflow: hidden; background: var(--ink-0); }
+.video-frame video { display: block; width: 100%; max-height: 60vh; }
+.record.has-video { grid-template-columns: minmax(200px, 380px) 1fr; }
+
+/* ── empty state ── */
+.empty-state {
+  border: 1px dashed var(--line); border-radius: var(--r-2);
+  padding: var(--sp-8); text-align: center;
+  color: var(--tx-dim); font-family: var(--font-body); font-size: var(--t-0);
+  margin-top: var(--sp-6);
+}
+.empty-state .head { color: var(--tx-lo); font-family: var(--font-display); font-size: var(--t-1); margin-bottom: var(--sp-2); }
+.empty-state .records-more { display: inline-block; margin-top: var(--sp-3); }
+
+/* ── honesty ── */
+.honesty { margin-top: var(--sp-12); border-top: 1px solid var(--line); padding-top: var(--sp-6); max-width: 72ch; }
+.honesty h3 { font-family: var(--font-display); font-size: var(--t-2); color: var(--ph-600); margin: 0 0 var(--sp-3); }
+.honesty p { color: var(--tx-lo); font-size: var(--t-0); line-height: 1.65; margin: 0 0 var(--sp-3); }
+.honesty p.dim { color: var(--tx-dim); }
+.honesty code { color: var(--ph-600); }
+.honesty .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-family: var(--font-body); font-size: var(--t-data); }
+.honesty .links a { color: var(--ph-700); text-decoration: none; }
+.honesty .links a:hover { color: var(--ph-500); }
+
+/* ── modal ── */
+.modal { display: none; position: fixed; inset: 0; background: oklch(0.13 0.008 145 / 0.85); z-index: 100; padding: 4vh 4vw; }
+.modal.open { display: block; }
+.modal .frame {
+  position: relative; max-width: 880px; margin: 0 auto; max-height: 92vh; overflow-y: auto;
+  background: var(--ink-1); border: 1px solid var(--line); border-radius: var(--r-2);
+  padding: var(--sp-6);
+}
+.modal .close {
+  position: sticky; top: 0; float: right;
+  background: var(--ink-3); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  font-family: var(--font-body); font-size: var(--t-data);
+  padding: 0.2rem 0.7rem; cursor: pointer; z-index: 2;
+}
+.modal .close:hover { color: var(--tx-hi); }
+.modal h3 { font-family: var(--font-display); color: var(--tx-hi); margin: 0 0 0.3rem; }
+.modal .subline { font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-dim); margin-bottom: var(--sp-4); }
+.modal .record { margin-top: var(--sp-3); }
+
+/* ── zero-JS note ── */
+.noscript-note {
+  border: 1px solid var(--st-paused); border-radius: var(--r-2);
+  padding: var(--sp-4); margin: 0 0 var(--sp-6);
+  font-family: var(--font-body); font-size: var(--t-0); color: var(--tx-lo);
+}
+.noscript-note a { color: var(--ph-600); }
+
+/* ── toast (JS only toggles opacity) ── */
+#toast {
+  position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+  background: var(--ink-3); color: var(--ph-500);
+  border: 1px solid var(--ph-700); border-radius: var(--r-1);
+  padding: 0.5rem 1.1rem;
+  font-family: var(--font-body); font-size: var(--t-data); letter-spacing: 0.04em;
+  z-index: 200; pointer-events: none;
+  transition: opacity 0.2s var(--ease); opacity: 0;
+}
+
+@media (pointer: coarse) {
+  .timeline-controls .preset, .timeline-controls .undated-toggle, .type-chips button { padding: 0.45rem 0.9rem; }
+  .view-tabs button { padding: 0.55rem 1.2rem; }
+}
+@media (max-width: 600px) {
+  .record, .record.has-video { grid-template-columns: 1fr; }
+  .record .thumb { width: 100%; height: 150px; }
+  .record .anchor { margin-left: 0; flex-basis: 100%; }
+  .timeline-controls input[type="search"] { min-width: 0; width: 100%; }
+}
 </style>
+<script type="speculationrules">
+{
+  "prerender": [
+    { "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+  ]
+}
+</script>
 </head>
-<body data-shader="_shared/shaders/grid.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -561,43 +346,57 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="https://github.com/Ledatic-Empire/pursue" target="_blank" rel="noopener">Source</a>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="https://github.com/Ledatic-Empire/pursue" target="_blank" rel="noopener">Source</a>
+  </div>
 </nav>
 
-<section class="hero">
-  <div class="scene">
-    <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
-  </div>
+<section class="hero compact">
+  <div class="scene"><div class="scene-fallback" aria-hidden="true"></div></div>
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">PURSUE &mdash; attested mirror</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Aliens</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+    <span class="eyebrow">PURSUE &mdash; attested mirror</span>
+    <h1 class="hero-title">Aliens</h1>
+    <p class="hero-sub">
       The Presidential Unsealing and Reporting System for UAP Encounters,
       mirrored byte-for-byte and walked across time.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+    <p class="hero-desc">
       Drag the handles on the timeline to scrub across the years the
       records cover. Each card is a real declassified file from
       <code>war.gov</code>, hashed in pure Rail and signed against
       <a href="entropy.html">ledatic.org/entropy/pulse</a> at the moment
-      we mirrored it. Click any title to open the file from our copy.
+      we mirrored it. Press <em>prove</em> on any record to replay that
+      check in your own browser.
     </p>
-    <div class="archive-meta fade-up" style="animation-delay: 0.7s">
-      <span><span class="source-badge" id="source-badge"><span class="dot"></span><span id="source-label">loading</span></span></span>
+    <div class="archive-meta">
+      <span class="chip" id="mirror-state" data-state="unknown" aria-live="polite" title="mirror status — an archive is a recording, never live">unknown</span>
+      <span class="chip" id="watch-state" data-state="unknown" aria-live="polite" title="recurring source re-check status">unknown</span>
+      <span class="watch-detail" id="watch-detail"></span>
       <span>records: <span class="v" id="rec-count">&mdash;</span></span>
       <span>agencies: <span class="v" id="agency-count">&mdash;</span></span>
-      <span>signed: <span class="v ok" id="signed-count">&mdash;</span></span>
+      <span>signed: <span class="v" id="signed-count">&mdash;</span></span>
       <span>span: <span class="v" id="year-span">&mdash;</span></span>
-      <span>source re-check: <a class="v" id="watchdog-status" title="loading">&mdash;</a></span>
     </div>
   </div>
 </section>
 
 <section class="section" id="archive">
   <div class="wrap">
+    <noscript>
+      <div class="noscript-note">
+        This archive renders in your browser from the signed manifest.
+        Without JavaScript you can still fetch
+        <a href="/pursue/manifest.jsonl">manifest.jsonl</a> directly &mdash;
+        every line carries the record's sha256, its beacon pulse, and a
+        fleet0 Ed25519 signature &mdash; and check any record with
+        <a href="/attest/verify.sh">verify.sh</a> against
+        <a href="/attest/fleet0.pub.pem">the published key</a>.
+      </div>
+    </noscript>
+
     <div class="view-tabs" id="view-tabs">
       <button class="active" data-view="timeline">Timeline</button>
       <button data-view="map">Map</button>
@@ -650,21 +449,29 @@
     </div><!-- /view-map -->
 
     <div class="records" id="records"></div>
+    <button class="records-more" id="records-more" type="button" hidden>show more</button>
     <div class="empty-state" id="empty-state" style="display: none;"></div>
 
     <div class="honesty">
       <h3>How we keep this honest</h3>
       <p>
         Every file shown here is a byte-for-byte copy of what
-        <code>war.gov</code> published. As bytes flow to disk we
-        compute their SHA-256 in pure Rail and bind the digest to a
+        <code>war.gov</code> published. As bytes flowed to disk we
+        computed their SHA-256 in pure Rail and bound each digest to a
         live entropy beacon pulse, signed by an independent fleet0
-        Ed25519 witness. If the source ever quietly changes a file,
-        re-checking it against these digests will show it &mdash;
-        automatic re-checks are currently paused. If we ever quietly
-        change one, you can prove it.
+        Ed25519 witness. The <em>prove</em> button on every record
+        replays that check here in your browser: it re-hashes our copy
+        where the file fits the in-browser cap, and verifies the
+        signature against the pinned public key either way.
       </p>
-      <p style="color: hsl(var(--muted-foreground));">
+      <p>
+        The recurring comparison against the war.gov source is currently
+        paused &mdash; the status chip above says so honestly. The signed
+        digests don't pause: if the source ever quietly changes a file,
+        re-checking against these attestations will show it, and if we
+        ever quietly change one, you can prove it.
+      </p>
+      <p class="dim">
         It's a single Rail binary called <code>pursue</code>. Pure
         Rail TLS&nbsp;1.3, streaming SHA-256, JSON. No curl, no
         SQLite, no libcrypto. Source is public. Run your own copy.
@@ -672,7 +479,7 @@
       <div class="links">
         <a href="https://github.com/Ledatic-Empire/pursue" target="_blank" rel="noopener">github &rarr;</a>
         <a href="entropy.html">entropy beacon &rarr;</a>
-        <a href="witness.html">fleet0 witness &rarr;</a>
+        <a href="/pursue/manifest.jsonl">signed manifest &rarr;</a>
         <a href="/attest/verify.sh">verify yourself &rarr;</a>
         <a href="/attest/fleet0.pub.pem">fleet0 pubkey &rarr;</a>
         <a href="rail.html">about Rail &rarr;</a>
@@ -710,6 +517,7 @@
           <li><a href="entropy.html">Entropy beacon</a></li>
           <li><a href="system.html">System</a></li>
           <li><a href="aliens.html" class="active">Aliens archive</a></li>
+          <li><a href="replay.html">Replay</a></li>
         </ul>
       </div>
       <div>
@@ -723,7 +531,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span>PURSUE archive &middot; signed by fleet0</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
@@ -887,18 +695,32 @@ async function loadManifest() {
 }
 
 // ── Rendering ──────────────────────────────────────────────────
+// Liveness grammar (§4): an archive is a recording, so the mirror
+// chip earns `replay` (cyan) over the pulse range its attestations
+// actually cover — never green. An empty mirror is an honest
+// `paused`. The sentinel in proof-tray.js owns the words.
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener("ledatic:proof", (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
 function setSourceBadge(src) {
-  const badge = document.getElementById("source-badge");
-  const label = document.getElementById("source-label");
-  if (src === "live") {
-    badge.classList.add("live");
-    badge.classList.remove("empty");
-    label.textContent = "attested · pursue mirror";
-  } else {
-    badge.classList.add("empty");
-    badge.classList.remove("live");
-    label.textContent = "empty · awaiting first sync";
-  }
+  whenProof((P) => {
+    const s = P.sentinel("#mirror-state");
+    if (!s) return;
+    if (src === "live" && STATE.records.length) {
+      const pulses = STATE.records
+        .map((r) => r.attestation && r.attestation.pulse_id)
+        .filter((p) => Number.isFinite(p) && p > 0);
+      if (pulses.length) {
+        s.set("replay", { from: Math.min(...pulses), to: Math.max(...pulses) });
+      } else {
+        s.set("paused", { note: "mirror loaded · no attested pulses" });
+      }
+    } else {
+      s.set("paused", { note: "mirror empty — awaiting first sync" });
+    }
+  });
 }
 
 // ── Source watchdog ───────────────────────────────────────────
@@ -922,41 +744,47 @@ function humanAgo(ms) {
 }
 
 function renderWatchdog(data) {
-  const el = document.getElementById("watchdog-status");
-  if (!el) return;
-  el.classList.remove("ok", "warn", "fail");
-  if (!data) {
-    // Honest paused state: the automatic source re-check is not
-    // currently running. The mirror's signed digests below remain
-    // verifiable; only the *recurring* source comparison is paused.
-    el.textContent = "paused";
-    el.title = "automatic source re-checks are not currently running — every record below is still hash-verifiable on demand";
-    el.removeAttribute("href");
-    return;
-  }
-  el.setAttribute("href", "/pursue/source_check.json");
-  const total = data.total_checked || 0;
-  const m = data.match_count || 0;
-  const d = data.drift_count || 0;
-  const miss = data.missing_count || 0;
-  const err = data.error_count || 0;
-  const ago = data.completed_at ? humanAgo(data.completed_at * 1000) : "?";
-  // index drift events by manifest URL so per-card render can find them.
-  STATE.driftByUrl = Object.create(null);
-  for (const dr of (data.drift_records || [])) STATE.driftByUrl[dr.url] = dr;
-  if (d || miss) {
-    el.classList.add("warn");
-    const parts = [];
-    if (d)    parts.push(`${d} drift`);
-    if (miss) parts.push(`${miss} missing`);
-    el.textContent = `${parts.join(" · ")} · ${ago}`;
-  } else if (total > 0) {
-    el.classList.add("ok");
-    el.textContent = `${m} still match · ${ago}`;
-  } else {
-    el.textContent = "—";
-  }
-  el.title = `last check ${ago} · ${total} checked · ${m} match · ${d} drift · ${miss} missing${err ? ' · ' + err + ' error' : ''}`;
+  const detail = document.getElementById("watch-detail");
+  whenProof((P) => {
+    const s = P.sentinel("#watch-state");
+    if (!s) return;
+    if (!data) {
+      // Honest paused state (§4): the automatic source re-check is not
+      // currently running. The mirror's signed digests below remain
+      // verifiable; only the *recurring* source comparison is paused.
+      s.set("paused", { note: "source re-checks offline" });
+      s.el.title = "automatic source re-checks are not currently running — every record below is still hash-verifiable on demand";
+      if (detail) detail.textContent = "";
+      return;
+    }
+    // index drift events by manifest URL so per-card render can find them.
+    STATE.driftByUrl = Object.create(null);
+    for (const dr of (data.drift_records || [])) STATE.driftByUrl[dr.url] = dr;
+    const total = data.total_checked || 0;
+    const m = data.match_count || 0;
+    const d = data.drift_count || 0;
+    const miss = data.missing_count || 0;
+    const err = data.error_count || 0;
+    if (data.completed_at) {
+      // STALE: the age since the last completed check counts up in
+      // pulses — "last verified +N pulses ago" — never a fake LIVE.
+      s._lastFeedAt = data.completed_at * 1000;
+      s.set("stale");
+    } else {
+      s.set("paused", { note: "re-check time unknown" });
+    }
+    if (detail) {
+      const parts = [];
+      if (total) parts.push(`${m}/${total} still match`);
+      if (d) parts.push(`${d} drift`);
+      if (miss) parts.push(`${miss} missing`);
+      if (err) parts.push(`${err} error`);
+      detail.innerHTML = parts.length
+        ? `<a href="/pursue/source_check.json" rel="nofollow">${escapeHtml(parts.join(" · "))}</a>`
+        : "";
+      detail.classList.toggle("warn", !!(d || miss));
+    }
+  });
 }
 
 function summary() {
@@ -1187,19 +1015,22 @@ function recordCardHtml(r, opts) {
     : (yr.primary || "?");
   const desc = r.description || "";
   const sha = r.sha256 ? r.sha256.slice(0, 12) + "…" : "";
-  const att = r.attestation && r.attestation.pulse_id;
-  const attestPill = att
-    ? `<span class="pill attest">pulse ${escapeHtml(String(r.attestation.pulse_id))}</span>`
-    : "";
+  const a = r.attestation || {};
+  // Pulse-anchored record header: the witnessed pulse is the record's
+  // native timestamp.  Unattested records say so honestly — no anchor
+  // is rendered where none exists.
+  const anchorHtml = a.pulse_id
+    ? `<time-pulse class="anchor" data-pulse="${escapeHtml(String(a.pulse_id))}"${a.beacon_timestamp_utc ? ` data-iso="${escapeHtml(a.beacon_timestamp_utc)}"` : ""}>@ p#${escapeHtml(String(a.pulse_id))}</time-pulse>`
+    : `<span class="anchor anchor-none">unattested</span>`;
   const id = recordId(r);
   const cls = "record" + (opts.expandVideo && isVideo ? " has-video" : "");
-  const a = r.attestation || {};
-  return `<div class="${cls}" id="case-${escapeHtml(id)}" data-id="${escapeHtml(id)}" data-sha="${escapeHtml(r.sha256 || "")}" data-href="${escapeHtml(pdfHref)}" data-pulse="${escapeHtml(String(a.pulse_id || ""))}" data-value-hex="${escapeHtml(a.value_hex || "")}" data-witnessed-at="${escapeHtml(String(a.witnessed_at || ""))}" data-sig="${escapeHtml(a.sig || "")}">
+  return `<div class="${cls}" id="case-${escapeHtml(id)}" data-id="${escapeHtml(id)}" data-sha="${escapeHtml(r.sha256 || "")}" data-href="${escapeHtml(pdfHref)}" data-name="${escapeHtml((r.local_path || r.url || "").split("/").pop() || "")}" data-bytes="${escapeHtml(String(r.size_bytes || ""))}" data-pulse="${escapeHtml(String(a.pulse_id || ""))}" data-value-hex="${escapeHtml(a.value_hex || "")}" data-witnessed-at="${escapeHtml(String(a.witnessed_at || ""))}" data-sig="${escapeHtml(a.sig || "")}" data-pkfp="${escapeHtml(a.pk_fp || "")}">
     ${leftCol}
     <div class="body">
       <div class="titleline">
         <span class="agency-badge">${escapeHtml(r.agency || "?")}</span>
         <span class="ttl"><a href="#case-${escapeHtml(id)}" class="case-link" data-id="${escapeHtml(id)}" title="copy permalink">${escapeHtml(r.title || pdfHref)}</a></span>
+        ${anchorHtml}
       </div>
       <div class="meta">
         <span><b>incident</b> <span class="yr">${escapeHtml(String(yrStr))}</span></span>
@@ -1210,9 +1041,8 @@ function recordCardHtml(r, opts) {
       ${desc ? `<div class="desc-wrap"><div class="desc">${escapeHtml(desc)}</div><button class="desc-toggle" type="button" data-action="toggle-desc">show more</button></div>` : ""}
       <div class="footer">
         ${sha ? `<span class="pill" title="${escapeHtml(r.sha256)}">sha256 ${escapeHtml(sha)}</span>` : ""}
-        ${attestPill}
         ${(STATE.driftByUrl && STATE.driftByUrl[r.url]) ? `<a class="pill drift" href="/pursue/${escapeHtml(STATE.driftByUrl[r.url].drift_local_path || "")}" target="_blank" rel="noopener" title="war.gov source bytes have drifted from this mirror — click for the divergent attested copy">DRIFT vs source</a>` : ""}
-        ${r.sha256 ? `<button class="verify-btn" data-action="verify">verify</button>` : ""}
+        ${r.sha256 ? `<button class="prove" type="button" data-action="prove" aria-expanded="false"><span class="prove-val">prove</span><span class="affix" aria-hidden="true">⌁</span></button>` : ""}
         <a href="${escapeHtml(pdfHref)}" target="_blank" rel="noopener">${
           isVideo
             ? "play video →"
@@ -1227,13 +1057,21 @@ function recordCardHtml(r, opts) {
   </div>`;
 }
 
-function renderRecords() {
+// Render paging: the manifest carries hundreds of records; painting all
+// of them at once costs layout time and bytes nobody asked for.  We page
+// in batches and keep a "show more" affordance.  Filter changes reset the
+// page; deep links (#case-…) expand it (see applyHighlight).
+const PAGE_SIZE = 60;
+function renderRecords(keepLimit) {
   const root = document.getElementById("records");
   const recs = recordsInWindow();
   document.getElementById("visible-count").textContent = recs.length;
   const empty = document.getElementById("empty-state");
+  const more = document.getElementById("records-more");
+  if (!keepLimit) STATE._visibleLimit = PAGE_SIZE;
   if (recs.length === 0) {
     root.innerHTML = "";
+    more.hidden = true;
     empty.style.display = "block";
     if (STATE.records.length === 0) {
       empty.innerHTML = `<div class="head">Mirror is empty</div>
@@ -1246,8 +1084,16 @@ function renderRecords() {
     return;
   }
   empty.style.display = "none";
-  root.innerHTML = recs.map(recordCardHtml).join("");
-  bindVerifyButtons(root);
+  const limit = STATE._visibleLimit || PAGE_SIZE;
+  const page = recs.slice(0, limit);
+  root.innerHTML = page.map(r => recordCardHtml(r)).join("");
+  if (recs.length > page.length) {
+    more.hidden = false;
+    more.textContent = `show more (${recs.length - page.length} below)`;
+  } else {
+    more.hidden = true;
+  }
+  bindProveButtons(root);
   bindCaseLinks(root);
   bindDescToggles(root);
   applyHighlight();
@@ -1275,125 +1121,150 @@ function bindDescToggles(root) {
   }
 }
 
-// ── Verify (live byte hashing + Ed25519 sig check in the browser) ─
-// Two-stage end-user proof:
-//   1. Stream the live R2 copy, hash via WebCrypto, compare to manifest sha256.
-//   2. Reconstruct the canonical witness message and verify the embedded
-//      Ed25519 sig against fleet0.pub.pem (fetched from /attest/).
-// Fetched bytes never leave the browser process.
-let _pubkeyPromise = null;
-function getPubkey() {
-  if (_pubkeyPromise) return _pubkeyPromise;
-  _pubkeyPromise = (async () => {
-    const r = await fetch("/attest/fleet0.pub.pem");
-    if (!r.ok) throw new Error("pubkey fetch HTTP " + r.status);
-    const pem = await r.text();
-    const b64 = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
-    const der = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    return crypto.subtle.importKey("spki", der, { name: "Ed25519" }, false, ["verify"]);
-  })().catch(e => { _pubkeyPromise = null; throw e; });
-  return _pubkeyPromise;
+// ── Prove (§5.1, popover variant) ──────────────────────────────
+// The proof engine lives in _shared/proof-tray.js: WebCrypto SHA-256
+// over the artifact bytes plus Ed25519 against the pinned fleet0 key.
+// Records carry their attestation inline in the manifest, so each
+// card synthesizes a witness-schema object and hands it to the
+// engine. Files beyond the engine's in-browser cap honestly report
+// "not fetched" while the signature is still checked.
+function manifestFromCard(card) {
+  const sha = card.getAttribute("data-sha") || "";
+  const bytes = parseInt(card.getAttribute("data-bytes") || "0", 10);
+  const artifact = { sha256: sha, name: card.getAttribute("data-name") || "record" };
+  if (bytes > 0) artifact.size_bytes = bytes;
+  return {
+    artifact,
+    witness: {
+      digest_sha256: sha,
+      pulse_id: parseInt(card.getAttribute("data-pulse") || "0", 10),
+      value_hex: card.getAttribute("data-value-hex") || "",
+      witnessed_at: parseInt(card.getAttribute("data-witnessed-at") || "0", 10),
+      sig: card.getAttribute("data-sig") || "",
+      pk_fp: card.getAttribute("data-pkfp") || "",
+      witness: "fleet0",
+    },
+  };
 }
 
-async function verifyRecord(card) {
-  const href = card.getAttribute("data-href");
-  const want = card.getAttribute("data-sha");
-  const btn = card.querySelector(".verify-btn");
-  if (!href || !want || !btn || btn.disabled) return;
-  btn.disabled = true;
-  btn.classList.remove("match", "partial", "fail");
-  btn.classList.add("checking");
-  btn.textContent = "fetching…";
-  let bytesOk = false;
-  let hex = "";
-  try {
-    const r = await fetch(href);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const total = parseInt(r.headers.get("Content-Length") || "0", 10);
-    const reader = r.body.getReader();
-    const chunks = [];
-    let n = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      n += value.length;
-      btn.textContent = total
-        ? `hashing ${(n/1048576).toFixed(1)}/${(total/1048576).toFixed(1)} MB…`
-        : `hashing ${(n/1048576).toFixed(1)} MB…`;
-    }
-    const buf = new Uint8Array(n);
-    let off = 0;
-    for (const c of chunks) { buf.set(c, off); off += c.length; }
-    const digest = await crypto.subtle.digest("SHA-256", buf);
-    hex = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
-    bytesOk = hex === want;
-  } catch (e) {
-    btn.classList.remove("checking");
-    btn.classList.add("fail");
-    btn.textContent = "✗ fetch failed";
-    btn.title = String(e.message || e);
-    btn.disabled = false;
-    return;
-  }
-
-  if (!bytesOk) {
-    btn.classList.remove("checking");
-    btn.classList.add("fail");
-    btn.textContent = "✗ bytes differ";
-    btn.title = `expected ${want}\ngot ${hex}`;
-    btn.disabled = false;
-    return;
-  }
-
-  // Stage 2: Ed25519 signature verification.
-  const pulse = card.getAttribute("data-pulse");
-  const valueHex = card.getAttribute("data-value-hex");
-  const witnessedAt = card.getAttribute("data-witnessed-at");
-  const sigB64 = card.getAttribute("data-sig");
-  if (!pulse || !valueHex || !witnessedAt || !sigB64) {
-    btn.classList.remove("checking");
-    btn.classList.add("partial");
-    btn.textContent = "✓ bytes · sig n/a";
-    btn.title = `bytes ok\nno embedded attestation`;
-    btn.disabled = false;
-    return;
-  }
-
-  btn.textContent = "checking sig…";
-  try {
-    const key = await getPubkey();
-    const msg = new TextEncoder().encode(`attest|v1|${hex}|${pulse}|${valueHex}|${witnessedAt}`);
-    const sig = Uint8Array.from(atob(sigB64), c => c.charCodeAt(0));
-    const ok = await crypto.subtle.verify({ name: "Ed25519" }, key, sig, msg);
-    btn.classList.remove("checking");
-    if (ok) {
-      btn.classList.add("match");
-      btn.textContent = "✓ bytes · ✓ sig";
-      btn.title = `bytes match manifest sha256\nfleet0 Ed25519 sig verified at pulse ${pulse}`;
-    } else {
-      btn.classList.add("partial");
-      btn.textContent = "✓ bytes · ✗ sig";
-      btn.title = `bytes match\nbut Ed25519 signature did not verify`;
-    }
-  } catch (e) {
-    btn.classList.remove("checking");
-    btn.classList.add("partial");
-    btn.textContent = "✓ bytes · sig err";
-    btn.title = `bytes ok\nsig check failed: ${e.message || e}`;
-  } finally {
-    btn.disabled = false;
-  }
+const POPOVER_OK = typeof HTMLElement !== "undefined" && "showPopover" in HTMLElement.prototype;
+let _pop = null;
+function getPop() {
+  if (_pop) return _pop;
+  _pop = document.createElement("div");
+  _pop.className = "proof-pop";
+  _pop.setAttribute("popover", "auto");
+  document.body.appendChild(_pop);
+  return _pop;
 }
 
-function bindVerifyButtons(root) {
-  for (const btn of (root || document).querySelectorAll(".verify-btn")) {
+function popLine(status, html) {
+  return `<span class="pop-line" data-status="${status}">${html}</span>`;
+}
+
+// Condense a ProofResult into three honest lines.
+function proofLines(res) {
+  const lines = [];
+  const hs = (res.steps || []).find((s) => s.id === "HASH") || {};
+  if (res.outcome === "fail") {
+    lines.push(popLine("fail", `✗ proof failed${res.failedAt ? " at " + escapeHtml(res.failedAt) : ""} — ${escapeHtml(res.note || "")}`));
+    lines.push(popLine("info", `<a href="/pursue/manifest.jsonl" target="_blank" rel="noopener">manifest</a> · <a href="#" data-action="copy-receipt">copy receipt</a>`));
+    return lines;
+  }
+  if (res.hashed) {
+    lines.push(popLine("ok", `<span class="ok-mark">✓</span> bytes fetched + hashed here — sha256 matches (${escapeHtml(fmtBytes(res.bytes))})`));
+  } else {
+    lines.push(popLine("info", `<span title="${escapeHtml(hs.note || "")}">bytes ${escapeHtml(hs.res || "not fetched")} — sig checked over the attested digest</span>`));
+  }
+  if (res.outcome === "ok") {
+    lines.push(popLine("ok", `<span class="ok-mark">✓</span> Ed25519 sig · ${escapeHtml(res.witnessName || "fleet0")} key ${escapeHtml(res.pkFp || "")}`));
+    lines.push(popLine("ok", `<span class="ok-mark">✓</span> anchored @ p#${escapeHtml(String(res.pulse || "?"))} · <a href="/pursue/manifest.jsonl" target="_blank" rel="noopener">manifest</a> · <a href="#" data-action="copy-receipt">copy receipt</a>`));
+  } else {
+    lines.push(popLine("info", `unverified — ${escapeHtml(res.note || "could not verify in this browser")}`));
+    lines.push(popLine("info", `<a href="/attest/verify.sh" target="_blank" rel="noopener">verify out-of-band</a> · <a href="#" data-action="copy-receipt">copy receipt</a>`));
+  }
+  return lines;
+}
+
+function showProof(btn, res) {
+  const tone = res.outcome === "ok" ? "ok" : res.outcome === "fail" ? "fail" : "info";
+  const html = proofLines(res).join("");
+  let pop;
+  if (POPOVER_OK) {
+    pop = getPop();
+    pop.classList.remove("proof-pop-inline");
+  } else {
+    // No Popover API: render the same card inline under the record.
+    const body = btn.closest(".body") || btn.parentElement;
+    pop = body.querySelector(".proof-pop-inline");
+    if (!pop) {
+      pop = document.createElement("div");
+      pop.className = "proof-pop proof-pop-inline";
+      body.appendChild(pop);
+    }
+  }
+  pop.innerHTML = html;
+  pop.dataset.outcome = tone;
+  const cp = pop.querySelector('[data-action="copy-receipt"]');
+  if (cp) cp.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigator.clipboard?.writeText(res.receipt || "");
+    flashToast("receipt copied");
+  });
+  if (!POPOVER_OK) return;
+  try { pop.hidePopover(); } catch (_) { /* not open */ }
+  pop.showPopover();
+  const r = btn.getBoundingClientRect();
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  const x = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - pw - 8));
+  let y = r.bottom + 8;
+  if (y + ph > window.innerHeight - 8) y = Math.max(8, r.top - ph - 8);
+  pop.style.left = x + "px";
+  pop.style.top = y + "px";
+  btn.setAttribute("aria-expanded", "true");
+  pop.addEventListener("toggle", function onToggle(e) {
+    if (e.newState === "closed") {
+      btn.setAttribute("aria-expanded", "false");
+      pop.removeEventListener("toggle", onToggle);
+    }
+  });
+}
+
+async function runRecordProof(btn) {
+  const card = btn.closest(".record");
+  if (!card || btn.dataset.running) return;
+  btn.dataset.running = "1";
+  const val = btn.querySelector(".prove-val") || btn;
+  const idle = val.textContent;
+  val.textContent = "proving…";
+  whenProof(async (P) => {
+    let res;
+    try {
+      res = await P.verifyManifestObject(manifestFromCard(card), {
+        artifactUrl: card.getAttribute("data-href") || undefined,
+        onStep: (s) => {
+          if (s.status !== "run") return;
+          if (s.id === "HASH") val.textContent = "hashing…";
+          if (s.id === "SIG") val.textContent = "checking sig…";
+        },
+      });
+    } catch (e) {
+      res = { outcome: "fail", failedAt: null, note: String((e && e.message) || e), steps: [], receipt: "" };
+    }
+    delete btn.dataset.running;
+    val.textContent = idle;
+    btn.dataset.proved = res.outcome;   // earned border via proof.css
+    showProof(btn, res);
+  });
+}
+
+function bindProveButtons(root) {
+  for (const btn of (root || document).querySelectorAll('button.prove[data-action="prove"]')) {
     if (btn.dataset.bound) continue;
     btn.dataset.bound = "1";
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      const card = btn.closest(".record");
-      if (card) verifyRecord(card);
+      runRecordProof(btn);
     });
   }
 }
@@ -1444,16 +1315,11 @@ function bindCaseLinks(root) {
 }
 
 function flashToast(msg) {
+  // #toast is styled in the page stylesheet; JS only owns text + opacity.
   let t = document.getElementById("toast");
   if (!t) {
     t = document.createElement("div");
     t.id = "toast";
-    t.style.cssText = "position:fixed;left:50%;bottom:32px;transform:translateX(-50%);"
-      + "background:hsl(var(--primary)/0.18);color:hsl(var(--primary));"
-      + "border:1px solid hsl(var(--primary)/0.5);border-radius:999px;"
-      + "padding:0.5rem 1.1rem;font-family:'IBM Plex Mono',ui-monospace,monospace;"
-      + "font-size:0.78rem;letter-spacing:0.04em;z-index:200;pointer-events:none;"
-      + "transition:opacity 0.2s ease;opacity:0;";
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -1466,7 +1332,17 @@ function applyHighlight() {
   for (const r of document.querySelectorAll(".record.highlight")) r.classList.remove("highlight");
   const m = (location.hash || "").match(/^#case-(.+)$/);
   if (!m) return;
-  const card = document.getElementById("case-" + m[1]);
+  let card = document.getElementById("case-" + m[1]);
+  if (!card && STATE.records.length) {
+    // Deep link points below the current page — expand fully and re-render
+    // once (keepLimit avoids resetting back to the first page).
+    const limit = STATE._visibleLimit || PAGE_SIZE;
+    if (limit !== Infinity) {
+      STATE._visibleLimit = Infinity;
+      renderRecords(true);
+      return; // renderRecords calls applyHighlight again
+    }
+  }
   if (card) {
     card.classList.add("highlight");
     card.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1645,7 +1521,7 @@ function openLocation(locNames) {
     ${recs.map(r => recordCardHtml(r, { expandVideo: true })).join("")}
   `;
   document.getElementById("modal").classList.add("open");
-  bindVerifyButtons(body);
+  bindProveButtons(body);
   bindDescToggles(body);
 }
 
@@ -1835,12 +1711,13 @@ function buildReleaseChips() {
 }
 
 // ── Init ───────────────────────────────────────────────────────
-(async function init() {
-  bindTimeline();
-  bindControls();
-  bindViewTabs();
-  bindModal();
-  window.addEventListener("hashchange", applyHighlight);
+// The manifest is ~half a megabyte of JSONL.  We do NOT fetch it on
+// page paint: the archive loads when it scrolls near the viewport, or
+// when the page goes idle, or immediately for a #case- deep link.
+// Save-Data users get an explicit "load the archive" button instead.
+async function init() {
+  if (STATE._initStarted) return;
+  STATE._initStarted = true;
   const [{ records, src }, watchdog] = await Promise.all([
     loadManifest(),
     loadWatchdog(),
@@ -1855,9 +1732,76 @@ function buildReleaseChips() {
   buildReleaseChips();
   drawTimeline();
   renderRecords();
+}
+
+(function boot() {
+  bindTimeline();
+  bindControls();
+  bindViewTabs();
+  bindModal();
+  window.addEventListener("hashchange", applyHighlight);
+  const more = document.getElementById("records-more");
+  if (more) more.addEventListener("click", () => {
+    STATE._visibleLimit = (STATE._visibleLimit || PAGE_SIZE) + PAGE_SIZE;
+    renderRecords(true);
+  });
+
+  // Deep link → the reader asked for a specific record; load now.
+  if (/^#case-/.test(location.hash || "")) { init(); return; }
+
+  const saveData = navigator.connection && navigator.connection.saveData === true;
+  if (saveData) {
+    // Honest about cost: the index alone is a sizeable download.
+    const empty = document.getElementById("empty-state");
+    if (empty) {
+      empty.style.display = "block";
+      empty.innerHTML = `<div class="head">Archive not loaded</div>
+        <p>You asked for reduced data, so the record index was not fetched automatically.</p>
+        <p style="margin-top:0.6rem;"><button class="records-more" id="load-archive" type="button">load the archive</button></p>`;
+      const b = document.getElementById("load-archive");
+      if (b) b.addEventListener("click", () => { empty.style.display = "none"; init(); });
+    }
+    return;
+  }
+
+  // Lazy start: whichever fires first wins (init() is idempotent).
+  const target = document.getElementById("archive");
+  if (target && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) { io.disconnect(); init(); }
+    }, { rootMargin: "800px" });
+    io.observe(target);
+  }
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(() => init(), { timeout: 4000 });
+  } else {
+    setTimeout(() => init(), 1500);
+  }
 })();
 </script>
 
-<script src="_shared/site.js?v=34a4421d"></script>
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* ── /aliens page wiring: footer self-check only (§5.4).
+   Everything here is additive; the page is complete without it. */
+
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+
+function whenProofMod(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+whenProofMod((P) => {
+  if (SAVE) return;            // §3.5 — reduced data: no automatic fetches
+  const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+  if (strip) P.mountSelfCheck(strip);
+});
+</script>
 </body>
 </html>

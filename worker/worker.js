@@ -1679,6 +1679,35 @@ async function handleSite(request, env, url) {
     });
   }
 
+  // Signed site-deploy manifests (spec §5.4) — written to KV by deploy.sh
+  // (attest/site/<n>.json + attest/site/latest.json: file list + sha256s +
+  // pulse anchor + Ed25519 signature; pubkey at /attest/site_deploy.pub.pem).
+  // Public read, no-store so latest.json is never edge-stale — the /replay
+  // ledger and per-page self-checks poll it. (/replay itself needs no route
+  // here: replay.html in KV is served by the extension-less fallback below,
+  // same as every other page.) Explicit handler beats the generic KV
+  // fallthrough, which would apply default caching.
+  const siteManifestMatch = pathname.match(/^\/attest\/site\/(latest|[0-9]{1,9})\.json$/);
+  if (siteManifestMatch && method === "GET") {
+    const body = await env.LEDATIC_KV.get(`attest/site/${siteManifestMatch[1]}.json`);
+    if (!body) {
+      return new Response('{"error":"no site deploy manifest"}', {
+        status: 404,
+        headers: sec({
+          "content-type": "application/json",
+          "access-control-allow-origin": "*",
+        }),
+      });
+    }
+    return new Response(body, {
+      headers: sec({
+        "content-type": "application/json",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "*",
+      }),
+    });
+  }
+
   // Attestation surfaces — releases, builds, selfhost.
   // Authoring path = R2.  Public reads, BEACON_TOKEN-gated writes.
   // Each attestation.json was signed by fleet0's Ed25519 witness key,

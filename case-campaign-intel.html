@@ -20,9 +20,10 @@
 <!-- og:end -->
 <title>Notes from a campaign-intelligence POC — Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/case-campaign-intel">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
 <style>
   .case {
@@ -102,7 +103,7 @@
   }
 </style>
 </head>
-<body data-shader="_shared/shaders/grid.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -113,25 +114,25 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
+  <pulse-clock data-endpoint="/entropy/pulse"></pulse-clock>
   <a class="nav-cta" href="mailto:z3m0g@icloud.com">Get in touch</a>
 </nav>
 
 <section class="hero" style="min-height: 50vh;">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
-  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Notes &mdash; Campaign intelligence POC</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">
+  <div class="hero-content fade-up" style="padding-top: 9rem; padding-bottom: 3rem;">
+    <span class="eyebrow">Notes &mdash; Campaign intelligence POC</span>
+    <h1 class="hero-title">
       What we <span class="accent">shipped</span>.
     </h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+    <p class="hero-sub">
       A 30-day POC, closed 2026-05-12.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+    <p class="hero-desc">
       An honest write-up of a campaign-intelligence engagement that ran
       April 13 &ndash; May 12, 2026. Apr 13 kickoff, Mon/Wed/Fri briefs,
       19-page handoff on day 30. Here's the shape, what we shipped, and
@@ -280,7 +281,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span>Rail <data class="fig" data-src="repo:version">release</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">tests</data> &middot; <data class="fig" data-src="repo:rail_native" data-fmt="mb">binary</data></span>
     </div>
   </div>
 </footer>

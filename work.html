@@ -20,40 +20,36 @@
 <!-- og:end -->
 <title>Work — Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/work">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
 <style>
   .offering {
-    border: 1px solid hsl(var(--border));
-    border-radius: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
     padding: 2rem;
-    background: hsl(var(--muted) / 0.25);
+    background: var(--ink-1);
     position: relative;
-    transition: border-color 0.2s, transform 0.2s;
+    transition: border-color 0.2s;
     height: 100%;
     display: flex;
     flex-direction: column;
   }
-  .offering:hover { border-color: hsl(var(--primary) / 0.6); transform: translateY(-2px); }
-  .offering .led-tl, .offering .led-br {
-    position: absolute; width: 6px; height: 6px; border-radius: 50%;
-    box-shadow: 0 0 8px hsl(var(--primary));
-  }
-  .offering .led-tl { top: 12px; left: 12px; background: hsl(var(--primary)); }
-  .offering .led-br { bottom: 12px; right: 12px; background: hsl(var(--primary) / 0.35); }
+  .offering:hover { border-color: var(--ph-700); }
   .offering h3 { font-size: 1.4rem; margin-top: 0.5rem; }
+  .offering > p { color: var(--tx-lo); font-size: 0.95rem; line-height: 1.65; }
   .offering .commit {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-family: var(--font-body);
     font-size: 0.78rem;
-    color: hsl(var(--primary));
+    color: var(--ph-600);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-top: 1.25rem;
     margin-bottom: 0.4rem;
   }
-  .offering ul { margin-top: 0.5rem; margin-left: 1.1rem; color: hsl(var(--muted-foreground)); font-size: 0.92rem; line-height: 1.65; }
+  .offering ul { margin-top: 0.5rem; margin-left: 1.1rem; color: var(--tx-lo); font-size: 0.92rem; line-height: 1.65; }
   .offering li { margin-bottom: 0.3rem; }
 
   .pitch-row {
@@ -67,15 +63,15 @@
   }
 
   .conv-block {
-    border: 1px solid hsl(var(--border));
-    border-radius: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
     padding: 2.5rem 2rem;
     text-align: center;
-    background: hsl(var(--muted) / 0.3);
+    background: var(--ink-1);
     margin-top: 3rem;
   }
   .conv-block h2 { margin-bottom: 0.5rem; }
-  .conv-block p  { color: hsl(var(--muted-foreground)); max-width: 36rem; margin: 0 auto 1.5rem; }
+  .conv-block p  { color: var(--tx-lo); max-width: 36rem; margin: 0 auto 1.5rem; }
   .conv-block .conv-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
   .principle-row {
@@ -89,21 +85,21 @@
   }
   .principle {
     padding: 1.25rem;
-    border-left: 2px solid hsl(var(--primary));
-    background: hsl(var(--muted) / 0.2);
+    border-left: 2px solid var(--ph-600);
+    background: var(--ink-1);
   }
   .principle h4 {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-family: var(--font-body);
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: hsl(var(--primary));
+    color: var(--ph-600);
     margin-bottom: 0.5rem;
   }
-  .principle p { color: hsl(var(--muted-foreground)); font-size: 0.92rem; line-height: 1.65; margin: 0; }
+  .principle p { color: var(--tx-lo); font-size: 0.92rem; line-height: 1.65; margin: 0; }
 </style>
 </head>
-<body data-shader="_shared/shaders/grid.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -114,25 +110,25 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
+  <pulse-clock data-endpoint="/entropy/pulse"></pulse-clock>
   <a class="nav-cta" href="mailto:z3m0g@icloud.com">Get in touch</a>
 </nav>
 
 <section class="hero" style="min-height: 60vh;">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
-  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 4rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Work with us</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">
+  <div class="hero-content fade-up" style="padding-top: 9rem; padding-bottom: 4rem;">
+    <span class="eyebrow">Work with us</span>
+    <h1 class="hero-title">
       Just a <span class="accent">sprinkle</span> of AI.
     </h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+    <p class="hero-sub">
       For the work you're already doing.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+    <p class="hero-desc">
       We help small businesses, local shops, and one-person operations
       sprinkle a little AI on the work they already do &mdash; answering
       common questions, tagging inventory, sorting receipts, drafting
@@ -140,11 +136,11 @@
       welcome. We're not trying to dominate your industry. We're trying to
       save you a few hours a week.
     </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+    <div class="cta-row">
       <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Hi">Say hi</a>
       <a class="btn btn-secondary" href="case-campaign-intel.html">Notes from a closed POC</a>
     </div>
-    <p class="trust fade-up" style="animation-delay: 0.85s">
+    <p class="trust">
       One-operator shop &middot; Detroit, MI &middot; Small jobs welcome
     </p>
   </div>
@@ -164,11 +160,9 @@
     <div class="pitch-row">
 
       <article class="offering reveal">
-        <span class="led-tl"></span>
-        <span class="led-br"></span>
         <span class="eyebrow">Common ask 01</span>
         <h3>A little workflow help</h3>
-        <p style="color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65;">
+        <p>
           One small AI tool for one repeating task. The kind of thing where you
           mutter "there has to be a better way to do this" once a week. We
           build a tiny, durable script that fits your existing workflow &mdash;
@@ -186,11 +180,9 @@
       </article>
 
       <article class="offering reveal">
-        <span class="led-tl"></span>
-        <span class="led-br"></span>
         <span class="eyebrow">Common ask 02</span>
         <h3>Watch one thing</h3>
-        <p style="color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65;">
+        <p>
           Quietly keep an eye on something that matters to you. One competitor
           down the street, a regulator's filings, a city zoning board, a
           supplier's price list, someone else's ad activity in your category.
@@ -208,15 +200,14 @@
       </article>
 
       <article class="offering reveal">
-        <span class="led-tl"></span>
-        <span class="led-br"></span>
         <span class="eyebrow">Common ask 03</span>
         <h3>A weekly intelligence brief</h3>
-        <p style="color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65;">
+        <p>
           A structured weekly read on what's happening in your line of work
           &mdash; useful for shops that want to feel less behind without
-          paying for an analyst. We ran one of these as a paid 30-day POC
-          (closed May 2026); the shape we landed on is in the notes link below.
+          paying for an analyst. We ran one of these as a paid 30-day
+          proof-of-concept &mdash; closed 2026-05-12, paid in full. The
+          shape we landed on is in the notes link below.
         </p>
         <div class="commit">For example</div>
         <ul>
@@ -229,7 +220,7 @@
 
     </div>
 
-    <p class="reveal" style="margin-top: 2.5rem; max-width: 48rem; color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.7;">
+    <p class="reveal" style="margin-top: 2.5rem; max-width: 48rem; color: var(--tx-lo); font-size: 0.95rem; line-height: 1.7;">
       None of these is the right shape? Tell us what would actually help and
       we'll figure it out together. If we're not the right fit, we'll say so
       &mdash; we'd rather send you somewhere better than waste your time.
@@ -333,7 +324,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span>Rail <data class="fig" data-src="repo:version">release</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">tests</data> &middot; <data class="fig" data-src="repo:rail_native" data-fmt="mb">binary</data></span>
     </div>
   </div>
 </footer>

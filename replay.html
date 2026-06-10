@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="A ledger of signed site deploys. Every deploy of ledatic.org leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/replay">
+<meta property="og:title" content="Replay — Ledatic">
+<meta property="og:description" content="A ledger of signed site deploys. Every deploy of ledatic.org leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Replay — Ledatic">
+<meta name="twitter:description" content="A ledger of signed site deploys. Every deploy of ledatic.org leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Replay — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/replay">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests. -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<style>
+/* ── /replay page styles — consumes tokens only ── */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* No shader (§6 /replay): the ledger is the picture. */
+.hero.compact { min-height: 46vh; }
+.hero.compact .hero-content { padding-top: 7rem; padding-bottom: 2rem; }
+.hero-content a { pointer-events: auto; }
+
+/* ledger status chip — same grammar as every honest state on the site */
+.ledger-meta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin: var(--sp-4) 0 var(--sp-6);
+  font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-lo);
+}
+.ledger-meta .chip {
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 2px 9px; color: var(--tx-lo); background: var(--ink-2);
+  letter-spacing: 0.03em;
+}
+.ledger-meta .chip[data-state="replay"] { color: var(--st-replay); border-color: var(--st-replay); }
+.ledger-meta .chip[data-state="paused"] { color: var(--st-paused); border-color: var(--st-paused); }
+
+/* ── deploy ledger rows ── */
+.deploys { list-style: none; margin: 0; padding: 0; }
+.deploys > li {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: var(--sp-2) var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-lo);
+}
+.deploys .dn {
+  font-family: var(--font-display); font-weight: 600;
+  color: var(--ph-600); min-width: 4.5rem;
+}
+.deploys .anchor { color: var(--tx-dim); }
+.deploys .files-ct { color: var(--tx-lo); }
+.deploys .digest { color: var(--tx-dim); word-break: break-all; }
+.deploys .raw { margin-left: auto; }
+.deploys time-pulse { font-style: normal; }
+
+.ledger-more {
+  margin: var(--sp-4) auto 0; display: block;
+  font-family: var(--font-body); font-size: var(--t-data);
+  background: var(--ink-2); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  padding: 0.5rem 1.4rem; cursor: pointer;
+}
+.ledger-more:hover { color: var(--tx-hi); border-color: var(--ph-700); }
+
+/* honest empty / not-loaded state */
+.empty-state {
+  border: 1px dashed var(--line); border-radius: var(--r-2);
+  padding: var(--sp-8); text-align: center;
+  color: var(--tx-dim); font-family: var(--font-body); font-size: var(--t-0);
+}
+.empty-state .head {
+  color: var(--tx-lo); font-family: var(--font-display);
+  font-size: var(--t-1); margin-bottom: var(--sp-2);
+}
+.empty-state a { color: var(--ph-600); }
+.empty-state .ledger-more { display: inline-block; margin-top: var(--sp-3); }
+.noscript-note {
+  border-left: 2px solid var(--st-paused);
+  padding: var(--sp-2) var(--sp-4); margin-top: var(--sp-4);
+  font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-lo);
+  text-align: left;
+}
+
+/* ── diff view ── */
+.diff-controls {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin: var(--sp-4) 0;
+  font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-lo);
+}
+.diff-controls select {
+  background: var(--ink-2); color: var(--tx-hi);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  font-family: var(--font-body); font-size: var(--t-data);
+  padding: 0.3rem 0.5rem;
+}
+.diff-controls select:disabled { color: var(--tx-dim); }
+.diff-controls button {
+  background: var(--ink-2); color: var(--tx-lo);
+  border: 1px solid var(--line); border-radius: var(--r-1);
+  font-family: var(--font-body); font-size: var(--t-data);
+  padding: 0.3rem 0.9rem; cursor: pointer;
+}
+.diff-controls button:hover:not(:disabled) { color: var(--tx-hi); border-color: var(--ph-700); }
+.diff-controls button:disabled { color: var(--tx-dim); cursor: default; }
+
+/* recorded data animating is cyan, never green — .panel-replay tape ruling
+   comes from site.css; this only sets the inner layout. */
+.diff-out {
+  padding: var(--sp-4) var(--sp-6);
+  font-family: var(--font-body); font-size: var(--t-data);
+  color: var(--tx-lo); line-height: 1.8;
+}
+.diff-out .sigline { color: var(--tx-dim); margin-bottom: var(--sp-3); }
+.diff-out .sigline .ok   { color: var(--st-replay); }
+.diff-out .sigline .bad  { color: var(--st-fail); }
+.diff-out h4 {
+  font-family: var(--font-display); font-size: var(--t-data);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--tx-lo); margin: var(--sp-3) 0 var(--sp-1);
+}
+.diff-out ul { list-style: none; margin: 0; padding: 0; }
+.diff-out li { padding: 1px 0; word-break: break-all; }
+.diff-out .k { color: var(--tx-hi); }
+.diff-out .sha { color: var(--tx-dim); }
+.diff-out .added   .k::before { content: "+ "; color: var(--st-replay); }
+.diff-out .removed .k::before { content: "− "; color: var(--st-paused); }
+.diff-out .changed .k::before { content: "Δ "; color: var(--st-replay); }
+.diff-out .same-note { color: var(--tx-dim); font-style: italic; }
+
+@media (max-width: 600px) {
+  .deploys > li { gap: var(--sp-1) var(--sp-3); }
+  .deploys .raw { margin-left: 0; flex-basis: 100%; }
+}
+</style>
+<script type="speculationrules">
+{
+  "prerender": [
+    { "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+  ]
+}
+</script>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="aliens.html">Aliens</a>
+    <a href="system.html">System</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="https://github.com/Ledatic-Empire/ledatic-site" target="_blank" rel="noopener">Source</a>
+  </div>
+</nav>
+
+<section class="hero compact">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Replay</span>
+    <h1 class="hero-title fade-up">What this site claimed, when.</h1>
+    <p class="hero-sub fade-up">
+      Every deploy of ledatic.org leaves a signed manifest.
+    </p>
+    <p class="hero-desc fade-up">
+      A deploy manifest lists the SHA-256 of every file served, is anchored to
+      a beacon pulse, and is Ed25519-signed with a dedicated deploy key. This
+      page replays the ledger: each entry proves itself in your browser, and
+      any two deploys can be diffed &mdash; what changed, what appeared, what
+      disappeared &mdash; with the proofs intact.
+    </p>
+  </div>
+</section>
+
+<main>
+
+<section class="section" id="ledger">
+  <div class="wrap">
+    <span class="eyebrow reveal">Deploy ledger</span>
+    <h2 class="reveal">The site, signed.</h2>
+    <p class="body reveal">
+      Manifests are served from <a href="/attest/site/latest.json">/attest/site/latest.json</a>
+      and numbered <code>/attest/site/&lt;n&gt;.json</code>. Press
+      <span aria-hidden="true">⌁</span> prove on any entry: your browser
+      recomputes the file-list digest, checks the pinned deploy key, verifies
+      the Ed25519 signature, and confirms the pulse anchor sits inside the
+      confirmed chain. Nothing is taken on faith from this page.
+    </p>
+
+    <div class="ledger-meta">
+      <span class="chip" id="ledger-state" data-state="unknown" aria-live="polite" title="ledger status — a deploy ledger is a recording, never live">unknown</span>
+      <span id="ledger-count"></span>
+    </div>
+
+    <ul class="deploys" id="deploys" hidden></ul>
+    <button class="ledger-more" id="ledger-more" type="button" hidden>show earlier deploys</button>
+
+    <div class="empty-state" id="ledger-empty">
+      <div class="head">Ledger not loaded</div>
+      <p>The ledger is fetched and verified in your browser &mdash; nothing here is pre-rendered as true.</p>
+      <p style="margin-top:0.6rem;">The raw endpoint is <a href="/attest/site/latest.json">/attest/site/latest.json</a>.</p>
+      <noscript>
+        <div class="noscript-note">
+          JavaScript is off, so this page cannot fetch or verify anything for
+          you. The manifest endpoint above is the unstyled truth &mdash; a 404
+          there means no deploy has been signed yet.
+        </div>
+      </noscript>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="diff">
+  <div class="wrap">
+    <span class="eyebrow reveal">Diff</span>
+    <h2 class="reveal">Between any two deploys.</h2>
+    <p class="body reveal">
+      Pick two manifests and the diff is computed from their signed file
+      lists: keys that appeared, keys that vanished, keys whose bytes changed.
+      Both manifests are re-verified before the diff renders &mdash; a diff
+      between unverified claims would just be two rumors compared.
+    </p>
+
+    <div class="diff-controls">
+      <label for="diff-from">from</label>
+      <select id="diff-from" disabled><option>—</option></select>
+      <label for="diff-to">to</label>
+      <select id="diff-to" disabled><option>—</option></select>
+      <button id="diff-run" type="button" disabled>diff</button>
+      <span id="diff-note" class="same-note"></span>
+    </div>
+
+    <div class="panel-replay" id="diff-panel" hidden>
+      <div class="diff-out" id="diff-out"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
+          <li><a href="replay.html">Replay</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* ── /replay page wiring ─────────────────────────────────────────
+   v1 (§6 /replay): a ledger of signed deploy manifests + a diff view
+   between any two deploys. The proof engine is the shared module —
+   this script only fetches, renders, and asks it to verify. */
+
+const BASE = '/attest/site/';
+const ROW_BATCH = 25;            // manifests fetched per "show earlier"
+
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const els = {
+  state:  document.getElementById('ledger-state'),
+  count:  document.getElementById('ledger-count'),
+  list:   document.getElementById('deploys'),
+  more:   document.getElementById('ledger-more'),
+  empty:  document.getElementById('ledger-empty'),
+  from:   document.getElementById('diff-from'),
+  to:     document.getElementById('diff-to'),
+  run:    document.getElementById('diff-run'),
+  note:   document.getElementById('diff-note'),
+  panel:  document.getElementById('diff-panel'),
+  out:    document.getElementById('diff-out'),
+};
+
+const manifests = new Map();     // n → manifest object
+let latestN = 0;                 // highest deploy number seen
+let oldestLoaded = 0;            // lowest n fetched so far
+
+async function fetchManifest(n) {
+  if (manifests.has(n)) return manifests.get(n);
+  try {
+    const res = await fetch(`${BASE}${n}.json`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const m = await res.json();
+    manifests.set(n, m);
+    return m;
+  } catch { return null; }
+}
+
+function rowHtml(m) {
+  const iso = m.deployed_at ? ` data-iso="${esc(m.deployed_at)}"` : '';
+  const anchor = m.pulse_id
+    ? `<time-pulse class="anchor" data-pulse="${esc(m.pulse_id)}"${iso}>@ p#${esc(m.pulse_id)}</time-pulse>`
+    : `<span class="anchor">no pulse anchor</span>`;
+  const ct = (m.files || []).length;
+  const dg = String(m.files_digest || '').slice(0, 16);
+  return `<li>
+    <span class="dn">#${esc(m.n)}</span>
+    ${anchor}
+    <span class="files-ct">${ct} file${ct === 1 ? '' : 's'}</span>
+    ${dg ? `<span class="digest" title="${esc(m.files_digest)}">digest ${esc(dg)}…</span>` : ''}
+    <button class="prove" type="button" data-manifest="${esc(BASE + m.n + '.json')}" data-proof="popover" aria-expanded="false"><span class="prove-val">prove</span><span class="affix" aria-hidden="true">⌁</span></button>
+    <a class="raw" href="${esc(BASE + m.n + '.json')}">manifest →</a>
+  </li>`;
+}
+
+function refreshDiffControls(P) {
+  const ns = [...manifests.keys()].sort((a, b) => b - a);
+  const opts = ns.map((n) => `<option value="${n}">#${n}</option>`).join('');
+  if (ns.length >= 2) {
+    els.from.innerHTML = opts; els.to.innerHTML = opts;
+    els.from.value = String(ns[1]);   // older
+    els.to.value = String(ns[0]);     // newer
+    els.from.disabled = false; els.to.disabled = false; els.run.disabled = false;
+    els.note.textContent = '';
+  } else {
+    els.note.textContent = ns.length === 1
+      ? 'one deploy on the ledger — a diff needs two'
+      : 'nothing to diff yet';
+  }
+  if (!els.run._wired) {
+    els.run._wired = true;
+    els.run.addEventListener('click', () => runDiff(P));
+  }
+}
+
+async function runDiff(P) {
+  const a = Number(els.from.value), b = Number(els.to.value);
+  els.panel.hidden = false;
+  els.out.innerHTML = '<span class="same-note">⌁ verifying both manifests…</span>';
+  const [ma, mb] = await Promise.all([fetchManifest(a), fetchManifest(b)]);
+  if (!ma || !mb) {
+    els.out.innerHTML = '<span class="same-note">could not fetch one of the manifests — the raw endpoints above are the truth</span>';
+    return;
+  }
+  // Verify before diffing: an unverified manifest proves nothing.
+  const [ra, rb] = await Promise.all([
+    P.verifyManifestObject(ma, { manifestUrl: `${BASE}${a}.json` }),
+    P.verifyManifestObject(mb, { manifestUrl: `${BASE}${b}.json` }),
+  ]);
+  const sig = (n, r) => r.outcome === 'ok'
+    ? `deploy #${n} <span class="ok">sig ✓ @ p#${esc(P.fmtPulse(r.pulse))}</span>`
+    : r.outcome === 'fail'
+      ? `deploy #${n} <span class="bad">proof FAILED at ${esc(r.failedAt || '?')}</span>`
+      : `deploy #${n} <span>could not verify here — ${esc(r.note || '')}</span>`;
+
+  const fa = new Map((ma.files || []).map((f) => [f.key, f.sha256]));
+  const fb = new Map((mb.files || []).map((f) => [f.key, f.sha256]));
+  const added = [], removed = [], changed = [];
+  for (const [k, sha] of fb) {
+    if (!fa.has(k)) added.push([k, sha]);
+    else if (fa.get(k) !== sha) changed.push([k, fa.get(k), sha]);
+  }
+  for (const [k, sha] of fa) if (!fb.has(k)) removed.push([k, sha]);
+  const cmp = (x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0);
+  added.sort(cmp); removed.sort(cmp); changed.sort(cmp);
+
+  let html = `<div class="sigline">${sig(a, ra)} &middot; ${sig(b, rb)}</div>`;
+  if (ra.outcome === 'fail' || rb.outcome === 'fail') {
+    html += `<p class="same-note">a manifest failed verification — diff withheld; compare the raw endpoints out-of-band</p>`;
+    els.out.innerHTML = html;
+    return;
+  }
+  const section = (title, items, cls, fmt) => items.length
+    ? `<h4>${title} (${items.length})</h4><ul class="${cls}">` +
+      items.map(fmt).join('') + `</ul>`
+    : '';
+  html += section('added', added, 'added',
+    ([k, s]) => `<li><span class="k">${esc(k)}</span> <span class="sha">${esc(s.slice(0, 12))}…</span></li>`);
+  html += section('removed', removed, 'removed',
+    ([k, s]) => `<li><span class="k">${esc(k)}</span> <span class="sha">${esc(s.slice(0, 12))}…</span></li>`);
+  html += section('changed', changed, 'changed',
+    ([k, s0, s1]) => `<li><span class="k">${esc(k)}</span> <span class="sha">${esc(s0.slice(0, 12))}… → ${esc(s1.slice(0, 12))}…</span></li>`);
+  if (!added.length && !removed.length && !changed.length) {
+    html += `<p class="same-note">no file-level difference — deploy #${esc(b)} served the same bytes as deploy #${esc(a)}</p>`;
+  }
+  els.out.innerHTML = html;
+}
+
+async function loadBatch(P, fromN) {
+  const stop = Math.max(1, fromN - ROW_BATCH + 1);
+  const ns = [];
+  for (let n = fromN; n >= stop; n--) ns.push(n);
+  const got = (await Promise.all(ns.map(fetchManifest))).filter(Boolean);
+  oldestLoaded = stop;
+  els.list.insertAdjacentHTML('beforeend', got.map(rowHtml).join(''));
+  els.list.hidden = false;
+  P.scan(els.list);
+  els.more.hidden = oldestLoaded <= 1;
+  els.count.textContent = `${manifests.size} of ${latestN} deploy${latestN === 1 ? '' : 's'} loaded`;
+  refreshDiffControls(P);
+}
+
+async function load(P) {
+  const s = P.sentinel(els.state);
+  let latest = null, status = 0;
+  try {
+    const res = await fetch(`${BASE}latest.json`, { cache: 'no-store' });
+    status = res.status;
+    if (res.ok) latest = await res.json();
+  } catch { status = -1; }
+
+  if (!latest) {
+    if (status === 404) {
+      // The honest day-one state: the endpoint exists, the chain does not.
+      s.set('paused', { note: 'awaiting first signed deploy' });
+      els.empty.innerHTML = `<div class="head">Empty ledger</div>
+        <p>no signed deploys yet &mdash; the chain starts with the next deploy</p>
+        <p style="margin-top:0.6rem;">When a deploy is signed, it appears here as entry #1 with its pulse anchor and proof.</p>`;
+    } else {
+      // not a failed proof — just an unreachable endpoint; amber, not red
+      s.set('paused', { note: 'ledger endpoint unreachable' });
+      els.empty.innerHTML = `<div class="head">Ledger unreachable</div>
+        <p>Could not fetch <a href="/attest/site/latest.json">/attest/site/latest.json</a> (${status === -1 ? 'network error' : 'HTTP ' + esc(status)}).</p>`;
+    }
+    return;
+  }
+
+  latestN = Number(latest.n) || 0;
+  if (latestN <= 0) {
+    // a manifest without a deploy number can vouch for nothing
+    s.set('paused', { note: 'latest manifest is malformed' });
+    els.empty.innerHTML = `<div class="head">Malformed manifest</div>
+      <p><a href="/attest/site/latest.json">/attest/site/latest.json</a> answered, but carries no deploy number. Inspect the raw endpoint.</p>`;
+    return;
+  }
+  els.empty.hidden = true;
+  manifests.set(latestN, latest);
+  if (latest.pulse_id) {
+    // a ledger is a recording — replay grammar, never "live"
+    s.set('replay', { from: latest.pulse_id, to: latest.pulse_id });
+  }
+  await loadBatch(P, latestN);
+  // widen the replay window to what is actually loaded
+  const pulses = [...manifests.values()].map((m) => Number(m.pulse_id)).filter(Number.isFinite);
+  if (pulses.length) s.set('replay', { from: Math.min(...pulses), to: Math.max(...pulses) });
+  if (!els.more._wired) {
+    els.more._wired = true;
+    els.more.addEventListener('click', () => loadBatch(P, oldestLoaded - 1));
+  }
+}
+
+whenProof((P) => {
+  const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+  if (SAVE) {
+    // §3.5 — reduced data: no automatic fetches; offer the explicit path.
+    const head = els.empty.querySelector('.head');
+    if (head) head.textContent = 'Ledger not loaded (reduced data)';
+    const b = document.createElement('button');
+    b.className = 'ledger-more';
+    b.type = 'button';
+    b.textContent = 'load the ledger';
+    b.addEventListener('click', () => { b.remove(); load(P); }, { once: true });
+    els.empty.appendChild(b);
+    return;
+  }
+  if (strip) P.mountSelfCheck(strip);
+  load(P);
+});
+</script>
+</body>
+</html>

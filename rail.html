@@ -3,29 +3,137 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A self-hosting compiler in ~1.2 MB. Six backends, 141 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, JIT-emitted Metal GPU kernels, plasma MHD — all in the same language.">
+<meta name="description" content="Rail is a self-hosting compiler with zero C dependencies — one small seed binary, six backends, JIT-emitted GPU kernels. Every tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/rail">
 <meta property="og:title" content="Rail — Ledatic">
-<meta property="og:description" content="A self-hosting compiler in ~1.2 MB. Six backends, 141 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, JIT-emitted Metal GPU kernels, plasma MHD — all in the same language.">
+<meta property="og:description" content="Rail is a self-hosting compiler with zero C dependencies — one small seed binary, six backends, JIT-emitted GPU kernels. Every tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Rail — Ledatic">
-<meta name="twitter:description" content="A self-hosting compiler in ~1.2 MB. Six backends, 141 tests green, 2-pass byte-identical fixed point. Pure-Rail TLS 1.3, JIT-emitted Metal GPU kernels, plasma MHD — all in the same language.">
+<meta name="twitter:description" content="Rail is a self-hosting compiler with zero C dependencies — one small seed binary, six backends, JIT-emitted GPU kernels. Every tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<link rel="canonical" href="https://ledatic.org/rail">
 <title>Rail — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="canonical" href="https://ledatic.org/rail">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests. Preloads are
+     gated off under reduced-data (fallback stack carries the page). -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<style>
+/* ── /rail page styles — consumes tokens only, defines no custom props ── */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* No shader on this page (§6 /rail): type + chain spine carry it.
+   The hero is shorter and its links earn pointer events back. */
+.hero.compact { min-height: 72vh; }
+.hero-content .cta-row a,
+.hero-content .trust,
+.hero-content .visor-mini { pointer-events: auto; }
+
+/* Plain Figures are citation elements (§5.4): dotted provenance underline. */
+data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
+
+/* stats row — six figures, one rhythm */
+.stat-row { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 720px)  { .stat-row { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1100px) { .stat-row { grid-template-columns: repeat(6, 1fr); } }
+.stat .value .prove { font: inherit; color: inherit; }
+
+/* ── Release ledger — chain spine as the version axis ── */
+.ledger { list-style: none; margin: 2rem 0 0; padding: 0; }
+.ledger > li {
+  position: relative;
+  padding: 1.25rem 0 1.25rem 1.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.ledger .mark {
+  position: absolute;
+  left: -0.42em;
+  top: 1.45rem;
+  font-size: 0.8rem;
+  background: var(--ink-0);
+  padding: 2px 0;
+}
+.erow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+}
+.erow .tray { flex-basis: 100%; max-width: none; }
+.lver { font-family: var(--font-display); font-weight: 600; color: var(--ph-600); }
+.ldate, .anchor {
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  color: var(--tx-dim);
+}
+.anchor time-pulse { color: var(--tx-lo); }
+.ledger .ttl {
+  margin: 0.4rem 0 0.15rem;
+  color: var(--tx-hi);
+  font-size: var(--t-0);
+  font-weight: 500;
+  max-width: 64ch;
+}
+.ledger p { color: var(--tx-lo); font-size: 0.9rem; line-height: 1.55; max-width: 64ch; margin: 0.2rem 0 0; }
+.ledger .gloss { font-size: 0.85rem; }
+
+/* burn-in chip — the stale treatment scaled to a badge */
+.era {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--st-stale);
+  border: 1px dashed var(--st-stale);
+  border-radius: var(--r-1);
+  padding: 0.1rem 0.45rem;
+  text-shadow: -1px -1px 0 var(--st-stale-ghost);
+  white-space: nowrap;
+}
+
+/* curl recipe — second path, after the browser one */
+pre.recipe {
+  margin-top: 1.25rem;
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: 1.25rem 1.5rem;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.8;
+  color: var(--tx-lo);
+  overflow-x: auto;
+}
+pre.recipe .c { color: var(--tx-dim); }
+pre.recipe .ok { color: var(--ph-600); }
+
+.push { margin-top: var(--sp-8); }
+.section .chain-link { display: block; margin-bottom: 0.75rem; }
+</style>
+<script type="speculationrules">
+{
+  "prerender": [
+    { "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+  ]
+}
+</script>
 </head>
-<body data-shader="_shared/shaders/porthole_magenta.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -36,79 +144,103 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+  </div>
 </nav>
 
-<section class="hero">
+<!-- HERO — no shader on /rail (§6): type and the chain spine do the work. -->
+<section class="hero compact">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Language &mdash; v5.1.0</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Rail</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+    <span class="eyebrow fade-up">Language &mdash; <data class="fig" data-src="repo:version">v5.1.0</data></span>
+    <h1 class="hero-title fade-up">Rail</h1>
+    <p class="hero-sub fade-up">
       A self-hosting compiler. Zero C dependencies.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Rail compiles itself to a ~1.2 MB ARM64 binary. Six backends: native
+    <p class="hero-desc fade-up">
+      Rail compiles itself to a <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb">~1.2 MB</data> ARM64 binary. Six backends: native
       ARM64, Linux ARM64, Linux x86_64, WASM (early), Cortex-M4, RISC-V &mdash; and it
       JIT-emits its own Metal GPU kernels. One language for the whole stack
       &mdash; compiler, TLS, plasma sim, site generator, training loop.
     </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+    <div class="cta-row fade-up">
       <a class="btn btn-primary" href="/rail/docs/">Read the docs</a>
       <a class="btn btn-secondary" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">GitHub</a>
       <a class="btn btn-secondary" href="changelog.html">Changelog</a>
     </div>
-    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
+    <div class="visor-mini fade-up">
       <span class="visor-label">Rail</span>
-      <span class="visor-value">v5.1.0 <span class="dim">//</span> 141/141</span>
+      <span class="visor-value"><data class="fig" data-src="repo:version">v5.1.0</data> <span class="dim">//</span> <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data></span>
     </div>
-    <p class="trust fade-up" style="animation-delay: 0.9s">
+    <p class="trust fade-up">
       2-pass byte-identical self-compile &middot; BSL 1.1 &middot; Detroit, MI
     </p>
   </div>
 </section>
 
+<main>
+
 <section class="section">
   <div class="wrap">
-    <span class="eyebrow reveal">Stats</span>
-    <h2 class="reveal">The numbers that matter.</h2>
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Figures</span>
+    <h2 class="reveal">The numbers, cited.</h2>
+    <p class="gloss reveal">
+      every figure below is injected at deploy time from the same generated
+      registry the honesty gate enforces &mdash; nothing here is typed by hand
+    </p>
 
-    <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
+    <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value">1.2 MB</div>
-        <div class="label">ARM64 seed binary</div>
+        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version">v5.1.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
+        <div class="label">Current release</div>
       </div>
       <div class="stat reveal">
-        <div class="value">94</div>
+        <div class="value"><data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data></div>
+        <div class="label">Tests green</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value"><data class="fig" data-src="repo:rail_native">1.2 MB</data></div>
+        <div class="label">Seed binary</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value"><data class="fig" data-src="stdlib:modules" data-fmt="count">94</data></div>
         <div class="label">Stdlib modules</div>
       </div>
       <div class="stat reveal">
-        <div class="value">141</div>
-        <div class="label">Tests passing</div>
+        <div class="value"><data class="fig" data-src="repo:tags" data-fmt="count">45</data></div>
+        <div class="label">Tagged releases</div>
       </div>
       <div class="stat reveal">
         <div class="value">0</div>
         <div class="label">C dependencies</div>
       </div>
     </div>
+    <p class="gloss push reveal">
+      the release figure is a working prove button &mdash; press it and your
+      browser fetches the tagged binary's attestation and checks the witness
+      signature itself
+    </p>
   </div>
 </section>
 
 <section class="section">
   <div class="wrap">
-    <span class="eyebrow reveal">Stdlib</span>
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Stdlib at a glance</span>
     <h2 class="reveal">What ships in the box.</h2>
     <p class="lead reveal">
       Every module below is Rail source, compiled by Rail, running on the
-      same ~1.2 MB binary. No FFI. No shims.
+      same <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb">~1.2 MB</data> binary. No FFI shims. No package manager.
     </p>
 
-    <div class="grid grid-2 grid-3" style="margin-top: 2rem;">
+    <div class="grid grid-2 grid-3 push">
       <div class="card reveal">
         <span class="eyebrow">Network</span>
         <h3>TLS 1.3</h3>
@@ -117,7 +249,7 @@
       <div class="card reveal">
         <span class="eyebrow">Network</span>
         <h3>HTTP + Socket</h3>
-        <p>Raw TCP, chunked-transfer decoder, keep-alive, strict HTTPS GET/POST. Live against Anthropic, Slack, Cloudflare.</p>
+        <p>Raw TCP, chunked-transfer decoder, keep-alive, strict HTTPS GET/POST/PUT. Live against real public APIs.</p>
       </div>
       <div class="card reveal">
         <span class="eyebrow">Data</span>
@@ -127,24 +259,28 @@
       <div class="card reveal">
         <span class="eyebrow">ML</span>
         <h3>Tensor + Autograd</h3>
-        <p>Metal GPU matmul. Reverse-mode autodiff. Transformer, optim, checkpoint.</p>
+        <p>Metal GPU matmul. Reverse-mode autodiff. Transformer, optim, checkpoint &mdash; the attested-training substrate.</p>
       </div>
       <div class="card reveal">
-        <span class="eyebrow">Text</span>
-        <h3>BPE + Tokenizer</h3>
-        <p>Byte-pair encoding, sampling, detokenization. Trained against the Rail corpus itself.</p>
+        <span class="eyebrow">Crypto</span>
+        <h3>Ed25519 + SHA-2</h3>
+        <p>Sign and verify, RFC 8032 byte-identical. The signatures on every release ledger row below come out of these modules.</p>
       </div>
       <div class="card reveal">
         <span class="eyebrow">Physics</span>
         <h3>Plasma MHD</h3>
-        <p>2D magnetohydrodynamics solver. Orszag-Tang vortex. Conservation to machine precision.</p>
+        <p>2D magnetohydrodynamics solver. Orszag-Tang vortex. The live run feeds the entropy beacon this site is clocked to.</p>
       </div>
     </div>
+    <p class="gloss push reveal">
+      <data class="fig" data-src="stdlib:modules" data-fmt="modules">94 modules</data> in the box &mdash; the six above are the headliners
+    </p>
   </div>
 </section>
 
 <section class="section">
   <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Why it exists</span>
     <h2 class="reveal">Fewer layers. Less hiding.</h2>
     <p class="body reveal">
@@ -162,111 +298,208 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="ledger">
   <div class="wrap">
-    <span class="eyebrow reveal">Shipping cadence</span>
-    <h2 class="reveal">Recent releases.</h2>
-
-    <div class="grid grid-2 reveal" style="margin-top: 2rem;">
-      <div class="card">
-        <span class="eyebrow">2026-05-15</span>
-        <h3>v5.1.0 &mdash; Rail emits its own GPU kernels</h3>
-        <p>Rail now generates Metal Shading Language source from its op-DAG, JIT-compiles it via Metal's <code>newLibraryWithSource:</code>, and dispatches the kernel at runtime. Every kernel the GPU executes is emitted by an attested Rail binary. Two hand-fused kernels land on the same dispatch path: RMSNorm + Q/K/V matmul fused (<strong>35&times; faster</strong> at training shapes), SiLU(gate)&middot;up fused (<strong>18&times; faster</strong>). bf16 numerics regime sidesteps fp16's step-2759 NaN cliff &mdash; 10k-step training stable. 141/141 still green; 2-pass byte-identical self-bootstrap unchanged.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-05-14</span>
-        <h3>v5.0.0 &mdash; Self-hosted toolchain (Linux ELF substrate)</h3>
-        <p>Rail produces its own aarch64 Linux ELF binaries. Encoder, assembler, static linker, ELF writer &mdash; all pure Rail. On the supported subset of inputs the build pipeline invokes no external <code>as</code>, <code>ld</code>, or <code>codesign</code>. Four hand programs (exit, fib, hello, BSS counter) run byte-equivalent to canonical <code>as</code> + <code>ld</code> output on Pi Zero 2 W.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-05-13</span>
-        <h3>v4.0.0 &mdash; Substrate parity + in-process JIT</h3>
-        <p>ARM64 and x86_64 backends each run their full suites green (140/140 and 136/136). JIT-first REPL at 0.1 ms/line. Single-program agentic loop: Rail calls Anthropic, JIT-lowers the response, executes, returns &mdash; no shell, no Python, no subprocess. Public reproducible hard-bench: frontier LLM + 1 KB Rail spec scores 30/30 on a held-out suite.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-05-02</span>
-        <h3>v3.11.0 &mdash; Read-file-bytes + HTTPS PUT bytes</h3>
-        <p>Pure-Rail PUT of arbitrary byte bodies, including the 945 KB <code>rail_native</code> binary itself. Five stdlib bugs fixed: <code>file.close</code> shadow, DNS UDP timeout, O(N²) <code>string_to_bytes</code>, <code>length == 0</code> O(N) traps, recv-loop keep-alive hang. End-to-end attestation now signs the binary that just compiled itself.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-05-02</span>
-        <h3>v3.10.0 &mdash; Path B: Rail-native Pi signer + Linux backend complete</h3>
-        <p>The attestation pipeline is now Rail-native end-to-end <em>including</em> the Pi-side HTTP signer (<code>pi_sign_server.rail</code>, 118 KB ELF, replaces ~110 LOC Python). Linux ARM64 cross-compile gains real <code>_atof</code>, <code>_snprintf</code> %.15g, and <code>_rail_print_float</code> &mdash; previous stubs silently returned zero for every float literal.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-05-02</span>
-        <h3>v3.9.0 &mdash; Ed25519 sign + Rail-native attest pipeline</h3>
-        <p>The attestation pipeline that v3.8.0 introduced is now Rail-native end-to-end. <code>sc_reduce</code>/<code>sc_muladd</code> + RFC 8032 sign in pure Rail, RFC §A.4 byte-identical. A Pi-hosted HTTP signer replaces the SSH dance &mdash; release-attest 49 s &rarr; 27 s.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-05-01</span>
-        <h3>v3.8.0 &mdash; Releases physicified</h3>
-        <p>Every tagged release, every test pass, every 2-pass fixed point now signed against a live entropy beacon by the Pi-hosted Ed25519 witness key. Mission control at <a href="/system">/system</a>.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-04-30</span>
-        <h3>v3.7.0 &mdash; Float-TCO root fix + mixed precision</h3>
-        <p>17-day silent wrong-result bug fixed at root in <code>all_params_int</code>. Runtime-mmap arena (4 GB+ scaling). Rail-native fp32&times;fp16 GPU matmul. Parallel rerank (7.1&times; at N=8).</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-04-27</span>
-        <h3>v3.6.1 &mdash; Compiler hardening</h3>
-        <p>Undefined idents now fail at link time with a named symbol instead of a runtime SIGSEGV. Parser accepts multi-line compound expressions inside unclosed brackets.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-04-20</span>
-        <h3>v3.6.0 &mdash; Strict HTTPS by default</h3>
-        <p>Chain-walk is now the default. Trust-store caching of SPKI hashes. Non-strict paths parked under <code>_unsafe_noverify</code>.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-04-19</span>
-        <h3>v3.4.0 &mdash; Ed25519 verify</h3>
-        <p>RFC 8032 §5.1 verifier clean against test vectors. 140/140, 2-pass byte-identical.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-04-19</span>
-        <h3>v3.3.0 &mdash; HTTPS keep-alive + P-521</h3>
-        <p>TCP_NODELAY + NST seq advance. ECDSA P-521 wired into cert chain + leaf verify.</p>
-      </div>
-      <div class="card">
-        <span class="eyebrow">2026-04-19</span>
-        <h3>v3.2.0 &mdash; Streaming bodies, bounded edit-distance</h3>
-        <p>compile.rail quadratic fixes. probe4 195s &rarr; 12s (16&times;).</p>
-      </div>
-    </div>
-
-    <div style="margin-top: 2rem;" class="reveal">
-      <a class="btn btn-ghost" href="changelog.html">Full changelog &rarr;</a>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap">
-    <span class="eyebrow reveal">Provenance</span>
-    <h2 class="reveal">Verify any release yourself.</h2>
-    <p class="reveal" style="max-width: 46rem; color: hsl(var(--muted-foreground)); margin-top: 1rem;">
-      Every tagged release binds <code>sha256(rail_native)</code> to a
-      live entropy beacon pulse and an Ed25519 signature from the Pi
-      witness. The verifier is one curl away.
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Attested ledger</span>
+    <h2 class="reveal">Recent releases, signed.</h2>
+    <p class="body reveal">
+      Each tagged row binds the release binary to an entropy-beacon pulse and
+      an Ed25519 witness signature. The pulse anchors the moment of signing.
+      Press <span aria-hidden="true">⌁</span> verify and your browser checks
+      the proof itself.
     </p>
 
-    <div class="reveal" style="margin-top: 1.5rem; background: hsl(var(--panel)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 1.25rem 1.5rem; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.78rem; color: hsl(var(--foreground) / 0.9); line-height: 1.7; overflow-x: auto;">
-<span style="color: hsl(var(--muted-foreground));"># Pull the verifier and the latest tagged release (v5.1.0).</span><br>
-<span style="color: hsl(var(--muted-foreground));"># Each release has the same shape; pin the tag you trust.</span><br>
-curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh<br>
-curl -sf https://ledatic.org/releases/v5.1.0/rail_native -o /tmp/rn<br>
-curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tmp/rn.att.json<br>
-/tmp/v.sh /tmp/rn /tmp/rn.att.json<br>
-<span style="color: hsl(var(--primary));"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span>
-    </div>
+    <ol class="ledger chain-spine">
 
-    <div style="margin-top: 1.5rem;" class="reveal">
-      <a class="btn btn-ghost" href="system.html">Live mission control &rarr;</a>
-      <a class="btn btn-ghost" href="entropy.html" style="margin-left: 0.75rem;">About the beacon &rarr;</a>
+      <li class="reveal">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">attested training</span>
+          <span class="ldate">2026-06-06</span>
+          <span class="era">untagged &middot; git history only</span>
+        </div>
+        <p class="ttl">A character language model trained with every step signed.</p>
+        <p class="gloss">plain words: the training run itself is on the chain &mdash; forge a gradient and verification fails</p>
+        <p>Per-step Ed25519 ledger over the full forward/backward pass; a foreign verifier replays and confirms the run. Public branch, headed for a tag.</p>
+      </li>
+
+      <li class="reveal">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">type layer</span>
+          <span class="ldate">2026-05-31</span>
+          <span class="era">untagged &middot; git history only</span>
+        </div>
+        <p class="ttl">A typed trust boundary: authenticated vs unauthenticated values.</p>
+        <p class="gloss">plain words: data that came from a checked proof and data that didn't now have different types &mdash; the compiler refuses to confuse them</p>
+        <p>Float type-inference plus auth/unauth desugaring, merged to master. Sound for arbitrary payloads.</p>
+      </li>
+
+      <li class="reveal" id="v5-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.1.0">v5.1.0</data></span>
+          <span class="ldate">2026-05-15</span>
+          <span class="anchor">attested <time-pulse data-pulse="1004625">@ p#1004625</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; v5.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail emits its own GPU kernels.</p>
+        <p class="gloss">plain words: the language writes the GPU code it runs &mdash; at runtime, from its own op-graph</p>
+        <p>DAG matcher + MSL emitter + JIT compile; two fused Metal kernels land 35&times; and 18&times; speedups at training shapes. bf16 regime stable over a 10k-step run. <data value="141">141/141</data> still green; 2-pass byte-identical self-bootstrap unchanged.</p>
+      </li>
+
+      <li class="reveal" id="v5-0-2">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v5.0.2</span>
+          <span class="ldate">2026-05-15</span>
+          <span class="anchor">attested <time-pulse data-pulse="1002744">@ p#1002744</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.0.2/rail_native.attestation.json" data-name="rail_native &middot; v5.0.2"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Attestation pipeline goes fully pure-Rail.</p>
+        <p class="gloss">plain words: the thing that signs the compiler is written in the compiler's own language, end to end</p>
+        <p>Hash &rarr; pulse &rarr; sign &rarr; publish with the attest/sign/publish shell scripts retired from the request path.</p>
+      </li>
+
+      <li class="reveal" id="v5-0-1">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v5.0.1</span>
+          <span class="ldate">2026-05-15</span>
+          <span class="anchor">attested <time-pulse data-pulse="987584">@ p#987584</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.0.1/rail_native.attestation.json" data-name="rail_native &middot; v5.0.1"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Attestation hygiene + codegen tightening.</p>
+        <p>Backfilled the v4-series attestations so the signed ledger has no gaps.</p>
+      </li>
+
+      <li class="reveal" id="v5-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v5.0.0</span>
+          <span class="ldate">2026-05-14</span>
+          <span class="anchor">attested <time-pulse data-pulse="976227">@ p#976227</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.0.0/rail_native.attestation.json" data-name="rail_native &middot; v5.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Self-hosted toolchain &mdash; Linux ELF substrate.</p>
+        <p class="gloss">plain words: no external assembler, no linker &mdash; Rail writes the executable file itself</p>
+        <p>Encoder, assembler, static linker, ELF writer, all pure Rail. Hand programs byte-equivalent to the canonical toolchain's output on a Raspberry Pi.</p>
+      </li>
+
+      <li class="reveal" id="v4-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v4.1.0</span>
+          <span class="ldate">2026-05-13</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="987511">@ p#987511</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v4.1.0/rail_native.attestation.json" data-name="rail_native &middot; v4.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Repo hygiene + leak-guard CI.</p>
+      </li>
+
+      <li class="reveal" id="v4-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v4.0.0</span>
+          <span class="ldate">2026-05-13</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="987510">@ p#987510</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v4.0.0/rail_native.attestation.json" data-name="rail_native &middot; v4.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Substrate parity + in-process JIT.</p>
+        <p>ARM64 and x86_64 suites both fully green (<data value="140">140/140</data> and 136/136). JIT-first REPL at 0.1 ms/line. Single-program agentic loop with no shell and no subprocess.</p>
+      </li>
+
+      <li class="reveal" id="v3-11-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.11.0</span>
+          <span class="ldate">2026-05-02</span>
+          <span class="anchor">attested <time-pulse data-pulse="515139">@ p#515139</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.11.0/rail_native.attestation.json" data-name="rail_native &middot; v3.11.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">HTTPS PUT of arbitrary bytes &mdash; Rail uploads its own binary.</p>
+        <p>End-to-end attestation now signs the binary that just compiled itself, and ships it over Rail's own TLS.</p>
+      </li>
+
+      <li class="reveal" id="v3-10-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.10.0</span>
+          <span class="ldate">2026-05-02</span>
+          <span class="anchor">attested <time-pulse data-pulse="510999">@ p#510999</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.10.0/rail_native.attestation.json" data-name="rail_native &middot; v3.10.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail-native witness signer + Linux backend complete.</p>
+        <p>The attestation pipeline is Rail end-to-end including the independent witness's HTTP signer.</p>
+      </li>
+
+      <li class="reveal" id="v3-9-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.9.0</span>
+          <span class="ldate">2026-05-02</span>
+          <span class="anchor">attested <time-pulse data-pulse="507683">@ p#507683</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.9.0/rail_native.attestation.json" data-name="rail_native &middot; v3.9.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Ed25519 sign in pure Rail.</p>
+        <p>RFC 8032 sign, byte-identical to the reference vectors. The signature math under every prove button on this page.</p>
+      </li>
+
+      <li class="reveal" id="v3-8-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.8.0</span>
+          <span class="ldate">2026-05-01</span>
+          <span class="anchor">attested <time-pulse data-pulse="467675">@ p#467675</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.8.0/rail_native.attestation.json" data-name="rail_native &middot; v3.8.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Releases physicified.</p>
+        <p class="gloss">plain words: from this release on, every tag is signed against the public heartbeat the moment it ships</p>
+        <p>Every tagged release, test pass, and self-compile fixed point binds to a live beacon pulse and a witness signature. The chain epoch.</p>
+      </li>
+
+    </ol>
+
+    <div class="push reveal">
+      <a class="btn btn-ghost" href="changelog.html">Full ledger &mdash; every tag since the first fixed point &rarr;</a>
     </div>
   </div>
 </section>
+
+<section class="section" id="verify">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Verify</span>
+    <h2 class="reveal">Check a release yourself.</h2>
+    <p class="body reveal">
+      <strong>In your browser:</strong> press any <span aria-hidden="true">⌁</span> verify
+      button in the ledger above. The page fetches the release attestation,
+      checks the Ed25519 witness signature against the pinned public key,
+      confirms the beacon pulse it was anchored to, and shows you every step
+      of the receipt. Nothing to install.
+    </p>
+    <p class="body reveal">
+      <strong>From a shell</strong>, if you'd rather not trust this page's
+      JavaScript &mdash; the verifier is one curl away:
+    </p>
+
+    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the latest tagged release (v5.1.0).</span>
+<span class="c"># Each release has the same shape; pin the tag you trust.</span>
+curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh
+curl -sf https://ledatic.org/releases/v5.1.0/rail_native -o /tmp/rn
+curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tmp/rn.att.json
+/tmp/v.sh /tmp/rn /tmp/rn.att.json
+<span class="ok"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span></code></pre>
+
+    <div class="cta-row push reveal">
+      <a class="btn btn-ghost" href="system.html">Mission control &rarr;</a>
+      <a class="btn btn-ghost" href="entropy.html">About the beacon &rarr;</a>
+    </div>
+  </div>
+</section>
+
+</main>
 
 <footer class="site-foot">
   <div class="wrap">
@@ -289,6 +522,7 @@ curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tm
           <li><a href="entropy.html">Entropy beacon</a></li>
           <li><a href="system.html">System</a></li>
           <li><a href="aliens.html">Aliens archive</a></li>
+          <li><a href="replay.html">Replay</a></li>
         </ul>
       </div>
       <div>
@@ -302,11 +536,33 @@ curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tm
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
 
-<script src="_shared/site.js"></script>
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* ── /rail page wiring: footer self-check only (§5.4).
+   Everything here is additive; the page is complete without it. */
+
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+whenProof((P) => {
+  if (SAVE) return;            // §3.5 — reduced data: no automatic fetches
+  const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+  if (strip) P.mountSelfCheck(strip);
+});
+</script>
 </body>
 </html>

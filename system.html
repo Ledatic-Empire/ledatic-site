@@ -3,76 +3,101 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Mission control. Live beacon pulse, last-attested build, self-hosting fixed point — bound to physical time, signed by fleet0, refreshed in your browser.">
+<meta name="description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point — every claim cites the public endpoint it reads, and the proofs run in your browser.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/system">
+<meta property="og:title" content="System — Ledatic">
+<meta property="og:description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point — every claim cites the public endpoint it reads, and the proofs run in your browser.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="System — Ledatic">
+<meta name="twitter:description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point — every claim cites the public endpoint it reads, and the proofs run in your browser.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<link rel="canonical" href="https://ledatic.org/system">
 <title>System &mdash; Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
+  .page-head {
+    padding: 10rem 0 0;
+    background: var(--ink-1);
+  }
+  .page-head .wrap { padding-bottom: var(--sp-12); }
+  .wrap-narrow { max-width: 56rem; }
+
   .panel {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
+    background: var(--ink-2);
+    box-shadow: var(--e1);
+    border-radius: var(--r-2);
+    padding: var(--sp-6);
+    margin-bottom: var(--sp-4);
   }
-  .panel h3 {
-    font-size: 0.78rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  h3.panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: hsl(var(--muted-foreground));
-    margin-bottom: 1rem;
+    color: var(--tx-dim);
+    margin-bottom: var(--sp-4);
   }
-  .panel h3 .dot {
-    display: inline-block;
-    width: 0.5rem; height: 0.5rem;
-    border-radius: 50%;
-    background: hsl(var(--muted));
-    margin-right: 0.5rem;
-    transform: translateY(-1px);
-  }
-  .panel.live h3 .dot { background: hsl(var(--primary)); box-shadow: 0 0 8px hsl(var(--primary) / 0.6); }
-  .panel.stale h3 .dot { background: #c08; }
+  h3.panel-head [data-state] { text-transform: none; letter-spacing: 0.06em; }
 
   .kv {
     display: grid;
-    grid-template-columns: 7rem 1fr;
+    grid-template-columns: 9rem 1fr;
     gap: 0.5rem 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    line-height: 1.65;
+    font-family: var(--font-body);
+    font-size: var(--t-data);
+    line-height: 1.8;
   }
-  .kv .k  { color: hsl(var(--muted-foreground)); }
-  .kv .v  { color: hsl(var(--foreground)); word-break: break-all; }
-  .kv .v.dim { color: hsl(var(--muted-foreground)); }
+  .kv .k { color: var(--tx-dim); }
+  .kv .v { color: var(--tx-hi); overflow-wrap: anywhere; }
+  .kv .v.dim { color: var(--tx-lo); }
   .kv .v code { font-family: inherit; }
 
+  .prove-row { margin-top: var(--sp-3); font-size: var(--t-data); }
+
   .links {
-    margin-top: 0.9rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
+    margin-top: var(--sp-3);
+    font-family: var(--font-body);
+    font-size: var(--t-data);
   }
-  .links a { color: hsl(var(--primary)); text-decoration: none; }
-  .links a:hover { text-decoration: underline; }
-  .links .sep { color: hsl(var(--muted-foreground)); margin: 0 0.5rem; }
+  .links a { color: var(--ph-700); }
+  .links a:hover { color: var(--ph-500); }
+  .links .sep { color: var(--tx-dim); margin: 0 0.5rem; }
 
   .verify-recipe {
-    background: hsl(var(--background) / 0.6);
-    border: 1px solid hsl(var(--border) / 0.6);
-    border-radius: 4px;
-    padding: 0.9rem 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
-    color: hsl(var(--foreground) / 0.85);
+    background: var(--ink-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
+    padding: var(--sp-4);
+    font-family: var(--font-body);
+    font-size: var(--t-data);
+    color: var(--tx-lo);
     overflow-x: auto;
-    line-height: 1.6;
+    line-height: 1.8;
   }
-  .verify-recipe .c { color: hsl(var(--muted-foreground)); }
+  .verify-recipe .c { color: var(--tx-dim); }
+
+  .foot-stats data { font-style: normal; }
 </style>
 </head>
-<body data-shader="_shared/shaders/grid.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -83,42 +108,43 @@
     <a href="system.html" class="active">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="#verify">Verify</a>
+  <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5">&#x2301; p#&mdash;</pulse-clock>
 </nav>
 
-<section class="hero" style="min-height: 40vh;">
-  <div class="scene">
-    <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
-  </div>
-  <div class="overlay" aria-hidden="true"></div>
-
-  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Mission control &mdash; live</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">System</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      Bound to physical time.
-    </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      The numbers below are not a deploy snapshot. They&rsquo;re fetched
-      live from the beacon, the witness, and the attestation surface
-      every time you load this page. If anything is stale, this page
-      shows it.
+<header class="page-head">
+  <div class="wrap wrap-narrow fade-up">
+    <span class="eyebrow">Mission control</span>
+    <h1 class="hero-title">System</h1>
+    <p class="lead">Bound to physical time.</p>
+    <p class="body">
+      Nothing on this page is a deploy snapshot. Each panel cites the public
+      endpoint it reads, ages are denominated in pulses of the entropy beacon
+      (wall clock is the italic translation), and a chip only says a surface
+      is alive after this page has actually confirmed it. If a surface cannot
+      be confirmed from here, the chip says that instead.
     </p>
   </div>
-</section>
+</header>
 
-<section class="section">
-  <div class="wrap" style="max-width: 56rem;">
+<section class="section" id="surfaces">
+  <div class="wrap wrap-narrow">
+
+    <noscript>
+      <p class="gloss" style="margin-bottom: 1.5rem;">
+        JavaScript is off, so nothing below is being checked from this page.
+        The chips stay hollow on purpose. Every endpoint link still serves the
+        raw signed JSON &mdash; the substrate doesn&rsquo;t need this page.
+      </p>
+    </noscript>
 
     <div class="panel" id="panel-pulse">
-      <h3><span class="dot"></span>Beacon &mdash; entropy/pulse</h3>
+      <h3 class="panel-head"><span>Beacon &mdash; entropy/pulse</span> <span data-state="unknown" data-sentinel="pulse">checking&hellip;</span></h3>
       <div class="kv">
-        <div class="k">pulse_id</div>      <div class="v" data-sys="pulse.id">&hellip;</div>
-        <div class="k">value_hex</div>     <div class="v dim"><code data-sys="pulse.hex">&hellip;</code></div>
-        <div class="k">timestamp_utc</div> <div class="v dim" data-sys="pulse.ts">&hellip;</div>
-        <div class="k">age</div>           <div class="v dim" data-sys="pulse.age">&hellip;</div>
+        <div class="k">pulse_id</div>      <div class="v" data-kv="pulse.id">&hellip;</div>
+        <div class="k">value_hex</div>     <div class="v dim"><code data-kv="pulse.hex">&hellip;</code></div>
+        <div class="k">timestamp</div>     <div class="v dim" data-kv="pulse.ts">&hellip;</div>
       </div>
+      <p class="prove-row gloss">The plasma instrument publishes a hash-chained pulse <data class="fig" value="2" data-src="beacon:cadence" data-fmt="words">every ~2 s</data>. The clock in the corner of every page is this feed.</p>
       <div class="links">
         <a href="/entropy/pulse">/entropy/pulse</a>
         <span class="sep">&middot;</span>
@@ -127,13 +153,15 @@
     </div>
 
     <div class="panel" id="panel-witness">
-      <h3><span class="dot"></span>Witness &mdash; fleet0</h3>
+      <h3 class="panel-head"><span>Witness &mdash; fleet0 chain head</span> <span data-state="unknown" data-sentinel data-fresh-pulses="60" id="sent-witness">checking&hellip;</span></h3>
       <div class="kv">
-        <div class="k">pulse_id</div>          <div class="v" data-sys="witness.pulse">&hellip;</div>
-        <div class="k">chain_verified</div>    <div class="v" data-sys="witness.chain">&hellip;</div>
-        <div class="k">pk_fp</div>             <div class="v dim"><code data-sys="witness.pkfp">&hellip;</code></div>
-        <div class="k">witnessed_at</div>      <div class="v dim" data-sys="witness.ts">&hellip;</div>
+        <div class="k">pulse_id</div>       <div class="v" data-kv="witness.pulse">&hellip;</div>
+        <div class="k">age</div>            <div class="v dim" data-kv="witness.age">&hellip;</div>
+        <div class="k">chain_verified</div> <div class="v" data-kv="witness.chain">&hellip;</div>
+        <div class="k">pk_fp</div>          <div class="v dim"><code data-kv="witness.pkfp">&hellip;</code></div>
+        <div class="k">witnessed</div>      <div class="v dim" data-kv="witness.ts">&hellip;</div>
       </div>
+      <p class="prove-row gloss">An independent edge node co-signs the beacon chain as it grows. The fields above are its own latest record, shown raw.</p>
       <div class="links">
         <a href="/witness/fleet0/latest">/witness/fleet0/latest</a>
         <span class="sep">&middot;</span>
@@ -142,49 +170,66 @@
     </div>
 
     <div class="panel" id="panel-fleet">
-      <h3><span class="dot"></span>Fleet &mdash; signed snapshot</h3>
+      <h3 class="panel-head"><span>Fleet &mdash; witnessed snapshot</span> <span data-state="unknown" data-sentinel data-fresh-pulses="90" id="sent-fleet">checking&hellip;</span></h3>
       <div class="kv">
-        <div class="k">pulse_id</div>      <div class="v" data-sys="fleet.pulse">&hellip;</div>
-        <div class="k">nodes</div>         <div class="v" data-sys="fleet.nodes">&hellip;</div>
-        <div class="k">snapshot age</div>  <div class="v dim" data-sys="fleet.age">&hellip;</div>
-        <div class="k">witness</div>       <div class="v dim"><code data-sys="fleet.pkfp">&hellip;</code></div>
+        <div class="k">surfaces</div>      <div class="v" data-kv="fleet.up">&hellip;</div>
+        <div class="k">snapshot pulse</div><div class="v" data-kv="fleet.pulse">&hellip;</div>
+        <div class="k">snapshot age</div>  <div class="v dim" data-kv="fleet.age">&hellip;</div>
+        <div class="k">witness pk_fp</div> <div class="v dim"><code data-kv="fleet.pkfp">&hellip;</code></div>
       </div>
+      <p class="prove-row">
+        <button class="prove" aria-expanded="false" data-manifest="/fleet/status.json" data-name="fleet snapshot witness"><span class="prove-val">prove the snapshot witness</span> <span class="affix" aria-hidden="true">&#x2301;</span></button>
+      </p>
       <div class="links">
         <a href="/fleet/status.json">/fleet/status.json</a>
+        <span class="sep">&middot;</span>
+        <a href="fleet.html">the fleet, surface by surface</a>
       </div>
     </div>
 
     <div class="panel" id="panel-build">
-      <h3><span class="dot"></span>Build &mdash; latest attested</h3>
+      <h3 class="panel-head"><span>Build &mdash; last attested test run</span> <span data-state="unknown" data-sentinel id="sent-build">checking&hellip;</span></h3>
       <div class="kv">
-        <div class="k">commit</div>      <div class="v"><code data-sys="build.short">&hellip;</code></div>
-        <div class="k">pass / total</div><div class="v" data-sys="build.pass">&hellip;</div>
-        <div class="k">status</div>      <div class="v" data-sys="build.status">&hellip;</div>
-        <div class="k">pulse_window</div><div class="v dim" data-sys="build.pulses">&hellip;</div>
-        <div class="k">log_sha256</div>  <div class="v dim"><code data-sys="build.logsha">&hellip;</code></div>
+        <div class="k">commit</div>       <div class="v"><code data-kv="build.commit">&hellip;</code></div>
+        <div class="k">pass / total</div> <div class="v" data-kv="build.pass">&hellip;</div>
+        <div class="k">status</div>       <div class="v" data-kv="build.status">&hellip;</div>
+        <div class="k">pulse window</div> <div class="v dim" data-kv="build.window">&hellip;</div>
+        <div class="k">log sha256</div>   <div class="v dim"><code data-kv="build.logsha">&hellip;</code></div>
       </div>
-      <div class="links" data-sys="build.links">&hellip;</div>
+      <p class="prove-row">
+        <button class="prove" id="prove-build" aria-expanded="false" data-name="build record attestation" hidden><span class="prove-val">prove this record</span> <span class="affix" aria-hidden="true">&#x2301;</span></button>
+      </p>
+      <div class="links">
+        <a id="link-build-result" href="/builds/latest/index.json">result.json</a>
+        <span class="sep">&middot;</span>
+        <a id="link-build-att" href="/builds/latest/index.json">attestation.json</a>
+      </div>
     </div>
 
     <div class="panel" id="panel-selfhost">
-      <h3><span class="dot"></span>Self-host &mdash; fixed point</h3>
+      <h3 class="panel-head"><span>Self-host &mdash; fixed point</span> <span data-state="unknown" data-sentinel id="sent-self">checking&hellip;</span></h3>
       <div class="kv">
-        <div class="k">commit</div>       <div class="v"><code data-sys="self.short">&hellip;</code></div>
-        <div class="k">fixed_point</div>  <div class="v" data-sys="self.fp">&hellip;</div>
-        <div class="k">seed_match</div>   <div class="v" data-sys="self.seed">&hellip;</div>
-        <div class="k">seed sha</div>     <div class="v dim"><code data-sys="self.seedsha">&hellip;</code></div>
-        <div class="k">pulse_window</div> <div class="v dim" data-sys="self.pulses">&hellip;</div>
+        <div class="k">commit</div>       <div class="v"><code data-kv="self.commit">&hellip;</code></div>
+        <div class="k">fixed_point</div>  <div class="v" data-kv="self.fp">&hellip;</div>
+        <div class="k">seed_match</div>   <div class="v" data-kv="self.seed">&hellip;</div>
+        <div class="k">seed sha256</div>  <div class="v dim"><code data-kv="self.seedsha">&hellip;</code></div>
+        <div class="k">pulse window</div> <div class="v dim" data-kv="self.window">&hellip;</div>
       </div>
-      <div class="links" data-sys="self.links">&hellip;</div>
+      <p class="prove-row">
+        <button class="prove" id="prove-self" aria-expanded="false" data-name="self-host record attestation" hidden><span class="prove-val">prove this record</span> <span class="affix" aria-hidden="true">&#x2301;</span></button>
+      </p>
+      <div class="links">
+        <a id="link-self-result" href="/selfhost/latest/index.json">result.json</a>
+      </div>
     </div>
 
     <div class="panel" id="verify">
-      <h3>Verify any of this yourself</h3>
-      <p style="font-size: 0.85rem; color: hsl(var(--muted-foreground)); margin-bottom: 1rem; max-width: 42rem;">
-        Each card above resolves to a JSON artifact signed by fleet0&rsquo;s
-        Ed25519 key. The signature is over (digest, pulse_id, witnessed_at)
-        with a unique namespace prefix, so attestation sigs cannot collide
-        with beacon-witness sigs.
+      <h3 class="panel-head"><span>Verify any of this yourself</span></h3>
+      <p class="body" style="font-size: var(--t-data); margin-bottom: 1rem;">
+        The prove buttons above run the proof in this tab &mdash; fetch, hash,
+        pinned key, Ed25519, pulse anchor &mdash; and print a pasteable receipt.
+        Nothing executes server-side. The shell recipe below is the
+        out-of-band path: same checks, your machine, no browser.
       </p>
       <div class="verify-recipe">
 <span class="c"># Pull the verifier and a release attestation, then verify locally.</span><br>
@@ -219,6 +264,7 @@ curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tm
           <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
           <li><a href="system.html" class="active">System</a></li>
+          <li><a href="fleet.html">Fleet</a></li>
           <li><a href="aliens.html">Aliens archive</a></li>
         </ul>
       </div>
@@ -233,12 +279,161 @@ curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tm
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><span id="page-selfcheck" data-selfcheck="unknown">page self-check needs JavaScript</span></span>
+      <span class="foot-stats">Rail <data class="fig" value="v5.1.0" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" value="170" data-src="tests:total" data-fmt="ratio">170/170</data> tests &middot; <data class="fig" value="1193744" data-src="repo:rail_native">1.2 MB</data> binary &middot; <data class="fig" value="45" data-src="repo:tags" data-fmt="tags">45 tags</data></span>
     </div>
   </div>
 </footer>
 
 <script src="_shared/site.js"></script>
-<script src="_shared/system-live.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* /system wiring — every fetch rides the shared pulse-bus (§5.3):
+   max one request per cadence tick, paused while hidden. Sentinels
+   own every state word; this code never writes "live" by hand. */
+import { pulseBus, fmtPulse, fmtDur, groupHex, CADENCE_MS } from './_shared/pulse-clock.js';
+import { sentinel, scan, mountSelfCheck } from './_shared/proof-tray.js';
+
+const $ = (s) => document.querySelector(s);
+const put = (key, text) => {
+  const el = document.querySelector('[data-kv="' + key + '"]');
+  if (el) el.textContent = text;
+};
+const wall = (iso) => String(iso || '').replace('T', ' ').replace('Z', ' UTC');
+const wallU = (u) => (typeof u === 'number' && Number.isFinite(u))
+  ? wall(new Date(u * 1000).toISOString().slice(0, 19) + 'Z') : '—';
+const fp16 = (v) => String(v || '').slice(0, 16);
+
+async function getJSON(url) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) { return null; }
+}
+
+/* Pulse-denominated ages, wall clock as the italic translation (§2).
+   Recomputed on every confirmed receipt — never extrapolated past
+   the drift since the last one. */
+const ages = new Map();
+function renderAges() {
+  if (!pulseBus.latest) return;
+  const drift = Math.max(0, Math.floor((Date.now() - pulseBus.receivedAt) / CADENCE_MS));
+  for (const [key, anchor] of ages) {
+    const el = document.querySelector('[data-kv="' + key + '"]');
+    if (!el) continue;
+    const age = (pulseBus.latest.pulse_id - anchor) + drift;
+    if (age < 0) continue;
+    el.textContent = '+' + fmtPulse(age) + ' pulses';
+    const i = document.createElement('i');
+    i.className = 'tp-wall';
+    i.textContent = ' · ' + fmtDur(age);
+    el.appendChild(i);
+  }
+}
+function setAge(key, anchor) {
+  if (typeof anchor === 'number' && Number.isFinite(anchor)) {
+    ages.set(key, anchor);
+    renderAges();
+  }
+}
+
+/* Beacon panel — rides the bus's own pulse fetch; zero extra polling. */
+pulseBus.subscribe((p) => {
+  put('pulse.id', 'p#' + fmtPulse(p.pulse_id));
+  put('pulse.hex', groupHex(p.value_hex || ''));
+  put('pulse.ts', wall(p.timestamp_utc));
+  renderAges();
+});
+
+/* Witness — fleet0's signed chain head, shown raw. */
+const wSent = sentinel($('#sent-witness'));
+pulseBus.schedule(30000, async () => {
+  const w = await getJSON('/witness/fleet0/latest');
+  if (!w || typeof w.pulse_id !== 'number') return;  // silence → sentinel demotes
+  put('witness.pulse', 'p#' + fmtPulse(w.pulse_id));
+  put('witness.chain', w.chain_verified == null ? 'not reported by this record' : String(w.chain_verified));
+  put('witness.pkfp', fp16(w.pk_fp));
+  put('witness.ts', wallU(w.witnessed_at));
+  setAge('witness.age', w.pulse_id);
+  const cur = pulseBus.latest && pulseBus.latest.pulse_id;
+  if (cur && cur - w.pulse_id > 450) wSent.set('stale', { agePulses: cur - w.pulse_id });
+  else if (wSent) wSent.feed(w.pulse_id);
+});
+
+/* Fleet — the witnessed snapshot. Counts only here; /fleet has the cards.
+   Node hostnames/addresses in the feed are never rendered. */
+const fSent = sentinel($('#sent-fleet'));
+pulseBus.schedule(30000, async () => {
+  const d = await getJSON('/fleet/status.json');
+  if (!d || !Array.isArray(d.nodes) || !d.nodes.length) return;
+  const up = d.nodes.filter((n) => n && n.alive).length;
+  put('fleet.up', up + ' of ' + d.nodes.length + ' answering');
+  if (typeof d.pulse_id === 'number') {
+    put('fleet.pulse', 'p#' + fmtPulse(d.pulse_id));
+    setAge('fleet.age', d.pulse_id);
+  }
+  put('fleet.pkfp', fp16(d.witness && d.witness.pk_fp));
+  const cur = pulseBus.latest && pulseBus.latest.pulse_id;
+  const pulseAge = (cur && typeof d.pulse_id === 'number') ? Math.max(0, cur - d.pulse_id) : null;
+  const wallOld = d.asof_unix ? (Date.now() / 1000 - d.asof_unix) > 900 : false;
+  if (wallOld || (pulseAge != null && pulseAge > 450)) fSent.set('stale', { agePulses: pulseAge || 0 });
+  else if (fSent) fSent.feed(d.pulse_id);
+});
+
+/* Attested records — replay states: recorded windows, not liveness. */
+const bSent = sentinel($('#sent-build'));
+pulseBus.schedule(300000, async () => {
+  const idx = await getJSON('/builds/latest/index.json');
+  if (!idx || !idx.short) return;
+  const base = '/builds/' + idx.short + '/result.json';
+  const r = await getJSON(base);
+  if (!r) return;
+  put('build.commit', r.short || idx.short);
+  put('build.pass', fmtPulse(r.pass) + ' / ' + fmtPulse(r.total));
+  put('build.status', String(r.status || '—'));
+  put('build.window', 'p#' + fmtPulse(r.pulse_start) + ' → p#' + fmtPulse(r.pulse_end));
+  put('build.logsha', r.log_sha256 ? groupHex(String(r.log_sha256).slice(0, 32)) + ' …' : '—');
+  if (bSent) bSent.set('replay', { from: r.pulse_start, to: r.pulse_end });
+  const a1 = $('#link-build-result'); if (a1) a1.href = base;
+  const a2 = $('#link-build-att'); if (a2) a2.href = base + '.attestation.json';
+  const btn = $('#prove-build');
+  if (btn && !btn.dataset.manifest) {
+    btn.dataset.manifest = base + '.attestation.json';
+    btn.dataset.artifact = base;
+    btn.hidden = false;
+    scan($('#panel-build'));
+  }
+});
+
+const sSent = sentinel($('#sent-self'));
+pulseBus.schedule(420000, async () => {
+  const idx = await getJSON('/selfhost/latest/index.json');
+  if (!idx || !idx.short) return;
+  const base = '/selfhost/' + idx.short + '/result.json';
+  const r = await getJSON(base);
+  if (!r) return;
+  put('self.commit', r.short || idx.short);
+  put('self.fp', String(r.fixed_point));
+  put('self.seed', String(r.seed_match));
+  put('self.seedsha', r.seed_sha256 ? groupHex(String(r.seed_sha256).slice(0, 32)) + ' …' : '—');
+  put('self.window', 'p#' + fmtPulse(r.pulse_start) + ' → p#' + fmtPulse(r.pulse_end));
+  if (sSent) sSent.set('replay', { from: r.pulse_start, to: r.pulse_end });
+  const a1 = $('#link-self-result'); if (a1) a1.href = base;
+  const btn = $('#prove-self');
+  if (btn && !btn.dataset.manifest) {
+    btn.dataset.manifest = base + '.attestation.json';
+    btn.dataset.artifact = base;
+    btn.hidden = false;
+    scan($('#panel-selfhost'));
+  }
+});
+
+/* Footer trust strip — this page vs its signed deploy manifest (§5.4). */
+mountSelfCheck($('#page-selfcheck'));
+</script>
 </body>
 </html>

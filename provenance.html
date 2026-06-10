@@ -3,459 +3,465 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Cryptographically verifiable AI reports — a separately controlled physical witness chained to a public entropy beacon, verifiable in any modern browser. EU AI Act log-retention ready (Article 26).">
+<meta name="description" content="Cryptographically verifiable AI reports — signed by an independent physical witness, anchored to a public entropy beacon, verifiable in any modern browser. This page proves itself on load. EU AI Act log-retention ready (Article 26).">
 <link rel="canonical" href="https://ledatic.org/provenance">
+<!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/provenance">
-<meta property="og:title" content="Provenance Tier — Ledatic">
-<meta property="og:description" content="Cryptographically verifiable AI reports. Separately controlled Pi-Zero physical witness, public entropy beacon, in-browser Ed25519 verification. EU AI Act log-retention ready (Article 26).">
+<meta property="og:title" content="Provenance — Ledatic">
+<meta property="og:description" content="Cryptographically verifiable AI reports — independent physical witness, public entropy beacon, in-browser Ed25519 verification. This page proves itself on load.">
 <meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<title>Provenance Tier — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="twitter:title" content="Provenance — Ledatic">
+<meta name="twitter:description" content="Cryptographically verifiable AI reports — independent witness, public beacon, in-browser verification.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Provenance — Ledatic</title>
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
-  /* Page-specific overrides — keep aligned with site.css tokens. */
+  .navend { display: flex; align-items: center; gap: 1.25rem; }
+
+  /* Ledger-class page: no shader, type + chain spine carry it. */
   .prov-hero {
-    padding: 9rem 1.5rem 5rem;
-    text-align: left;
+    padding: 10rem 1.5rem 4rem;
     max-width: 76rem;
     margin: 0 auto;
   }
   @media (min-width: 1024px) { .prov-hero { padding-left: 4rem; padding-right: 4rem; } }
-  .prov-eyebrow {
-    color: hsl(var(--primary));
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    margin-bottom: 1.25rem;
-  }
-  .prov-title {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-    margin-bottom: 1.5rem;
-  }
-  .prov-title .accent { color: hsl(var(--primary)); }
-  .prov-sub {
-    font-size: clamp(1rem, 1.5vw, 1.2rem);
-    color: hsl(var(--muted-foreground));
-    max-width: 48rem;
-    margin-bottom: 2.5rem;
-    line-height: 1.55;
-  }
-  .prov-cta-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; }
-  .prov-trust {
-    color: hsl(var(--muted-foreground));
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-  }
-  .prov-trust .dot { color: hsl(var(--primary)); margin: 0 0.4rem; }
+  .prov-hero .hero-title { max-width: 18ch; }
+  .prov-hero .hero-desc { margin-top: 1rem; }
+  .prov-hero .tray { margin-top: 1.5rem; max-width: 60rem; }
 
-  .prov-section { padding: 4rem 0; }
-  .prov-section-title {
-    color: hsl(var(--muted-foreground));
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-  }
-  .prov-h {
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    margin-bottom: 2.5rem;
-  }
-  .prov-h .accent { color: hsl(var(--primary)); }
-
-  .prov-grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  }
-  .prov-card {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    transition: border-color 0.25s ease;
-  }
-  .prov-card:hover { border-color: hsl(var(--primary) / 0.4); }
-  .prov-card h3 {
-    font-size: 1rem;
-    font-weight: 500;
-    color: hsl(var(--foreground));
-    margin-bottom: 0.5rem;
-  }
-  .prov-card p {
+  /* the self-proof button reads as the page's primary action */
+  #prove-this-page {
+    font-family: var(--font-body);
     font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
-    line-height: 1.65;
-  }
-  .prov-card .num {
-    font-family: 'IBM Plex Mono', monospace;
-    color: hsl(var(--primary));
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    margin-bottom: 0.5rem;
-    display: block;
-  }
-
-  .prov-vs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  @media (max-width: 700px) { .prov-vs { grid-template-columns: 1fr; } }
-  .prov-vs-col {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-  }
-  .prov-vs-col h3 {
-    font-size: 0.95rem;
     font-weight: 500;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid hsl(var(--border));
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    background: var(--ph-600);
+    color: var(--ink-0);
+    border: 1px solid transparent;
+    border-radius: var(--r-2);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
   }
-  .prov-vs-col.them h3 { color: hsl(var(--muted-foreground)); }
-  .prov-vs-col.us h3 { color: hsl(var(--primary)); }
-  .prov-vs-col ul { list-style: none; padding: 0; margin: 0; }
-  .prov-vs-col li {
-    font-size: 0.875rem;
-    padding: 0.55rem 0;
-    color: hsl(var(--muted-foreground));
-  }
-  .prov-vs-col.us li { color: hsl(var(--foreground) / 0.85); }
-  .prov-vs-col li::before { content: "—"; margin-right: 0.5rem; color: hsl(var(--muted-foreground)); }
-  .prov-vs-col.us li::before { content: "✓"; color: hsl(var(--primary)); }
+  #prove-this-page .affix { color: var(--ink-0); }
+  #prove-this-page:hover { filter: brightness(1.12); }
 
+  /* the chain, set as a mono ledger block */
   .prov-chain {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.5rem;
+    background: var(--ink-2);
+    box-shadow: var(--e1);
+    border-radius: var(--r-0);
     padding: 1.5rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    color: hsl(var(--muted-foreground));
+    font-family: var(--font-body);
+    font-size: var(--t-data);
+    color: var(--tx-lo);
     line-height: 1.9;
     overflow-x: auto;
   }
-  .prov-chain .step { color: hsl(var(--foreground)); }
-  .prov-chain .arrow { color: hsl(var(--primary)); margin: 0 0.4rem; }
+  .prov-chain .step { color: var(--tx-hi); }
+  .prov-chain .arrow { color: var(--ph-600); margin: 0 0.4rem; }
 
-  .prov-pricing {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: 1rem;
+  /* comparison columns */
+  .prov-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 700px) { .prov-vs { grid-template-columns: 1fr; } }
+  .prov-vs-col { background: var(--ink-2); box-shadow: var(--e1); border-radius: var(--r-2); padding: 1.5rem; }
+  .prov-vs-col h3 {
+    font-size: 0.95rem; font-weight: 500; margin-bottom: 1rem;
+    padding-bottom: 0.75rem; border-bottom: 1px solid var(--line);
   }
-  .prov-tier {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.5rem;
-    padding: 1.75rem 1.5rem;
-  }
-  .prov-tier.featured {
-    border-color: hsl(var(--primary) / 0.5);
-    background: linear-gradient(180deg, hsl(var(--primary) / 0.06) 0%, hsl(var(--panel)) 100%);
-  }
-  .prov-tier .tname {
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
-    margin-bottom: 0.5rem;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-  .prov-tier.featured .tname { color: hsl(var(--primary)); }
-  .prov-tier .price {
-    font-size: 2rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.25rem;
-  }
-  .prov-tier .price .per {
-    font-size: 0.9rem;
-    color: hsl(var(--muted-foreground));
-    font-weight: 400;
-    letter-spacing: 0;
-  }
-  .prov-tier .desc {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.85rem;
-    margin-bottom: 1.25rem;
-    line-height: 1.5;
-  }
-  .prov-tier ul { list-style: none; padding: 0; }
-  .prov-tier li {
-    font-size: 0.85rem;
-    color: hsl(var(--foreground) / 0.85);
-    padding: 0.4rem 0;
-    border-bottom: 1px solid hsl(var(--border) / 0.4);
-  }
-  .prov-tier li:last-child { border-bottom: none; }
+  .prov-vs-col.them h3 { color: var(--tx-lo); }
+  .prov-vs-col.us h3 { color: var(--ph-600); }
+  .prov-vs-col ul { list-style: none; padding: 0; margin: 0; }
+  .prov-vs-col li { font-size: 0.875rem; padding: 0.55rem 0; color: var(--tx-lo); }
+  .prov-vs-col.us li { color: var(--tx-hi); }
+  .prov-vs-col li::before { content: "—"; margin-right: 0.5rem; color: var(--tx-dim); }
+  .prov-vs-col.us li::before { content: "✓"; color: var(--ph-600); }
 
-  .prov-faq dt {
-    font-weight: 500;
-    color: hsl(var(--foreground));
-    margin-bottom: 0.4rem;
-    font-size: 0.95rem;
+  /* FAQ */
+  .prov-faq dt { font-weight: 500; color: var(--tx-hi); margin-bottom: 0.4rem; font-size: 0.95rem; }
+  .prov-faq dd { color: var(--tx-lo); margin: 0 0 1.5rem; font-size: 0.875rem; line-height: 1.65; max-width: 70ch; }
+  .prov-faq dd code, .prov-chain code {
+    font-family: var(--font-body); font-size: 0.85em;
+    background: var(--ink-1); padding: 0.1em 0.4em; border-radius: var(--r-1);
   }
-  .prov-faq dd {
-    color: hsl(var(--muted-foreground));
-    margin-bottom: 1.5rem;
-    font-size: 0.875rem;
-    line-height: 1.65;
-  }
-  .prov-faq dd code {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.85em;
-    background: hsl(var(--hero-bg));
-    padding: 0.1em 0.4em;
-    border-radius: 0.2em;
-  }
-
-  .prov-demo-link {
-    display: inline-block;
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--primary) / 0.3);
-    border-radius: 0.375rem;
-    padding: 0.85rem 1.25rem;
-    margin-top: 1rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.85rem;
-    color: hsl(var(--primary));
-    text-decoration: none;
-    transition: background 0.2s ease;
-  }
-  .prov-demo-link:hover { background: hsl(var(--primary) / 0.1); }
 </style>
 </head>
-<body class="provenance">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
   <div class="navlinks">
-    <a href="/rail">Rail</a>
-    <a href="/entropy">Entropy</a>
-    <a href="/aliens">Aliens</a>
-    <a href="/system">System</a>
-    <a href="/changelog">Changelog</a>
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="aliens.html">Aliens</a>
+    <a href="system.html">System</a>
+    <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=Provenance">Get in touch</a>
+  <div class="navend">
+    <pulse-clock data-fresh-pulses="5"></pulse-clock>
+    <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=Provenance">Get in touch</a>
+  </div>
 </nav>
 
 <section class="prov-hero">
-  <div class="prov-eyebrow">Provenance Tier &middot; v1</div>
-  <h1 class="prov-title">
-    Prove what your AI<br>
-    actually generated<span class="accent">.</span>
-  </h1>
-  <p class="prov-sub">
-    Every Provenance Tier report is cryptographically signed by a Pi&nbsp;Zero physical witness node
-    chained to a public entropy beacon. Third parties verify the signature in their own browser, against
-    a public Ed25519 key, with no backend trust. Built for legal, financial, and regulated workflows
-    where "we ran it through a model" needs to survive discovery.
+  <span class="eyebrow fade-up">Provenance</span>
+  <h1 class="hero-title fade-up">Prove what your AI actually generated<span class="accent">.</span></h1>
+  <p class="hero-desc fade-up">
+    Every Provenance report ships with a signed manifest: input hash, output
+    hash, a timestamp anchored to a public entropy beacon, and an Ed25519
+    signature from an independent physical witness. Anyone you hand the report
+    to verifies it in their own browser &mdash; no account, no tooling, no calling us.
+    Built for legal, financial, and regulated workflows where
+    &ldquo;we ran it through a model&rdquo; needs to survive discovery.
   </p>
-  <div class="prov-cta-row">
-    <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Provenance">Talk to us</a>
-    <a class="btn btn-secondary" href="#how">How it works</a>
+  <p class="hero-desc fade-up">
+    This page demonstrates the claim by proving itself. The manifest below is
+    the signed record of this site's own deploy &mdash; including the bytes of
+    the page you are reading.
+  </p>
+  <div class="cta-row fade-up">
+    <button class="prove" id="prove-this-page" aria-expanded="false" aria-controls="hero-tray"
+            data-manifest="/attest/site/latest.json"
+            data-name="this page &middot; signed deploy manifest">Prove this page<span class="affix" aria-hidden="true">&#8961;</span></button>
+    <a class="btn btn-ghost" href="mailto:z3m0g@icloud.com?subject=Provenance">Talk to us</a>
   </div>
-  <p class="prov-trust">
-    fleet0 pk_fp <code style="font-family:inherit;">cac5f21a70564aeb</code>
-    <span class="dot">/</span>
-    pulse beacon since Apr 2026
-    <span class="dot">/</span>
-    Ed25519 over Sha-256 chain
+  <div class="tray" id="hero-tray" role="log" aria-live="polite" hidden></div>
+  <p class="trust fade-up">
+    manifest: <a href="/attest/site/latest.json">/attest/site/latest.json</a> &middot;
+    reproduce offline: <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">attest/verify.sh</a>
   </p>
 </section>
 
-<section class="prov-section">
+<section class="section">
   <div class="wrap">
-    <div class="prov-section-title">Buyer &middot; 01</div>
-    <h2 class="prov-h">Why this exists<span class="accent">.</span></h2>
-    <div class="prov-grid">
-      <div class="prov-card">
-        <span class="num">/01</span>
+    <span class="eyebrow reveal">Workflow &middot; 01</span>
+    <h2 class="reveal">How it runs.</h2>
+    <p class="lead reveal">
+      Signing rides alongside your existing pipeline. Nothing about how you
+      produce reports changes; what changes is what you can hand to an inspector.
+    </p>
+    <div class="grid grid-3">
+      <div class="card reveal">
+        <span class="eyebrow">/01</span>
+        <h3>Generate as usual</h3>
+        <p>Your reports are produced however you produce them today. At delivery
+        time, the inputs and outputs are hashed &mdash; the content itself never
+        leaves your custody.</p>
+      </div>
+      <div class="card reveal">
+        <span class="eyebrow">/02</span>
+        <h3>Witness signs</h3>
+        <p>An independent, separately controlled witness device reads the current
+        public beacon pulse and signs the record against it. The witness shares
+        no infrastructure with the systems producing the reports.</p>
+      </div>
+      <div class="card reveal">
+        <span class="eyebrow">/03</span>
+        <h3>Anyone verifies</h3>
+        <p>The manifest is published at a stable URL. Counsel, auditors, and
+        counterparties verify the signature in their own browser against a
+        public, pinned Ed25519 key &mdash; in seconds, without contacting us.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Buyer &middot; 02</span>
+    <h2 class="reveal">Why this exists.</h2>
+    <div class="grid grid-2">
+      <div class="card reveal">
+        <span class="eyebrow">/01</span>
         <h3>Litigation defense</h3>
-        <p>Opposing counsel claims your AI analysis was retrofitted post-hoc. Hand them a signed manifest, an immutable timestamp on the public beacon, and a witness pubkey they can verify from their laptop.</p>
+        <p>Opposing counsel claims your AI analysis was retrofitted post-hoc.
+        Hand them a signed manifest, an immutable timestamp on the public
+        beacon, and a witness pubkey they can verify from their laptop.</p>
       </div>
-      <div class="prov-card">
-        <span class="num">/02</span>
-        <h3>EU AI Act log-retention readiness (Article 26)</h3>
-        <p>Article 26 (deployer log retention) demands "we used model X on data Y at time Z" kept for ≥6 months. Provenance answers it cryptographically &mdash; a checked box, not a paragraph. Article 13 documentation and Article 26 human-oversight obligations are organizational deliverables, not crypto artifacts; Provenance Tier covers the log-retention slice.</p>
+      <div class="card reveal">
+        <span class="eyebrow">/02</span>
+        <h3>EU AI Act log retention (Article 26)</h3>
+        <p>Deployer log retention demands &ldquo;we used model X on data Y at
+        time Z&rdquo; kept for &ge;6 months. Provenance answers it
+        cryptographically &mdash; a checked box, not a paragraph. Article 13
+        documentation and human-oversight obligations are organizational
+        deliverables; Provenance covers the log-retention slice.</p>
       </div>
-      <div class="prov-card">
-        <span class="num">/03</span>
+      <div class="card reveal">
+        <span class="eyebrow">/03</span>
         <h3>Internal audit</h3>
-        <p>SEC, FCA, internal risk. "Prove the AI was used correctly, not after the fact." Signed timestamps from a witness you don't control. The auditor verifies it in their browser; no audit log to argue about.</p>
+        <p>SEC, FCA, internal risk. &ldquo;Prove the AI was used correctly, not
+        after the fact.&rdquo; Signed timestamps from a witness you don't
+        control. The auditor verifies it in their browser; no audit log to
+        argue about.</p>
       </div>
-      <div class="prov-card">
-        <span class="num">/04</span>
+      <div class="card reveal">
+        <span class="eyebrow">/04</span>
         <h3>Adversarial provenance</h3>
-        <p>Intelligence and journalism workflows where the source matters. "Yes that's our analysis, here's proof of when it was generated and what it was generated from. Verify it yourself." The deepfake era's antibody.</p>
+        <p>Intelligence and journalism workflows where the source matters.
+        &ldquo;Yes that's our analysis, here's proof of when it was generated.
+        Verify it yourself.&rdquo; The deepfake era's antibody.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="how" class="prov-section">
+<section id="how" class="section">
   <div class="wrap">
-    <div class="prov-section-title">Architecture &middot; 02</div>
-    <h2 class="prov-h">The chain<span class="accent">.</span></h2>
-    <div class="prov-chain">
-<span class="step">your input</span> <span class="arrow">→</span> sha-256 <span class="arrow">→</span> prompt_hash<br>
-<span class="step">model output</span> <span class="arrow">→</span> sha-256 <span class="arrow">→</span> response_hash<br>
-<span class="step">model identity</span> <span class="arrow">→</span> weights_hash (canonical, public)<br>
-<span class="step">timestamp</span> <span class="arrow">→</span> ISO-8601 UTC<br>
+    <span class="eyebrow reveal">Architecture &middot; 03</span>
+    <h2 class="reveal">The chain.</h2>
+    <div class="prov-chain reveal">
+<span class="step">your input</span> <span class="arrow">&rarr;</span> sha-256 <span class="arrow">&rarr;</span> prompt_hash<br>
+<span class="step">model output</span> <span class="arrow">&rarr;</span> sha-256 <span class="arrow">&rarr;</span> response_hash<br>
+<span class="step">timestamp</span> <span class="arrow">&rarr;</span> ISO-8601 UTC<br>
 <br>
-all of the above <span class="arrow">→</span> canonical message <span class="arrow">→</span> sha-256 <span class="arrow">→</span> <span class="step">inner_digest</span><br>
+all of the above <span class="arrow">&rarr;</span> canonical message <span class="arrow">&rarr;</span> sha-256 <span class="arrow">&rarr;</span> <span class="step">inner_digest</span><br>
 <br>
-<span class="step">fleet0</span> reads current <span class="step">entropy/pulse</span> &nbsp;→&nbsp; pulse_id, value_hex<br>
-<span class="step">fleet0</span> Ed25519-signs &nbsp;<code>attest|v1|inner_digest|pulse_id|value_hex|witnessed_at</code><br>
+<span class="step">the witness</span> reads the current public beacon pulse <span class="arrow">&rarr;</span> pulse_id, value_hex<br>
+<span class="step">the witness</span> Ed25519-signs <code>attest|v1|inner_digest|pulse_id|value_hex|witnessed_at</code><br>
 <br>
-ledatic.org PUTs the manifest at <span class="step">/provenance/manifest/&lt;id&gt;</span><br>
-public verifier at <span class="step">/verify/&lt;id&gt;</span> &nbsp;→&nbsp; in-browser <code>crypto.subtle.verify</code><br>
-<br>
-no backend trust required. fleet0's pubkey is constant. you own the verification.
+the manifest is published at a stable URL<br>
+the proof runs in any modern browser: <code>crypto.subtle.verify</code>
     </div>
-    <a class="prov-demo-link" href="/verify/rep_demo_001">→ See a real signed manifest verify in your browser</a>
+    <p class="body reveal" style="margin-top: 1rem;">
+      We never claim zero trust. We claim minimal, explicit, one-time trust:
+      pin the witness key once &mdash; out of band, from the public repo &mdash;
+      and verify everything after, forever, without us in the loop.
+    </p>
   </div>
 </section>
 
-<section class="prov-section">
+<section class="section">
   <div class="wrap">
-    <div class="prov-section-title">Comparison &middot; 03</div>
-    <h2 class="prov-h">What competitors can&rsquo;t do<span class="accent">.</span></h2>
-    <div class="prov-vs">
+    <span class="eyebrow reveal">Press it &middot; 04</span>
+    <h2 class="reveal">Verify one right now.</h2>
+    <p class="body reveal">
+      This button verifies a real, rotating attestation: the entropy beacon's
+      latest signed physics frame. Your browser fetches the manifest, re-derives
+      the artifact hash, and checks the witness signature &mdash; if the frame
+      has rotated past the signed one, the proof reports that honestly.
+    </p>
+    <p class="reveal">
+      <button class="prove" aria-expanded="false"
+              data-manifest="/entropy/frame/latest.attestation.json"
+              data-artifact="/entropy/frame/current"
+              data-name="entropy frame &middot; witness attestation"><span class="prove-val">verify a live attestation</span><span class="affix" aria-hidden="true">&#8961;</span></button>
+    </p>
+    <p class="body reveal" style="font-size: 0.8rem; color: var(--tx-dim);">
+      No JavaScript? Fetch <code>/entropy/frame/latest.attestation.json</code> and
+      reproduce every check offline with <code>attest/verify.sh</code> from the
+      <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">public site repo</a>.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Comparison &middot; 05</span>
+    <h2 class="reveal">What vendor logs can't do.</h2>
+    <div class="prov-vs reveal">
       <div class="prov-vs-col them">
-        <h3>OpenAI &middot; Anthropic &middot; Google</h3>
+        <h3>Model vendors</h3>
         <ul>
           <li>Sign their own outputs with their own key</li>
           <li>You're trusting their audit log, not cryptography</li>
           <li>No third-party witness</li>
           <li>No public timestamp anchor</li>
-          <li>Centralized; opaque internals</li>
-          <li>"Trust the vendor"</li>
+          <li>&ldquo;Trust the vendor&rdquo;</li>
         </ul>
       </div>
       <div class="prov-vs-col us">
         <h3>Ledatic Provenance</h3>
         <ul>
-          <li>Signed by a dedicated physical witness device — not the model host</li>
-          <li>Public Ed25519 pubkey, browser-verifiable signatures</li>
-          <li>Independent witness node, separately controlled</li>
-          <li>Chained to a public entropy beacon you can read live</li>
-          <li>One public witness node today — more planned</li>
-          <li>"Trust the cryptography"</li>
+          <li>Signed by an independent witness &mdash; not the model host</li>
+          <li>Public Ed25519 keys, browser-verifiable signatures</li>
+          <li>Witness device separately controlled and inspectable</li>
+          <li>Chained to a public entropy beacon you can read yourself</li>
+          <li>&ldquo;Trust the cryptography&rdquo;</li>
         </ul>
       </div>
     </div>
   </div>
 </section>
 
-<section class="prov-section">
+<section class="section">
   <div class="wrap">
-    <div class="prov-section-title">Engagement &middot; 04</div>
-    <h2 class="prov-h">Scoped to fit<span class="accent">.</span></h2>
-    <p style="max-width: 52rem; color: hsl(var(--muted-foreground)); line-height: 1.7; font-size: 1rem;">
-      Provenance engagements are sized to the inspector you're answering to.
-      A regulator with a quarterly audit cycle is a different shape than
-      a newsroom defending a single story, which is different again from
-      a litigation hold. Write us with the shape of your problem and we'll
-      size honestly: what the chain has to cover, how many witnesses, what
-      retention, what the verifier UX needs to look like for the person
-      actually doing the checking. The cryptographic floor is included by
-      default; that's the point.
+    <span class="eyebrow reveal">Operated &middot; 06</span>
+    <h2 class="reveal">This isn't a whitepaper.</h2>
+    <p class="body reveal">
+      We shipped this in production. A 30-day commercial engagement ran its
+      client deliverables through the witness chain &mdash; signed manifests,
+      public verification pages. Closed 2026-05-12, paid in full. The witness
+      infrastructure has signed the public beacon's observations continuously
+      since April 2026, and the page you are reading is published through the
+      same discipline: a signed deploy manifest, checked against the served
+      bytes in your browser.
     </p>
-    <div style="margin-top: 1.75rem;">
-      <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Provenance">Get in touch</a>
-      <a class="btn btn-secondary" href="/verify/rep_demo_001" style="margin-left: 0.75rem;">See a real signed manifest</a>
-    </div>
   </div>
 </section>
 
-<section class="prov-section">
+<section class="section">
   <div class="wrap">
-    <div class="prov-section-title">FAQ &middot; 05</div>
-    <h2 class="prov-h">Common questions<span class="accent">.</span></h2>
-    <dl class="prov-faq">
-      <dt>How is this different from OpenAI signing my output?</dt>
-      <dd>OpenAI signs with a key they control, against an audit log they maintain. You're trusting them. We sign with a dedicated Pi Zero witness, verifiable against a public Ed25519 key, chained to a public beacon. The witness is independent of the signer. Anyone can verify the chain end-to-end without contacting us.</dd>
+    <span class="eyebrow reveal">FAQ &middot; 07</span>
+    <h2 class="reveal">Common questions.</h2>
+    <dl class="prov-faq reveal">
+      <dt>How is this different from a model vendor signing my output?</dt>
+      <dd>A vendor signs with a key they control, against an audit log they
+      maintain. You're trusting them. Here, the signature comes from a witness
+      that is independent of the report generator, verifiable against a public
+      Ed25519 key, chained to a public beacon. Anyone can verify the chain
+      end-to-end without contacting us.</dd>
 
-      <dt>What if fleet0 (the Pi) goes down or is compromised?</dt>
-      <dd>If fleet0 is unreachable at sign-time, the report is delivered unsigned with a clear "unwitnessed" disclosure — no false claims. Provenance+Audit tier provisions a secondary witness so single-node outages don't block signing. If a key is ever compromised we publish a revocation and rotate; affected manifests are flagged on /verify.</dd>
+      <dt>What is the witness?</dt>
+      <dd>A dedicated, separately controlled physical signing device that shares
+      no infrastructure with the systems producing the reports. Independence is
+      the feature: its public keys are published, pinned in this site's verifier,
+      and available out of band from the public repo.</dd>
 
-      <dt>Why a Pi Zero — that's not "enterprise-grade hardware."</dt>
-      <dd>Independence is the feature. The whole point is that the signing key lives on a small, dedicated, inspectable physical device that doesn't share infrastructure with the model host or the report generator. Off-the-shelf hardware is a virtue here, not a flaw.</dd>
+      <dt>What if the witness is down or compromised?</dt>
+      <dd>If the witness is unreachable at sign-time, the report is delivered
+      unsigned with a clear &ldquo;unwitnessed&rdquo; disclosure &mdash; no false
+      claims. Larger engagements provision a secondary witness so single-node
+      outages don't block signing. If a key were ever compromised we publish a
+      revocation and rotate; affected manifests are flagged on the verify surface.</dd>
 
       <dt>Can you backdate a manifest?</dt>
-      <dd>No. The witness signs over the current pulse_id of the public entropy beacon. Pulses are append-only and timestamp-anchored on Cloudflare. To backdate, we would have to forge the public beacon — which third parties read continuously. Not happening.</dd>
+      <dd>No. The witness signs over the current pulse_id of the public entropy
+      beacon. Pulses are append-only and publicly readable, and third parties
+      observe the beacon continuously. To backdate, we would have to forge a
+      public chain that other people already hold copies of.</dd>
 
-      <dt>Does the verify page need our backend?</dt>
-      <dd>No &mdash; with one honest qualifier. /verify/&lt;id&gt; serves a static HTML/JS page that fetches the manifest JSON and runs <code>crypto.subtle.verify</code> in the visitor's browser. The fleet0 public key is a constant in the page. The only network call is to fetch the manifest. You can clone the page, change the manifest URL, run it from disk — same result. <strong>For maximum independence, do that.</strong> Public verifications via the live URL trust Cloudflare's CDN to deliver the same JS to every visitor; that is industry-standard but not zero-trust. Belt-and-suspenders auditors should fetch a local copy of <code>verify.html</code>, verify its hash matches the published value, and run it from disk. We also publish a fully self-contained, zero-CDN verifier at <code>tools/verify/standalone.html</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site">ledatic-site</a> repo (SHA-256 <code>90b0daaca3858c18a138ce829128bcefc59f273cf9f01726197395937e699289</code>); download it, verify the hash with <code>shasum -a 256 standalone.html</code>, and open it in any modern browser to verify any manifest URL or pasted JSON without trusting our CDN at all.</dd>
+      <dt>Does verification need your backend?</dt>
+      <dd>The proof itself runs in your browser via WebCrypto &mdash; the only
+      network call fetches the manifest. For maximum independence, don't even
+      trust the page: the public site repo ships <code>attest/verify.sh</code>,
+      which reproduces every check offline from the manifest and the pinned keys.</dd>
 
       <dt>Browser support for Ed25519?</dt>
-      <dd>Chrome 137+, Safari 17+, Firefox 138+. The verify page also displays the manifest fields and the inner-message integrity check independently of WebCrypto, so older browsers still see most of the chain — they just can't run the final signature check.</dd>
-
-      <dt>EU AI Act — concretely?</dt>
-      <dd>Article 26 (deployer obligations) demands logs retained ≥6 months. Provenance gives you a cryptographic, third-party-verifiable artifact for that requirement — auditable in seconds rather than reconstructed from internal logs after the fact. Article 13 (transparency to deployers — model identity, capabilities, intended use, training-data summary) and Article 26's human-oversight + monitoring obligations are organizational deliverables, not crypto artifacts. Provenance Tier covers the log-retention slice; we can scope the rest with you but do not produce them as crypto.</dd>
+      <dd>Current Chrome, Safari, and Firefox all run the in-browser signature
+      check. Older browsers still see the manifest fields and the integrity
+      checks &mdash; they just can't run the final signature step; the offline
+      script covers them.</dd>
     </dl>
   </div>
 </section>
 
-<section class="prov-section">
+<section class="section">
   <div class="wrap">
-    <div class="prov-section-title">Inspect the witness &middot; 06</div>
-    <h2 class="prov-h">Live infrastructure<span class="accent">.</span></h2>
-    <div class="prov-grid">
-      <div class="prov-card">
-        <span class="num">/pubkey</span>
-        <h3>fleet0 Ed25519 public key</h3>
-        <p>Raw 32 bytes (base64): <code style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;display:block;margin-top:0.5rem;color:hsl(var(--foreground));">BYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=</code></p>
+    <span class="eyebrow reveal">Inspect &middot; 08</span>
+    <h2 class="reveal">The public surfaces.</h2>
+    <div class="grid grid-2">
+      <div class="card reveal">
+        <span class="eyebrow">/keys</span>
+        <h3>Witness public keys</h3>
+        <p><a href="/attest/fleet0.pub.pem">fleet0.pub.pem</a> (artifact witness,
+        pk_fp <code>cac5f21a70564aeb</code>) &middot;
+        <a href="/attest/site_deploy.pub.pem">site_deploy.pub.pem</a> (deploy signer,
+        pk_fp <code>7b4391d64aecb9ac</code>). Both pinned in this site's verifier;
+        compare out of band against the public repo.</p>
       </div>
-      <div class="prov-card">
-        <span class="num">/witness</span>
+      <div class="card reveal">
+        <span class="eyebrow">/witness</span>
         <h3>Latest signed observation</h3>
-        <p><a href="https://ledatic.org/witness/fleet0/latest">/witness/fleet0/latest</a> — fleet0 signs each pulse it observes; this is the most recent.</p>
+        <p><a href="/witness/fleet0/latest">/witness/fleet0/latest</a> &mdash; the
+        witness signs each beacon pulse it observes; this is the most recent.</p>
       </div>
-      <div class="prov-card">
-        <span class="num">/pulse</span>
+      <div class="card reveal">
+        <span class="eyebrow">/pulse</span>
         <h3>Public entropy beacon</h3>
-        <p><a href="https://ledatic.org/entropy/pulse">/entropy/pulse</a> — append-only, every ~2s, the chain anchor every Provenance manifest binds against.</p>
+        <p><a href="/entropy/pulse">/entropy/pulse</a> &mdash; append-only,
+        published <data class="fig" value="2" data-src="beacon:cadence" data-fmt="words">every ~2 s</data>;
+        the anchor every Provenance manifest binds against. The clock in the nav
+        is reading it now.</p>
       </div>
-      <div class="prov-card">
-        <span class="num">/log</span>
+      <div class="card reveal">
+        <span class="eyebrow">/log</span>
         <h3>Beacon history</h3>
-        <p><a href="https://ledatic.org/entropy/pulse/log">/entropy/pulse/log</a> — last 50 pulses with prev_hash chain. Walk the chain in one request.</p>
+        <p><a href="/entropy/pulse/log">/entropy/pulse/log</a> &mdash; recent
+        pulses with their prev_hash chain. Walk the chain in one request.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="prov-section" style="text-align: center; padding: 6rem 1.5rem;">
-  <div class="prov-section-title">Ready &middot; 07</div>
-  <h2 class="prov-h">Your AI generated something<span class="accent">.</span><br>Prove it<span class="accent">.</span></h2>
-  <div class="prov-cta-row" style="justify-content: center;">
+<section class="section" style="text-align: center;">
+  <span class="eyebrow reveal">Ready &middot; 09</span>
+  <h2 class="reveal">Your AI generated something.<br>Prove it.</h2>
+  <div class="cta-row reveal" style="justify-content: center;">
     <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Provenance">Start a conversation</a>
-    <a class="btn btn-secondary" href="/verify/rep_demo_001">Verify a sample report</a>
+    <a class="btn btn-ghost" href="verify.html">Open the verifier</a>
   </div>
 </section>
 
-<footer style="border-top:1px solid hsl(var(--border)); padding: 2rem 1.5rem; text-align:center; color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
-  Ledatic &middot; Cryptographically verifiable AI &middot; Built in Detroit
-  <br>
-  <a href="/" style="color: hsl(var(--muted-foreground)); margin-top: 0.5rem; display: inline-block;">ledatic.org</a> &middot;
-  <a href="https://github.com/zemo-g/rail" style="color: hsl(var(--muted-foreground));">code</a>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><span data-selfcheck>page self-check runs in your browser &middot; requires JavaScript</span></span>
+      <span>RAIL <data class="fig" value="v5.1.0" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" value="170" data-src="tests:total" data-fmt="ratio">170/170</data> tests</span>
+    </div>
+  </div>
 </footer>
 
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* Self-demonstrating hero (§6 /provenance): run the deploy-manifest proof
+   in the open tray on arrival. A missing manifest (no signed deploy yet)
+   renders an honest "could not verify here" — never green, never alarm. */
+const P = window.LedaticProof;
+const heroBtn = document.getElementById('prove-this-page');
+if (P && heroBtn) {
+  requestAnimationFrame(() => {
+    if (heroBtn.getAttribute('aria-expanded') !== 'true') heroBtn.click();
+  });
+}
+
+/* Footer self-check vs the signed deploy manifest (§5.4). */
+const strip = document.querySelector('.trust-strip [data-selfcheck]');
+if (P && strip) P.mountSelfCheck(strip);
+</script>
 </body>
 </html>

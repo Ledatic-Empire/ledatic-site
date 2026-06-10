@@ -3,61 +3,46 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Live 2D ideal MHD — Orszag-Tang vortex on a 128² periodic grid. Mass, energy, and ∇·B conserved to machine precision. The solver drives the public entropy beacon.">
+<meta name="description" content="Live 2D ideal MHD — an Orszag-Tang vortex on a periodic grid, running in Rail. The solver drives the public entropy beacon; mass and energy drift are read live from signed frame headers and verifiable in your browser.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/plasma">
 <meta property="og:title" content="Plasma — Ledatic">
-<meta property="og:description" content="Live 2D ideal MHD — Orszag-Tang vortex on a 128² periodic grid. Mass, energy, and ∇·B conserved to machine precision. The solver drives the public entropy beacon.">
+<meta property="og:description" content="Live 2D ideal MHD — an Orszag-Tang vortex on a periodic grid, running in Rail. The solver drives the public entropy beacon; mass and energy drift are read live from signed frame headers and verifiable in your browser.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Plasma — Ledatic">
-<meta name="twitter:description" content="Live 2D ideal MHD — Orszag-Tang vortex on a 128² periodic grid. Mass, energy, and ∇·B conserved to machine precision. The solver drives the public entropy beacon.">
+<meta name="twitter:description" content="Live 2D ideal MHD — an Orszag-Tang vortex on a periodic grid, running in Rail. Conservation is read live from signed frame headers, verifiable in your browser.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Plasma — Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/plasma">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
-  /* Hero viewer-mode pill: matches viewer.css's .viewer-modes look so the
-   * three viewers feel like one family. Sits below the CTA row and lets
-   * visitors pick mobile / live4k / holo without going through holo first.
-   */
-  .hero-modes {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
-    opacity: 0.85;
-  }
-  .hero-modes a {
-    color: hsl(var(--muted-foreground));
-    text-decoration: none;
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    transition: color 180ms, background 180ms;
-  }
-  .hero-modes a:hover {
-    color: hsl(var(--foreground));
-    background: hsl(var(--primary) / 0.12);
-  }
-  .hero-modes .sep {
-    opacity: 0.45;
+  /* nav right group: pulse clock + CTA share the right slot */
+  .navend { display: flex; align-items: center; gap: 1.25rem; }
+
+  /* conservation readouts ride the viewport readout bar; the prove
+     buttons inherit the citation underline from proof.css */
+  .mhd-readouts .prove { letter-spacing: 0.12em; }
+  .mhd-readouts .prove .prove-val { color: var(--ph-600); }
+
+  /* badge chip inside the viewport overlay */
+  .mhd-overlay [data-state] {
+    font-size: var(--t-data);
+    letter-spacing: 0.08em;
   }
 </style>
 </head>
-<body data-shader="_shared/shaders/torus.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -68,45 +53,42 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="https://github.com/zemo-g/rail/tree/master/stdlib" target="_blank" rel="noopener">Source</a>
+  <div class="navend">
+    <pulse-clock data-fresh-pulses="5"></pulse-clock>
+    <a class="nav-cta" href="https://github.com/zemo-g/rail/tree/master/tools/plasma" target="_blank" rel="noopener">Source</a>
+  </div>
 </nav>
 
 <section class="hero">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+    <canvas data-field="plasma" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Physics &mdash; live</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Plasma</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+    <span class="eyebrow fade-up">Physics</span>
+    <h1 class="hero-title fade-up">Plasma</h1>
+    <p class="hero-sub fade-up">
       Magnetohydrodynamics. Two dimensions. Zero shortcuts.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      A 128&times;128 ideal-MHD solver, running live.
+    <p class="hero-desc fade-up">
+      A 128&times;128 ideal-MHD solver, running continuously.
       Orszag-Tang initial conditions on a 2&pi; periodic domain.
-      Mass, energy, and &nabla;&middot;B all conserved to machine
-      precision. Every step feeds the public entropy beacon.
+      It drives the public entropy beacon &mdash; and its conservation
+      numbers are not asserted in copy, they are read off the signed
+      frame header below, where you can check the signature yourself.
     </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
-      <a class="btn btn-primary" href="/holo.html">View live &rarr;</a>
+    <div class="cta-row fade-up">
+      <a class="btn btn-primary" href="#field">Watch the field &darr;</a>
       <a class="btn btn-ghost" href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd.rail" target="_blank" rel="noopener">Read the solver</a>
     </div>
-    <nav class="hero-modes fade-up" style="animation-delay: 0.78s" aria-label="Viewer mode">
-      <a href="/mobile.html">mobile</a>
-      <span class="sep" aria-hidden="true">&middot;</span>
-      <a href="/live4k.html">live4k</a>
-      <span class="sep" aria-hidden="true">&middot;</span>
-      <a href="/holo.html">holo</a>
-    </nav>
-    <div class="visor-mini fade-up" style="animation-delay: 0.84s; margin-top: 1.25rem;">
+    <div class="visor-mini fade-up" style="margin-top: 1.25rem;">
       <span class="visor-label">Grid</span>
       <span class="visor-value">128 <span class="dim">&times;</span> 128</span>
     </div>
-    <p class="trust fade-up" style="animation-delay: 0.9s">
-      Lax-Friedrichs &middot; &Delta;m/m &lt; 10<sup>-15</sup> &middot; &nabla;&middot;B &lt; 10<sup>-15</sup>
+    <p class="trust fade-up">
+      Lax-Friedrichs &middot; &Delta;m/m and &Delta;E/E measured from signed frame headers
     </p>
   </div>
 </section>
@@ -132,55 +114,67 @@
         <div class="label">Fields per cell</div>
       </div>
       <div class="stat reveal">
-        <div class="value">10<sup>-15</sup></div>
-        <div class="label">Conservation error</div>
+        <div class="value"><data class="fig" value="2" data-src="beacon:cadence" data-fmt="s">~2 s</data></div>
+        <div class="label">Beacon cadence</div>
       </div>
       <div class="stat reveal">
-        <div class="value">Rail</div>
-        <div class="label">Runtime</div>
+        <div class="value"><data class="fig" value="v5.1.0" data-src="repo:version">v5.1.0</data></div>
+        <div class="label">Rail runtime</div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="field">
   <div class="wrap">
     <span class="eyebrow reveal">Validation</span>
     <h2 class="reveal">Orszag-Tang vortex.</h2>
     <p class="body reveal">
       The canonical 2D MHD test. Smooth initial conditions evolve into
-      turbulent small-scale structure with sharp shock fronts. Our
-      solver conserves mass and energy to machine precision
-      (&Delta;m/m &lt; 10<sup>-15</sup>, &Delta;E/E &lt; 10<sup>-15</sup>)
-      and maintains &nabla;&middot;B at 10<sup>-15</sup> by construction.
-      Lax-Friedrichs on a 128<sup>2</sup> periodic grid &mdash; diffusive
-      at shocks, exact where it counts.
+      turbulent small-scale structure with sharp shock fronts.
+      Mass and energy drift are measured against their step-zero anchors
+      every step and shipped in each frame's header &mdash; the readouts on the
+      viewport are parsed from those bytes in your browser, never typed by us.
     </p>
 
     <div class="mhd-viewport reveal" style="margin-top: 2rem;">
       <canvas id="mhd-canvas"
-              data-mhd-live="https://ledatic.org/entropy/frame/current"
+              data-mhd-live="/entropy/frame/current"
               data-mhd-shader="_shared/shaders/mhd_live.frag"
               data-mhd-fallback="_shared/shaders/mhd.frag"
               aria-hidden="true"></canvas>
       <div class="mhd-frame" aria-hidden="true"></div>
       <div class="mhd-overlay">
-        <span class="live-dot"></span>
         <span>Orszag-Tang</span>
-        <span class="mhd-kernel">// &hellip;</span>
+        <span id="mhd-state" data-state="unknown">checking&hellip;</span>
       </div>
       <div class="mhd-readouts">
         <span>Grid <span class="mhd-num">128&times;128</span></span>
-        <span>Var <span class="mhd-num">&rho;</span></span>
         <span>Step <span class="mhd-num" data-live="mhd-step">&mdash;</span></span>
+        <span>&Delta;m/m
+          <button class="prove" data-proof="popover"
+                  data-manifest="/entropy/frame/latest.attestation.json"
+                  data-artifact="/entropy/frame/current"
+                  data-name="frame &middot; &Delta;m/m"><span class="prove-val" data-cons="dm">&mdash;</span><span class="affix" aria-hidden="true">&#8961;</span></button>
+        </span>
+        <span>&Delta;E/E
+          <button class="prove" data-proof="popover"
+                  data-manifest="/entropy/frame/latest.attestation.json"
+                  data-artifact="/entropy/frame/current"
+                  data-name="frame &middot; &Delta;E/E"><span class="prove-val" data-cons="de">&mdash;</span><span class="affix" aria-hidden="true">&#8961;</span></button>
+        </span>
       </div>
     </div>
-    <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
-      Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the 128&times;128
-      solver grid on a 2&pi; periodic domain, min-max normalized and color-mapped in your GPU. A new
-      frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
-      cross-dissolves between them for smooth motion. Every keyframe is hashed into the
-      entropy chain.
+    <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: var(--tx-dim);">
+      Density (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the solver grid,
+      min-max normalized and color-mapped in your GPU. A new keyframe lands about
+      <data class="fig" value="2" data-src="beacon:cadence" data-fmt="words">every ~2 s</data>;
+      the display cross-dissolves between keyframes &mdash; a video fade, not fabricated physics.
+      Exactly what is signed: an independent witness publishes an Ed25519 signature over the
+      SHA-256 of the latest frame at <code>/entropy/frame/latest.attestation.json</code>, refreshed
+      about twice a minute. The &#8961; buttons re-fetch the frame, re-derive its hash in your
+      browser, and check that signature &mdash; if the frame has rotated past the signed one,
+      the proof says so instead of pretending.
     </p>
   </div>
 </section>
@@ -236,35 +230,96 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><span data-selfcheck>page self-check runs in your browser &middot; requires JavaScript</span></span>
+      <span>RAIL <data class="fig" value="v5.1.0" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" value="170" data-src="tests:total" data-fmt="ratio">170/170</data> tests</span>
     </div>
   </div>
 </footer>
 
-<script src="_shared/site.js"></script>
-<script>
-/* Badge honesty guard: site.js sets data-live-mounted="1" on the canvas only
-   once real attested frames stream. Until then the badge stays neutral; if
-   the procedural fallback shader is showing instead, say so. */
-(function () {
-  var canvas = document.querySelector('canvas[data-mhd-live]');
-  var badge = document.querySelector('.mhd-overlay .mhd-kernel');
-  var dot = document.querySelector('.mhd-overlay .live-dot');
-  if (!canvas || !badge) return;
-  var ticks = 0;
-  var t = setInterval(function () {
-    if (canvas.getAttribute('data-live-mounted') === '1') {
-      clearInterval(t);
-      badge.textContent = '// live';
-      if (dot) dot.style.display = '';
-      return;
+<script src="_shared/site.js" defer></script>
+<script src="_shared/field.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* Page wiring. The badge is a real sentinel (§4): it earns its state from
+   actual attested-frame arrivals; nothing here authors a liveness word. */
+const P = window.LedaticProof;
+const canvas = document.querySelector('canvas[data-mhd-live]');
+const viewport = document.querySelector('.mhd-viewport');
+const badge = document.getElementById('mhd-state');
+
+if (P && canvas && badge) {
+  const s = P.sentinel(badge, { freshPulses: 8 });
+  let sawFrame = false;
+  const onFrame = () => {
+    sawFrame = true;
+    if (viewport) viewport.classList.remove('panel-replay');
+    /* anchor the badge to the last confirmed beacon pulse (§4 copy
+       pattern: word + pulse anchor) — confirmed-only, never synthesized */
+    const bus = window.pulseBus;
+    s.feed(bus && bus.latest && !bus.stale ? bus.latest.pulse_id : undefined);
+  };
+  /* site.js writes the step readout once per real attested frame, and
+     stamps data-live-mounted on the canvas at the first one. */
+  const stepEl = document.querySelector('[data-live="mhd-step"]');
+  if (stepEl) {
+    new MutationObserver(onFrame)
+      .observe(stepEl, { childList: true, characterData: true, subtree: true });
+  }
+  new MutationObserver(() => {
+    if (canvas.getAttribute('data-live-mounted') === '1') onFrame();
+  }).observe(canvas, { attributes: true, attributeFilter: ['data-live-mounted'] });
+  if (canvas.getAttribute('data-live-mounted') === '1') onFrame();
+
+  /* No attested frame after ~8 cadences ⇒ site.js engaged the procedural
+     fallback shader. That is a replay of the equations, not the beacon —
+     say so in cyan (§4). If frames flowed and then stop, the sentinel's own
+     demotion clock burns the badge in as stale instead. */
+  setTimeout(() => {
+    if (!sawFrame) {
+      s.set('replay', { note: 'procedural fallback — no attested frames reaching this page' });
+      if (viewport) viewport.classList.add('panel-replay');
     }
-    if (++ticks === 12) { /* ~12 s with no attested frame: fallback replay */
-      badge.textContent = '// replay — beacon unreachable';
-      if (dot) dot.style.display = 'none';
-    }
-  }, 1000);
-})();
+  }, 16000);
+}
+
+/* Conservation readouts — parsed from the signed frame's 48-byte header
+   (f32 mass, energy and their step-0 anchors m0, e0). Range-requested
+   where the server honors it; the full frame otherwise. */
+const dmEl = document.querySelector('[data-cons="dm"]');
+const deEl = document.querySelector('[data-cons="de"]');
+const sci = (x) => (Number.isFinite(x) ? (x === 0 ? '0' : x.toExponential(1)) : '—');
+async function readMetrics() {
+  try {
+    const res = await fetch('/entropy/frame/current', {
+      cache: 'no-store',
+      headers: { Range: 'bytes=0-47' },
+    });
+    if (!res.ok) return;
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength < 48) return;
+    const v = new DataView(buf);
+    const mass = v.getFloat32(16, true);
+    const energy = v.getFloat32(20, true);
+    const m0 = v.getFloat32(40, true);
+    const e0 = v.getFloat32(44, true);
+    if (dmEl && m0 !== 0) dmEl.textContent = sci((mass - m0) / m0);
+    if (deEl && e0 !== 0) deEl.textContent = sci((energy - e0) / e0);
+  } catch { /* readouts stay an honest em dash */ }
+}
+if (dmEl || deEl) {
+  if (window.pulseBus && window.pulseBus.schedule) {
+    window.pulseBus.schedule(20000, readMetrics);
+  } else {
+    readMetrics();
+    setInterval(readMetrics, 20000);
+  }
+}
+
+/* Footer self-check vs the signed deploy manifest (§5.4). A missing
+   manifest renders honest unknown — never green, never alarm. */
+const strip = document.querySelector('.trust-strip [data-selfcheck]');
+if (P && strip) P.mountSelfCheck(strip);
 </script>
 </body>
 </html>

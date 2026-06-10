@@ -1,48 +1,56 @@
 /* ============================================================
-   Ledatic 2030 — shared stylesheet
-   Tokens, typography, components. Dark-only.
+   LEDATIC 2040 — site.css (layout + components)
+   Tokens live in tokens.css and MUST be linked before this file:
+     <link rel="stylesheet" href="_shared/tokens.css">
+     <link rel="stylesheet" href="_shared/site.css">
+   Laws honored here (see DESIGN_SPEC):
+   - Glow is earned: --ph-500 and --e3 are applied only through
+     JS-set state ([data-state="live"], [data-verified]). Nothing
+     in a static selector glows brand-bright.
+   - Motion narrates verification or it doesn't exist: no
+     free-running loops, no ambient float. Scroll-driven CSS is
+     @supports-guarded; reduced-motion is a first-class mode.
+   - Honest states are designed states: paused / replay / stale /
+     fail / alarm each have a grammar, never color-only.
    ============================================================ */
-
-:root {
-  --background:         0 0% 10%;
-  --foreground:         0 0% 96%;
-  --primary:          119 99% 46%;
-  --primary-foreground: 0 0% 4%;
-  --secondary:          0 0% 18%;
-  --muted:              0 0% 16%;
-  --muted-foreground:   0 0% 60%;
-  --border:             0 0% 20%;
-  --nav-button:         0 0% 18%;
-  --hero-bg:            0 0% 8%;
-  --panel:              0 0% 12%;
-  --radius:             0.5rem;
-
-  --step-0:  clamp(0.875rem, 1.1vw + 0.5rem, 1rem);
-  --step-1:  clamp(1rem,     1.5vw + 0.5rem, 1.25rem);
-  --step-2:  clamp(1.25rem,  2vw + 0.5rem,   1.75rem);
-  --step-3:  clamp(1.875rem, 3vw + 0.5rem,   2.75rem);
-  --step-hero: clamp(3rem,   8vw,            6rem);
-
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; }
+
+/* Numeral law (§2): tabular + slashed-zero sitewide. We read hashes
+   for a living; counters must tick with zero layout shift. */
+html {
+  font-variant-numeric: tabular-nums slashed-zero;
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: var(--step-0);
-  line-height: 1.6;
+  font-family: var(--font-body);
+  font-size: var(--t-0);
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: hsl(var(--hero-bg));
-  color: hsl(var(--foreground));
+  background: var(--ink-0);
+  color: var(--tx-hi);
   overflow-x: hidden;
 }
 
-a { color: inherit; text-decoration: none; }
-code, pre, .mono {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+a {
+  color: inherit;
+  text-decoration: none;
+  /* Phosphor decay (§3.3): charge fast, decay slow. */
+  transition: color var(--hover-out) var(--ease);
 }
+a:hover { transition-duration: var(--hover-in); }
+
+code, pre, .mono { font-family: var(--font-body); }
+pre, code { border-radius: var(--r-0); }       /* data is square */
+
+::selection { background: var(--ph-800); color: var(--tx-hi); }
+
+/* The translation voice (§2): wall-clock glosses + plain-language
+   lines for non-technical readers. Always italic, always second. */
+.gloss { font-style: italic; color: var(--tx-lo); }
 
 /* ============================================================
    LAYOUT
@@ -51,20 +59,33 @@ code, pre, .mono {
   width: 100%;
   max-width: 76rem;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 var(--sp-6);
 }
 @media (min-width: 1024px) {
   .wrap { padding: 0 2.5rem; }
 }
 
-.section {
-  padding: 5rem 0;
-  position: relative;
+.section        { padding: var(--sp-24) 0; position: relative; }
+.section--wide  { padding: var(--sp-32) 0; }
+
+/* Faint hairline between consecutive sections */
+.section + .section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    oklch(0.53 0.15 144 / 0.25) 50%,
+    transparent
+  );
 }
-.section--wide  { padding: 8rem 0; }
 
 /* ============================================================
-   NAV
+   NAV — solid ink. No backdrop-filter (§9.8).
    ============================================================ */
 nav.topnav {
   position: fixed;
@@ -74,57 +95,71 @@ nav.topnav {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 2rem;
-  transition: background 0.3s var(--ease), backdrop-filter 0.3s var(--ease);
+  border-bottom: 1px solid transparent;
+  transition: background var(--hover-out) var(--ease),
+              border-color var(--hover-out) var(--ease);
 }
 nav.topnav.scrolled {
-  background: hsl(var(--hero-bg) / 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  background: var(--nav-bg);
+  border-bottom-color: var(--line);
 }
 @media (min-width: 1024px) {
   nav.topnav { padding-left: 4rem; padding-right: 4rem; }
 }
 
 .logo {
-  color: hsl(var(--foreground));
+  color: var(--tx-hi);
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   text-decoration: none;
 }
-.logo .accent { color: hsl(var(--primary)); }
+.logo .accent { color: var(--ph-600); }
 
 .navlinks { display: none; gap: 2rem; }
 @media (min-width: 768px) { .navlinks { display: flex; } }
 .navlinks a {
-  font-size: 0.75rem;
-  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+  color: var(--tx-lo);
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
   text-decoration: none;
-  transition: color 0.2s ease;
   position: relative;
 }
-.navlinks a:hover { color: hsl(var(--foreground)); }
-.navlinks a.active { color: hsl(var(--primary)); }
+.navlinks a:hover { color: var(--tx-hi); }
+.navlinks a.active { color: var(--ph-600); }
+
+/* Underline draws in fast, decays out slow (phosphor curve) */
+.navlinks a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -6px;
+  height: 1px;
+  background: var(--ph-600);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--hover-out) var(--ease);
+}
+.navlinks a:hover::after,
+.navlinks a.active::after { transform: scaleX(1); transition-duration: var(--hover-in); }
 
 .nav-cta {
   display: none;
-  font-family: inherit;
-  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--foreground));
-  background: hsl(var(--nav-button));
+  color: var(--tx-hi);
+  background: var(--ink-3);
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--r-2);
   padding: 0.625rem 1.5rem;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition: background var(--hover-out) var(--ease), transform 0.1s ease;
 }
-.nav-cta:hover  { background: hsl(var(--nav-button) / 0.8); }
+.nav-cta:hover  { background: var(--ph-800); transition-duration: var(--hover-in); }
 .nav-cta:active { transform: scale(0.97); }
 @media (min-width: 768px) { .nav-cta { display: inline-flex; } }
 
@@ -136,7 +171,7 @@ section.hero {
   min-height: 100vh;
   display: flex;
   align-items: flex-end;
-  background: hsl(var(--hero-bg));
+  background: var(--ink-1);
   overflow: hidden;
 }
 .scene { position: absolute; inset: 0; }
@@ -151,14 +186,14 @@ section.hero {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 70% 40%, hsl(var(--primary) / 0.08), transparent 60%),
-    hsl(var(--hero-bg));
+    radial-gradient(ellipse at 70% 40%, oklch(0.79 0.27 142 / 0.06), transparent 60%),
+    var(--ink-1);
 }
 .overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(0, 0, 0, 0.3);
+  background: oklch(0 0 0 / 0.3);
   pointer-events: none;
 }
 
@@ -176,33 +211,34 @@ section.hero {
 }
 
 h1.hero-title {
-  font-size: var(--step-hero);
+  font-family: var(--font-display);
+  font-size: var(--t-hero);
   font-weight: 700;
   line-height: 1.05;
-  letter-spacing: -0.05em;
-  color: hsl(var(--foreground));
+  letter-spacing: -0.02em;
+  color: var(--tx-hi);
   text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
 @media (min-width: 768px) { h1.hero-title { margin-bottom: 1rem; } }
-.accent { color: hsl(var(--primary)); }
+.accent { color: var(--ph-600); }
 
 .hero-sub {
   font-size: clamp(1.125rem, 2.5vw, 1.875rem);
-  font-weight: 300;
-  line-height: 1.25;
-  color: hsl(var(--foreground) / 0.85);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--tx-hi);
   margin-bottom: 0.75rem;
 }
 @media (min-width: 768px) { .hero-sub { margin-bottom: 1.5rem; } }
 
 .hero-desc {
-  font-size: clamp(0.875rem, 1.5vw, 1.25rem);
-  font-weight: 300;
+  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+  font-weight: 400;
   line-height: 1.55;
-  color: hsl(var(--muted-foreground));
+  color: var(--tx-lo);
   margin-bottom: 1rem;
-  max-width: 38rem;
+  max-width: 64ch;
 }
 @media (min-width: 768px) { .hero-desc { margin-bottom: 2rem; } }
 
@@ -220,102 +256,130 @@ h1.hero-title {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: inherit;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-weight: 500;
   font-size: 0.875rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   padding: 0.75rem 1.5rem;
   border: 1px solid transparent;
-  border-radius: 0.125rem;
+  border-radius: var(--r-2);
   cursor: pointer;
   text-transform: uppercase;
   text-decoration: none;
-  transition: filter 0.2s ease, transform 0.1s ease, background 0.2s ease, color 0.2s ease;
+  transition: filter var(--hover-out) var(--ease),
+              background var(--hover-out) var(--ease),
+              color var(--hover-out) var(--ease),
+              border-color var(--hover-out) var(--ease),
+              box-shadow var(--hover-out) var(--ease),
+              transform 0.1s ease;
 }
 @media (min-width: 768px) { .btn { padding: 1rem 2rem; } }
+.btn:hover  { transition-duration: var(--hover-in), var(--hover-in), var(--hover-in), var(--hover-in), var(--hover-in), 0.1s; }
 .btn:active { transform: scale(0.97); }
 
 .btn-primary {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: var(--ph-600);
+  color: var(--ink-0);
 }
-.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:hover { filter: brightness(1.12); box-shadow: var(--e2); }
 
 .btn-secondary {
-  background: hsl(var(--foreground));
-  color: hsl(var(--background));
+  background: var(--tx-hi);
+  color: var(--ink-0);
 }
 .btn-secondary:hover { filter: brightness(0.9); }
 
 .btn-ghost {
   background: transparent;
-  color: hsl(var(--foreground));
-  border-color: hsl(var(--border));
+  color: var(--tx-hi);
+  border-color: var(--line);
 }
 .btn-ghost:hover {
-  background: hsl(var(--muted));
-  border-color: hsl(var(--primary) / 0.4);
+  background: var(--ink-3);
+  border-color: var(--ph-700);
 }
 
 /* ============================================================
    TYPOGRAPHY UTILITIES
    ============================================================ */
+/* Labels/eyebrows (§2): 0.8rem minimum, tracking 0.12em, --tx-dim. */
 .eyebrow {
   display: inline-block;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--primary));
+  color: var(--tx-dim);
   margin-bottom: 1rem;
 }
 
 h2 {
-  font-size: var(--step-3);
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 87.5;
+  font-size: var(--t-3);
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1.1;
-  color: hsl(var(--foreground));
+  color: var(--tx-hi);
   margin-bottom: 1rem;
   text-transform: uppercase;
 }
 
 h3 {
-  font-size: var(--step-2);
+  font-family: var(--font-display);
+  font-size: var(--t-2);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   line-height: 1.2;
-  color: hsl(var(--foreground));
+  color: var(--tx-hi);
   margin-bottom: 0.75rem;
 }
 
 p.lead {
-  font-size: var(--step-1);
-  font-weight: 300;
-  color: hsl(var(--foreground) / 0.85);
+  font-size: var(--t-1);
+  font-weight: 400;
+  color: var(--tx-hi);
   max-width: 44rem;
   margin-bottom: 2rem;
   line-height: 1.5;
 }
 
 p.body {
-  font-size: var(--step-0);
-  color: hsl(var(--muted-foreground));
-  line-height: 1.7;
+  font-size: var(--t-0);
+  color: var(--tx-lo);
+  line-height: 1.65;
   margin-bottom: 1rem;
-  max-width: 40rem;
+  max-width: 64ch;            /* body prose max measure (§2) */
 }
 
 .trust {
-  color: hsl(var(--muted-foreground) / 0.6);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.75rem;
+  display: inline-block;
+  color: var(--tx-dim);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
   font-weight: 400;
   letter-spacing: 0.05em;
   margin-top: 1rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-2);
 }
 @media (min-width: 768px) { .trust { margin-top: 1.5rem; } }
+.trust::before { content: "[ "; color: var(--ph-700); margin-right: 0.1em; }
+.trust::after  { content: " ]"; color: var(--ph-700); margin-left: 0.1em; }
+
+/* Eyebrows read as console log lines */
+.eyebrow::before,
+.operator-eyebrow::before,
+footer.site-foot h4::before {
+  content: "// ";
+  color: var(--ph-700);
+  letter-spacing: 0;
+  margin-right: 0.15em;
+  font-weight: 500;
+}
 
 /* ============================================================
    CARDS / GRID
@@ -329,52 +393,55 @@ p.body {
 @media (min-width: 1024px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, 1fr); } }
 
-.card {
-  background: hsl(var(--panel));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
+.card, .node-card {
+  position: relative;
+  background: var(--ink-2);
+  box-shadow: var(--e1);                 /* panel elevation */
+  border-radius: var(--r-2);
   padding: 1.75rem;
-  transition: border-color 0.25s var(--ease), transform 0.25s var(--ease);
+  transition: box-shadow var(--hover-out) var(--ease),
+              transform var(--hover-out) var(--ease);
 }
-.card:hover {
-  border-color: hsl(var(--primary) / 0.4);
+.card:hover, .node-card:hover {
+  box-shadow: var(--e2);                 /* interactive — never a drop shadow */
   transform: translateY(-2px);
+  transition-duration: var(--hover-in);
 }
 .card h3 { margin-bottom: 0.5rem; }
-.card p  { color: hsl(var(--muted-foreground)); font-size: 0.9rem; line-height: 1.55; }
-.card .eyebrow { margin-bottom: 0.75rem; font-size: 0.7rem; }
+.card p  { color: var(--tx-lo); font-size: 0.9rem; line-height: 1.55; }
+.card .eyebrow { margin-bottom: 0.75rem; font-size: 0.8rem; }
 
-/* stat cards — numeric hero rows */
+/* stat cards — numeric rows. Data is square (--r-0). */
 .stat {
-  background: hsl(var(--panel));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
   padding: 1.5rem;
 }
 .stat .value {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: var(--step-3);
+  font-family: var(--font-display);
+  font-size: var(--t-3);
   font-weight: 500;
-  color: hsl(var(--primary));
+  color: var(--ph-600);
   line-height: 1;
   margin-bottom: 0.5rem;
 }
 .stat .label {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
+  color: var(--tx-dim);
 }
 
 /* ============================================================
    FOOTER
    ============================================================ */
 footer.site-foot {
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid var(--line);
   padding: 3rem 0 2rem;
   margin-top: 4rem;
-  color: hsl(var(--muted-foreground));
+  color: var(--tx-lo);
   font-size: 0.8rem;
 }
 footer.site-foot .foot-grid {
@@ -386,262 +453,402 @@ footer.site-foot .foot-grid {
   footer.site-foot .foot-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
 }
 footer.site-foot h4 {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--foreground));
+  color: var(--tx-hi);
   margin-bottom: 1rem;
 }
 footer.site-foot ul { list-style: none; }
 footer.site-foot li { margin-bottom: 0.5rem; }
-footer.site-foot a:hover { color: hsl(var(--primary)); }
+footer.site-foot a:hover { color: var(--ph-600); }
 footer.site-foot .foot-bottom {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
   letter-spacing: 0.1em;
-  color: hsl(var(--muted-foreground) / 0.7);
+  color: var(--tx-dim);
 }
 
 /* ============================================================
-   ANIMATIONS
+   LIVENESS GRAMMAR (§4)
+   One shared chip, wired to a freshness check. Default state is
+   UNKNOWN — hollow, unlit, claiming nothing — until a check passes.
+   Contract:
+   - Authored HTML may carry data-state="unknown" only. Every other
+     state value is written by sentinel JS at runtime.
+   - CSS owns the glyph channel (::before). JS owns word + pulse
+     anchor as text. Never color-only: hue + glyph + word + pulse.
+   - Chips should carry aria-live="polite"; feeds role="log".
    ============================================================ */
-@keyframes fade-up {
-  0%   { opacity: 0; transform: translateY(20px); filter: blur(4px); }
-  100% { opacity: 1; transform: translateY(0);    filter: blur(0); }
+[data-state] {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+  padding: 0 0.6em;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-2);
+  color: var(--tx-dim);
 }
-.fade-up {
-  opacity: 0;
-  animation: fade-up 0.7s var(--ease) forwards;
+[data-state]::before          { content: "◌"; }       /* hollow until proven */
+[data-state="live"]::before   { content: "●"; }
+[data-state="paused"]::before { content: "▮▮"; letter-spacing: 0.08em; }
+[data-state="replay"]::before { content: "◉"; }
+[data-state="stale"]::before  { content: "◌"; }
+[data-state="fail"]::before   { content: "✗"; }
+
+[data-state="unknown"] { color: var(--tx-dim); }                       /* ◌ checking… */
+[data-state="live"]    { color: var(--st-live); box-shadow: var(--e2); /* JS-set only */
+                         border-color: var(--ph-700); }
+[data-state="paused"]  { color: var(--st-paused); }
+[data-state="replay"]  { color: var(--st-replay); }
+[data-state="stale"]   { color: var(--st-stale);
+                         filter: saturate(0.55);
+                         border-style: dashed;
+                         border-color: var(--st-stale);
+                         text-shadow: -1px -1px 0 var(--st-stale-ghost); } /* burn-in */
+[data-state="fail"]    { color: var(--st-fail); border-color: var(--st-fail); }
+
+/* Self-check alarm — inverse video. Rarer than red (§0 rule 2).
+   Only for a page failing its own self-check. JS-set only. */
+.alarm, [data-state="alarm"] {
+  background: var(--alarm-bg);
+  color: var(--alarm-fg);
+  border: 0;
+  border-radius: var(--r-0);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  filter: none;
+  text-shadow: none;
 }
-.reveal {
-  opacity: 0;
-  transform: translateY(30px);
-  filter: blur(4px);
-  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease), filter 0.9s var(--ease);
+[data-state="alarm"]::before { content: "█"; }
+
+/* Motion-as-liveness (§3): the dot breathes ONCE per received pulse.
+   Sentinel JS toggles .breathe on real receipt — never an infinite loop. */
+@keyframes st-breathe {
+  0%, 100% { opacity: 1; }
+  40%      { opacity: 0.35; }
 }
-.reveal.in {
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
+[data-state="live"].breathe::before {
+  animation: st-breathe 600ms var(--ease) 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .fade-up, .reveal {
-    animation: none;
-    opacity: 1;
-    filter: none;
-    transform: none;
-    transition: none;
-  }
-  #scene-canvas { display: none; }
-  .scene-fallback { display: block; }
-  body::after { animation: none !important; }
-  .logo .accent { animation: none !important; }
-  h1.hero-title { animation: none !important; background: none; color: hsl(var(--foreground)); -webkit-text-fill-color: initial; }
+/* Verified bloom (§3.3): charge to --e3, decay back to --e2 over 1.6s.
+   data-verified is set only by JS on a passed client-side proof. */
+@keyframes verified-bloom {
+  0%   { box-shadow: var(--e2); }
+  12%  { box-shadow: var(--e3); }
+  100% { box-shadow: var(--e2); }
+}
+[data-state="live"][data-verified] {
+  animation: verified-bloom 1.6s var(--ease) 1;
 }
 
 /* ============================================================
-   SCANLINES  (soft CRT sweep across the viewport)
+   HONEST-STATE PANELS (§4 treatments at panel scale)
    ============================================================ */
-body::before {
+
+/* PAUSED — a museum placard, not an apology. Thin amber top-rule,
+   zero animation, content stays full contrast. */
+.placard-paused {
+  position: relative;
+  border-top: 2px solid var(--st-paused);
+  background: var(--ink-1);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-6);
+}
+.placard-paused, .placard-paused * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* REPLAY — recorded data animating is cyan, never green.
+   Subtle horizontal tape ruling. */
+.panel-replay {
+  position: relative;
+  background: var(--ink-1);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+}
+.panel-replay::after {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 99;
+  border-radius: inherit;
   background: repeating-linear-gradient(
     to bottom,
-    transparent 0px,
-    transparent 2px,
-    hsl(120 50% 8% / 0.18) 3px,
-    transparent 4px
+    transparent 0,
+    transparent 7px,
+    oklch(0.82 0.12 195 / 0.05) 7px,
+    oklch(0.82 0.12 195 / 0.05) 8px
   );
-  animation: scan-drift 0.32s linear infinite;
-  will-change: transform;
-}
-@keyframes scan-drift {
-  0%   { transform: translateY(0); }
-  100% { transform: translateY(4px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  body::before { animation: none !important; opacity: 0.4; }
 }
 
+/* STALE — the burn-in. Desaturated, dashed ash border, double-print
+   ghost (text-shadow 1px up-left), static 6% scanline. The only live
+   element on a stale panel is its age (.age), counting up in pulses. */
+.burn-in {
+  position: relative;
+  border: 1px dashed var(--st-stale);
+  border-radius: var(--r-0);
+  background: var(--ink-1);
+  color: var(--st-stale);
+  filter: saturate(0.55);
+  text-shadow: -1px -1px 0 var(--st-stale-ghost);
+  padding: var(--sp-6);
+}
+.burn-in::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--tex-scanline);
+  opacity: 0.06;
+}
+.burn-in .age { color: var(--tx-hi); text-shadow: none; }
+
 /* ============================================================
-   GRAIN OVERLAY  (subtle CRT texture across the viewport)
+   TEXTURE — one static scanline veil at 3% (§1 token laws).
+   CSS only. No noise rasters. Never animated.
    ============================================================ */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 100;
-  opacity: 0.055;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  animation: grain 7.5s steps(8) infinite;
-}
-@keyframes grain {
-  0%   { transform: translate( 0%,  0%); }
-  12%  { transform: translate(-2%, -1%); }
-  24%  { transform: translate( 1%, -2%); }
-  36%  { transform: translate(-1%,  2%); }
-  48%  { transform: translate( 2%,  1%); }
-  60%  { transform: translate(-2%, -2%); }
-  72%  { transform: translate( 1%,  1%); }
-  84%  { transform: translate(-1%, -1%); }
-  100% { transform: translate( 0%,  0%); }
+  z-index: 99;
+  background: var(--tex-scanline);
+  opacity: 0.03;
 }
 
 /* ============================================================
-   SCROLL PROGRESS  (thin green bar at top of viewport)
+   CHAIN SPINE + SCROLL-DRIVEN (§3.1) — zero JS.
+   Base render (no support / no motion): spine fully drawn,
+   links pre-filled, reveals simply visible.
    ============================================================ */
-#scroll-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: hsl(var(--primary));
-  z-index: 60;
-  transform-origin: left center;
-  transform: scaleX(0);
-  will-change: transform;
-  pointer-events: none;
-  box-shadow: 0 0 12px hsl(var(--primary) / 0.55);
-}
-
-/* Smooth in-page scroll */
-html { scroll-behavior: smooth; }
-
-/* ============================================================
-   CARD 3D TILT  (JS sets transform inline; this preps stage)
-   ============================================================ */
-.card, .node-card {
-  transform-style: preserve-3d;
-  transition:
-    transform 0.35s var(--ease),
-    border-color 0.25s var(--ease),
-    box-shadow 0.35s var(--ease);
-  will-change: transform;
-}
-.card:hover, .node-card:hover {
-  box-shadow: 0 14px 40px -16px hsl(var(--primary) / 0.35);
-}
-
-/* ============================================================
-   NAV UNDERLINE  (green draw-in from left)
-   ============================================================ */
-.navlinks a::after {
+.chain-spine { position: relative; }
+.chain-spine::before {
   content: "";
   position: absolute;
   left: 0;
-  right: 0;
-  bottom: -6px;
-  height: 1px;
-  background: hsl(var(--primary));
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.35s var(--ease);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+  transform-origin: top;
 }
-.navlinks a:hover::after,
-.navlinks a.active::after {
-  transform: scaleX(1);
+
+/* Section boundary glyph: hollow ◇ base, solid ◆ fills over it. */
+.chain-link {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-body);
+  line-height: 1;
+  color: var(--ph-700);
+}
+.chain-link::before { content: "◇"; }
+.chain-link::after {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--ph-600);
+  opacity: 1;                  /* pre-filled without timeline support */
+}
+
+/* Reveals: visible by default — the zero-JS, zero-support render is
+   a complete site. 12px max travel, opacity/translate only. */
+.reveal { opacity: 1; }
+.reveal.in { opacity: 1; }     /* legacy IntersectionObserver class: no-op */
+
+/* Page-load entrance (pure CSS, runs without JS). */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+.fade-up { animation: fade-up 0.6s var(--ease) backwards; }
+
+@keyframes reveal-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes spine-draw {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@keyframes link-fill {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes hero-wdth {
+  from { font-variation-settings: 'wdth' 112; }
+  to   { font-variation-settings: 'wdth' 87.5; }
+}
+@keyframes progress-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+  .chain-spine::before {
+    animation: spine-draw linear both;
+    animation-timeline: scroll(root);
+  }
+  .chain-link::after {
+    animation: link-fill linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 80%;
+  }
+  /* Hero width-breathing: 'wdth' 112 → 87.5 over the first viewport. */
+  h1.hero-title {
+    animation: hero-wdth linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 100vh;
+  }
+  /* Scroll progress without JS. (site.js inline transform loses to
+     this animation where supported — same visual either way.) */
+  #scroll-progress {
+    animation: progress-draw linear both;
+    animation-timeline: scroll(root);
+  }
 }
 
 /* ============================================================
-   BUTTON GLOW  (primary CTA gets a green halo on hover)
+   CROSS-DOCUMENT VIEW TRANSITIONS (§3.2)
+   Real pages, real URLs. Fails soft to a plain swap.
    ============================================================ */
-.btn-primary {
-  box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
-  transition:
-    filter 0.2s ease,
-    transform 0.1s ease,
-    box-shadow 0.35s var(--ease);
+@view-transition { navigation: auto; }
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: 0.18s; }
+::view-transition-group(page-title) {
+  animation-duration: 0.28s;
+  animation-timing-function: var(--ease);
 }
-.btn-primary:hover {
-  box-shadow: 0 0 28px hsl(var(--primary) / 0.5);
+pulse-clock   { view-transition-name: pulse-clock; }  /* never blinks across nav */
+h1.hero-title { view-transition-name: page-title; }
+
+/* ============================================================
+   SCROLL PROGRESS (thin bar; CSS-driven where supported)
+   ============================================================ */
+#scroll-progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--ph-600);
+  z-index: 60;
+  transform-origin: left center;
+  transform: scaleX(0);
+  pointer-events: none;
 }
 
 /* ============================================================
-   FOCUS RINGS  (keyboard navigation visible + brand-consistent)
+   FOCUS RINGS — keyboard navigation visible + brand-consistent
    ============================================================ */
 :focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid var(--ph-600);
   outline-offset: 3px;
-  border-radius: 2px;
+  border-radius: var(--r-1);
 }
 :focus:not(:focus-visible) { outline: none; }
 
 /* ============================================================
-   LOGO SLASH BREATHING
+   LIVE MHD VIEWPORT — shared by /entropy and /plasma.
+   The overlay dot claims nothing by itself: page JS wires it into
+   the liveness grammar ([data-state]); until then it renders dim.
    ============================================================ */
-.logo .accent {
-  display: inline-block;
-  animation: logo-breathe 3.2s ease-in-out infinite;
+.mhd-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: var(--r-3);             /* viewport = the maximum radius */
+  overflow: hidden;
+  box-shadow: var(--e1);
+  background: var(--ink-1);
 }
-@keyframes logo-breathe {
-  0%, 100% { opacity: 0.75; text-shadow: 0 0 0 transparent; }
-  50%      { opacity: 1;    text-shadow: 0 0 10px hsl(var(--primary) / 0.55); }
+.mhd-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
-
-/* ============================================================
-   HERO TITLE SHIMMER  (slow gradient sweep over white letters)
-   ============================================================ */
-h1.hero-title {
-  background-image: linear-gradient(
-    110deg,
-    hsl(var(--foreground)) 25%,
-    hsl(var(--foreground) / 0.68) 48%,
-    hsl(var(--foreground)) 72%
-  );
-  background-size: 220% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 7s linear infinite;
-}
-h1.hero-title .accent {
-  -webkit-text-fill-color: hsl(var(--primary));
-  color: hsl(var(--primary));
-}
-@keyframes shimmer {
-  0%   { background-position: 220% 0; }
-  100% { background-position: -220% 0; }
-}
-
-/* ============================================================
-   SECTION DIVIDER  (faint green hairline between consecutive sections)
-   ============================================================ */
-.section + .section::before {
-  content: "";
+.mhd-viewport .mhd-frame {
   position: absolute;
-  top: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    hsl(var(--primary) / 0.25) 50%,
-    transparent
-  );
+  inset: 8px;
+  border: 1px solid var(--line);
+  pointer-events: none;
+  border-radius: var(--r-1);
 }
+.mhd-viewport .mhd-overlay {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--nav-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-lo);
+}
+.mhd-viewport .mhd-overlay .live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--tx-dim);             /* unlit until sentinel JS earns it */
+}
+.mhd-viewport .mhd-overlay .mhd-kernel {
+  color: var(--ph-600);
+  letter-spacing: 0.08em;
+}
+.mhd-viewport .mhd-readouts {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  display: grid;
+  grid-auto-flow: column;
+  gap: 1rem;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-lo);
+  padding: 0.4rem 0.75rem;
+  background: var(--nav-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+}
+.mhd-viewport .mhd-readouts .mhd-num { color: var(--ph-600); }
 
 /* ============================================================
-   OPERATOR SECTION  (Neuromancer lineage — jacked-in console)
+   LEGACY CONSOLE COMPONENTS (retokened; de-animated — unwired
+   liveness claims removed per §9.4: sentinel or nothing)
    ============================================================ */
 .operator-section {
-  background: hsl(var(--hero-bg));
-  padding: 9rem 0;
+  background: var(--ink-1);
+  padding: var(--sp-32) 0;
   position: relative;
   overflow: hidden;
 }
@@ -650,7 +857,7 @@ h1.hero-title .accent {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 50% 50%, hsl(var(--primary) / 0.045), transparent 75%);
+    radial-gradient(ellipse 70% 55% at 50% 50%, oklch(0.79 0.27 142 / 0.04), transparent 75%);
   pointer-events: none;
 }
 .operator {
@@ -660,35 +867,31 @@ h1.hero-title .accent {
   position: relative;
 }
 .operator-eyebrow {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--primary));
+  color: var(--tx-dim);
   margin-bottom: 1.25rem;
   display: inline-block;
 }
 h2.operator-title {
+  font-family: var(--font-display);
   font-size: clamp(2.75rem, 8.5vw, 5.5rem);
   font-weight: 700;
   line-height: 0.95;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
-  color: hsl(var(--foreground));
-  -webkit-text-fill-color: hsl(var(--foreground));
-  background: none;
+  color: var(--tx-hi);
   margin-bottom: 0.75rem;
 }
-h2.operator-title .accent {
-  color: hsl(var(--primary));
-  -webkit-text-fill-color: hsl(var(--primary));
-}
+h2.operator-title .accent { color: var(--ph-600); }
 .operator-sub {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: var(--font-body);
   font-size: clamp(0.8rem, 1.1vw, 0.95rem);
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
+  color: var(--tx-lo);
   margin-bottom: 4rem;
 }
 .operator-rig {
@@ -699,326 +902,125 @@ h2.operator-title .accent {
 }
 .operator-foot {
   margin-top: 3.5rem;
-  color: hsl(var(--muted-foreground) / 0.65);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-/* --- Visor rig internals --- */
-.operator-rig .cable {
-  stroke-dasharray: 6 8;
-  animation: cable-drift 9s linear infinite;
-}
-.operator-rig .cable-b { animation-duration: 11s; animation-direction: reverse; }
-@keyframes cable-drift {
-  0%   { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -56; }
-}
-
-.operator-rig .glyph { animation: glyph-flicker 4.2s steps(1) infinite; }
-.operator-rig .glyph-2 { animation-delay: 0.6s; }
-.operator-rig .glyph-3 { animation-delay: 1.2s; }
-.operator-rig .glyph-4 { animation-delay: 1.8s; }
-.operator-rig .glyph-5 { animation-delay: 2.4s; }
-.operator-rig .glyph-6 { animation-delay: 3.0s; }
-@keyframes glyph-flicker {
-  0%, 91%, 100% { opacity: 1; }
-  92%, 93%      { opacity: 0.35; }
-  94%, 95%      { opacity: 1; }
-  96%           { opacity: 0.5; }
-}
-
-.operator-rig .led {
-  animation: led-pulse 1.9s ease-in-out infinite;
-  transform-origin: center;
-}
-.operator-rig .led-b { animation-delay: 0.8s; }
-.operator-rig .led-c { animation-delay: 0.3s; animation-duration: 2.4s; }
-@keyframes led-pulse {
-  0%, 100% { opacity: 0.95; }
-  50%      { opacity: 0.28; }
-}
-
-/* Live MHD viewport — shared by /entropy and /plasma (and any future
-   live-frame page). Consolidated here so the framed box can't drift per
-   page the way it did when this lived inline on /plasma only. */
-.mhd-viewport {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 2 / 1;
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid hsl(var(--primary) / 0.4);
-  background: hsl(var(--hero-bg));
-}
-.mhd-viewport canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.mhd-viewport .mhd-frame {
-  position: absolute;
-  inset: 8px;
-  border: 1px solid hsl(120 55% 32% / 0.55);
-  pointer-events: none;
-  border-radius: 2px;
-}
-.mhd-viewport .mhd-overlay {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.4rem 0.75rem;
-  background: hsl(var(--hero-bg) / 0.78);
-  border: 1px solid hsl(var(--primary) / 0.45);
-  border-radius: 2px;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-}
-.mhd-viewport .mhd-overlay .live-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: hsl(var(--primary));
-  box-shadow: 0 0 6px hsl(var(--primary) / 0.7);
-  animation: led-pulse 1.6s ease-in-out infinite;
-}
-.mhd-viewport .mhd-overlay .mhd-kernel {
-  color: hsl(var(--primary));
-  letter-spacing: 0.08em;
-}
-.mhd-viewport .mhd-readouts {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  display: grid;
-  grid-auto-flow: column;
-  gap: 1rem;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.65rem;
+  color: var(--tx-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-  padding: 0.4rem 0.75rem;
-  background: hsl(var(--hero-bg) / 0.72);
-  border: 1px solid hsl(var(--border));
-  border-radius: 2px;
-}
-.mhd-viewport .mhd-readouts .mhd-num {
-  color: hsl(var(--primary));
-  text-shadow: 0 0 6px hsl(var(--primary) / 0.4);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .operator-rig .cable,
-  .operator-rig .glyph,
-  .operator-rig .led { animation: none !important; }
-}
-
-/* ============================================================
-   LEDATIC SOUL — Neuromancer DNA propagated site-wide
-   Every surface reads like a console transmission.
-   ============================================================ */
-
-/* --- Eyebrows become console log lines --- */
-.eyebrow::before,
-.operator-eyebrow::before,
-footer.site-foot h4::before {
-  content: "// ";
-  color: hsl(var(--primary) / 0.55);
-  letter-spacing: 0;
-  margin-right: 0.15em;
-  font-weight: 500;
-}
-
-/* --- Logo gets a live status LED --- */
-.logo {
-  position: relative;
-  padding-right: 1rem;
-}
-.logo::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 50%;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: hsl(var(--primary));
-  box-shadow: 0 0 8px hsl(var(--primary) / 0.6);
-  transform: translateY(-50%);
-  animation: led-pulse 2s ease-in-out infinite;
-}
-
-/* --- Cards gain hardware-panel chrome:
-       top-left live LED + bottom-right idle LED --- */
-.card, .node-card {
-  position: relative;
-}
-.card::before,
-.node-card::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: hsl(var(--primary));
-  box-shadow: 0 0 6px hsl(var(--primary) / 0.55);
-  animation: led-pulse 2.3s ease-in-out infinite;
-  pointer-events: none;
-}
-.card::after,
-.node-card::after {
-  content: "";
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: hsl(var(--primary) / 0.3);
-  animation: led-pulse 3.1s ease-in-out infinite;
-  animation-delay: 0.7s;
-  pointer-events: none;
-}
-
-/* --- Trust paragraphs render as bracketed terminal readouts --- */
-.trust {
-  display: inline-block;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: 2px;
-  background: hsl(var(--panel) / 0.4);
-}
-.trust::before {
-  content: "[ ";
-  color: hsl(var(--primary) / 0.6);
-  margin-right: 0.1em;
-}
-.trust::after {
-  content: " ]";
-  color: hsl(var(--primary) / 0.6);
-  margin-left: 0.1em;
-}
-
-/* --- Footer bottom becomes a terminal status bar --- */
-footer.site-foot .foot-bottom {
-  position: relative;
-  padding: 1.2rem 0 0 1.5rem;
-  margin-top: 3rem;
-}
-footer.site-foot .foot-bottom::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: calc(50% + 0.3rem);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: hsl(var(--primary));
-  box-shadow: 0 0 8px hsl(var(--primary) / 0.55);
-  transform: translateY(-50%);
-  animation: led-pulse 2s ease-in-out infinite;
-}
-
-/* --- Visor mini: compact console panel for page-specific readouts --- */
+/* Compact console panel for page-specific readouts */
 .visor-mini {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1.1rem 0.75rem 1.4rem;
-  background: linear-gradient(180deg,
-    hsl(120 25% 14%),
-    hsl(120 20% 9%),
-    hsl(120 25% 14%));
-  border: 1.5px solid hsl(120 60% 45%);
-  border-radius: 3px;
-  box-shadow:
-    inset 0 0 18px hsl(120 99% 46% / 0.08),
-    0 8px 28px -14px hsl(120 99% 46% / 0.35);
+  padding: 0.75rem 1.1rem;
+  background: var(--ink-2);
+  border: 1px solid var(--ph-700);
+  border-radius: var(--r-1);
+  box-shadow: var(--e1);
 }
-.visor-mini::before,
-.visor-mini::after {
-  content: "";
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: hsl(120 99% 55%);
-  box-shadow: 0 0 6px hsl(120 99% 55% / 0.7);
-  animation: led-pulse 2.1s ease-in-out infinite;
-}
-.visor-mini::before { top: 5px; left: 5px; }
-.visor-mini::after  { bottom: 5px; right: 5px; animation-delay: 0.7s; }
-
 .visor-mini .visor-label {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.65rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
+  color: var(--tx-dim);
   padding-right: 0.85rem;
-  border-right: 1px solid hsl(120 40% 25%);
+  border-right: 1px solid var(--line);
 }
 .visor-mini .visor-value {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: 0.08em;
-  color: hsl(var(--primary));
-  text-shadow: 0 0 10px hsl(var(--primary) / 0.45);
-  font-variant-numeric: tabular-nums;
+  color: var(--ph-600);
 }
 .visor-mini .visor-value .dim {
-  color: hsl(var(--muted-foreground));
-  text-shadow: none;
+  color: var(--tx-lo);
   font-weight: 400;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .visor-mini::before,
-  .visor-mini::after { animation: none !important; }
-}
-
-/* --- Reusable `.readout` pill (for any inline status chip) --- */
+/* Inline status chip. The dot is unlit — wire a [data-state]
+   sentinel instead for anything that claims liveness. */
 .readout {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.4rem 0.85rem;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-  border: 1px solid hsl(var(--border));
-  border-radius: 2px;
-  background: hsl(var(--panel) / 0.4);
+  color: var(--tx-lo);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-2);
 }
 .readout::before {
   content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: hsl(var(--primary));
-  box-shadow: 0 0 6px hsl(var(--primary) / 0.55);
-  animation: led-pulse 2s ease-in-out infinite;
+  background: var(--tx-dim);
 }
 
+/* ============================================================
+   REDUCED MOTION (§3.4) — a full first-class mode, one block.
+   Scroll/view timelines and the view-transition rule unset;
+   chain spine fully drawn; links pre-filled; reveals visible.
+   Shader single-frame + static clock handled in JS (matchMedia).
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .logo::after,
-  .card::before, .card::after,
-  .node-card::before, .node-card::after,
-  footer.site-foot .foot-bottom::before,
-  .readout::before { animation: none !important; }
+  @view-transition { navigation: none; }
+
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  .fade-up,
+  .reveal,
+  h1.hero-title,
+  .chain-spine::before,
+  .chain-link::after,
+  #scroll-progress,
+  [data-state="live"].breathe::before,
+  [data-state="live"][data-verified] {
+    animation: none !important;
+  }
+
+  .reveal, .fade-up { opacity: 1; transform: none; }
+  .chain-spine::before { transform: none; }     /* fully drawn */
+  .chain-link::after { opacity: 1; }            /* pre-filled  */
+  #scroll-progress { display: none; }           /* motion-only affordance */
+  [data-state="live"][data-verified] { box-shadow: var(--e3); } /* earned, static */
+}
+
+/* ============================================================
+   REDUCED DATA (§3.5) — equal citizen.
+   Fonts fall back and polling slows in their own modules;
+   here: no decorative texture work at all.
+   ============================================================ */
+@media (prefers-reduced-data: reduce) {
+  body::after,
+  .burn-in::after,
+  .panel-replay::after { content: none; }
+}
+
+/* ============================================================
+   PREFERS-CONTRAST: MORE (§3.5) — token lifts live in tokens.css;
+   here the component-level swaps: no veils, no desaturation filters
+   (state stays legible through border + glyph + word).
+   ============================================================ */
+@media (prefers-contrast: more) {
+  body::after { content: none; }
+  .burn-in, [data-state="stale"] { filter: none; }
+  .card, .node-card, .stat, .visor-mini {
+    box-shadow: none;
+    outline: 1px solid var(--line);
+  }
 }

@@ -3,78 +3,127 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Milestone Rail releases, newest first. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. The repo&apos;s CHANGELOG.md is the complete record.">
+<meta name="description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists — newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/changelog">
 <meta property="og:title" content="Changelog — Ledatic">
-<meta property="og:description" content="Milestone Rail releases, newest first. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. The repo&apos;s CHANGELOG.md is the complete record.">
+<meta property="og:description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists — newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Changelog — Ledatic">
-<meta name="twitter:description" content="Milestone Rail releases, newest first. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. The repo&apos;s CHANGELOG.md is the complete record.">
+<meta name="twitter:description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists — newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Changelog — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="canonical" href="https://ledatic.org/changelog">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests. -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
-  .release {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    padding: 2rem 0;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-  @media (min-width: 768px) {
-    .release { grid-template-columns: 10rem 1fr; gap: 3rem; }
-  }
-  .release .meta {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.8rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .release .meta .ver {
-    color: hsl(var(--primary));
-    font-weight: 500;
-  }
-  .release h3 { margin-bottom: 0.75rem; }
-  .release p  { color: hsl(var(--muted-foreground)); font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.5rem; max-width: 46rem; }
-  .release ul {
-    margin-top: 0.75rem;
-    margin-left: 1.25rem;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
-  .release li { margin-bottom: 0.25rem; }
+/* ── /changelog page styles — consumes tokens only ── */
 
-  .attest-badge {
-    margin-top: 0.6rem;
-    padding: 0.5rem 0.7rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: 4px;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
-    line-height: 1.5;
-    color: hsl(var(--muted-foreground));
-    background: hsl(var(--muted) / 0.4);
-    max-width: 46rem;
-  }
-  .attest-badge .ok { color: hsl(var(--primary)); }
-  .attest-badge .lab { color: hsl(var(--muted-foreground)); }
-  .attest-badge .val { color: hsl(var(--foreground)); }
-  .attest-badge a { color: hsl(var(--primary)); text-decoration: none; }
-  .attest-badge a:hover { text-decoration: underline; }
-  .attest-badge code { font-family: inherit; word-break: break-all; }
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* No shader (§6 /changelog): the chain spine is the version axis. */
+.hero.compact { min-height: 46vh; }
+.hero.compact .hero-content { padding-top: 7rem; padding-bottom: 2rem; }
+.hero-content a { pointer-events: auto; }
+
+data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
+
+/* ── The ledger — chain spine as the version axis ── */
+.ledger { list-style: none; margin: 1rem 0 0; padding: 0; }
+.ledger > li {
+  position: relative;
+  padding: 1rem 0 1rem 1.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.ledger .mark {
+  position: absolute;
+  left: -0.42em;
+  top: 1.15rem;
+  font-size: 0.8rem;
+  background: var(--ink-0);
+  padding: 2px 0;
+}
+.erow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.9rem;
+}
+.erow .tray { flex-basis: 100%; max-width: none; }
+.lver {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ph-600);
+  min-width: 5.5rem;
+}
+.ldate, .anchor {
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  color: var(--tx-dim);
+}
+.anchor time-pulse { color: var(--tx-lo); }
+.ledger .ttl {
+  margin: 0.3rem 0 0;
+  color: var(--tx-hi);
+  font-size: var(--t-0);
+  font-weight: 500;
+  max-width: 64ch;
+}
+.ledger p { color: var(--tx-lo); font-size: 0.9rem; line-height: 1.55; max-width: 64ch; margin: 0.2rem 0 0; }
+.ledger .gloss { font-size: 0.85rem; }
+
+/* burn-in chip — the stale treatment scaled to a badge */
+.era {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--st-stale);
+  border: 1px dashed var(--st-stale);
+  border-radius: var(--r-1);
+  padding: 0.1rem 0.45rem;
+  text-shadow: -1px -1px 0 var(--st-stale-ghost);
+  white-space: nowrap;
+}
+
+/* chain-epoch divider — a statement, not a release */
+.ledger li.epoch {
+  border-bottom: 1px dashed var(--st-stale);
+  color: var(--st-stale);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.6;
+  text-shadow: -1px -1px 0 var(--st-stale-ghost);
+}
+.ledger li.epoch .mark { color: var(--st-stale); }
+
+.push { margin-top: var(--sp-8); }
+.section .chain-link { display: block; margin-bottom: 0.75rem; }
 </style>
+<script type="speculationrules">
+{
+  "prerender": [
+    { "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+  ]
+}
+</script>
 </head>
-<body data-shader="_shared/shaders/bench.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -85,275 +134,618 @@
     <a href="system.html">System</a>
     <a href="changelog.html" class="active">Changelog</a>
   </div>
-  <a class="nav-cta" href="https://github.com/zemo-g/rail/releases" target="_blank" rel="noopener">Releases</a>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="https://github.com/zemo-g/rail/releases" target="_blank" rel="noopener">Releases</a>
+  </div>
 </nav>
 
-<section class="hero" style="min-height: 50vh;">
+<section class="hero compact">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
-  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Changelog</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Ship log</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      Milestone releases, newest first.
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Changelog</span>
+    <h1 class="hero-title fade-up">The ledger</h1>
+    <p class="hero-sub fade-up">
+      Every tag Rail has ever shipped, newest first.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Public since v1.0. Tagged entries carry their signed attestation artifacts.
-      CHANGELOG.md in the repo is the canonical, complete record.
+    <p class="hero-desc fade-up">
+      Tagged entries carry a real attestation: the release binary, hashed and
+      Ed25519-signed by an independent witness against a live entropy-beacon
+      pulse. Press <span aria-hidden="true">⌁</span> verify on any entry and
+      your browser checks the proof itself. Entries that predate the chain
+      say so &mdash; honestly.
     </p>
   </div>
 </section>
+
+<main>
 
 <section class="section">
-  <div class="wrap" style="max-width: 62rem;">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Attested ledger &mdash; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data></span>
+    <h2 class="reveal">Releases, on the chain.</h2>
+    <p class="body reveal">
+      A pulse anchor (<span aria-hidden="true">@ p#&hellip;</span>) marks the
+      beacon pulse at the moment of <em>signing</em> &mdash; for releases
+      after the chain epoch that is the release itself; for older tags the
+      signature was added retroactively and is labeled backfill. The repo's
+      CHANGELOG.md remains the complete prose record.
+    </p>
+    <p class="gloss reveal">
+      scripts off? every proof here is a plain URL:
+      /releases/&lt;tag&gt;/rail_native.attestation.json
+    </p>
+    <p class="body reveal">
+      This page doubles as the site's own deploy ledger: deploys of
+      ledatic.org sign into the same chain, and the self-check in the footer
+      verifies the page you are reading right now. Walk the chain itself at
+      <a href="replay.html">/replay</a>.
+    </p>
 
-    <div class="release reveal" data-attest-tag="v5.1.0" id="v5.1.0">
-      <div class="meta">
-        <div class="ver">v5.1.0</div>
-        <div>2026-05-15</div>
-      </div>
-      <div>
-        <h3>Rail emits its own GPU kernels</h3>
-        <p>Rail now generates Metal Shading Language source from its op-DAG, JIT-compiles it via Metal's <code>newLibraryWithSource:</code>, and dispatches the kernel at runtime. Every kernel the GPU executes is emitted by an attested Rail binary &mdash; the substrate piece needed for end-to-end attested GPU training.</p>
-        <ul>
-          <li>Auto-emission pipeline: <code>stdlib/jit_node.rail</code> (op-DAG types) + <code>stdlib/jit_tape.rail</code> (tracers) + <code>stdlib/jit_match.rail</code> (DAG matcher) + <code>stdlib/jit_emit.rail</code> (MSL emitter)</li>
-          <li>Hand-fused Metal kernels: <code>fused_rmsnorm_qkv</code> (RMSNorm + 3 matmul in one threadgroup-per-row dispatch, <strong>35&times; faster</strong> at training shapes), <code>fused_silu_hadamard</code> (SiLU(gate) * up elementwise, <strong>18&times; faster</strong>)</li>
-          <li>bf16 numerics regime: <code>tgl_matmul_bf16</code> + <code>matmul_bf16</code> Rail wrapper. f32 exponent range sidesteps fp16's step-2759 NaN cliff. 10k-step training stable</li>
-          <li>JIT compile foundation: <code>tgl_jit_compile_from_tmp_file</code> drives Metal's <code>newLibraryWithSource:</code> from a Rail-emitted <code>.metal</code> file; pipeline IDs cached for reuse</li>
-          <li>200-step matched-seed pilot vs bf16 baseline: trajectory shape preserved, no NaN, both converge. Wall-clock bench (3&times;3 alternating runs): <strong>2.85% step-throughput improvement</strong> at seq=512 d=64 d_ff=192</li>
-          <li>141/141 still green; 2-pass byte-identical self-bootstrap unchanged</li>
-        </ul>
-      </div>
+    <ol class="ledger chain-spine push">
+
+      <li class="reveal" id="v5-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.1.0">v5.1.0</data></span>
+          <span class="ldate">2026-05-15</span>
+          <span class="anchor">attested <time-pulse data-pulse="1004625">@ p#1004625</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; v5.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail emits its own GPU kernels.</p>
+        <p class="gloss">the language writes the GPU code it runs &mdash; at runtime, from its own op-graph</p>
+      </li>
+
+      <li class="reveal" id="v5-0-2">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v5.0.2</span>
+          <span class="ldate">2026-05-15</span>
+          <span class="anchor">attested <time-pulse data-pulse="1002744">@ p#1002744</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.0.2/rail_native.attestation.json" data-name="rail_native &middot; v5.0.2"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Attestation pipeline goes fully pure-Rail.</p>
+      </li>
+
+      <li class="reveal" id="v5-0-1">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v5.0.1</span>
+          <span class="ldate">2026-05-15</span>
+          <span class="anchor">attested <time-pulse data-pulse="987584">@ p#987584</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.0.1/rail_native.attestation.json" data-name="rail_native &middot; v5.0.1"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Attestation hygiene + codegen tightening.</p>
+      </li>
+
+      <li class="reveal" id="v5-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v5.0.0</span>
+          <span class="ldate">2026-05-14</span>
+          <span class="anchor">attested <time-pulse data-pulse="976227">@ p#976227</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.0.0/rail_native.attestation.json" data-name="rail_native &middot; v5.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Self-hosted toolchain &mdash; Linux ELF substrate.</p>
+        <p class="gloss">no external assembler, no linker &mdash; Rail writes the executable file itself</p>
+      </li>
+
+      <li class="reveal" id="v4-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v4.1.0</span>
+          <span class="ldate">2026-05-13</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="987511">@ p#987511</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v4.1.0/rail_native.attestation.json" data-name="rail_native &middot; v4.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Repo hygiene + leak-guard CI.</p>
+      </li>
+
+      <li class="reveal" id="v4-0-1">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v4.0.1</span>
+          <span class="ldate">2026-05-13</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="987510">@ p#987510</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v4.0.1/rail_native.attestation.json" data-name="rail_native &middot; v4.0.1"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Public-surface sanitization.</p>
+      </li>
+
+      <li class="reveal" id="v4-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v4.0.0</span>
+          <span class="ldate">2026-05-13</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="987510">@ p#987510</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v4.0.0/rail_native.attestation.json" data-name="rail_native &middot; v4.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Substrate maturity &mdash; backend parity + in-process JIT.</p>
+        <p class="gloss">two instruction sets, one suite, fully green on both</p>
+      </li>
+
+      <li class="reveal" id="advisory-2026-05-09">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">advisory</span>
+          <span class="ldate">2026-05-09</span>
+        </div>
+        <p class="ttl">Security leak found, fixed.</p>
+        <p>An API token was leaked in public git history and was rotated. No customer data affected.</p>
+      </li>
+
+      <li class="reveal" id="v3-11-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.11.0</span>
+          <span class="ldate">2026-05-02</span>
+          <span class="anchor">attested <time-pulse data-pulse="515139">@ p#515139</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.11.0/rail_native.attestation.json" data-name="rail_native &middot; v3.11.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Read-file-bytes + HTTPS PUT of arbitrary bytes.</p>
+      </li>
+
+      <li class="reveal" id="v3-10-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.10.0</span>
+          <span class="ldate">2026-05-02</span>
+          <span class="anchor">attested <time-pulse data-pulse="510999">@ p#510999</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.10.0/rail_native.attestation.json" data-name="rail_native &middot; v3.10.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail-native witness signer; Linux backend complete.</p>
+      </li>
+
+      <li class="reveal" id="v3-9-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.9.0</span>
+          <span class="ldate">2026-05-02</span>
+          <span class="anchor">attested <time-pulse data-pulse="507683">@ p#507683</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.9.0/rail_native.attestation.json" data-name="rail_native &middot; v3.9.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Ed25519 sign + Rail-native attest pipeline.</p>
+      </li>
+
+      <li class="reveal" id="v3-8-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.8.0</span>
+          <span class="ldate">2026-05-01</span>
+          <span class="anchor">attested <time-pulse data-pulse="467675">@ p#467675</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.8.0/rail_native.attestation.json" data-name="rail_native &middot; v3.8.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Releases physicified.</p>
+        <p class="gloss">the chain epoch &mdash; from here forward, every release is signed at the moment it ships</p>
+      </li>
+
+      <li class="epoch reveal" aria-label="chain epoch boundary">
+        <span class="mark" aria-hidden="true">◇</span>
+        pre-pulse era &mdash; everything below shipped before the chain
+        existed (2026-05-01). Signatures below were added retroactively;
+        each pulse anchor marks the signing moment, not the release.
+      </li>
+
+      <li class="reveal" id="v3-7-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.7.0</span>
+          <span class="ldate">2026-04-30</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="467684">@ p#467684</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.7.0/rail_native.attestation.json" data-name="rail_native &middot; v3.7.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Float-TCO root fix + mixed-precision inference.</p>
+      </li>
+
+      <li class="reveal" id="v3-6-1">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.6.1</span>
+          <span class="ldate">2026-04-27</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360785">@ p#360785</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.6.1/rail_native.attestation.json" data-name="rail_native &middot; v3.6.1"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Compiler hardening &mdash; undefined idents fail at link time.</p>
+      </li>
+
+      <li class="reveal" id="v3-6-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.6.0</span>
+          <span class="ldate">2026-04-20</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="358894">@ p#358894</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.6.0/rail_native.attestation.json" data-name="rail_native &middot; v3.6.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Strict HTTPS by default &mdash; chain-walk to trust store.</p>
+      </li>
+
+      <li class="reveal" id="v3-5-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.5.0</span>
+          <span class="ldate">2026-04-19</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360394">@ p#360394</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.5.0/rail_native.attestation.json" data-name="rail_native &middot; v3.5.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Entropy read hardened + static-path guard.</p>
+      </li>
+
+      <li class="reveal" id="phase1-mini-handoff-2026-04-19">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">phase1-mini-handoff</span>
+          <span class="ldate">2026-04-19</span>
+          <span class="era">pre-pulse era &middot; git history only</span>
+        </div>
+        <p class="ttl">Phase-1 handoff snapshot.</p>
+      </li>
+
+      <li class="reveal" id="v3-4-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.4.0</span>
+          <span class="ldate">2026-04-19</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360393">@ p#360393</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.4.0/rail_native.attestation.json" data-name="rail_native &middot; v3.4.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Ed25519 verify &mdash; RFC 8032 clean against test vectors.</p>
+      </li>
+
+      <li class="reveal" id="v3-3-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.3.0</span>
+          <span class="ldate">2026-04-19</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360392">@ p#360392</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.3.0/rail_native.attestation.json" data-name="rail_native &middot; v3.3.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">HTTPS keep-alive + ECDSA P-521.</p>
+      </li>
+
+      <li class="reveal" id="v3-2-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.2.0</span>
+          <span class="ldate">2026-04-19</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360391">@ p#360391</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.2.0/rail_native.attestation.json" data-name="rail_native &middot; v3.2.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Strict HTTPS one-line import + compiler quadratic fixes.</p>
+      </li>
+
+      <li class="reveal" id="v3-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.1.0</span>
+          <span class="ldate">2026-04-18</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360390">@ p#360390</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.1.0/rail_native.attestation.json" data-name="rail_native &middot; v3.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Streaming HTTPS bodies &mdash; linear, not quadratic.</p>
+      </li>
+
+      <li class="reveal" id="v3-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v3.0.0</span>
+          <span class="ldate">2026-04-18</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360389">@ p#360389</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v3.0.0/rail_native.attestation.json" data-name="rail_native &middot; v3.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail speaks TLS.</p>
+        <p class="gloss">pure-Rail TLS 1.3 with chain validation &mdash; no proxy left in the request path</p>
+      </li>
+
+      <li class="reveal" id="v2-23-0-rc1">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.23.0-rc1</span>
+          <span class="ldate">2026-04-17</span>
+          <span class="era">pre-pulse era &middot; git history only</span>
+        </div>
+        <p class="ttl">Rail talks to the internet &mdash; pure-Rail HTTP/1.1.</p>
+      </li>
+
+      <li class="reveal" id="v2-16-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.16.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594271">@ p#594271</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.16.0/rail_native.attestation.json" data-name="rail_native &middot; v2.16.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM: fold with bare named functions.</p>
+      </li>
+
+      <li class="reveal" id="v2-15-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.15.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594248">@ p#594248</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.15.0/rail_native.attestation.json" data-name="rail_native &middot; v2.15.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM: named-fn map/filter + closure-capture fix.</p>
+      </li>
+
+      <li class="reveal" id="v2-14-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.14.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594227">@ p#594227</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.14.0/rail_native.attestation.json" data-name="rail_native &middot; v2.14.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Metal IR scaffold &mdash; JIT-compiled GPU kernels.</p>
+      </li>
+
+      <li class="reveal" id="v2-13-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.13.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594206">@ p#594206</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.13.0/rail_native.attestation.json" data-name="rail_native &middot; v2.13.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM map / filter / fold.</p>
+      </li>
+
+      <li class="reveal" id="v2-12-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.12.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594184">@ p#594184</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.12.0/rail_native.attestation.json" data-name="rail_native &middot; v2.12.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Multi-head attention, learnable LayerNorm.</p>
+      </li>
+
+      <li class="reveal" id="v2-11-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.11.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594162">@ p#594162</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.11.0/rail_native.attestation.json" data-name="rail_native &middot; v2.11.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM MHD to t=&pi;.</p>
+      </li>
+
+      <li class="reveal" id="v2-10-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.10.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594141">@ p#594141</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.10.0/rail_native.attestation.json" data-name="rail_native &middot; v2.10.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM MHD simulates.</p>
+      </li>
+
+      <li class="reveal" id="v2-9-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.9.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594120">@ p#594120</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.9.0/rail_native.attestation.json" data-name="rail_native &middot; v2.9.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM compiler maturity for compute kernels.</p>
+      </li>
+
+      <li class="reveal" id="v2-8-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.8.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594099">@ p#594099</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.8.0/rail_native.attestation.json" data-name="rail_native &middot; v2.8.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM transcendentals (~9-digit accuracy).</p>
+      </li>
+
+      <li class="reveal" id="v2-7-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.7.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594077">@ p#594077</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.7.0/rail_native.attestation.json" data-name="rail_native &middot; v2.7.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">WASM floats end-to-end.</p>
+      </li>
+
+      <li class="reveal" id="v2-6-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.6.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594056">@ p#594056</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.6.0/rail_native.attestation.json" data-name="rail_native &middot; v2.6.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Compiler + REPL polish.</p>
+      </li>
+
+      <li class="reveal" id="v2-5-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.5.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594035">@ p#594035</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.5.0/rail_native.attestation.json" data-name="rail_native &middot; v2.5.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Pre-norm transformer block.</p>
+      </li>
+
+      <li class="reveal" id="v2-4-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.4.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="594013">@ p#594013</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.4.0/rail_native.attestation.json" data-name="rail_native &middot; v2.4.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Attention end-to-end.</p>
+      </li>
+
+      <li class="reveal" id="v2-3-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.3.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593991">@ p#593991</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.3.0/rail_native.attestation.json" data-name="rail_native &middot; v2.3.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">The training stack.</p>
+      </li>
+
+      <li class="reveal" id="v2-2-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.2.0</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593969">@ p#593969</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.2.0/rail_native.attestation.json" data-name="rail_native &middot; v2.2.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">The Suite.</p>
+      </li>
+
+      <li class="reveal" id="v2-1-2">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.1.2</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593948">@ p#593948</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.1.2/rail_native.attestation.json" data-name="rail_native &middot; v2.1.2"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Full GPU op coverage via FFI.</p>
+      </li>
+
+      <li class="reveal" id="v2-1-1">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.1.1</span>
+          <span class="ldate">2026-04-14</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593926">@ p#593926</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.1.1/rail_native.attestation.json" data-name="rail_native &middot; v2.1.1"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">v2.1 regression tests + technical debt.</p>
+      </li>
+
+      <li class="reveal" id="v2-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.1.0</span>
+          <span class="ldate">2026-04-13</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593904">@ p#593904</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.1.0/rail_native.attestation.json" data-name="rail_native &middot; v2.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">The GPU session &mdash; Rail drives Metal, trains neural nets.</p>
+      </li>
+
+      <li class="reveal" id="v2-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v2.0.0</span>
+          <span class="ldate">2026-04-06</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="360388">@ p#360388</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v2.0.0/rail_native.attestation.json" data-name="rail_native &middot; v2.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">512 MB allocator + conservative GC.</p>
+        <p class="gloss">memory management lands &mdash; the runtime stops trusting luck</p>
+      </li>
+
+      <li class="reveal" id="v1-4-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v1.4.0</span>
+          <span class="ldate">2026-03-22</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593883">@ p#593883</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v1.4.0/rail_native.attestation.json" data-name="rail_native &middot; v1.4.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">GC mark-sweep, nested lambdas, match exhaustiveness.</p>
+      </li>
+
+      <li class="reveal" id="v1-1-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v1.1.0</span>
+          <span class="ldate">2026-03-18</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593861">@ p#593861</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v1.1.0/rail_native.attestation.json" data-name="rail_native &middot; v1.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Metal, WASM + x86_64 backends; concurrency; stdlib grows.</p>
+      </li>
+
+      <li class="reveal" id="v1-0-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v1.0.0</span>
+          <span class="ldate">2026-03-17</span>
+          <span class="era">pre-pulse era</span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="593840">@ p#593840</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v1.0.0/rail_native.attestation.json" data-name="rail_native &middot; v1.0.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Self-hosting achieved &mdash; the Rust is deleted.</p>
+        <p class="gloss">from this day, the compiler that compiles Rail is written in Rail</p>
+      </li>
+
+      <li class="reveal" id="v0-6-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver">v0.6.0</span>
+          <span class="ldate">2026-03-14</span>
+          <span class="era">pre-pulse era &middot; git history only</span>
+        </div>
+        <p class="ttl">First self-compile fixed point.</p>
+      </li>
+
+    </ol>
+
+    <div class="push reveal">
+      <a class="btn btn-ghost" href="rail.html">About the language &rarr;</a>
+      <a class="btn btn-ghost" href="https://github.com/zemo-g/rail/blob/master/CHANGELOG.md" rel="noopener">Full prose record (CHANGELOG.md) &rarr;</a>
     </div>
-
-    <div class="release reveal" data-attest-tag="v5.0.0" id="v5.0.0">
-      <div class="meta">
-        <div class="ver">v5.0.0</div>
-        <div>2026-05-14</div>
-      </div>
-      <div>
-        <h3>Self-hosted toolchain (Linux ELF substrate)</h3>
-        <p>Rail produces its own aarch64 Linux ELF binaries. Encoder, assembler, static linker, and ELF writer are all pure Rail. On the supported subset of inputs, the build pipeline invokes no external <code>as</code>, <code>ld</code>, or <code>codesign</code>.</p>
-        <ul>
-          <li><code>jit/arm64.rail</code>: 23 new encoders for the Linux mnemonic set (<code>ldrb</code>/<code>strb</code>, <code>clz</code>, <code>neg</code>, <code>cmn</code>, <code>rev</code>, <code>fneg</code>, <code>fcvt</code>, <code>tbnz</code>, <code>stp</code>/<code>ldp</code> pre/post-index, <code>asr</code>/<code>lsr</code>/<code>lsl</code> immediate)</li>
-          <li><code>stdlib/elf.rail</code>: 175-line <code>Elf64_Ehdr</code> + program-header writer for static aarch64 binaries</li>
-          <li><code>tools/v5/elf_asm.rail</code>: 567-line section-aware ARM64 assembler + static linker with <code>adrp</code> / <code>:lo12:</code> symbol resolution</li>
-          <li>Four hand programs (exit42, fib, hello, BSS counter) run byte-equivalent to canonical <code>as</code> + <code>ld</code> output on a Raspberry Pi</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v4.0.0" id="v4.0.0">
-      <div class="meta">
-        <div class="ver">v4.0.0</div>
-        <div>2026-05-13</div>
-      </div>
-      <div>
-        <h3>Substrate parity + in-process JIT</h3>
-        <p>ARM64 and x86_64 backends reach full parity (140/140 and 136/136). JIT-first REPL at 0.1 ms/line. Single-program agentic loop: Rail calls Anthropic, JIT-lowers the response, executes, returns &mdash; no shell, no Python, no subprocess. Public reproducible hard-bench: frontier LLM + 1 KB Rail spec scores 30/30 on a held-out suite. Multi-witness Ed25519 provenance with pulse_id binding closes the prior session-replay gap.</p>
-      </div>
-    </div>
-
-    <div class="release reveal">
-      <div class="meta">
-        <div class="ver">advisory</div>
-        <div>2026-05-09</div>
-      </div>
-      <div>
-        <h3>Security leak found, fixed</h3>
-        <p>An API token was leaked in public git history and has been rotated. No customer data affected.</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.10.0" id="v3.10.0">
-      <div class="meta">
-        <div class="ver">v3.10.0</div>
-        <div>2026-05-02</div>
-      </div>
-      <div>
-        <h3>Path B: Rail-native Pi signer + Linux backend complete</h3>
-        <p>The attestation pipeline is now Rail-native end-to-end <em>including</em> the Pi-side HTTP signer. The hot path no longer touches Python at all. Linux ARM64 cross-compile produces useful binaries beyond hello-world.</p>
-        <ul>
-          <li><code>tools/attest/pi_sign_server.rail</code>: HTTP signer on the Pi witness. Replaces the ~110 LOC Python signer with a 118 KB ELF. Same wire format, same backing shell signer, end-to-end verified</li>
-          <li><code>linux_libc.s</code>: three real implementations replacing silent stubs &mdash; <code>_atof</code> (real number parser, the previous stub returned 0.0 for every Rail float literal), <code>_snprintf</code> %.15g formatter (real digit-extract, the previous stub wrote literal "0"), <code>_rail_print_float</code> (Linux-ABI clone of the Mac stub)</li>
-          <li>140/140 green; byte-identical self-bootstrap verified</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.9.0" id="v3.9.0">
-      <div class="meta">
-        <div class="ver">v3.9.0</div>
-        <div>2026-05-02</div>
-      </div>
-      <div>
-        <h3>Ed25519 sign + Rail-native attest pipeline</h3>
-        <p>The attestation pipeline that v3.8.0 introduced is now Rail-native end-to-end. Mac-side orchestrator, scalar arithmetic mod L, sign function, signer transport &mdash; all Rail. Only the Pi-side key material still touches OpenSSL via the existing shell signer (wrapped in a Python HTTP server).</p>
-        <ul>
-          <li><code>stdlib/ed25519_scalar.rail</code>: <code>sc_reduce</code> (64-byte mod L) and <code>sc_muladd</code> ((a&middot;b + c) mod L) in pure Rail. 8/8 vectors pass including <code>SHA-512('') mod L</code> matching the Python oracle byte-for-byte</li>
-          <li><code>stdlib/ed25519_sign.rail</code>: full RFC 8032 &sect;5.1.6 sign. <code>r</code>, <code>R</code>, <code>k</code>, <code>S = sc_muladd(k, a, r)</code>, <code>sig = R || S</code>. RFC &sect;A.4 vector 1 byte-identical for both pk and sig + round-trip verify=1; PASS on first compile</li>
-          <li><code>tools/attest/attest.rail</code>: Rail-native attestation orchestrator. SHA-256 over input bytes, HTTPS GET <code>/entropy/pulse</code>, JSON parse, HTTP POST signer, JSON outer build, write to <code>&lt;input&gt;.attestation.json</code>. Zero shell-out on the request path</li>
-          <li><code>tools/attest/pi_sign_server.py</code>: HTTP signer service on the Pi witness, replacing a per-attest remote shell round-trip &mdash; release-attest wall time 49 s &rarr; 27 s</li>
-          <li>Linux ARM64 cross-compile fixed: <code>./rail_native linux foo.rail</code> produces working ELF; hello/fact/fold run on Pi</li>
-          <li>Plasma beacon RSS leak fixed: 5 GB / 31 GB swap &rarr; 21 MB / 90 s. Three-layer fix in <code>_rail_chained_malloc</code>, <code>mk_lxf_step_into</code>, double-buffered beacon loop</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.8.0" id="v3.8.0">
-      <div class="meta">
-        <div class="ver">v3.8.0</div>
-        <div>2026-05-01</div>
-      </div>
-      <div>
-        <h3>Releases physicified (attestation)</h3>
-        <p>Every tagged release, every <code>./rail_native test</code> pass, and every 2-pass self-compile fixed point now binds to a live entropy beacon <code>pulse_id</code> and an Ed25519 signature from the project's Pi witness (<code>pk_fp = cac5f21a70564aeb</code>).</p>
-        <ul>
-          <li>Public mission control at <a href="/system">ledatic.org/system</a> &mdash; five panels (beacon &middot; witness &middot; fleet &middot; build &middot; selfhost), each resolves to a signed JSON artifact, refreshes on 2.5 s cadence, self-marks &ldquo;live&rdquo; or &ldquo;stale&rdquo;</li>
-          <li>Reproducible offline with <a href="/attest/verify.sh"><code>verify.sh</code></a> + <a href="/attest/fleet0.pub.pem"><code>fleet0.pub.pem</code></a></li>
-          <li>Backfilled coverage: v2.0.0 &rarr; v3.7.0 all attested + downloadable</li>
-          <li>Scheduled agents drive the cadences: a daily release attest plus a 60 s fleet attest</li>
-          <li>CI fix: builds <code>libtensor_gpu.dylib</code> before tests, ending 14 days of red on tensor link errors</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.7.0" id="v3.7.0">
-      <div class="meta">
-        <div class="ver">v3.7.0</div>
-        <div>2026-04-30</div>
-      </div>
-      <div>
-        <h3>Float-TCO root fix, mixed-precision inference, parallel rerank</h3>
-        <p>Substrate work + new inference paths + diagnostic infrastructure. Three real bugs (one fixed at root, one workaround'd at source, one falsified). 140/140 green; byte-identical self-bootstrap verified.</p>
-        <ul>
-          <li>Float-TCO root fix: re-added <code>body_has_float</code> guard to <code>all_params_int</code>. Closes a 17-day silent wrong-result bug that reinterpreted float bits as ints in tail-recursive register-ABI calls (RMSNorm CPU, AdamW weight decay, LayerNorm CPU backward)</li>
-          <li>Runtime-mmap arena via <code>RAIL_ARENA_MB</code> env var (default 1 GB, scales to 4 GB+). Long-context training (seq=2048+) now mechanically tractable on macOS</li>
-          <li>17-counter <code>alloc_stats_snapshot</code> builtin + <code>RAIL_ARENA_TRACE</code></li>
-          <li>Rail-native fp32-acts &times; fp16-weights &times; fp32-accum GPU matmul (<code>stdlib/tensor.rail:matmul_mixed</code>) &mdash; 2&times; tighter than all-fp16</li>
-          <li><code>parallel_rerank.sh</code> validated 7.1&times; wall-clock at N=8</li>
-          <li><code>./rail_native quick</code> &mdash; 15 critical tests in ~5 s</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.6.1" id="v3.6.1">
-      <div class="meta">
-        <div class="ver">v3.6.1</div>
-        <div>2026-04-27</div>
-      </div>
-      <div>
-        <h3>Compiler hardening</h3>
-        <p>Two codegen + parser fixes; both gated by 2-pass byte-identical self-bootstrap.</p>
-        <ul>
-          <li>Undefined identifiers now fail at link time with a named symbol (<code>_RAIL_UNDEFINED_IDENT_&lt;name&gt;</code>) instead of silently producing a binary that segfaults at runtime</li>
-          <li>Parser accepts multi-line compound expressions (cons chains, nested calls, list literals) inside unclosed <code>(...)</code>/<code>[...]</code> or before strictly-greater-indented <code>(</code>/<code>[</code></li>
-          <li><code>returns_float</code> tracks let-bound floats through V (variable) AST nodes, fixing two latent miscompile bugs in MHD axisym + MPD source-term paths</li>
-          <li>140/140 green, byte-identical self-bootstrap verified (<code>14af7d5d&hellip;</code>)</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.6.0" id="v3.6.0">
-      <div class="meta">
-        <div class="ver">v3.6.0</div>
-        <div>2026-04-20</div>
-      </div>
-      <div>
-        <h3>Unified HTTPS client</h3>
-        <p>Chain-walk to trust store is now the default for <code>https_get_url</code> / <code>https_post_url</code>. Old leaf-only bodies moved under <code>_unsafe_noverify</code>. <code>_strict</code> aliases kept for one release.</p>
-        <ul>
-          <li>Trust-store SPKI cache: O(N) walk &rarr; O(1) lookup</li>
-          <li>New <code>asn1_find_spki</code> / <code>ts_has_spki_hash</code></li>
-          <li>Amazon (DigiCert/RSA) + Slack (ISRG/RSA) strict verified live</li>
-          <li>140/140 green, 2-pass byte-identical</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.5.0" id="v3.5.0">
-      <div class="meta">
-        <div class="ver">v3.5.0</div>
-        <div>2026-04-20</div>
-      </div>
-      <div>
-        <h3>hc_read_random hardened + serve_static path guard</h3>
-        <p><code>hc_read_random</code> now pipes <code>urandom</code> via stdout instead of writing a tmp file. <code>serve_static</code> returns 400 on <code>..</code> / <code>\</code>.</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.4.0" id="v3.4.0">
-      <div class="meta">
-        <div class="ver">v3.4.0</div>
-        <div>2026-04-19</div>
-      </div>
-      <div>
-        <h3>Ed25519 verify</h3>
-        <p>RFC 8032 §5.1 verifier clean against TEST 1. Canonical <code>ed_d_bytes</code> LE hex. Flattened mutual recursion in <code>ed_pow_bytes_iter</code>.</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.3.0" id="v3.3.0">
-      <div class="meta">
-        <div class="ver">v3.3.0</div>
-        <div>2026-04-19</div>
-      </div>
-      <div>
-        <h3>HTTPS keep-alive + ECDSA P-521</h3>
-        <p>TCP_NODELAY + pre-wrapped first-request coalesced with handshake + NST seq advance. P-521 structural clone of P-384 with 33 limbs.</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.2.0" id="v3.2.0">
-      <div class="meta">
-        <div class="ver">v3.2.0</div>
-        <div>2026-04-19</div>
-      </div>
-      <div>
-        <h3>Strict HTTPS by default + compiler quadratic fix</h3>
-        <p><code>stdlib/https_strict.rail</code> makes chain-walked HTTPS a one-line import, unblocked by two compiler fixes: <code>edit_dist</code> O(3<sup>n</sup>) &rarr; bounded, <code>compile_funcs</code> O(N<sup>2</sup>) &rarr; O(N). probe4 195 s &rarr; 12 s (16&times;).</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.1.0" id="v3.1.0">
-      <div class="meta">
-        <div class="ver">v3.1.0</div>
-        <div>2026-04-19</div>
-      </div>
-      <div>
-        <h3>Streaming HTTPS bodies</h3>
-        <p>Response bodies scale linearly. The v3.0.0 receiver re-joined a growing string per record and per byte &mdash; O(body_len<sup>2</sup>), capping practical bodies near 64 KB. Replaced with chunked byte accumulation and a single final join: O(body_len).</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v3.0.0" id="v3.0.0">
-      <div class="meta">
-        <div class="ver">v3.0.0</div>
-        <div>2026-04-18</div>
-      </div>
-      <div>
-        <h3>Rail speaks TLS</h3>
-        <p>Pure-Rail TLS 1.3 + chain validation. ECDSA-P256/P384, RSA-PSS/PKCS1, SHA-256/384/512, x25519, ChaCha20-Poly1305. socat retired from the fleet.</p>
-      </div>
-    </div>
-
-    <div class="release reveal" data-attest-tag="v2.0.0" id="v2.0.0">
-      <div class="meta">
-        <div class="ver">v2.0.0</div>
-        <div>2026-04-06</div>
-      </div>
-      <div>
-        <h3>512 MB allocator + conservative GC</h3>
-        <p>Bump arena + mark-sweep in ARM64 assembly. Runtime safety for <code>head []</code> / <code>tail []</code>. 116-test baseline green.</p>
-      </div>
-    </div>
-
   </div>
 </section>
+
+</main>
 
 <footer class="site-foot">
   <div class="wrap">
@@ -376,6 +768,7 @@
           <li><a href="entropy.html">Entropy beacon</a></li>
           <li><a href="system.html">System</a></li>
           <li><a href="aliens.html">Aliens archive</a></li>
+          <li><a href="replay.html">Replay</a></li>
         </ul>
       </div>
       <div>
@@ -389,12 +782,33 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
 
-<script src="_shared/site.js"></script>
-<script src="_shared/changelog-attest.js"></script>
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* ── /changelog page wiring: footer self-check only (§5.4).
+   Everything here is additive; the page is complete without it. */
+
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+whenProof((P) => {
+  if (SAVE) return;            // §3.5 — reduced data: no automatic fetches
+  const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+  if (strip) P.mountSelfCheck(strip);
+});
+</script>
 </body>
 </html>

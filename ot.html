@@ -16,20 +16,22 @@
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <title>OT &mdash; Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/ot">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
   .ot-viewport {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     max-width: 640px;
-    margin: 2rem auto;
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
+    margin: 2rem auto 1rem;
+    background: var(--ink-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
     overflow: hidden;
   }
   .ot-viewport canvas {
@@ -40,53 +42,56 @@
   .ot-readouts {
     position: absolute;
     top: 0.75rem; right: 0.75rem;
-    background: hsl(var(--background) / 0.6);
-    border: 1px solid hsl(var(--border) / 0.6);
-    border-radius: 4px;
+    background: var(--ink-0);
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
     padding: 0.5rem 0.7rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-family: var(--font-body);
     font-size: 0.7rem;
-    color: hsl(var(--foreground));
+    color: var(--tx-hi);
     line-height: 1.6;
-    backdrop-filter: blur(4px);
   }
-  .ot-readouts .lab { color: hsl(var(--muted-foreground)); }
+  .ot-readouts .lab { color: var(--tx-dim); }
+  .ot-pause { max-width: 640px; margin: 0 auto 1.5rem; font-size: 0.85rem; line-height: 1.65; }
+  .ot-pause p { margin: 0 0 0.75rem; }
+  .ot-pause .age { display: inline-block; font-size: 0.78rem; }
   .methodology {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
+    background: var(--ink-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
     padding: 1.5rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-family: var(--font-body);
     font-size: 0.78rem;
     line-height: 1.65;
-    color: hsl(var(--foreground) / 0.9);
+    color: var(--tx-lo);
     margin: 1.5rem 0;
   }
   .methodology h3 {
-    font-family: 'Sora', sans-serif;
+    font-family: var(--font-display);
     font-size: 1rem;
     margin-bottom: 0.75rem;
-    color: hsl(var(--primary));
+    color: var(--ph-600);
   }
   .methodology .kv { display: grid; grid-template-columns: 9rem 1fr; gap: 0.4rem 1rem; }
-  .methodology .k { color: hsl(var(--muted-foreground)); }
-  .methodology .v { color: hsl(var(--foreground)); }
+  .methodology .k { color: var(--tx-dim); }
+  .methodology .v { color: var(--tx-hi); }
+  .methodology p, .methodology ul { font-family: var(--font-body); color: var(--tx-lo); font-size: 0.85rem; }
   .citation {
-    background: hsl(var(--background) / 0.6);
-    border: 1px solid hsl(var(--border) / 0.6);
-    border-radius: 4px;
+    background: var(--ink-0);
+    border: 1px solid var(--line);
+    border-radius: var(--r-0);
     padding: 0.9rem 1rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-family: var(--font-body);
     font-size: 0.74rem;
-    color: hsl(var(--foreground) / 0.85);
+    color: var(--tx-lo);
     line-height: 1.6;
     margin: 1.5rem 0;
     word-break: break-all;
   }
-  .citation .lab { color: hsl(var(--muted-foreground)); }
+  .citation .lab { color: var(--tx-dim); }
 </style>
 </head>
-<body data-shader="_shared/shaders/grid.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -97,31 +102,31 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
+  <pulse-clock data-endpoint="/entropy/pulse"></pulse-clock>
   <a class="nav-cta" href="#cite">Cite</a>
 </nav>
 
 <section class="hero" style="min-height: 40vh;">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
-  <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Research artifact &mdash; attested &middot; publisher paused</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">OT</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+  <div class="hero-content fade-up" style="padding-top: 9rem; padding-bottom: 3rem;">
+    <span class="eyebrow">Research artifact &mdash; attested &middot; publisher paused</span>
+    <h1 class="hero-title">OT</h1>
+    <p class="hero-sub">
       Orszag-Tang vortex, preserved in a verifiable public record.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
+    <p class="hero-desc">
       The canonical 2D ideal-MHD test (Orszag &amp; Tang, 1979) on a
       periodic 256&sup2; grid, integrated by Lax-Friedrichs in a GPU
       compute kernel; signing and verification run through Rail. Each
       published frame was hashed and signed by an Ed25519 witness
       against the entropy beacon, so a paper citing a state at pulse_id
       <em>N</em> can be verified years later from the public record.
-      The publisher is currently paused &mdash; the frame below is the
-      last attested state, and it still verifies.
+      The publisher is paused &mdash; the frame below is the last
+      attested state, and it still verifies.
     </p>
   </div>
 </section>
@@ -144,13 +149,25 @@
       </div>
     </div>
 
-    <p style="font-family: 'Sora', sans-serif; font-size: 0.85rem; color: hsl(var(--muted-foreground)); margin: -0.5rem auto 1.5rem; max-width: 640px;">
-      <strong style="color: hsl(var(--foreground));">Status: paused.</strong>
-      The OT publisher has been offline since <span data-sys="att.date">2026-04-29</span>.
-      The frame above is the last attested state &mdash; signed at beacon pulse
-      <span data-sys="att.pulse">396703</span> &mdash; and still verifies against
-      the public key below.
-    </p>
+    <div class="burn-in ot-pause">
+      <p>
+        The stream stopped at p#<span data-sys="att.pulse">396703</span>
+        &middot; chain intact to here &middot; every signed record below
+        still verifies.
+      </p>
+      <p>
+        The OT publisher has been offline since
+        <time-pulse data-pulse="396703" data-iso="2026-04-29T00:00:00Z">2026-04-29</time-pulse>.
+        The frame above is the last attested state, signed against the
+        beacon pulse current at signing time. Nothing here has been
+        re-signed since.
+      </p>
+      <p class="age"><time-pulse data-pulse="396703" data-mode="age">age unknown until the beacon answers</time-pulse></p>
+      <button class="prove" aria-expanded="false"
+              data-manifest="/entropy/frame/ot256/latest.attestation.json"
+              data-artifact="/entropy/frame/ot256/current"
+              data-name="ot256 frame">verify the last attested frame <span class="affix" aria-hidden="true">&#8907;</span></button>
+    </div>
 
     <div class="methodology">
       <h3>Numerical method</h3>
@@ -162,13 +179,13 @@
         <div class="k">init</div>        <div class="v">OT vortex: &rho;<sub>0</sub> = 25/(36&pi;), p<sub>0</sub> = 5/(12&pi;), v = (&minus;sin y, sin x), B = (&minus;sin y / &radic;(4&pi;), sin 2x / &radic;(4&pi;))</div>
         <div class="k">conservation</div><div class="v">&Delta;m/m &asymp; 10<sup>&minus;7</sup>, &Delta;E/E &asymp; 10<sup>&minus;7</sup>, &nabla;&middot;B &asymp; 10<sup>&minus;6</sup> (f32 precision; the lower-resolution sister at /plasma runs in f64 and conserves to 10<sup>&minus;15</sup>)</div>
         <div class="k">runtime</div>     <div class="v">Metal compute kernel on an Apple-silicon GPU, two-pass LF dispatched per step. Host driver in Objective-C; bytes published via the same primitive that signs every other Ledatic surface.</div>
-        <div class="k">cadence</div>     <div class="v">~388 frames/s solver while running; attestations were re-signed every 30&nbsp;s against the live entropy pulse. Publisher paused since 2026-04-29 &mdash; the last attestation remains verifiable.</div>
+        <div class="k">cadence</div>     <div class="v">~388 frames/s solver while running; attestations were re-signed every 30&nbsp;s against the live entropy pulse. Publisher paused since 2026-04-29 &mdash; the last attestation remains verifiable, and no re-signing is claimed.</div>
       </div>
     </div>
 
     <div id="cite" class="methodology">
       <h3>Cite this state</h3>
-      <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-bottom: 1rem;">
+      <p style="margin-bottom: 1rem;">
         Each published frame's bytes were signed against the beacon pulse
         current at signing time. To cite a state, capture both the frame
         attestation and the beacon pulse it was bound to. Anyone can
@@ -186,7 +203,7 @@
  pk_fp=<span data-sys="witness.pkfp">&hellip;</span>,<br>
  accessed=<span data-sys="now">&hellip;</span>"
       </div>
-      <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-top: 1rem;">
+      <p style="margin-top: 1rem;">
         Reproduce-the-frame instruction:
       </p>
       <div class="citation">
@@ -200,17 +217,17 @@ curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /
 
     <div class="methodology">
       <h3>Lineage</h3>
-      <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem;">
+      <p>
         Sits in conversation with the conservation-law numerics tradition
         (van Leer, Roe, Harten, Toro) and the cryptographic-attestation
         lineage (Drand, NIST randomness beacon). The intersection &mdash;
         physical chaos plus public Ed25519 provenance plus a self-hosting
         compiler in the signing path &mdash; is what's novel here.
       </p>
-      <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-top: 0.75rem;">
+      <p style="margin-top: 0.75rem;">
         References:
       </p>
-      <ul style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-left: 1.25rem; line-height: 1.7;">
+      <ul style="margin-left: 1.25rem; line-height: 1.7;">
         <li>Orszag, S. A. &amp; Tang, C. M. (1979). <em>Small-scale structure of two-dimensional magnetohydrodynamic turbulence.</em> J. Fluid Mech. 90, 129&ndash;143.</li>
         <li>2024 Phys. Plasmas comparison of 16 numerical schemes on the OT vortex: <a href="https://pubs.aip.org/aip/pop/article/31/1/012101/2932188/" rel="noopener">aip 31, 012101</a></li>
         <li>Solver source: <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd_ot_2d_256_host.m">tools/plasma/mhd_ot_2d_256_host.m</a> + <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd_ot_2d_256.metal">mhd_ot_2d_256.metal</a> (Metal / Obj-C). The 128&sup2; beacon sister solver is pure Rail: <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd.rail">tools/plasma/mhd.rail</a></li>
@@ -255,7 +272,7 @@ curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip">Rail <data class="fig" data-src="repo:version">release</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">tests</data> &middot; <data class="fig" data-src="repo:rail_native" data-fmt="mb">binary</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
@@ -282,6 +299,11 @@ curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /
     })
     .catch(function () {});
 })();
+</script>
+<script type="module">
+import { mountSelfCheck } from './_shared/proof-tray.js';
+const slot = document.querySelector('[data-selfcheck]');
+if (slot) mountSelfCheck(slot);
 </script>
 </body>
 </html>

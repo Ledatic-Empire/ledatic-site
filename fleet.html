@@ -19,62 +19,91 @@
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <link rel="canonical" href="https://ledatic.org/fleet">
-<title>Fleet — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Fleet &mdash; Ledatic</title>
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
-  .node-card {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 1.75rem;
-    transition: border-color 0.25s var(--ease);
+  .page-head {
+    padding: 10rem 0 0;
+    background: var(--ink-1);
   }
-  .node-card:hover { border-color: hsl(var(--primary) / 0.4); }
-  .node-card .role {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
+  .page-head .wrap { padding-bottom: var(--sp-12); }
+  .wrap-narrow { max-width: 56rem; }
+
+  .panel {
+    background: var(--ink-2);
+    box-shadow: var(--e1);
+    border-radius: var(--r-2);
+    padding: var(--sp-6);
+    margin-bottom: var(--sp-4);
+  }
+  h3.panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: hsl(var(--primary));
+    color: var(--tx-dim);
+    margin-bottom: var(--sp-4);
+  }
+  h3.panel-head [data-state] { text-transform: none; letter-spacing: 0.06em; }
+
+  .kv {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 0.5rem 1rem;
+    font-family: var(--font-body);
+    font-size: var(--t-data);
+    line-height: 1.8;
+  }
+  .kv .k { color: var(--tx-dim); }
+  .kv .v { color: var(--tx-hi); overflow-wrap: anywhere; }
+  .kv .v.dim { color: var(--tx-lo); }
+  .kv .v code { font-family: inherit; }
+
+  .prove-row { margin-top: var(--sp-3); font-size: var(--t-data); }
+
+  .links {
+    margin-top: var(--sp-3);
+    font-family: var(--font-body);
+    font-size: var(--t-data);
+  }
+  .links a { color: var(--ph-700); }
+  .links a:hover { color: var(--ph-500); }
+  .links .sep { color: var(--tx-dim); margin: 0 0.5rem; }
+
+  .node-card .role {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ph-600);
     margin-bottom: 0.5rem;
   }
   .node-card h3 { margin-bottom: 0.25rem; }
   .node-card .specs {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75rem;
-    color: hsl(var(--muted-foreground));
+    font-family: var(--font-body);
+    font-size: var(--t-data);
+    color: var(--tx-dim);
     margin-bottom: 1rem;
   }
-  .node-card .status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .node-card .dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    background: hsl(var(--muted-foreground) / 0.5);
-    border-radius: 50%;
-  }
-  .node-card .status.up { color: hsl(var(--primary)); }
-  .node-card .status.up .dot {
-    background: hsl(var(--primary));
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .node-card .status.down .dot { background: hsl(0 65% 50%); }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.35; }
-  }
+  .node-card p { margin-bottom: 1rem; }
+  .node-card [data-state] { font-size: var(--t-data); }
+
+  .foot-stats data { font-style: normal; }
 </style>
 </head>
-<body data-shader="_shared/shaders/fleet.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -85,72 +114,103 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="#nodes">Nodes</a>
+  <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5">&#x2301; p#&mdash;</pulse-clock>
 </nav>
 
-<section class="hero">
-  <div class="scene">
-    <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+<header class="page-head">
+  <div class="wrap wrap-narrow fade-up">
+    <span class="eyebrow">Infrastructure</span>
+    <h1 class="hero-title">Fleet</h1>
+    <p class="lead">Four surfaces. One witnessed snapshot.</p>
+    <p class="body">
+      Four nodes answer one HTTP control plane &mdash; three on a Thunderbolt
+      star, one at the edge. This page never reaches them. It reads the one
+      snapshot the fleet publishes, co-signed by an independent witness at a
+      pulse, and tells you exactly how old that record is. A chip only earns
+      a state after this page has read a fresh snapshot; what can&rsquo;t be
+      checked from the public edge stays hollow.
+    </p>
   </div>
-  <div class="overlay" aria-hidden="true"></div>
+</header>
 
-  <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Infrastructure</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Fleet</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      Four nodes. Star topology. One HTTP surface.
-    </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Three nodes form a Thunderbolt star, measured at up to 9.16 Gb/s;
-      the fourth joins over the private mesh. Every node answers the same
-      HTTP control plane &mdash; pure Rail on three of the four. No tmux.
-      No ssh fan-out.
-    </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
-      <a class="btn btn-primary" href="#nodes">See the nodes</a>
-      <a class="btn btn-ghost" href="#topology">Topology</a>
+<section class="section" id="snapshot">
+  <div class="wrap wrap-narrow">
+
+    <noscript>
+      <p class="gloss" style="margin-bottom: 1.5rem;">
+        JavaScript is off, so nothing on this page is being checked. The
+        chips stay hollow on purpose &mdash; they assert nothing they
+        haven&rsquo;t read. The snapshot link below still serves the raw
+        signed JSON; the substrate doesn&rsquo;t need this page.
+      </p>
+    </noscript>
+
+    <div class="panel" id="panel-snapshot">
+      <h3 class="panel-head"><span>Snapshot &mdash; witnessed fleet status</span> <span data-state="unknown" data-sentinel data-fresh-pulses="90" id="sent-snapshot">checking&hellip;</span></h3>
+      <div class="kv">
+        <div class="k">surfaces</div>      <div class="v" data-kv="snap.up">&hellip;</div>
+        <div class="k">snapshot pulse</div><div class="v" data-kv="snap.pulse">&hellip;</div>
+        <div class="k">snapshot age</div>  <div class="v dim" data-kv="snap.age">&hellip;</div>
+        <div class="k">witness pk_fp</div> <div class="v dim"><code data-kv="snap.pkfp">&hellip;</code></div>
+        <div class="k">witnessed</div>     <div class="v dim" data-kv="snap.ts">&hellip;</div>
+      </div>
+      <p class="prove-row gloss">
+        The hub publishes this snapshot; an independent edge node signs its
+        digest against the beacon chain. The cards below render that record
+        &mdash; nothing here probes a machine directly.
+      </p>
+      <p class="prove-row">
+        <button class="prove" aria-expanded="false" data-manifest="/fleet/status.json" data-name="fleet snapshot witness"><span class="prove-val">prove the snapshot witness</span> <span class="affix" aria-hidden="true">&#x2301;</span></button>
+      </p>
+      <div class="links">
+        <a href="/fleet/status.json">/fleet/status.json</a>
+        <span class="sep">&middot;</span>
+        <a href="system.html">mission control</a>
+      </div>
     </div>
-    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
-      <span class="visor-label">Nodes</span>
-      <span class="visor-value" data-live="fleet-status">&mdash; <span class="dim">//</span> CHECKING</span>
-    </div>
+
   </div>
 </section>
 
 <section class="section" id="nodes">
   <div class="wrap">
-    <span class="eyebrow reveal">Nodes</span>
-    <h2 class="reveal">Who's on the mesh.</h2>
+    <span class="eyebrow">Nodes</span>
+    <h2>Who&rsquo;s on the mesh.</h2>
+    <p class="body">
+      Each chip is the witnessed snapshot&rsquo;s word, anchored to the pulse
+      it was signed at &mdash; not a direct probe. A surface that didn&rsquo;t
+      answer when the snapshot was taken says so. A snapshot that has aged
+      past its budget stops claiming anything except its own age.
+    </p>
 
-    <div class="grid grid-2 reveal" style="margin-top: 2rem;">
+    <div class="grid grid-2" style="margin-top: 2rem;">
       <div class="node-card">
         <span class="role">Hub &middot; Orchestrator</span>
         <h3>Node 01</h3>
         <p class="specs">Apple silicon &middot; desktop class</p>
         <p>Primary inference, compilation, and orchestration. Runs the entropy beacon and the self-healer.</p>
-        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
+        <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
       </div>
       <div class="node-card">
         <span class="role">Reasoning</span>
         <h3>Node 02</h3>
         <p class="specs">Apple silicon &middot; workstation class</p>
         <p>Large-model reasoning. Dedicated Thunderbolt link to the hub, measured at 9.16 Gb/s.</p>
-        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
+        <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
       </div>
       <div class="node-card">
         <span class="role">Orchestrator</span>
         <h3>Node 03</h3>
         <p class="specs">Apple silicon &middot; laptop class</p>
         <p>Spoke on the Thunderbolt star. Hits the fleet HTTP surface over the mesh.</p>
-        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
+        <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
       </div>
       <div class="node-card">
         <span class="role">Control plane</span>
         <h3>Node 04</h3>
         <p class="specs">ARM64 Linux &middot; SBC class</p>
         <p>Edge observatory. Fleet control-plane node. Reachable over the private mesh.</p>
-        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
+        <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
       </div>
     </div>
   </div>
@@ -158,28 +218,28 @@
 
 <section class="section" id="topology">
   <div class="wrap">
-    <span class="eyebrow reveal">Topology</span>
-    <h2 class="reveal">Star, not triangle.</h2>
-    <p class="body reveal">
+    <span class="eyebrow">Topology</span>
+    <h2>Star, not triangle.</h2>
+    <p class="body">
       The hub carries the routing; the reasoning and laptop nodes are spokes.
       A triangle topology was tried and failed &mdash; L2 loops on the bridge
       caused ARP to break silently across the fabric. Star-only from then on.
     </p>
 
     <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
-      <div class="stat reveal">
+      <div class="stat">
         <div class="value">9.16</div>
         <div class="label">Gb/s hub &harr; reasoning</div>
       </div>
-      <div class="stat reveal">
+      <div class="stat">
         <div class="value">0.42</div>
         <div class="label">ms RTT</div>
       </div>
-      <div class="stat reveal">
+      <div class="stat">
         <div class="value">0.33</div>
         <div class="label">Gb/s hub &harr; laptop</div>
       </div>
-      <div class="stat reveal">
+      <div class="stat">
         <div class="value">90 s</div>
         <div class="label">Self-healer tick</div>
       </div>
@@ -187,24 +247,21 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="control-plane">
   <div class="wrap">
-    <span class="eyebrow reveal">Control plane</span>
-    <h2 class="reveal">One HTTP surface.</h2>
-    <p class="body reveal">
+    <span class="eyebrow">Control plane</span>
+    <h2>One HTTP surface.</h2>
+    <p class="body">
       Every node answers the same small HTTP surface: report health, run a
-      whitelisted command, queue an async job. No ssh fan-out. Shared state
-      is file-based, so a binary swap is a drop-in upgrade.
+      whitelisted command, queue an async job &mdash; pure Rail on three of
+      the four. No tmux. No ssh fan-out. Shared state is file-based, so a
+      binary swap is a drop-in upgrade.
     </p>
-
-    <div class="card reveal" style="margin-top: 2rem;">
-      <span class="eyebrow">Shell</span>
-      <h3>Fleet health, one command</h3>
-      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.8rem; line-height: 1.6;"><code># $AUTH carries the per-fleet token header.
-for N in $NODES; do
-  echo "$N: $(curl -sH "$AUTH" http://$N/health)"
-done</code></pre>
-    </div>
+    <p class="body" style="margin-top: 1rem;">
+      That surface is private. From the public edge, the witnessed snapshot
+      at the top of this page is exactly what can be checked &mdash; so that
+      is all this page claims.
+    </p>
   </div>
 </section>
 
@@ -228,6 +285,7 @@ done</code></pre>
           <li><a href="verify.html">Verify an artifact</a></li>
           <li><a href="entropy.html">Entropy beacon</a></li>
           <li><a href="system.html">System</a></li>
+          <li><a href="fleet.html" class="active">Fleet</a></li>
           <li><a href="aliens.html">Aliens archive</a></li>
         </ul>
       </div>
@@ -242,41 +300,99 @@ done</code></pre>
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><span id="page-selfcheck" data-selfcheck="unknown">page self-check needs JavaScript</span></span>
+      <span class="foot-stats">Rail <data class="fig" value="v5.1.0" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" value="170" data-src="tests:total" data-fmt="ratio">170/170</data> tests &middot; <data class="fig" value="1193744" data-src="repo:rail_native">1.2 MB</data> binary &middot; <data class="fig" value="45" data-src="repo:tags" data-fmt="tags">45 tags</data></span>
     </div>
   </div>
 </footer>
 
 <script src="_shared/site.js"></script>
-<script>
-// Node-card status: wired to the witnessed fleet feed. Cards stay in the
-// neutral "—" state until a fetch succeeds; a stale feed shows STALE, not UP.
-(function () {
-  var cards = document.querySelectorAll('[data-node-status]');
-  if (!cards.length) return;
-  var STALE_S = 900; // feed older than 15 min: stop claiming liveness
-  function set(el, cls, txt) {
-    el.classList.remove('up', 'down');
-    if (cls) el.classList.add(cls);
-    el.querySelector('.status-text').textContent = txt;
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* /fleet wiring — one scheduled fetch of the witnessed snapshot rides the
+   shared pulse-bus (§5.3): max one request per cadence tick, paused while
+   hidden. Sentinels own every state word — this code never writes one by
+   hand — and node names/addresses in the feed are never rendered (rule 5:
+   capability level only). */
+import { pulseBus, fmtPulse, fmtDur, CADENCE_MS } from './_shared/pulse-clock.js';
+import { sentinel, mountSelfCheck } from './_shared/proof-tray.js';
+
+const put = (key, text) => {
+  const el = document.querySelector('[data-kv="' + key + '"]');
+  if (el) el.textContent = text;
+};
+const wallU = (u) => (typeof u === 'number' && Number.isFinite(u))
+  ? new Date(u * 1000).toISOString().slice(0, 19).replace('T', ' ') + ' UTC' : '—';
+
+/* Pulse-denominated ages, wall clock as the italic translation (§2).
+   Recomputed on every confirmed receipt — never extrapolated past the
+   drift since the last one. */
+const ages = new Map();
+function renderAges() {
+  if (!pulseBus.latest) return;
+  const drift = Math.max(0, Math.floor((Date.now() - pulseBus.receivedAt) / CADENCE_MS));
+  for (const [key, anchor] of ages) {
+    const el = document.querySelector('[data-kv="' + key + '"]');
+    if (!el) continue;
+    const age = (pulseBus.latest.pulse_id - anchor) + drift;
+    if (age < 0) continue;
+    el.textContent = '+' + fmtPulse(age) + ' pulses';
+    const i = document.createElement('i');
+    i.className = 'tp-wall';
+    i.textContent = ' · ' + fmtDur(age);
+    el.appendChild(i);
   }
-  function render(d) {
-    if (!d || !Array.isArray(d.nodes) || d.nodes.length !== cards.length) return;
-    var stale = d.asof_unix && (Date.now() / 1000 - d.asof_unix) > STALE_S;
-    cards.forEach(function (el, i) {
-      if (stale) { set(el, null, 'STALE'); return; }
-      set(el, d.nodes[i].alive ? 'up' : 'down', d.nodes[i].alive ? 'UP' : 'DOWN');
-    });
+}
+pulseBus.subscribe(renderAges);
+
+const snapSent = sentinel(document.querySelector('#sent-snapshot'));
+const chips = Array.from(document.querySelectorAll('[data-node-chip]'))
+  .map((el) => sentinel(el));
+
+const STALE_PULSES = 450;  // snapshot older than this in pulses: stop claiming
+const STALE_WALL_S = 900;  // same budget against the snapshot's own wall stamp
+
+pulseBus.schedule(30000, async () => {
+  let d = null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch('/fleet/status.json', { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(t);
+    if (res.ok) d = await res.json();
+  } catch (e) { /* silence → sentinels demote on their own clock */ }
+  if (!d || !Array.isArray(d.nodes) || !d.nodes.length) return;
+
+  const up = d.nodes.filter((n) => n && n.alive).length;
+  put('snap.up', up + ' of ' + d.nodes.length + ' answering');
+  if (typeof d.pulse_id === 'number') {
+    put('snap.pulse', 'p#' + fmtPulse(d.pulse_id));
+    ages.set('snap.age', d.pulse_id);
+    renderAges();
   }
-  function tick() {
-    fetch('/fleet/status.json', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(render)
-      .catch(function () {});
+  put('snap.pkfp', String((d.witness && d.witness.pk_fp) || '—').slice(0, 16));
+  put('snap.ts', wallU(d.witness && d.witness.witnessed_at));
+
+  const cur = pulseBus.latest && pulseBus.latest.pulse_id;
+  const pulseAge = (cur && typeof d.pulse_id === 'number') ? Math.max(0, cur - d.pulse_id) : null;
+  const wallOld = d.asof_unix ? (Date.now() / 1000 - d.asof_unix) > STALE_WALL_S : false;
+  const stale = wallOld || (pulseAge != null && pulseAge > STALE_PULSES);
+
+  if (snapSent) {
+    if (stale) snapSent.set('stale', { agePulses: pulseAge || 0 });
+    else snapSent.feed(d.pulse_id);
   }
-  tick();
-  setInterval(tick, 15000);
-})();
+  if (d.nodes.length !== chips.length) return;  // shape drift: cards assert nothing
+  chips.forEach((chip, i) => {
+    if (!chip) return;
+    if (stale) { chip.set('stale', { agePulses: pulseAge || 0 }); return; }
+    if (d.nodes[i] && d.nodes[i].alive) chip.feed(d.pulse_id);
+    else chip.set('paused', { pulse: d.pulse_id, note: 'silent in this snapshot' });
+  });
+});
+
+/* Footer trust strip — this page vs its signed deploy manifest (§5.4). */
+mountSelfCheck(document.querySelector('#page-selfcheck'));
 </script>
 </body>
 </html>

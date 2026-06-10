@@ -1,0 +1,133 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   fonts.css — self-hosted type, zero third-party requests (spec §2)
+   Two OFL families, four woff2 files, subset with pyftsubset
+   (latin + box-drawing + UI glyph set), content-hashed filenames.
+
+   PROVENANCE (sha256 of each served file — substrate honesty):
+     fonts/MartianMonoVF.dda1215d.woff2          46,984 B
+       sha256 dda1215df5f7f98c2228bd47aa70f82aea228d71d071facf96a498735b5822a4
+       from Martian Mono v1.1.0 VF (github.com/evilmartians/mono, OFL 1.1)
+       axes kept: wght 100–800 · wdth 75–112.5
+     fonts/IBMPlexMono-Regular.6490a869.woff2    11,124 B
+       sha256 6490a86976941a02aa0578c6c1aa4218d551df88cb138095717d6a003860edf2
+     fonts/IBMPlexMono-Medium.2f17816d.woff2     11,096 B
+       sha256 2f17816d2699d189494732df98b314f62e004beba50716a233837cd9ac7574c5
+     fonts/IBMPlexMono-Italic.7bb0d402.woff2     12,576 B
+       sha256 7bb0d4022d64087051176c3a6a0d535027fb087f1a2c6b33ffdb49510b0a6bda
+       from IBM Plex Mono v1.1.0 (github.com/IBM/plex, OFL 1.1)
+     total 81,780 B ≈ 81.8 KB — under the 95 KB shared-font budget (spec §7).
+     Licenses: fonts/LICENSES.txt
+
+   GLYPH COVERAGE (honest): the families ship latin, box-drawing (─│┼…),
+   block elements (▌█, Plex), ✓→↑↓ (both), ✗ (Martian). The UI glyphs
+   ⌁ ◇ ◉ ◌ ▮ ● ▸ ⠿ do NOT exist in either upstream family — they render
+   per-glyph from the system fallback stack by design. Do not claim
+   otherwise in copy.
+
+   FALLBACK METRICS: 'Martian Mono Fallback' / 'Plex Mono Fallback' are
+   metric-tuned Menlo (size-adjust + ascent/descent overrides computed
+   from the real font tables) so font-display:swap reflow ≈ 0 CLS.
+     Menlo      adv 1233/2048 = 0.60205 em
+     Plex Mono  adv  600/1000 = 0.600 em · hhea 1025/-275/0
+     Martian VF adv  750/1000 = 0.750 em · hhea 1000/-200/0
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Webfonts ─────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Martian Mono';
+  src: url('fonts/MartianMonoVF.dda1215d.woff2') format('woff2');
+  font-weight: 100 800;
+  font-stretch: 75% 112.5%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+2009-200A, U+2013-2014, U+2018-201E, U+2020-2022,
+    U+2026, U+2030, U+2039-203A, U+2044, U+2074, U+20AC, U+2122,
+    U+2190-2199, U+2212, U+2215, U+2500-259F, U+2713, U+2717, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('fonts/IBMPlexMono-Regular.6490a869.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+2009-200A, U+2013-2014, U+2018-201E, U+2020-2022,
+    U+2026, U+2030, U+2039-203A, U+2044, U+2074, U+20AC, U+2122,
+    U+2190-2199, U+2212, U+2215, U+2500-259F, U+2713, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('fonts/IBMPlexMono-Medium.2f17816d.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+2009-200A, U+2013-2014, U+2018-201E, U+2020-2022,
+    U+2026, U+2030, U+2039-203A, U+2044, U+2074, U+20AC, U+2122,
+    U+2190-2199, U+2212, U+2215, U+2500-259F, U+2713, U+FFFD;
+}
+
+/* The translation voice — wall-clock glosses + plain-language lines (spec §2) */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('fonts/IBMPlexMono-Italic.7bb0d402.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+2009-200A, U+2013-2014, U+2018-201E, U+2020-2022,
+    U+2026, U+2030, U+2039-203A, U+2044, U+2074, U+20AC, U+2122,
+    U+2190-2199, U+2212, U+2215, U+2500-259F, U+2713, U+FFFD;
+}
+
+/* ── Metric-tuned local fallbacks (swap CLS ≈ 0) ──────────────────────────────
+   size-adjust = primary_advance / menlo_advance
+   ascent/descent-override = (metric / upm) / size-adjust   (next-font formula)
+   Martian:  S = 0.750/0.60205 = 124.57% · asc 1.000/1.2457 · desc 0.200/1.2457
+   Plex:     S = 0.600/0.60205 =  99.66% · asc 1.025/0.9966 · desc 0.275/0.9966 */
+
+@font-face {
+  font-family: 'Martian Mono Fallback';
+  src: local('Menlo');
+  size-adjust: 124.57%;
+  ascent-override: 80.27%;
+  descent-override: 16.05%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Plex Mono Fallback';
+  src: local('Menlo');
+  size-adjust: 99.66%;
+  ascent-override: 102.85%;
+  descent-override: 27.59%;
+  line-gap-override: 0%;
+}
+
+/* ── Family stacks — consume these tokens, never name families directly ───── */
+
+:root {
+  /* display / H1–H2 / hero / big data (spec §2 row 1) */
+  --font-display: 'Martian Mono', 'Martian Mono Fallback',
+    ui-monospace, 'SF Mono', Menlo, monospace;
+  /* body / UI / data / code + italic translations (spec §2 row 2) */
+  --font-body: 'IBM Plex Mono', 'Plex Mono Fallback',
+    ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* ── Save-Data / reduced-data: no font download, fallback stack only (§3.5)
+   Pages must also gate their <link rel="preload"> with
+   media="(prefers-reduced-data: no-preference)" or the preload still fires. */
+
+@media (prefers-reduced-data: reduce) {
+  :root {
+    --font-display: 'Martian Mono Fallback',
+      ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-body: 'Plex Mono Fallback',
+      ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+}

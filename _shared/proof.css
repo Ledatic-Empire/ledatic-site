@@ -1,0 +1,312 @@
+/* ============================================================
+   LEDATIC 2040 — proof.css                       (spec §5.1, §4)
+   Styles for the proof primitives owned by proof-tray.js:
+     .prove        the claim button (wraps a value, ⌁ affix)
+     .tray         the inline proof tray (steps print live)
+     .proof-pop    the popover variant (3-line proof card)
+     .receipt      the copyable proof-of-proof block
+     .trust-strip  footer self-check verdict slot helpers
+
+   Link order contract (after tokens.css + site.css):
+     <link rel="stylesheet" href="_shared/tokens.css">
+     <link rel="stylesheet" href="_shared/site.css">
+     <link rel="stylesheet" href="_shared/proof.css">
+
+   Division of labor: site.css owns the [data-state] liveness
+   chip grammar (§4 hue/glyph). This file never redeclares it.
+   Color law: --st-fail appears ONLY on a failed verification
+   step/verdict. Inverse video (--alarm-*) appears ONLY on a
+   page-vs-manifest self-check failure (§0 rule 2). Verified
+   glow (--e2/--e3) is applied by JS via data-outcome — never
+   authored.
+   ============================================================ */
+
+/* ── The claim button ───────────────────────────────────────── */
+/* Zero-JS degrade: .prove renders as plain inline text — the
+   claim stays readable; the affix is decoration; nothing opens. */
+button.prove {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: inline;
+  letter-spacing: inherit;
+}
+.prove > data,
+.prove .prove-val {
+  border-bottom: 1px dotted var(--ph-700);   /* citation underline (§5.4) */
+  padding-bottom: 1px;
+  transition: border-color var(--hover-out) var(--ease);
+}
+.prove:hover > data,
+.prove:hover .prove-val {
+  border-color: var(--ph-500);
+  transition-duration: var(--hover-in);      /* phosphor charges fast… */
+}
+/* Session persistence (§5.1): JS sets data-proved after a proof.
+   ok → the dotted underline goes solid for the session.
+   fail → the underline carries the one meaning red has. */
+.prove[data-proved="ok"] > data,
+.prove[data-proved="ok"] .prove-val   { border-bottom-style: solid; border-color: var(--ph-600); }
+.prove[data-proved="fail"] > data,
+.prove[data-proved="fail"] .prove-val { border-bottom-style: solid; border-color: var(--st-fail); }
+
+.prove .affix {
+  color: var(--tx-dim);
+  margin-left: 0.35em;
+  transition: color var(--hover-out) var(--ease),
+              text-shadow var(--hover-out) var(--ease);
+}
+.prove:hover .affix,
+.prove:focus-visible .affix,
+.prove[aria-expanded="true"] .affix {
+  color: var(--ph-500);
+  transition-duration: var(--hover-in);
+}
+.prove:focus-visible {
+  outline: 2px solid var(--ph-700);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+/* ── The proof tray ─────────────────────────────────────────── */
+.tray {
+  background: var(--ink-3);
+  border-radius: var(--r-0);                 /* data is square (§1)        */
+  box-shadow: var(--e1);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.8;
+  color: var(--tx-lo);
+  text-align: left;
+  padding: var(--sp-3) var(--sp-4);
+  margin: var(--sp-2) 0 var(--sp-4);
+  position: relative;
+  overflow: hidden;
+  max-width: 72ch;
+  transition: box-shadow 1.6s var(--ease);   /* bloom decays through this  */
+}
+.tray[hidden] { display: none; }
+
+/* Outcome glow — JS-set only (token law). ok earns interactive
+   elevation; the verified bloom (e3→e2) rides .bloom below. */
+.tray[data-outcome="ok"]   { box-shadow: var(--e2); }
+.tray[data-outcome="fail"] { box-shadow: inset 0 0 0 1px var(--st-fail); }
+
+/* Verified bloom (§3.3): JS adds .bloom on OK, removes next frame;
+   the 1.6s base transition carries the decay back to --e2. */
+.tray.bloom {
+  box-shadow: var(--e3);
+  transition: box-shadow 80ms var(--ease);
+}
+
+/* Prove press (§3.3): 120ms scanline sweep, top→bottom, once. */
+@keyframes tray-sweep {
+  from { top: 0;    opacity: 1; }
+  to   { top: 100%; opacity: 0; }
+}
+.tray.sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ph-200), transparent);
+  animation: tray-sweep 120ms linear 1 forwards;
+  pointer-events: none;
+}
+
+.tray-title {
+  color: var(--tx-hi);
+  letter-spacing: 0.12em;
+  margin: 0 0 var(--sp-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tray-title .affix { color: var(--ph-600); margin-right: 0.4em; }
+
+/* Step rows: NAME  label ………… ✓ result
+   The leader dots are generated (clipped) so rows never reflow. */
+.tray-step {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  white-space: nowrap;
+}
+.tray-step .st-name {
+  flex: 0 0 5ch;
+  color: var(--tx-dim);
+  letter-spacing: 0.08em;
+}
+.tray-step .st-label { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.tray-step .st-dots  { flex: 1 1 0; overflow: hidden; color: var(--tx-dim); opacity: 0.6; min-width: 1ch; }
+.tray-step .st-dots::before { content: "…………………………………………………………………………"; }
+.tray-step .st-res   { flex: 0 0 auto; }
+
+.tray-step[data-status="run"]  .st-res { color: var(--tx-dim); }
+.tray-step[data-status="ok"]   .st-res { color: var(--ph-500); }   /* earned    */
+.tray-step[data-status="fail"] { color: var(--st-fail); }          /* THE red   */
+.tray-step[data-status="fail"] .st-name,
+.tray-step[data-status="fail"] .st-dots { color: var(--st-fail); opacity: 1; }
+.tray-step[data-status="skip"] .st-res,
+.tray-step[data-status="skip"] .st-label,
+.tray-step[data-status="info"] .st-res { color: var(--tx-dim); }
+
+/* Step check draw (§3.3): ✓ strokes draw in 140ms, staggered by
+   actual async completion — JS appends rows as checks land. */
+.tray-step .tick {
+  width: 0.9em; height: 0.9em;
+  vertical-align: -0.08em;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: square;
+  stroke-dasharray: 14;
+  stroke-dashoffset: 14;
+  transition: stroke-dashoffset 140ms var(--ease);
+}
+.tray-step .tick.draw { stroke-dashoffset: 0; }
+
+/* Failure detail line — exact copy of what didn't check out. */
+.tray-note {
+  color: var(--st-fail);
+  margin: var(--sp-1) 0 0 5ch;
+  white-space: normal;
+  max-width: 60ch;
+}
+.tray-note[data-tone="info"] { color: var(--tx-dim); }
+
+/* Verdict block: ▌verified in your browser · 0.41 s · …
+   The left bar is the ▌ glyph from the spec, as a border. */
+.tray-verdict {
+  margin-top: var(--sp-2);
+  padding-left: 0.8em;
+  border-left: 3px solid var(--ph-500);
+  color: var(--tx-lo);
+  white-space: normal;
+}
+.tray-verdict[data-tone="fail"]       { border-left-color: var(--st-fail); color: var(--st-fail); }
+.tray-verdict[data-tone="unverified"] { border-left-color: var(--tx-dim); color: var(--tx-dim); }
+
+/* ── The receipt (proof-of-proof, §5.1) ─────────────────────── */
+.receipt { margin-top: var(--sp-2); }
+.receipt summary {
+  cursor: pointer;
+  color: var(--tx-dim);
+  letter-spacing: 0.08em;
+  list-style: none;
+}
+.receipt summary::-webkit-details-marker { display: none; }
+.receipt summary::before { content: "▸ "; }
+.receipt[open] summary::before { content: "▾ "; }
+.receipt summary:hover { color: var(--tx-lo); }
+.receipt pre {
+  margin: var(--sp-1) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--ink-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-0);
+  font: inherit;
+  color: var(--tx-lo);
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: all;
+}
+.copy-btn {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  color: var(--tx-lo);
+  font: inherit;
+  letter-spacing: 0.08em;
+  padding: 0 0.6em;
+  margin-left: 0.6em;
+  cursor: pointer;
+  transition: color var(--hover-out) var(--ease),
+              border-color var(--hover-out) var(--ease),
+              background var(--hover-out) var(--ease);
+}
+.copy-btn:hover {
+  color: var(--ph-500);
+  border-color: var(--ph-700);
+  transition-duration: var(--hover-in);
+}
+/* Copy flash (§3.3): 80ms --ph-50 flash, "copied" decays out ~2s. */
+.copy-btn.copied { background: var(--ph-50); color: var(--ink-0); transition-duration: 80ms; }
+.copy-echo {
+  color: var(--tx-dim);
+  margin-left: 0.5em;
+  opacity: 0;
+  transition: opacity 2s var(--ease);
+}
+.copy-echo.show { opacity: 1; transition-duration: 80ms; }
+
+/* Key-pin honesty line (§5.1): minimal, explicit, one-time trust. */
+.tray-keypin {
+  margin-top: var(--sp-2);
+  color: var(--tx-dim);
+  font-size: 0.8rem;
+  white-space: normal;
+}
+.tray-keypin a { color: var(--ph-700); }
+.tray-keypin a:hover { color: var(--ph-500); }
+
+/* ── Popover variant (§5.1) — 3-line proof card, zero library ── */
+.proof-pop {
+  /* override [popover] UA defaults (margin auto / inset 0) */
+  position: fixed;
+  margin: 0;
+  inset: auto;
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-0);
+  box-shadow: var(--e1);
+  color: var(--tx-lo);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  line-height: 1.8;
+  padding: var(--sp-2) var(--sp-3);
+  max-width: 44ch;
+  overflow-wrap: break-word;
+}
+.proof-pop[data-outcome="ok"]   { box-shadow: var(--e2); }
+.proof-pop[data-outcome="fail"] { box-shadow: inset 0 0 0 1px var(--st-fail); }
+.proof-pop .pop-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proof-pop .pop-line[data-status="ok"] .st-res,
+.proof-pop .pop-line[data-status="ok"]   { color: var(--tx-lo); }
+.proof-pop .pop-line .ok-mark             { color: var(--ph-500); }
+.proof-pop .pop-line[data-status="fail"]  { color: var(--st-fail); white-space: normal; }
+.proof-pop a { color: var(--ph-700); }
+.proof-pop a:hover { color: var(--ph-500); }
+
+/* ── Trust-strip self-check verdict (§5.4) ──────────────────────
+   Layout only. The ALARM visual itself (inverse video) is owned
+   by site.css `.alarm` — JS adds that class on self-check failure
+   and writes the words. Nothing here may imitate it. */
+.trust-strip [data-selfcheck] { color: var(--tx-dim); }
+.trust-strip [data-selfcheck="ok"] { color: var(--tx-lo); }
+.trust-strip .alarm {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+}
+
+/* ── prefers-reduced-motion: full first-class mode (§3.4) ─────── */
+@media (prefers-reduced-motion: reduce) {
+  .tray.sweep::before { animation: none; content: none; }
+  .tray, .tray.bloom { transition: none; }
+  .tray.bloom { box-shadow: var(--e2); }            /* earned, static */
+  .tray-step .tick { stroke-dashoffset: 0; transition: none; }
+  .copy-btn, .copy-echo, .prove .affix,
+  .prove > data, .prove .prove-val { transition: none; }
+}
+
+/* ── prefers-contrast: more (§3.5) ───────────────────────────── */
+@media (prefers-contrast: more) {
+  .tray[data-outcome="ok"] { box-shadow: inset 0 0 0 2px var(--ph-700); }
+  .proof-pop { border-color: var(--tx-lo); }
+}

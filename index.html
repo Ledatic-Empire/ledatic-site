@@ -22,6 +22,7 @@
 <link rel="canonical" href="https://ledatic.org/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -32,7 +33,7 @@
       "name": "Ledatic",
       "url": "https://ledatic.org/",
       "logo": "https://ledatic.org/og.png",
-      "description": "Ledatic builds the verifiable layer — from the doorstep to the monolith. A self-hosting compiler in Rail, a live MHD plasma beacon, a Pi witness chain, and a Rail-native verifier you can run yourself.",
+      "description": "Ledatic builds the verifiable layer — from the doorstep to the monolith. A self-hosting compiler in Rail, a live MHD plasma beacon, an independent witness chain, and a Rail-native verifier you can run yourself.",
       "founder": { "@type": "Person", "name": "Reilly Gomez" },
       "address": { "@type": "PostalAddress", "addressLocality": "Detroit", "addressRegion": "MI", "addressCountry": "US" },
       "email": "z3m0g@icloud.com",
@@ -49,12 +50,103 @@
   ]
 }
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- §2: self-hosted type only — zero third-party requests. Preloads are
+     gated off under reduced-data (fallback stack carries the page). -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<style>
+/* ── / page styles — consumes tokens only, defines no custom props ── */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* The nav clock owns the cross-document view-transition continuity
+   (§3.2). The hero clock is this page's content-scale instrument —
+   it must NOT share the view-transition-name or the transition skips. */
+pulse-clock.hero-clock {
+  view-transition-name: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45em;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0.75rem 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 5.5vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+/* No state override needed: this base rule's specificity (0,1,1) already
+   beats the shared [data-state] rules (0,1,0) for box-shadow/border, while
+   color still inherits the earned state hue from site.css. */
+
+.hero-gloss {
+  font-size: var(--t-data);
+  margin-bottom: 1.5rem;
+  max-width: 64ch;
+}
+
+/* hero-content is pointer-events:none; the proof object earns input back */
+.hero-content pulse-clock,
+.hero-content .prove,
+.hero-content .tray { pointer-events: auto; }
+
+/* PROVE THIS PAGE — the one hero button (§6 /) */
+#prove-page {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tx-hi);
+  background: var(--ink-2);
+  border: 1px solid var(--ph-700);
+  border-radius: var(--r-1);
+  padding: 0.85rem 1.6rem;
+  transition: box-shadow var(--hover-out) var(--ease),
+              border-color var(--hover-out) var(--ease);
+}
+#prove-page:hover {
+  box-shadow: var(--e2);
+  border-color: var(--ph-600);
+  transition-duration: var(--hover-in);
+}
+
+/* full-width proof tray in the hero (§6 /) */
+.hero-content .tray { max-width: none; width: 100%; }
+
+/* Plain Figures are citation elements (§5.4): dotted provenance underline.
+   (.prove > data already carries its own underline via proof.css.) */
+data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
+
+/* stats row — five figures, one rhythm */
+.stat-row { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 900px) { .stat-row { grid-template-columns: repeat(5, 1fr); } }
+.stat .value .prove { font: inherit; color: inherit; }
+
+/* chain-link section markers fill via view() timeline (§3.1, site.css) */
+.section .chain-link { display: block; margin-bottom: 0.75rem; }
+
+.push { margin-top: var(--sp-8); }
+</style>
+<script type="speculationrules">
+{
+  "prerender": [
+    { "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+  ]
+}
+</script>
 </head>
-<body class="home" data-shader="_shared/shaders/field.frag">
+<body class="home">
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -65,182 +157,71 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=Hi">Say hi</a>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=Hi">Say hi</a>
+  </div>
 </nav>
 
+<!-- HERO — a live proof object (§6 /): pulse-seeded field band behind a
+     giant pulse clock and one button. With JS off this degrades to the
+     static poster, a hollow clock that claims nothing, and a plain page. -->
 <section class="hero">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+    <canvas id="scene-canvas" data-field="home" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">
+    <h1 class="hero-title fade-up">
       Ledatic<span class="accent"> /</span>
     </h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
+    <p class="hero-sub fade-up">
       The verifiable layer &mdash; from the doorstep to the monolith.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      The code your computer runs. The creations your humans make. A
-      self-hosting compiler with zero C dependencies, every release signed
-      against a live MHD plasma beacon, verifiable in 143 lines of Rail.
-      Built in the open.
+    <pulse-clock class="hero-clock fade-up" data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <p class="hero-gloss gloss fade-up">
+      the public heartbeat this site is clocked to &mdash; every age below is
+      denominated in pulses, wall-clock is just the translation
     </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
-      <a class="btn btn-primary" href="aliens.html#archive">Verify a real artifact</a>
-      <a class="btn btn-secondary" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Read the Code</a>
+    <div class="cta-row fade-up">
+      <button class="prove" id="prove-page" aria-expanded="false" aria-controls="prove-page-tray"
+              data-manifest="/attest/site/latest.json"
+              data-name="this page &middot; signed deploy manifest"><span class="prove-val">Prove this page</span><span class="affix" aria-hidden="true">⌁</span></button>
     </div>
-    <p class="trust fade-up" style="animation-delay: 0.85s">
-      Rail v5.1.0 &middot; 141 tests green &middot; Self-hosting since 2026 &middot; Detroit, MI
-    </p>
+    <div class="tray" id="prove-page-tray" role="log" aria-live="polite" hidden></div>
   </div>
 </section>
 
-<section class="operator-section">
-  <div class="wrap">
-    <div class="operator">
-      <span class="operator-eyebrow reveal">Operator &middot; Line 01</span>
-      <h2 class="operator-title reveal">
-        Console <span class="accent">cowboys.</span>
-      </h2>
-      <p class="operator-sub reveal">
-        The compiler you run is the compiler you read.
-      </p>
-
-      <svg class="operator-rig reveal" viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <linearGradient id="visor-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0"   stop-color="hsl(120 25% 14%)"/>
-            <stop offset="0.5" stop-color="hsl(120 20% 10%)"/>
-            <stop offset="1"   stop-color="hsl(120 25% 14%)"/>
-          </linearGradient>
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2.2"/>
-          </filter>
-        </defs>
-
-        <!-- ============ CABLES TOP (5) ============ -->
-        <g fill="none" stroke="hsl(120 55% 32%)" stroke-width="2" stroke-linecap="round" opacity="0.72">
-          <path class="cable"   d="M 215,0  C 205,70  260,130 270,220"/>
-          <path class="cable cable-b" d="M 310,0  C 342,78  298,150 332,220"/>
-          <path class="cable"   d="M 400,0  C 390,90  420,170 405,220"/>
-          <path class="cable cable-b" d="M 492,0  C 470,65  504,135 472,220"/>
-          <path class="cable"   d="M 585,0  C 605,90  552,160 538,220"/>
-        </g>
-        <!-- outer glow sheath -->
-        <g fill="none" stroke="hsl(120 70% 42%)" stroke-width="0.6" opacity="0.35">
-          <path d="M 215,0  C 205,70  260,130 270,220"/>
-          <path d="M 310,0  C 342,78  298,150 332,220"/>
-          <path d="M 400,0  C 390,90  420,170 405,220"/>
-          <path d="M 492,0  C 470,65  504,135 472,220"/>
-          <path d="M 585,0  C 605,90  552,160 538,220"/>
-        </g>
-
-        <!-- ============ VISOR ============ -->
-        <g transform="translate(180, 200)">
-          <!-- Main body -->
-          <rect x="0" y="0" width="440" height="130" rx="4" ry="4"
-                fill="url(#visor-grad)" stroke="hsl(120 60% 45%)" stroke-width="1.6"/>
-
-          <!-- Upper ridge -->
-          <rect x="-4" y="-6" width="448" height="8" rx="1" fill="hsl(120 30% 16%)" stroke="hsl(120 55% 38%)" stroke-width="0.8"/>
-          <!-- Lower jaw plate -->
-          <rect x="-4" y="128" width="448" height="6" rx="1" fill="hsl(120 30% 16%)" stroke="hsl(120 55% 38%)" stroke-width="0.8"/>
-
-          <!-- Panel seams -->
-          <line x1="110" y1="0" x2="110" y2="130" stroke="hsl(120 35% 22%)" stroke-width="0.6"/>
-          <line x1="220" y1="0" x2="220" y2="130" stroke="hsl(120 35% 22%)" stroke-width="0.6"/>
-          <line x1="330" y1="0" x2="330" y2="130" stroke="hsl(120 35% 22%)" stroke-width="0.6"/>
-          <line x1="0"   y1="65" x2="440" y2="65" stroke="hsl(120 35% 20%)" stroke-width="0.5"/>
-
-          <!-- Corner rivets / LEDs -->
-          <circle class="led led-a" cx="16" cy="18"  r="3.2" fill="hsl(120 99% 55%)" filter="url(#glow)"/>
-          <circle cx="16"  cy="18"  r="1.4" fill="hsl(120 99% 70%)"/>
-          <circle class="led led-b" cx="424" cy="18" r="3.2" fill="hsl(120 99% 55%)" filter="url(#glow)"/>
-          <circle cx="424" cy="18" r="1.4" fill="hsl(120 99% 70%)"/>
-          <circle class="led led-c" cx="16"  cy="112" r="3.2" fill="hsl(120 99% 55%)" filter="url(#glow)"/>
-          <circle cx="16"  cy="112" r="1.4" fill="hsl(120 99% 70%)"/>
-          <circle cx="424" cy="112" r="3"   fill="hsl(120 30% 30%)"/>
-
-          <!-- Side cable ports -->
-          <rect x="-14" y="50" width="14" height="30" rx="1" fill="hsl(120 25% 11%)" stroke="hsl(120 55% 38%)" stroke-width="0.8"/>
-          <rect x="440" y="50" width="14" height="30" rx="1" fill="hsl(120 25% 11%)" stroke="hsl(120 55% 38%)" stroke-width="0.8"/>
-          <circle cx="-7"  cy="60" r="1.5" fill="hsl(120 60% 40%)"/>
-          <circle cx="-7"  cy="70" r="1.5" fill="hsl(120 60% 40%)"/>
-          <circle cx="447" cy="60" r="1.5" fill="hsl(120 60% 40%)"/>
-          <circle cx="447" cy="70" r="1.5" fill="hsl(120 60% 40%)"/>
-
-          <!-- ============ GLYPH READOUT ============ -->
-          <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="38" font-weight="500"
-             fill="hsl(119 99% 46%)" filter="url(#glow)">
-            <text class="glyph glyph-1" x="24"  y="80">||||</text>
-            <text class="glyph glyph-2" x="128" y="80">:</text>
-            <text class="glyph glyph-3" x="158" y="80">X</text>
-            <text class="glyph glyph-4" x="238" y="80">|||</text>
-            <text class="glyph glyph-5" x="320" y="80">:</text>
-            <text class="glyph glyph-6" x="352" y="80">&gt;_</text>
-          </g>
-          <!-- Crisp foreground copy (no glow) for readability -->
-          <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="38" font-weight="500"
-             fill="hsl(119 99% 62%)">
-            <text class="glyph glyph-1" x="24"  y="80">||||</text>
-            <text class="glyph glyph-2" x="128" y="80">:</text>
-            <text class="glyph glyph-3" x="158" y="80">X</text>
-            <text class="glyph glyph-4" x="238" y="80">|||</text>
-            <text class="glyph glyph-5" x="320" y="80">:</text>
-            <text class="glyph glyph-6" x="352" y="80">&gt;_</text>
-          </g>
-        </g>
-
-        <!-- ============ CABLES BOTTOM (5) ============ -->
-        <g fill="none" stroke="hsl(120 55% 32%)" stroke-width="2" stroke-linecap="round" opacity="0.72">
-          <path class="cable"   d="M 250,330 C 230,400 280,470 262,520"/>
-          <path class="cable cable-b" d="M 340,330 C 358,395 322,455 330,520"/>
-          <path class="cable"   d="M 400,330 C 408,405 392,475 400,520"/>
-          <path class="cable cable-b" d="M 460,330 C 478,395 444,465 452,520"/>
-          <path class="cable"   d="M 550,330 C 528,400 578,460 554,520"/>
-        </g>
-        <g fill="none" stroke="hsl(120 70% 42%)" stroke-width="0.6" opacity="0.35">
-          <path d="M 250,330 C 230,400 280,470 262,520"/>
-          <path d="M 340,330 C 358,395 322,455 330,520"/>
-          <path d="M 400,330 C 408,405 392,475 400,520"/>
-          <path d="M 460,330 C 478,395 444,465 452,520"/>
-          <path d="M 550,330 C 528,400 578,460 554,520"/>
-        </g>
-      </svg>
-
-      <p class="operator-foot reveal">
-        Rail &middot; ~1.2 MB &middot; No backdoor &middot; No ICE between you and your tools
-      </p>
-    </div>
-  </div>
-</section>
+<main>
 
 <section class="section">
   <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Substrate</span>
     <h2 class="reveal">One language under everything you just verified.</h2>
-    <p class="lead reveal" style="max-width: 52rem;">
+    <p class="lead reveal">
       The compiler. The MHD simulation that becomes the beacon. The TLS
-      stack carrying signatures from a Pi witness. The 143-line
+      stack carrying signatures from an independent witness. The 143-line
       verifier behind the button up top. The site you're reading. All of
-      it Rail. All of it compiles to a single ~1.2 MB seed binary you can
+      it Rail. All of it compiles to a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb">~1.2 MB</data> seed binary you can
       read end to end. No npm. No Python. No runtime.
     </p>
-    <div class="cta-row reveal" style="margin-top: 2rem; justify-content: flex-start;">
+    <p class="gloss reveal">the compiler you run is the compiler you read</p>
+    <div class="cta-row push reveal">
       <a class="btn btn-primary" href="rail.html">See the language</a>
       <a class="btn btn-secondary" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source on GitHub</a>
     </div>
   </div>
 </section>
 
-<section class="section" style="border-top: 1px solid hsl(var(--border));">
+<section class="section">
   <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">From the doorstep to the monolith</span>
     <h2 class="reveal">Same primitive. Every scale.</h2>
-    <p class="lead reveal" style="max-width: 52rem;">
+    <p class="lead reveal">
       A signature you can re-derive in your browser, anchored to a public
       physics process nobody controls, witnessed by an independent key.
       That primitive runs from one artifact at your doorstep all the way
@@ -248,16 +229,16 @@
       scope.
     </p>
 
-    <div class="grid grid-2 grid-4" style="margin-top: 2.5rem;">
+    <div class="grid grid-2 grid-4 push">
       <a class="card reveal" href="aliens.html#archive">
         <span class="eyebrow">Doorstep</span>
         <h3>Verify</h3>
-        <p>One record, one chain, "ok" in your browser. Pick any file from the archive — your browser re-derives the Ed25519 signature against the witness's public key and the live entropy pulse.</p>
+        <p>One record, one chain, "ok" in your browser. Pick any file from the archive &mdash; your browser re-derives the Ed25519 signature against the witness's public key and the entropy pulse it was anchored to.</p>
       </a>
       <a class="card reveal" href="system.html">
         <span class="eyebrow">Fleet</span>
         <h3>System</h3>
-        <p>Live mission control. Every node's state signed every minute by a Pi witness sitting on its own key.</p>
+        <p>Mission control, sentinel-checked. Every surface renders unknown until a signed check passes &mdash; nothing glows that hasn't proven itself.</p>
       </a>
       <a class="card reveal" href="aliens.html">
         <span class="eyebrow">Archive</span>
@@ -271,7 +252,7 @@
       </a>
     </div>
 
-    <div class="cta-row reveal" style="margin-top: 2.5rem; justify-content: flex-start;">
+    <div class="cta-row push reveal">
       <a class="btn btn-primary" href="aliens.html#archive">Verify a real artifact</a>
       <a class="btn btn-secondary" href="manifesto.html">Read the manifesto</a>
     </div>
@@ -280,29 +261,55 @@
 
 <section class="section">
   <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Shipping cadence</span>
-    <h2 class="reveal">Forty-five tagged releases and counting.</h2>
+    <h2 class="reveal"><data class="fig" data-src="repo:tags" data-fmt="count">45</data> tagged releases and counting.</h2>
 
-    <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
+    <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value">v5.1.0</div>
+        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version">v5.1.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
         <div class="label">Current Rail</div>
       </div>
       <div class="stat reveal">
-        <div class="value">141</div>
+        <div class="value"><data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data></div>
         <div class="label">Tests green</div>
       </div>
       <div class="stat reveal">
-        <div class="value">1.2 MB</div>
+        <div class="value"><data class="fig" data-src="repo:rail_native">1.2 MB</data></div>
         <div class="label">Seed binary</div>
+      </div>
+      <div class="stat reveal">
+        <div class="value"><data class="fig" data-src="repo:tags" data-fmt="count">45</data></div>
+        <div class="label">Tagged releases</div>
       </div>
       <div class="stat reveal">
         <div class="value">0</div>
         <div class="label">C deps</div>
       </div>
     </div>
+    <p class="gloss push reveal">
+      the release figure above is a working prove button &mdash; press it and
+      your browser fetches the tagged binary, hashes it, and checks the
+      witness signature itself
+    </p>
   </div>
 </section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">2040, backwards</span>
+    <h2 class="reveal">No one can retro-fabricate a heartbeat.</h2>
+    <p class="lead reveal">
+      The beacon ticks every <data class="fig" data-src="beacon:cadence" data-fmt="s">~2 s</data>. Kept up, that is roughly 220 million
+      unbroken pulses by 2040 &mdash; a hash chain nobody can fabricate after
+      the fact, with every deploy of this site signed into it. It starts here.
+    </p>
+    <p class="gloss reveal">fourteen years from now, this page will be able to prove what it said today</p>
+  </div>
+</section>
+
+</main>
 
 <footer class="site-foot">
   <div class="wrap">
@@ -325,6 +332,7 @@
           <li><a href="entropy.html">Entropy beacon</a></li>
           <li><a href="system.html">System</a></li>
           <li><a href="aliens.html">Aliens archive</a></li>
+          <li><a href="replay.html">Replay</a></li>
         </ul>
       </div>
       <div>
@@ -338,11 +346,61 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
 
-<script src="_shared/site.js"></script>
+<script src="_shared/site.js" defer></script>
+<script src="_shared/field.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* ── / page wiring: hero auto-proof + footer self-check (§5.4, §6 /) ──
+   Everything here is additive; the page is complete without it. */
+
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+function whenVisible(cb) {
+  // Prerendered / hidden documents must not spend the visitor's network.
+  if (!document.hidden) { cb(); return; }
+  document.addEventListener('visibilitychange', function once() {
+    if (document.hidden) return;
+    document.removeEventListener('visibilitychange', once);
+    cb();
+  });
+}
+
+whenProof((P) => {
+  if (SAVE) return;            // §3.5 — reduced data: no automatic fetches;
+                               // the strip keeps its honest authored text and
+                               // the prove button still works on press.
+
+  // Footer trust strip — re-confirms this page against the signed deploy
+  // manifest after load; flips to ALARM only on a real mismatch (§5.4).
+  whenVisible(() => {
+    const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+    if (strip) P.mountSelfCheck(strip);
+  });
+
+  // PROVE THIS PAGE — the deploy-manifest proof runs in the full-width
+  // hero tray within 3 s of arrival (§6 /). Never re-fires over a tray
+  // the visitor already opened.
+  whenVisible(() => {
+    setTimeout(() => {
+      const btn = document.getElementById('prove-page');
+      if (btn && btn.getAttribute('aria-expanded') === 'false') btn.click();
+    }, 1200);
+  });
+});
+</script>
 </body>
 </html>

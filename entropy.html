@@ -20,42 +20,116 @@
 <!-- og:end -->
 <title>Entropy — Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/entropy">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- self-hosted type only; preloads gated off under reduced-data -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- link order contract: tokens → fonts → site → proof, page styles last -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
 <style>
-  .pulse-feed {
-    background: hsl(var(--panel));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.8rem;
-    color: hsl(var(--muted-foreground));
-    max-height: 20rem;
-    overflow-y: auto;
-    line-height: 1.8;
-  }
-  .pulse-feed .row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 1rem;
-    padding: 0.25rem 0;
-    border-bottom: 1px solid hsl(var(--border) / 0.4);
-  }
-  .pulse-feed .row:last-child { border-bottom: none; }
-  .pulse-feed .ts { color: hsl(var(--primary)); }
-  .pulse-feed .hash {
-    color: hsl(var(--foreground) / 0.85);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .pulse-feed .n { color: hsl(var(--muted-foreground) / 0.6); }
+/* /entropy page styles — consumes tokens only, defines no custom props */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* Chain feed: rows are real buttons, clickable into a proof detail */
+.chain-feed {
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-4) var(--sp-6);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  color: var(--tx-lo);
+  line-height: 1.8;
+  max-height: 26rem;
+  overflow-y: auto;
+}
+.chain-feed .row {
+  appearance: none;
+  background: none;
+  border: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.2rem 4.8rem 1fr auto;
+  gap: var(--sp-4);
+  align-items: baseline;
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--line);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chain-feed .row:hover .hash { color: var(--tx-hi); }
+.chain-feed .row .glyph.link-ok  { color: var(--st-live); }
+.chain-feed .row .glyph.link-bad { color: var(--st-fail); }
+.chain-feed .row .glyph.link-na  { color: var(--tx-dim); }
+.chain-feed .row .ts   { color: var(--ph-600); }
+.chain-feed .row .hash { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chain-feed .row .n    { color: var(--tx-dim); }
+.chain-feed .row-stub  { color: var(--tx-dim); }
+.chain-feed.is-stale   { border: 1px dashed var(--st-stale); filter: saturate(0.55); }
+
+.row-detail {
+  background: var(--ink-3);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  margin: var(--sp-1) 0 var(--sp-2);
+  padding: var(--sp-4);
+  font-size: var(--t-data);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.row-detail .lbl { color: var(--tx-dim); }
+.row-detail a { color: var(--ph-600); }
+
+.check-ok   { color: var(--st-live); }
+.check-fail { color: var(--st-fail); }
+.check-info { color: var(--tx-dim); }
+
+/* MHD viewport extras: honest empty state + readout chip slot */
+.mhd-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: var(--sp-6);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  color: var(--tx-dim);
+}
+
+/* Witness receipt card */
+.witness-card {
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-6);
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+}
+.witness-card dl {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  column-gap: var(--sp-4);
+  row-gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+}
+.witness-card dt { color: var(--tx-dim); }
+.witness-card dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .witness-card dl { grid-template-columns: 1fr; row-gap: 0; }
+  .witness-card dd { margin-bottom: var(--sp-2); }
+}
 </style>
 </head>
-<body data-shader="_shared/shaders/beacon.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -66,38 +140,45 @@
     <a href="system.html">System</a>
     <a href="changelog.html">Changelog</a>
   </div>
-  <a class="nav-cta" href="#verify">Verify</a>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="#verify">Verify</a>
+  </div>
 </nav>
 
 <section class="hero">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
+    <canvas id="scene-canvas" data-field="entropy" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Attestation &mdash; live</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Entropy</h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      A public beacon, pulsing every two seconds.
+    <span class="eyebrow fade-up">Entropy beacon</span>
+    <h1 class="hero-title fade-up">Entropy</h1>
+    <p class="hero-sub fade-up">
+      A public beacon. A new pulse lands
+      <data class="fig" data-src="beacon:cadence" data-fmt="words">every ~2 s</data>.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Each pulse is a hash of the current plasma simulation state,
-      chained to the previous pulse. Walk the chain yourself and
-      catch any in-flight tampering &mdash; the verifier is one
-      shell line and you trust no one to read the result.
+    <p class="hero-desc fade-up">
+      Each pulse hashes the live plasma state into a chain anyone can
+      walk. Nothing on this page lights up unless a check passed in
+      your browser — and the verifier is one shell line you run
+      yourself.
     </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+    <div class="cta-row fade-up">
       <a class="btn btn-primary" href="#verify">How to verify</a>
-      <a class="btn btn-ghost" href="#feed">Live feed</a>
+      <a class="btn btn-ghost" href="#feed">Watch the chain</a>
     </div>
-    <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
+    <div class="visor-mini fade-up" style="margin-top: 1.25rem;">
       <span class="visor-label">Pulse</span>
       <span class="visor-value" data-live="entropy-pulse">&mdash;</span>
     </div>
-    <p class="trust fade-up" style="animation-delay: 0.9s">
-      Emitted by one node &middot; independently Ed25519-cosigned by an external witness
+    <p class="trust fade-up">
+      Emitted by one node &middot; observed and Ed25519-cosigned by an independent witness
+    </p>
+    <p class="gloss fade-up">
+      the band behind this text is a pulse-seeded rendering &mdash; decoration, not the beacon. the beacon is the numbers below.
     </p>
   </div>
 </section>
@@ -107,12 +188,12 @@
     <span class="eyebrow reveal">What it is</span>
     <h2 class="reveal">A chain of physics-anchored pulses.</h2>
     <p class="lead reveal">
-      Every two seconds, the Ledatic MHD solver runs one more step.
+      The Ledatic MHD solver advances one step
+      <data class="fig" data-src="beacon:cadence" data-fmt="words">every ~2 s</data>.
       The resulting plasma state is hashed, concatenated with the
       previous pulse hash, and posted to a public store. Anyone can
-      walk the chain. The chain is produced by a single node and
-      independently observed by an external Ed25519 witness that
-      cosigns the pulses it sees.
+      walk the chain. One node produces it; an independent Ed25519
+      witness observes it and cosigns what it saw.
     </p>
 
     <div class="grid grid-3 reveal" style="margin-top: 2rem;">
@@ -138,42 +219,58 @@
 <section class="section" id="source">
   <div class="wrap">
     <span class="eyebrow reveal">The source</span>
-    <h2 class="reveal">See what's being hashed.</h2>
+    <h2 class="reveal">See what&rsquo;s being hashed.</h2>
     <p class="body reveal" style="max-width: 52rem;">
       An Orszag-Tang vortex on a 128&sup2; periodic grid. Ideal-MHD,
       Lax-Friedrichs, conservation to machine precision
       (&Delta;m/m &lt; 10<sup>-15</sup>, &Delta;E/E &lt; 10<sup>-15</sup>,
       &nabla;&middot;B at 10<sup>-15</sup> by construction). The frame
-      you're looking at is the same frame that just got SHA-256'd into
-      the chain row above. Plasma is chaotic &mdash; small perturbations
-      blow up fast &mdash; which is exactly the property an honest
-      entropy beacon needs.
+      below is the same frame that gets SHA-256&rsquo;d into the chain.
+      Plasma is chaotic &mdash; small perturbations blow up fast &mdash;
+      which is exactly the property an honest entropy beacon needs.
     </p>
 
     <div class="mhd-viewport reveal" style="margin-top: 2rem;">
-      <canvas id="mhd-canvas"
-              data-mhd-live="https://ledatic.org/entropy/frame/current"
-              data-mhd-shader="_shared/shaders/mhd_live.frag"
-              data-mhd-fallback="_shared/shaders/mhd.frag"
-              aria-hidden="true"></canvas>
+      <canvas id="mhd-canvas" aria-hidden="true"></canvas>
       <div class="mhd-frame" aria-hidden="true"></div>
+      <div class="mhd-empty" id="mhd-empty" hidden>
+        this browser has no WebGL2 &mdash; the raw frame bytes are
+        still public at <code>/entropy/frame/current</code>
+      </div>
+      <noscript>
+        <div class="mhd-empty">
+          with JavaScript off this panel stays dark &mdash; the frame
+          bytes are public at <code>/entropy/frame/current</code>
+        </div>
+      </noscript>
       <div class="mhd-overlay">
-        <span class="live-dot"></span>
         <span>Orszag-Tang</span>
-        <span class="mhd-kernel">// &hellip;</span>
+        <span id="mhd-state" data-state="unknown"></span>
       </div>
       <div class="mhd-readouts">
         <span>Grid <span class="mhd-num">128&times;128</span></span>
         <span>Var <span class="mhd-num">&rho;</span></span>
-        <span>Step <span class="mhd-num" data-live="mhd-step">&mdash;</span></span>
+        <span>Plane <span class="mhd-num">64&nbsp;KB</span></span>
+        <span>Step <span class="mhd-num" id="mhd-step">&mdash;</span></span>
       </div>
     </div>
-    <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
-      Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the 128&times;128
-      solver grid on a 2&pi; periodic domain, min-max normalized and color-mapped in your GPU. A new
-      frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
-      cross-dissolves between them for smooth motion. Every keyframe is hashed into the
-      entropy chain. Deeper write-up on <a href="plasma.html">the plasma page</a>.
+    <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: var(--tx-dim); max-width: 52rem;">
+      The viewport reads only the density plane of each published
+      frame &mdash; the first 64&nbsp;KB after the header, min-max
+      normalized and color-mapped on your GPU. Every kept frame is a
+      real keyframe from <code>/entropy/frame/current</code>; the
+      dissolve between keyframes is presentation. If frames stop
+      arriving, the panel says so: stale within seconds, and after ten
+      quiet minutes it demotes itself to replay &mdash; recorded
+      pixels, labeled as recorded.
+    </p>
+    <p class="body reveal" style="margin-top: 0.5rem; max-width: 52rem;">
+      Each frame also ships a signed record:
+      <button class="prove" aria-expanded="false"
+              data-manifest="/entropy/frame/latest.attestation.json"
+              data-artifact="/entropy/frame/current"
+              data-name="entropy frame &middot; signed attestation"><span class="prove-val">frame attestation</span><span class="affix" aria-hidden="true">⌁</span></button>
+      &mdash; press it and the proof runs here, in your tab.
     </p>
   </div>
 </section>
@@ -181,16 +278,53 @@
 <section class="section" id="feed">
   <div class="wrap">
     <span class="eyebrow reveal">Feed</span>
-    <h2 class="reveal">Recent pulses.</h2>
+    <h2 class="reveal">Watch the chain walk. <span id="feed-state" data-state="unknown" data-sentinel="pulse" data-fresh-pulses="5"></span></h2>
     <p class="body reveal">
-      Pulses land here as they happen, newest first &mdash; the feed
-      keeps the most recent twenty. The full log of the last 50 lives
-      at <code>/entropy/pulse/log</code>, which the verifier below walks.
+      Pulses land newest-first. Each arriving row is checked against
+      the one before it &mdash; the link glyph fills only when
+      <code>prev_value_hex</code> matches in your browser, and a break
+      prints red. Click any row to re-fetch its published record and
+      compare. The full log of the last 50 lives at
+      <code>/entropy/pulse/log</code>.
     </p>
 
-    <div class="pulse-feed reveal" id="pulse-feed" style="margin-top: 2rem;">
-      <!-- JS replaces this once /entropy/pulse responds. -->
-      <div class="row"><span class="ts">&mdash;&mdash;:&mdash;&mdash;:&mdash;&mdash;</span><span class="hash">waiting for first pulse&hellip;</span><span class="n">&mdash;</span></div>
+    <p class="gloss reveal" id="feed-note" hidden></p>
+    <div class="chain-feed reveal" id="chain-feed" style="margin-top: 1.5rem;">
+      <div class="row-stub">JavaScript is off &mdash; the chain still
+      walks without it: fetch <code>/entropy/pulse/log</code> and
+      compare each <code>prev_value_hex</code> yourself, or use the
+      one-liner under Verify below.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="witness">
+  <div class="wrap">
+    <span class="eyebrow reveal">Witness</span>
+    <h2 class="reveal">Independently observed.</h2>
+    <p class="body reveal" style="max-width: 52rem;">
+      A second machine on separate hardware polls the same public
+      chain, checks each link it sees, and signs a receipt &mdash;
+      pulse id, value, and the moment it watched &mdash; with its own
+      Ed25519 key. The latest receipt is republished below, and its
+      signature is re-checked in your browser against a key pinned in
+      this site&rsquo;s source.
+    </p>
+
+    <div class="witness-card reveal" id="witness-card" style="margin-top: 2rem;">
+      <span id="witness-state" data-state="unknown"></span>
+      <dl>
+        <dt>Observed pulse</dt><dd id="w-pulse">&mdash;</dd>
+        <dt>Watched at</dt><dd id="w-at">&mdash;</dd>
+        <dt>Gap</dt><dd id="w-gap">&mdash;</dd>
+        <dt>Chain link</dt><dd id="w-link">&mdash;</dd>
+        <dt>Signature</dt><dd id="w-sig">&mdash;</dd>
+        <dt>Pinned key</dt><dd id="w-key">&mdash;</dd>
+      </dl>
+      <p class="gloss" style="margin: 1rem 0 0;">
+        raw receipt: <a href="/witness/fleet0/latest">/witness/fleet0/latest</a>
+        &mdash; the signed message is <code>pulse_id|value_hex|witnessed_at</code>
+      </p>
     </div>
   </div>
 </section>
@@ -200,21 +334,22 @@
     <span class="eyebrow reveal">Verify</span>
     <h2 class="reveal">Walk the chain yourself.</h2>
     <p class="body reveal">
-      No Ledatic trust required. Each pulse carries the previous
-      pulse's hash in <code>prev_value_hex</code>. Fetch two pulses
-      a few seconds apart and confirm they chain. Curl and jq are
-      all you need.
+      You don&rsquo;t have to take this page&rsquo;s word for any of
+      it. Each pulse carries the previous pulse&rsquo;s hash in
+      <code>prev_value_hex</code>; the chain check is pure arithmetic
+      on public JSON. Pin the witness key once, and every receipt
+      after that is checkable too.
     </p>
 
     <div class="card reveal" style="margin-top: 2rem;">
       <span class="eyebrow">Shell</span>
       <h3>Verify the chain in one line</h3>
-      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/log | jq -e '. as $l | all(range(1; length); $l[.].prev_value_hex == $l[.-1].value_hex)' &amp;&amp; echo "chain OK" || echo "chain BROKEN"</code></pre>
-      <p style="margin-top: 1rem; font-size: 0.85rem; color: hsl(var(--muted-foreground));">
-        Fetches the last 50 pulses and confirms each one's
-        <code>prev_value_hex</code> matches the previous pulse's
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/log | jq -e '. as $l | all(range(1; length); $l[.].prev_value_hex == $l[.-1].value_hex)' &amp;&amp; echo "chain OK" || echo "chain BROKEN"</code></pre>
+      <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--tx-lo);">
+        Fetches the last 50 pulses and confirms each one&rsquo;s
+        <code>prev_value_hex</code> matches the previous pulse&rsquo;s
         <code>value_hex</code>. If anyone rewrote history mid-chain,
-        the link breaks and you'll see <code>chain BROKEN</code>.
+        the link breaks and you&rsquo;ll see <code>chain BROKEN</code>.
       </p>
     </div>
   </div>
@@ -254,35 +389,404 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
 
-<script src="_shared/site.js"></script>
-<script>
-/* Badge honesty guard: site.js sets data-live-mounted="1" on the canvas only
-   once real attested frames stream. Until then the badge stays neutral; if
-   the procedural fallback shader is showing instead, say so. */
-(function () {
-  var canvas = document.querySelector('canvas[data-mhd-live]');
-  var badge = document.querySelector('.mhd-overlay .mhd-kernel');
-  var dot = document.querySelector('.mhd-overlay .live-dot');
-  if (!canvas || !badge) return;
-  var ticks = 0;
-  var t = setInterval(function () {
-    if (canvas.getAttribute('data-live-mounted') === '1') {
-      clearInterval(t);
-      badge.textContent = '// live';
-      if (dot) dot.style.display = '';
+<script src="_shared/site.js" defer></script>
+<script src="_shared/field.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* /entropy page wiring — additive only; the page is complete without
+   it. Every lit state below is SET by a check, never authored (§4). */
+import { pulseBus as bus, fmtPulse, groupHex } from './_shared/pulse-clock.js';
+import { PINNED_KEYS, sentinel, mountSelfCheck } from './_shared/proof-tray.js';
+
+const $ = (s, r) => (r || document).querySelector(s);
+const enc = new TextEncoder();
+const prm = matchMedia('(prefers-reduced-motion: reduce)');
+const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const hexOf = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
+const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
+
+/* MHD viewport: real frames only, 64 KB density-plane budget. Polls
+   via the shared pulse-bus, reads header + density plane (48+65 536 B)
+   with a streaming reader, then cancels the body — the endpoint serves
+   the full frame, so the budget is enforced client-side. Dedupe by
+   step. NO procedural fallback: no real frame → claim nothing. */
+(async function mhdStream() {
+  const canvas = $('#mhd-canvas');
+  const chipEl = $('#mhd-state');
+  if (!canvas || !chipEl) return;
+  const viewport = canvas.closest('.mhd-viewport');
+  const stepEl = $('#mhd-step');
+  const emptyEl = $('#mhd-empty');
+  const chip = sentinel(chipEl, { freshPulses: 8 });
+  chip.set('unknown');
+
+  const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
+  if (!gl) { canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return; }
+
+  let fragSrc;
+  try { fragSrc = await (await fetch('_shared/shaders/mhd_live.frag')).text(); }
+  catch { canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return; }
+
+  const VS = '#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}';
+  const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return o; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fragSrc));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return;
+  }
+  const uRes = gl.getUniformLocation(prog, 'u_res');
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uFrame = gl.getUniformLocation(prog, 'u_frame');
+  const W = 128, H = 128, HDR = 48, CAP = HDR + W * H * 4; /* f32 density plane */
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, W, H, 0, gl.RED, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  let planeEtag = null;
+  async function fetchPlane() {
+    const headers = {};
+    if (planeEtag) headers['If-None-Match'] = planeEtag;
+    const res = await fetch('/entropy/frame/current', { cache: 'no-store', headers });
+    if (res.status === 304) return null;     /* unchanged — no bytes spent */
+    if (!res.ok || !res.body) throw new Error('frame ' + res.status);
+    planeEtag = res.headers.get('etag');
+    const reader = res.body.getReader();
+    const buf = new Uint8Array(CAP);
+    let got = 0;
+    while (got < CAP) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const take = Math.min(value.length, CAP - got);
+      buf.set(value.subarray(0, take), got);
+      got += take;
+    }
+    reader.cancel().catch(() => {});           /* budget: stop at 65 584 B */
+    if (got < CAP) throw new Error('short frame');
+    const dv = new DataView(buf.buffer);
+    if (dv.getUint32(0, true) !== W || dv.getUint32(4, true) !== H) throw new Error('grid changed');
+    const step = dv.getUint32(12, true);
+    const f = new Float32Array(buf.buffer, HDR, W * H);
+    let mn = Infinity, mx = -Infinity;
+    for (let i = 0; i < f.length; i++) { const v = f[i]; if (v === v) { if (v < mn) mn = v; if (v > mx) mx = v; } }
+    const u8 = new Uint8Array(W * H);
+    const s = mx > mn ? 255 / (mx - mn) : 0;
+    for (let i = 0; i < f.length; i++) { const v = f[i]; u8[i] = v === v ? (v - mn) * s : 0; }
+    return { step, u8 };
+  }
+
+  let prev = null, cur = null, mixT = 1, lastStep = -1, lastFrameAt = 0, raf = 0, lastT = 0;
+  const lerped = new Uint8Array(W * H);
+
+  function upload() {
+    let src = cur;
+    if (prev && mixT < 1) {
+      for (let i = 0; i < lerped.length; i++) lerped[i] = prev[i] + (cur[i] - prev[i]) * mixT;
+      src = lerped;
+    }
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RED, gl.UNSIGNED_BYTE, src);
+  }
+  function draw(tms) {
+    const w = canvas.clientWidth | 0, h = canvas.clientHeight | 0;
+    if (w && h && (canvas.width !== w || canvas.height !== h)) { canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(prog);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, tms / 1000);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(uFrame, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  function frame(t) {
+    raf = 0;
+    if (document.hidden || !cur) return;
+    /* motion runs only while the chip has EARNED live — recorded or
+       stale pixels freeze, honestly (§4) */
+    if (chipEl.dataset.state !== 'live') { mixT = 1; upload(); draw(t); return; }
+    const dt = lastT ? t - lastT : 16; lastT = t;
+    if (mixT < 1) mixT = Math.min(1, mixT + dt / 600);
+    upload(); draw(t);
+    if (!prm.matches) raf = requestAnimationFrame(frame);
+  }
+  function startLoop() {
+    if (prm.matches) { mixT = 1; upload(); draw(performance.now()); return; }
+    if (!raf) { lastT = 0; raf = requestAnimationFrame(frame); }
+  }
+  function demoteReplay() {
+    if (chipEl.dataset.state === 'replay' || lastStep < 0) return;
+    chip.set('replay', { note: 'recorded step ' + fmtPulse(lastStep) });
+    if (viewport) viewport.classList.add('panel-replay');
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    if (cur) { mixT = 1; upload(); draw(performance.now()); }
+  }
+
+  bus.schedule(4000, async () => {
+    if (document.hidden) return;                       /* visibility-paused */
+    try {
+      const fr = await fetchPlane();
+      if (fr && fr.step !== lastStep) {
+        lastStep = fr.step;
+        lastFrameAt = Date.now();
+        prev = cur; cur = fr.u8; mixT = prev ? 0 : 1;
+        if (stepEl) stepEl.textContent = fmtPulse(fr.step);
+        if (viewport) viewport.classList.remove('panel-replay');
+        chip.feed();                 /* earned: a real frame arrived */
+        startLoop();
+        return;
+      }
+    } catch (e) { /* unreachable or malformed — staleness does the talking */ }
+    if (lastFrameAt && Date.now() - lastFrameAt > 600000) demoteReplay();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && chipEl.dataset.state === 'live') startLoop();
+  });
+})();
+
+/* Chain-walking feed: each arriving row client-verifies its prev-hash
+   link; rows open a proof detail that re-fetches the record by id. */
+(function chainFeed() {
+  const feed = $('#chain-feed');
+  if (!feed) return;
+  feed.setAttribute('role', 'log');
+  feed.setAttribute('aria-live', 'polite');
+  const noteEl = $('#feed-note');
+  let newest = null;
+  let seeded = false;
+
+  const GLYPHS = {
+    ok: ['◆', 'link-ok', 'prev-hash link to the previous pulse verified in this tab'],
+    bad: ['✗', 'link-bad', 'prev-hash does NOT match the previous pulse — chain break'],
+    na: ['◇', 'link-na', 'link not checkable here (first row, or a polling gap)'],
+  };
+  const linkKey = (ok) => (ok === true ? 'ok' : ok === false ? 'bad' : 'na');
+
+  function span(cls, text) {
+    const el = document.createElement('span');
+    el.className = cls; el.textContent = text;
+    return el;
+  }
+
+  async function recheck(rec, out) {
+    try {
+      const r = await fetch('/entropy/pulse/' + rec.pulse_id, { cache: 'no-store' });
+      if (!r.ok) {
+        out.textContent = 'published record unavailable (' + r.status + ') — row stands unchecked';
+        out.className = 'recheck check-info';
+        return;
+      }
+      const p = await r.json();
+      if (p && p.value_hex === rec.value_hex && p.prev_value_hex === rec.prev_value_hex) {
+        out.textContent = '✓ re-fetched /entropy/pulse/' + rec.pulse_id + ' — the published record matches this row';
+        out.className = 'recheck check-ok';
+      } else {
+        out.textContent = '✗ the published record DIFFERS from what this page displayed';
+        out.className = 'recheck check-fail';
+      }
+    } catch {
+      out.textContent = 'record re-fetch failed — network';
+      out.className = 'recheck check-info';
+    }
+  }
+
+  function toggleDetail(btn, rec, ok) {
+    if (btn.getAttribute('aria-expanded') === 'true') {
+      btn.setAttribute('aria-expanded', 'false');
+      const d = btn.nextElementSibling;
+      if (d && d.classList.contains('row-detail')) d.remove();
       return;
     }
-    if (++ticks === 12) { /* ~12 s with no attested frame: fallback replay */
-      badge.textContent = '// replay — beacon unreachable';
-      if (dot) dot.style.display = 'none';
+    btn.setAttribute('aria-expanded', 'true');
+    const d = document.createElement('div');
+    d.className = 'row-detail';
+    const line = (lbl, val, cls) => {
+      const p = document.createElement('div');
+      p.appendChild(span('lbl', lbl + '  '));
+      p.appendChild(span(cls || '', val));
+      d.appendChild(p);
+      return p.lastChild;
+    };
+    line('value', groupHex(rec.value_hex || ''));
+    line('prev ', groupHex(rec.prev_value_hex || ''));
+    line('link ', GLYPHS[linkKey(ok)][2], 'check-' + (ok === true ? 'ok' : ok === false ? 'fail' : 'info'));
+    const out = line('check', 'fetching the published record…', 'check-info');
+    out.classList.add('recheck');
+    const p = document.createElement('div');
+    p.appendChild(span('lbl', 'raw   '));
+    const a = document.createElement('a');
+    a.href = '/entropy/pulse/' + rec.pulse_id;
+    a.textContent = '/entropy/pulse/' + rec.pulse_id;
+    p.appendChild(a);
+    d.appendChild(p);
+    btn.after(d);
+    recheck(rec, out);
+  }
+
+  function push(rec, ok) {
+    if (!seeded) { feed.textContent = ''; seeded = true; }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'row';
+    btn.setAttribute('aria-expanded', 'false');
+    const [g, cls, title] = GLYPHS[linkKey(ok)];
+    btn.title = title;
+    btn.appendChild(span('glyph ' + cls, g));
+    btn.appendChild(span('ts', (rec.timestamp_utc || '').slice(11, 19) || '--:--:--'));
+    const hex = rec.value_hex || '';
+    btn.appendChild(span('hash', hex.length > 20 ? hex.slice(0, 14) + '…' + hex.slice(-6) : hex));
+    btn.appendChild(span('n', '#' + fmtPulse(rec.pulse_id)));
+    btn.addEventListener('click', () => toggleDetail(btn, rec, ok));
+    feed.insertBefore(btn, feed.firstChild);
+    const rows = feed.querySelectorAll('button.row');
+    for (let i = rows.length - 1; i >= 20; i--) {
+      const d = rows[i].nextElementSibling;
+      if (d && d.classList.contains('row-detail')) d.remove();
+      rows[i].remove();
     }
-  }, 1000);
+    newest = { id: Number(rec.pulse_id), value: rec.value_hex };
+  }
+
+  /* seed from the public log (ascending), THEN subscribe — the bus
+     replays the latest confirmed pulse to late subscribers. */
+  (async () => {
+    try {
+      const r = await fetch('/entropy/pulse/log', { cache: 'no-store' });
+      const log = await r.json();
+      if (Array.isArray(log) && log.length > 1 &&
+          Number(log[0].pulse_id) > Number(log[log.length - 1].pulse_id)) log.reverse();
+      if (Array.isArray(log) && log.length) {
+        const tail = log.slice(-20);
+        const base = log.length - tail.length;
+        tail.forEach((rec, i) => {
+          const prior = base + i > 0 ? log[base + i - 1] : null;
+          let ok = null;
+          if (prior && Number(rec.pulse_id) === Number(prior.pulse_id) + 1) {
+            ok = rec.prev_value_hex === prior.value_hex;
+          }
+          push(rec, ok);
+        });
+      }
+    } catch { /* stub row stays — it claims nothing */ }
+
+    bus.subscribe((p) => {
+      if (!p || typeof p.pulse_id !== 'number') return;
+      if (newest && p.pulse_id <= newest.id) return;
+      let ok = null;
+      if (newest && p.pulse_id === newest.id + 1) ok = p.prev_value_hex === newest.value;
+      push(p, ok);
+      feed.classList.remove('is-stale');
+      if (noteEl) noteEl.hidden = true;
+    });
+    bus.onStale((age) => {
+      feed.classList.add('is-stale');
+      if (noteEl) {
+        noteEl.hidden = false;
+        noteEl.textContent = 'beacon quiet — last confirmed pulses shown, +' + fmtPulse(age) + ' pulses since';
+      }
+    });
+  })();
 })();
+
+/* Witness receipt: shown, verified, breathing. The receipt signs
+   `pulse_id|value_hex|witnessed_at` — checked here with WebCrypto
+   against the PINNED key. Red appears only on an actual failure. */
+(async function witness() {
+  const chipEl = $('#witness-state');
+  if (!chipEl) return;
+  const chip = sentinel(chipEl, { freshPulses: 60 });
+  chip.set('unknown');
+  const out = {
+    pulse: $('#w-pulse'), at: $('#w-at'), gap: $('#w-gap'),
+    link: $('#w-link'), sig: $('#w-sig'), key: $('#w-key'),
+  };
+  const pin = PINNED_KEYS.fleet0;
+  const spki = b64(pin.spki_b64);
+  const pinnedFp = (await sha256hex(spki)).slice(0, 16);
+  if (out.key) out.key.textContent = groupHex(pinnedFp) + ' (pinned in this page’s source)';
+  let key = null;
+  try { key = await crypto.subtle.importKey('spki', spki, { name: 'Ed25519' }, false, ['verify']); }
+  catch {
+    try { key = await crypto.subtle.importKey('raw', spki.slice(-32), { name: 'Ed25519' }, false, ['verify']); }
+    catch { key = null; }
+  }
+
+  let lastSeen = 0;
+  bus.schedule(30000, async () => {
+    if (document.hidden) return;
+    let w;
+    try {
+      const r = await fetch('/witness/fleet0/latest', { cache: 'no-store' });
+      if (!r.ok) return;                /* staleness does the talking */
+      w = await r.json();
+    } catch { return; }
+    if (!w || typeof w.pulse_id !== 'number' || w.witnessed_at === lastSeen) return;
+    lastSeen = w.witnessed_at;
+
+    out.pulse.textContent = 'p#' + fmtPulse(w.pulse_id);
+    out.at.textContent = new Date(w.witnessed_at * 1000).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+    out.gap.textContent = w.gap === 1
+      ? 'adjacent (gap 1)'
+      : 'gap ' + w.gap + (w.gap > 1 ? ' — skipped polls are gaps, not breaks' : '');
+    if (w.chain_verified === true) {
+      out.link.textContent = '✓ prev-hash matched the witness’s own previous observation';
+      out.link.className = 'check-ok';
+    } else if (w.chain_verified === false) {
+      out.link.textContent = '✗ the witness observed a chain break';
+      out.link.className = 'check-fail';
+    } else {
+      out.link.textContent = 'not checkable for this receipt (non-adjacent observation)';
+      out.link.className = 'check-info';
+    }
+
+    if (w.pk_fp && w.pk_fp !== pinnedFp) {
+      /* moving-target honesty: an unpinned key is information, not failure */
+      out.sig.textContent = 'receipt signed by an unpinned key (' + groupHex(String(w.pk_fp)) + ') — shown, not verified here';
+      out.sig.className = 'check-info';
+      chip.feed(w.pulse_id);
+      return;
+    }
+    if (!key) {
+      out.sig.textContent = 'signature shown — this browser has no Ed25519 engine; verify out-of-band';
+      out.sig.className = 'check-info';
+      chip.feed(w.pulse_id);
+      return;
+    }
+    let ok = false;
+    try {
+      ok = await crypto.subtle.verify(
+        { name: 'Ed25519' }, key, b64(w.sig),
+        enc.encode(w.pulse_id + '|' + w.value_hex + '|' + w.witnessed_at)
+      );
+    } catch { ok = false; }
+    if (ok) {
+      out.sig.textContent = '✓ Ed25519 signature verified in this tab against the pinned key';
+      out.sig.className = 'check-ok';
+      chip.feed(w.pulse_id);
+      chip.verified();                       /* the bloom is earned */
+    } else {
+      out.sig.textContent = '✗ signature did NOT verify against the pinned witness key';
+      out.sig.className = 'check-fail';
+      chip.set('fail', { note: 'witness signature' });
+    }
+  });
+})();
+
+/* ── Footer self-check vs the signed deploy manifest (§5.4) ── */
+const strip = $('.foot-bottom [data-selfcheck]');
+if (strip) mountSelfCheck(strip);
 </script>
 </body>
 </html>

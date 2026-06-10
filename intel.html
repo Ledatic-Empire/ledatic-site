@@ -12,49 +12,58 @@
 <meta property="og:site_name" content="Ledatic">
 <link rel="canonical" href="https://ledatic.org/intel">
 <title>Intel — Ledatic</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
 <link rel="stylesheet" href="_shared/site.css">
 <style>
   .feature-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 3rem; }
   @media (min-width: 768px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
-  .feature { border: 1px solid hsl(var(--border)); padding: 2rem; border-radius: 6px; background: hsl(var(--muted) / 0.2); }
+  .feature { border: 1px solid var(--line); padding: 2rem; border-radius: var(--r-0); background: var(--ink-1); }
   .feature h3 { font-size: 1.15rem; margin-bottom: 0.75rem; }
-  .feature p { color: hsl(var(--muted-foreground)); font-size: 0.95rem; line-height: 1.65; }
-  .feature .icon { font-size: 1.4rem; color: hsl(var(--primary)); font-family: 'IBM Plex Mono', monospace; font-weight: 500; margin-bottom: 0.85rem; letter-spacing: 0.1em; }
-  .feature.provenance { border-color: hsl(var(--primary) / 0.4); background: hsl(var(--primary) / 0.04); }
-  .feature.provenance h3 a { color: hsl(var(--primary)); text-decoration: none; }
+  .feature p { color: var(--tx-lo); font-size: 0.95rem; line-height: 1.65; }
+  .feature .icon { font-size: 1.4rem; color: var(--ph-600); font-family: var(--font-body); font-weight: 500; margin-bottom: 0.85rem; letter-spacing: 0.1em; }
+  .feature.provenance { border-color: var(--ph-700); }
+  .feature.provenance h3 a { color: var(--ph-600); text-decoration: none; }
   .feature.provenance h3 a:hover { text-decoration: underline; }
 
-  .sample-section { margin: 4rem 0; padding: 2rem; border: 1px solid hsl(var(--border)); border-radius: 6px; background: hsl(var(--muted) / 0.1); }
+  .intel-placard { max-width: 64rem; margin: 0 auto; }
+  .intel-placard h2 {
+    font-family: var(--font-display); font-size: 0.95rem;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--st-paused); margin: 0 0 0.6rem;
+  }
+  .intel-placard p { color: var(--tx-lo); font-size: 0.92rem; line-height: 1.7; margin: 0; }
+
+  .sample-section { margin: 4rem 0; padding: 2rem; border: 1px solid var(--line); border-radius: var(--r-0); background: var(--ink-1); }
   .sample-section h3 { margin-bottom: 1.5rem; }
 
-  .social-proof { margin: 3rem 0; padding: 2rem; text-align: center; border-top: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .social-proof { margin: 3rem 0; padding: 2rem; text-align: center; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
   @media (max-width: 700px) { .social-proof { grid-template-columns: 1fr; } }
-  .social-proof .stat-value { font-size: 2.2rem; font-weight: bold; color: hsl(var(--primary)); font-family: 'IBM Plex Mono', ui-monospace; margin-bottom: 0.25rem; }
-  .social-proof .stat-label { color: hsl(var(--muted-foreground)); font-size: 0.85rem; }
+  .social-proof .stat-value { font-size: 2.2rem; font-weight: bold; color: var(--ph-600); font-family: var(--font-body); margin-bottom: 0.25rem; }
+  .social-proof .stat-label { color: var(--tx-lo); font-size: 0.85rem; }
 
-  .cta-signup { background: hsl(var(--muted) / 0.3); padding: 2.5rem 2rem; border-radius: 8px; text-align: center; margin: 3rem 0; }
+  .cta-signup { background: var(--ink-1); padding: 2.5rem 2rem; border-radius: var(--r-1, 8px); text-align: center; margin: 3rem 0; }
   .cta-signup h2 { margin-bottom: 1rem; }
-  .cta-signup p { margin-bottom: 1.5rem; color: hsl(var(--muted-foreground)); }
+  .cta-signup p { margin-bottom: 1.5rem; color: var(--tx-lo); }
 
   .faqs { margin: 4rem 0; }
-  .faq-item { border-bottom: 1px dashed hsl(var(--border)); padding: 1.5rem 0; }
+  .faq-item { border-bottom: 1px dashed var(--line); padding: 1.5rem 0; }
   .faq-item:last-child { border-bottom: none; }
-  .faq-q { font-weight: 600; font-size: 1rem; margin-bottom: 0.75rem; color: hsl(var(--foreground)); }
-  .faq-a { color: hsl(var(--muted-foreground)); line-height: 1.65; font-size: 0.95rem; }
-  .faq-a a { color: hsl(var(--primary)); text-decoration: none; }
+  .faq-q { font-weight: 600; font-size: 1rem; margin-bottom: 0.75rem; color: var(--tx-hi); }
+  .faq-a { color: var(--tx-lo); line-height: 1.65; font-size: 0.95rem; }
+  .faq-a a { color: var(--ph-600); text-decoration: none; }
   .faq-a a:hover { text-decoration: underline; }
 
-  .demo-strip { background: hsl(var(--primary) / 0.06); border: 1px solid hsl(var(--primary) / 0.3); border-radius: 6px; padding: 1.5rem; margin: 2rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-  .demo-strip .label { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: hsl(var(--primary)); }
-  .demo-strip .text { flex: 1; min-width: 240px; color: hsl(var(--muted-foreground)); font-size: 0.9rem; }
-  .demo-strip a.demo-cta { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: hsl(var(--primary)); text-decoration: none; padding: 0.5rem 1rem; border: 1px solid hsl(var(--primary) / 0.4); border-radius: 4px; transition: background 0.2s; }
-  .demo-strip a.demo-cta:hover { background: hsl(var(--primary) / 0.1); }
+  .demo-strip { background: var(--ink-1); border: 1px solid var(--ph-700); border-radius: var(--r-0); padding: 1.5rem; margin: 2rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .demo-strip .label { font-family: var(--font-body); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ph-600); }
+  .demo-strip .text { flex: 1; min-width: 240px; color: var(--tx-lo); font-size: 0.9rem; }
+  .demo-strip a.demo-cta { font-family: var(--font-body); font-size: 0.85rem; color: var(--ph-600); text-decoration: none; padding: 0.5rem 1rem; border: 1px solid var(--ph-700); border-radius: var(--r-0); transition: background 0.2s; }
+  .demo-strip a.demo-cta:hover { background: var(--ink-2, var(--ink-1)); }
 </style>
 </head>
-<body data-shader="_shared/shaders/grid.frag">
+<body>
 
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
@@ -65,34 +74,50 @@
     <a href="/system">System</a>
     <a href="/changelog">Changelog</a>
   </div>
+  <pulse-clock data-endpoint="/entropy/pulse"></pulse-clock>
   <a class="nav-cta" href="#signup">Get in touch</a>
 </nav>
 
-<section class="hero" style="min-height: 80vh;">
+<section class="hero" style="min-height: 70vh;">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" aria-hidden="true"></canvas>
   </div>
   <div class="overlay" aria-hidden="true"></div>
 
-  <div class="hero-content" style="padding-top: 10rem; padding-bottom: 5rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Daily Intelligence</span>
-    <h1 class="hero-title fade-up" style="animation-delay: 0.2s; font-size: clamp(2.5rem, 6vw, 4rem);">
+  <div class="hero-content fade-up" style="padding-top: 10rem; padding-bottom: 5rem;">
+    <span class="eyebrow">Daily Intelligence</span>
+    <h1 class="hero-title" style="font-size: clamp(2.5rem, 6vw, 4rem);">
       Owned analysis,<br>delivered <span class="accent">daily.</span>
     </h1>
-    <p class="hero-sub fade-up" style="animation-delay: 0.4s; max-width: 40rem;">
+    <p class="hero-sub" style="max-width: 40rem;">
       Your competitive landscape, synthesized by your own AI. No cloud fees. No external LLM dependency. No data residency questions.
     </p>
-    <p class="hero-desc fade-up" style="animation-delay: 0.55s; max-width: 40rem;">
-      The Intel briefing system automates the work of a dedicated analyst — daily monitoring, pattern detection, week-over-week synthesis — and places it under your control. Built for researchers, investigators, competitive intelligence teams, and operators who need speed without compromise.
+    <p class="hero-desc" style="max-width: 40rem;">
+      The Intel briefing system automates the work of a dedicated analyst &mdash; daily monitoring, pattern detection, week-over-week synthesis &mdash; and places it under your control. Built for researchers, investigators, competitive intelligence teams, and operators who need speed without compromise.
     </p>
-    <div class="cta-row fade-up" style="animation-delay: 0.7s">
+    <div class="cta-row">
       <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Intel">Get in touch</a>
       <a class="btn btn-secondary" href="#sample">See a sample brief</a>
     </div>
-    <p class="trust fade-up" style="animation-delay: 0.85s">
+    <p class="trust">
       Every brief signed against a live pulse_id &middot; verifiable in any browser
     </p>
+  </div>
+</section>
+
+<section class="section" style="padding-top: var(--sp-8);">
+  <div class="wrap">
+    <div class="placard-paused intel-placard">
+      <h2>Paused &mdash; no active collection</h2>
+      <p>
+        The proving engagement &mdash; a paid 30-day proof-of-concept &mdash;
+        closed 2026-05-12, paid in full, and its collectors were shut down
+        with it. Everything below is a closing snapshot of what ran, plus
+        the shape we'd run again. The signed artifacts from that engagement
+        still verify, in your browser, today. No collection is happening
+        for anyone right now; a new engagement is what turns it back on.
+      </p>
+    </div>
   </div>
 </section>
 
@@ -101,7 +126,7 @@
     <span class="eyebrow reveal">What you get</span>
     <h2 class="reveal">Daily briefings. Weekly synthesis. Queryable corpus.</h2>
     <p class="lead reveal" style="max-width: 52rem;">
-      Every morning, a fresh analysis lands in your inbox. Weekly digests roll up patterns across your monitors. And when you need to dig deeper, ask questions directly to the corpus &mdash; your own local LLM handles the reasoning, no external API.
+      Every morning of an engagement, a fresh analysis lands in your inbox. Weekly digests roll up patterns across your monitors. And when you need to dig deeper, ask questions directly to the corpus &mdash; your own local LLM handles the reasoning, no external API.
     </p>
 
     <div class="feature-grid">
@@ -118,7 +143,7 @@
       <div class="feature reveal">
         <div class="icon">/03</div>
         <h3>Q&amp;A Over Corpus</h3>
-        <p>Ask the 30-day history directly. "Which competitors held positions for ≥21 days?" "What angles underperformed?" Answered by your local LLM in seconds.</p>
+        <p>Ask the 30-day history directly. "Which competitors held positions for &ge;21 days?" "What angles underperformed?" Answered by your local LLM in seconds.</p>
       </div>
       <div class="feature reveal">
         <div class="icon">/04</div>
@@ -132,7 +157,7 @@
       </div>
       <div class="feature provenance reveal">
         <div class="icon">/06</div>
-        <h3><a href="/provenance">Cryptographic provenance →</a></h3>
+        <h3><a href="/provenance">Cryptographic provenance &rarr;</a></h3>
         <p>Every report optionally signed by a dedicated physical witness device, chained to a public entropy beacon. Verify in any browser, no backend trust. EU&nbsp;AI&nbsp;Act ready.</p>
       </div>
     </div>
@@ -140,7 +165,7 @@
     <div class="demo-strip reveal">
       <span class="label">Signed demo</span>
       <span class="text">A real EU AI Act compliance brief from the May 2026 POC, witness-signed, verifies in your browser:</span>
-      <a class="demo-cta" href="/verify/rep_demo_001">→ verify rep_demo_001</a>
+      <a class="demo-cta" href="/verify/rep_demo_001">&rarr; verify rep_demo_001</a>
     </div>
   </div>
 </section>
@@ -148,20 +173,20 @@
 <section class="section" id="sample">
   <div class="wrap" style="max-width: 64rem;">
     <span class="eyebrow reveal">Sample output</span>
-    <h2 class="reveal">What a day's brief looks like</h2>
+    <h2 class="reveal">What a day's brief looked like</h2>
     <p class="lead reveal" style="max-width: 52rem;">
-      Below is a compressed excerpt from a real 30-day POC. This is the deterministic layer &mdash; counts, persistence, format distribution, and top movers &mdash; that anchors every brief. The thematic synthesis wraps around this.
+      The deterministic layer &mdash; counts, persistence, format distribution, and top movers &mdash; anchored every brief in the closed 30-day POC. The thematic synthesis wrapped around it.
     </p>
 
     <p class="body reveal" style="margin-bottom: 1.5rem;">
-      Every vertical on your monitor produces a deterministic layer (counts, persistence, top movers) plus a thematic synthesis (narrative patterns, anomalies, forward signals). For a real signed example you can verify in your browser — the full receipt, hash chain, and witness signature — see the EU AI Act compliance brief at <a href="/sample" style="color: hsl(var(--primary)); text-decoration: underline;">/sample</a>.
+      Every vertical on a monitor produces a deterministic layer (counts, persistence, top movers) plus a thematic synthesis (narrative patterns, anomalies, forward signals). For a real signed example you can verify in your browser &mdash; the full receipt, hash chain, and witness signature &mdash; see the EU AI Act compliance brief at <a href="/sample" style="color: var(--ph-600); text-decoration: underline;">/sample</a>.
     </p>
     <div class="sample-section reveal" style="text-align: center;">
-      <a class="btn btn-primary" href="/sample">→ See a live signed brief</a>
+      <a class="btn btn-primary" href="/sample">&rarr; See a signed brief</a>
     </div>
 
     <p class="body reveal" style="margin-top: 2rem;">
-      This is a fully cryptographically attested daily brief &mdash; generated entirely on owned hardware, signed by a physical witness, verifiable in your browser. Specific verticals (legal research, regulatory monitoring, competitive intelligence, fraud signals) are scoped per-customer during onboarding.
+      That brief is fully cryptographically attested &mdash; generated entirely on owned hardware, signed by a physical witness, verifiable in your browser. Specific verticals (legal research, regulatory monitoring, competitive intelligence, fraud signals) are scoped per-customer during onboarding.
     </p>
   </div>
 </section>
@@ -172,7 +197,7 @@
     <h2 class="reveal">Engagements scoped to fit.</h2>
     <p class="lead reveal" style="max-width: 52rem;">
       We don&rsquo;t publish a price sheet because no two intel
-      engagements look the same. The recent 30-day campaign-intelligence
+      engagements look the same. The 30-day campaign-intelligence
       POC <a href="/case-campaign-intel">(closing notes here)</a> ran one
       vertical with Mon/Wed/Fri cadence, local compute, every brief signed
       against a live pulse. If something close to that shape would be
@@ -196,7 +221,7 @@
       </div>
       <div>
         <div class="stat-value">0</div>
-        <div class="stat-label">cloud LLM API calls &middot; everything runs on owned hardware</div>
+        <div class="stat-label">cloud LLM API calls &middot; everything ran on owned hardware</div>
       </div>
     </div>
   </div>
@@ -295,7 +320,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span data-live="rail-version">RAIL v5.1.0 &middot; 141/141</span>
+      <span>Rail <data class="fig" data-src="repo:version">release</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">tests</data> &middot; <data class="fig" data-src="repo:rail_native" data-fmt="mb">binary</data></span>
     </div>
   </div>
 </footer>
