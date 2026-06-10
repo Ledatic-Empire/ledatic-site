@@ -19,6 +19,7 @@
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Plasma — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/plasma">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -84,7 +85,7 @@
       Magnetohydrodynamics. Two dimensions. Zero shortcuts.
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      A 128&times;128 ideal-MHD solver running live on the Mac Mini.
+      A 128&times;128 ideal-MHD solver, running live.
       Orszag-Tang initial conditions on a 2&pi; periodic domain.
       Mass, energy, and &nabla;&middot;B all conserved to machine
       precision. Every step feeds the public entropy beacon.
@@ -128,7 +129,7 @@
       </div>
       <div class="stat reveal">
         <div class="value">6</div>
-        <div class="label">Conserved vars</div>
+        <div class="label">Fields per cell</div>
       </div>
       <div class="stat reveal">
         <div class="value">10<sup>-15</sup></div>
@@ -166,7 +167,7 @@
       <div class="mhd-overlay">
         <span class="live-dot"></span>
         <span>Orszag-Tang</span>
-        <span class="mhd-kernel">// live</span>
+        <span class="mhd-kernel">// &hellip;</span>
       </div>
       <div class="mhd-readouts">
         <span>Grid <span class="mhd-num">128&times;128</span></span>
@@ -177,8 +178,8 @@
     <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
       Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the 128&times;128
       solver grid on a 2&pi; periodic domain, min-max normalized and color-mapped in your GPU. A new
-      attested frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
-      cross-dissolves between them for smooth motion. Every keyframe has been hashed and signed into the
+      frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
+      cross-dissolves between them for smooth motion. Every keyframe is hashed into the
       entropy chain.
     </p>
   </div>
@@ -241,5 +242,29 @@
 </footer>
 
 <script src="_shared/site.js"></script>
+<script>
+/* Badge honesty guard: site.js sets data-live-mounted="1" on the canvas only
+   once real attested frames stream. Until then the badge stays neutral; if
+   the procedural fallback shader is showing instead, say so. */
+(function () {
+  var canvas = document.querySelector('canvas[data-mhd-live]');
+  var badge = document.querySelector('.mhd-overlay .mhd-kernel');
+  var dot = document.querySelector('.mhd-overlay .live-dot');
+  if (!canvas || !badge) return;
+  var ticks = 0;
+  var t = setInterval(function () {
+    if (canvas.getAttribute('data-live-mounted') === '1') {
+      clearInterval(t);
+      badge.textContent = '// live';
+      if (dot) dot.style.display = '';
+      return;
+    }
+    if (++ticks === 12) { /* ~12 s with no attested frame: fallback replay */
+      badge.textContent = '// replay — beacon unreachable';
+      if (dot) dot.style.display = 'none';
+    }
+  }, 1000);
+})();
+</script>
 </body>
 </html>

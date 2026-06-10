@@ -414,8 +414,6 @@
         createScene({ canvas, shaderUrl: fallback });
         continue;
       }
-      // Mark canvas so the procedural mount can't clobber it later.
-      canvas.setAttribute('data-live-mounted', '1');
       // Self-pacing poll: each frame is ~0.5 MB and can take >250 ms, so a
       // fixed setInterval stacked overlapping fetches and saturated the
       // connection pool. Await the prior fetch before scheduling the next,
@@ -488,6 +486,8 @@
   // Pulls the most recent release from /feed.xml and fills any
   // [data-live="rail-version"] element. Falls back silently to the
   // server-rendered fallback text if the feed is unreachable.
+  // Version only — the feed carries no current test count, so we don't
+  // decorate this live element with one.
   async function initLiveVersion() {
     const els = document.querySelectorAll('[data-live="rail-version"]');
     if (!els.length) return;
@@ -498,7 +498,7 @@
       const title = xml.querySelector('entry > title')?.textContent || '';
       const m = title.match(/v(\d+\.\d+\.\d+)/);
       if (!m) return;
-      els.forEach(el => { el.textContent = `RAIL v${m[1]} · 141/141`; });
+      els.forEach(el => { el.textContent = `RAIL v${m[1]}`; });
     } catch {}
   }
 

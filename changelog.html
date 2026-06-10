@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Every tagged Rail release, in order. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. Each entry points at the commit that ships it.">
+<meta name="description" content="Milestone Rail releases, newest first. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. The repo&apos;s CHANGELOG.md is the complete record.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/changelog">
 <meta property="og:title" content="Changelog — Ledatic">
-<meta property="og:description" content="Every tagged Rail release, in order. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. Each entry points at the commit that ships it.">
+<meta property="og:description" content="Milestone Rail releases, newest first. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. The repo&apos;s CHANGELOG.md is the complete record.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Changelog — Ledatic">
-<meta name="twitter:description" content="Every tagged Rail release, in order. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. Each entry points at the commit that ships it.">
+<meta name="twitter:description" content="Milestone Rail releases, newest first. From v2.0&apos;s 512 MB allocator and GC to v5.1.0 emitting its own GPU kernels from an op-DAG. The repo&apos;s CHANGELOG.md is the complete record.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Changelog — Ledatic</title>
@@ -99,11 +99,11 @@
     <span class="eyebrow fade-up" style="animation-delay: 0.1s">Changelog</span>
     <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Ship log</h1>
     <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      Every tagged release, in order.
+      Milestone releases, newest first.
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Public since v1.0. Each entry points at the commit that ships it.
-      CHANGELOG.md in the repo is the canonical source.
+      Public since v1.0. Tagged entries carry their signed attestation artifacts.
+      CHANGELOG.md in the repo is the canonical, complete record.
     </p>
   </div>
 </section>
@@ -111,7 +111,7 @@
 <section class="section">
   <div class="wrap" style="max-width: 62rem;">
 
-    <div class="release reveal" data-attest-tag="v5.1.0">
+    <div class="release reveal" data-attest-tag="v5.1.0" id="v5.1.0">
       <div class="meta">
         <div class="ver">v5.1.0</div>
         <div>2026-05-15</div>
@@ -130,7 +130,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v5.0.0">
+    <div class="release reveal" data-attest-tag="v5.0.0" id="v5.0.0">
       <div class="meta">
         <div class="ver">v5.0.0</div>
         <div>2026-05-14</div>
@@ -142,12 +142,12 @@
           <li><code>jit/arm64.rail</code>: 23 new encoders for the Linux mnemonic set (<code>ldrb</code>/<code>strb</code>, <code>clz</code>, <code>neg</code>, <code>cmn</code>, <code>rev</code>, <code>fneg</code>, <code>fcvt</code>, <code>tbnz</code>, <code>stp</code>/<code>ldp</code> pre/post-index, <code>asr</code>/<code>lsr</code>/<code>lsl</code> immediate)</li>
           <li><code>stdlib/elf.rail</code>: 175-line <code>Elf64_Ehdr</code> + program-header writer for static aarch64 binaries</li>
           <li><code>tools/v5/elf_asm.rail</code>: 567-line section-aware ARM64 assembler + static linker with <code>adrp</code> / <code>:lo12:</code> symbol resolution</li>
-          <li>Four hand programs (exit42, fib, hello, BSS counter) run byte-equivalent to canonical <code>as</code> + <code>ld</code> output on Pi Zero 2 W via Tailscale</li>
+          <li>Four hand programs (exit42, fib, hello, BSS counter) run byte-equivalent to canonical <code>as</code> + <code>ld</code> output on a Raspberry Pi</li>
         </ul>
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v4.0.0">
+    <div class="release reveal" data-attest-tag="v4.0.0" id="v4.0.0">
       <div class="meta">
         <div class="ver">v4.0.0</div>
         <div>2026-05-13</div>
@@ -169,7 +169,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.10.0">
+    <div class="release reveal" data-attest-tag="v3.10.0" id="v3.10.0">
       <div class="meta">
         <div class="ver">v3.10.0</div>
         <div>2026-05-02</div>
@@ -178,14 +178,14 @@
         <h3>Path B: Rail-native Pi signer + Linux backend complete</h3>
         <p>The attestation pipeline is now Rail-native end-to-end <em>including</em> the Pi-side HTTP signer. The hot path no longer touches Python at all. Linux ARM64 cross-compile produces useful binaries beyond hello-world.</p>
         <ul>
-          <li><code>tools/attest/pi_sign_server.rail</code>: HTTP signer on <code>fleet0:9102</code>. Replaces the ~110 LOC Python signer with a 118 KB ELF. Same wire format, same backing shell signer, end-to-end verified</li>
+          <li><code>tools/attest/pi_sign_server.rail</code>: HTTP signer on the Pi witness. Replaces the ~110 LOC Python signer with a 118 KB ELF. Same wire format, same backing shell signer, end-to-end verified</li>
           <li><code>linux_libc.s</code>: three real implementations replacing silent stubs &mdash; <code>_atof</code> (real number parser, the previous stub returned 0.0 for every Rail float literal), <code>_snprintf</code> %.15g formatter (real digit-extract, the previous stub wrote literal "0"), <code>_rail_print_float</code> (Linux-ABI clone of the Mac stub)</li>
           <li>140/140 green; byte-identical self-bootstrap verified</li>
         </ul>
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.9.0">
+    <div class="release reveal" data-attest-tag="v3.9.0" id="v3.9.0">
       <div class="meta">
         <div class="ver">v3.9.0</div>
         <div>2026-05-02</div>
@@ -197,32 +197,32 @@
           <li><code>stdlib/ed25519_scalar.rail</code>: <code>sc_reduce</code> (64-byte mod L) and <code>sc_muladd</code> ((a&middot;b + c) mod L) in pure Rail. 8/8 vectors pass including <code>SHA-512('') mod L</code> matching the Python oracle byte-for-byte</li>
           <li><code>stdlib/ed25519_sign.rail</code>: full RFC 8032 &sect;5.1.6 sign. <code>r</code>, <code>R</code>, <code>k</code>, <code>S = sc_muladd(k, a, r)</code>, <code>sig = R || S</code>. RFC &sect;A.4 vector 1 byte-identical for both pk and sig + round-trip verify=1; PASS on first compile</li>
           <li><code>tools/attest/attest.rail</code>: Rail-native attestation orchestrator. SHA-256 over input bytes, HTTPS GET <code>/entropy/pulse</code>, JSON parse, HTTP POST signer, JSON outer build, write to <code>&lt;input&gt;.attestation.json</code>. Zero shell-out on the request path</li>
-          <li><code>tools/attest/pi_sign_server.py</code> + <code>com.ledatic.attest_sign.service</code>: Pi HTTP signer on <code>fleet0:9102</code> over Tailscale, token-authed. Replaces the per-attest SSH dance &mdash; release-attest wall time 49 s &rarr; 27 s</li>
+          <li><code>tools/attest/pi_sign_server.py</code>: HTTP signer service on the Pi witness, replacing a per-attest remote shell round-trip &mdash; release-attest wall time 49 s &rarr; 27 s</li>
           <li>Linux ARM64 cross-compile fixed: <code>./rail_native linux foo.rail</code> produces working ELF; hello/fact/fold run on Pi</li>
           <li>Plasma beacon RSS leak fixed: 5 GB / 31 GB swap &rarr; 21 MB / 90 s. Three-layer fix in <code>_rail_chained_malloc</code>, <code>mk_lxf_step_into</code>, double-buffered beacon loop</li>
         </ul>
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.8.0">
+    <div class="release reveal" data-attest-tag="v3.8.0" id="v3.8.0">
       <div class="meta">
         <div class="ver">v3.8.0</div>
         <div>2026-05-01</div>
       </div>
       <div>
         <h3>Releases physicified (attestation)</h3>
-        <p>Every tagged release, every <code>./rail_native test</code> pass, and every 2-pass self-compile fixed point now binds to a live entropy beacon <code>pulse_id</code> and an Ed25519 signature from the project's <code>fleet0</code> Pi witness (<code>pk_fp = cac5f21a70564aeb</code>).</p>
+        <p>Every tagged release, every <code>./rail_native test</code> pass, and every 2-pass self-compile fixed point now binds to a live entropy beacon <code>pulse_id</code> and an Ed25519 signature from the project's Pi witness (<code>pk_fp = cac5f21a70564aeb</code>).</p>
         <ul>
           <li>Public mission control at <a href="/system">ledatic.org/system</a> &mdash; five panels (beacon &middot; witness &middot; fleet &middot; build &middot; selfhost), each resolves to a signed JSON artifact, refreshes on 2.5 s cadence, self-marks &ldquo;live&rdquo; or &ldquo;stale&rdquo;</li>
           <li>Reproducible offline with <a href="/attest/verify.sh"><code>verify.sh</code></a> + <a href="/attest/fleet0.pub.pem"><code>fleet0.pub.pem</code></a></li>
           <li>Backfilled coverage: v2.0.0 &rarr; v3.7.0 all attested + downloadable</li>
-          <li>LaunchAgents drive the cadences: <code>com.ledatic.attest_daily</code> (06:00), <code>com.ledatic.fleet_attest</code> (60 s)</li>
+          <li>Scheduled agents drive the cadences: a daily release attest plus a 60 s fleet attest</li>
           <li>CI fix: builds <code>libtensor_gpu.dylib</code> before tests, ending 14 days of red on tensor link errors</li>
         </ul>
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.7.0">
+    <div class="release reveal" data-attest-tag="v3.7.0" id="v3.7.0">
       <div class="meta">
         <div class="ver">v3.7.0</div>
         <div>2026-04-30</div>
@@ -241,7 +241,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.6.1">
+    <div class="release reveal" data-attest-tag="v3.6.1" id="v3.6.1">
       <div class="meta">
         <div class="ver">v3.6.1</div>
         <div>2026-04-27</div>
@@ -258,13 +258,13 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.6.0">
+    <div class="release reveal" data-attest-tag="v3.6.0" id="v3.6.0">
       <div class="meta">
         <div class="ver">v3.6.0</div>
         <div>2026-04-20</div>
       </div>
       <div>
-        <h3>Strict HTTPS by default</h3>
+        <h3>Unified HTTPS client</h3>
         <p>Chain-walk to trust store is now the default for <code>https_get_url</code> / <code>https_post_url</code>. Old leaf-only bodies moved under <code>_unsafe_noverify</code>. <code>_strict</code> aliases kept for one release.</p>
         <ul>
           <li>Trust-store SPKI cache: O(N) walk &rarr; O(1) lookup</li>
@@ -275,7 +275,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.5.0">
+    <div class="release reveal" data-attest-tag="v3.5.0" id="v3.5.0">
       <div class="meta">
         <div class="ver">v3.5.0</div>
         <div>2026-04-20</div>
@@ -286,7 +286,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.4.0">
+    <div class="release reveal" data-attest-tag="v3.4.0" id="v3.4.0">
       <div class="meta">
         <div class="ver">v3.4.0</div>
         <div>2026-04-19</div>
@@ -297,7 +297,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.3.0">
+    <div class="release reveal" data-attest-tag="v3.3.0" id="v3.3.0">
       <div class="meta">
         <div class="ver">v3.3.0</div>
         <div>2026-04-19</div>
@@ -308,29 +308,29 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.2.0">
+    <div class="release reveal" data-attest-tag="v3.2.0" id="v3.2.0">
       <div class="meta">
         <div class="ver">v3.2.0</div>
         <div>2026-04-19</div>
       </div>
       <div>
-        <h3>Streaming bodies + compile.rail quadratic fixes</h3>
-        <p><code>edit_dist</code> O(3<sup>n</sup>) &rarr; bounded. <code>compile_funcs</code> O(N<sup>2</sup>) &rarr; O(N). probe4 195 s &rarr; 12 s (16&times;).</p>
+        <h3>Strict HTTPS by default + compiler quadratic fix</h3>
+        <p><code>stdlib/https_strict.rail</code> makes chain-walked HTTPS a one-line import, unblocked by two compiler fixes: <code>edit_dist</code> O(3<sup>n</sup>) &rarr; bounded, <code>compile_funcs</code> O(N<sup>2</sup>) &rarr; O(N). probe4 195 s &rarr; 12 s (16&times;).</p>
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.1.0">
+    <div class="release reveal" data-attest-tag="v3.1.0" id="v3.1.0">
       <div class="meta">
         <div class="ver">v3.1.0</div>
-        <div>2026-04-18</div>
+        <div>2026-04-19</div>
       </div>
       <div>
-        <h3>HTTPS hardening — keep-alive groundwork</h3>
-        <p>Pre-handshake socket coalescing + body framing prep. Stepping stone to v3.2.0&rsquo;s streaming bodies and v3.3.0&rsquo;s keep-alive.</p>
+        <h3>Streaming HTTPS bodies</h3>
+        <p>Response bodies scale linearly. The v3.0.0 receiver re-joined a growing string per record and per byte &mdash; O(body_len<sup>2</sup>), capping practical bodies near 64 KB. Replaced with chunked byte accumulation and a single final join: O(body_len).</p>
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v3.0.0">
+    <div class="release reveal" data-attest-tag="v3.0.0" id="v3.0.0">
       <div class="meta">
         <div class="ver">v3.0.0</div>
         <div>2026-04-18</div>
@@ -341,7 +341,7 @@
       </div>
     </div>
 
-    <div class="release reveal" data-attest-tag="v2.0.0">
+    <div class="release reveal" data-attest-tag="v2.0.0" id="v2.0.0">
       <div class="meta">
         <div class="ver">v2.0.0</div>
         <div>2026-04-06</div>

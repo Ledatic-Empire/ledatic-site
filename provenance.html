@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="The only AI vendor with a separately controlled physical witness — a Pi Zero you can SSH into and inspect — chained to a public entropy beacon, browser-verifiable in any modern browser. EU AI Act log-retention ready (Article 26).">
+<meta name="description" content="Cryptographically verifiable AI reports — a separately controlled physical witness chained to a public entropy beacon, verifiable in any modern browser. EU AI Act log-retention ready (Article 26).">
+<link rel="canonical" href="https://ledatic.org/provenance">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/provenance">
 <meta property="og:title" content="Provenance Tier — Ledatic">
@@ -249,7 +250,7 @@
     <a href="/system">System</a>
     <a href="/changelog">Changelog</a>
   </div>
-  <a class="nav-cta" href="https://reports.ledatic.org">Reports</a>
+  <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=Provenance">Get in touch</a>
 </nav>
 
 <section class="prov-hero">
@@ -262,10 +263,10 @@
     Every Provenance Tier report is cryptographically signed by a Pi&nbsp;Zero physical witness node
     chained to a public entropy beacon. Third parties verify the signature in their own browser, against
     a public Ed25519 key, with no backend trust. Built for legal, financial, and regulated workflows
-    where "we ran it through Claude" needs to survive discovery.
+    where "we ran it through a model" needs to survive discovery.
   </p>
   <div class="prov-cta-row">
-    <a class="btn btn-primary" href="https://reports.ledatic.org">Talk to us</a>
+    <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Provenance">Talk to us</a>
     <a class="btn btn-secondary" href="#how">How it works</a>
   </div>
   <p class="prov-trust">
@@ -326,7 +327,7 @@ public verifier at <span class="step">/verify/&lt;id&gt;</span> &nbsp;→&nbsp; 
 <br>
 no backend trust required. fleet0's pubkey is constant. you own the verification.
     </div>
-    <a class="prov-demo-link" id="demo-link" href="/verify/rep_demo_001">→ See a real signed manifest verify in your browser</a>
+    <a class="prov-demo-link" href="/verify/rep_demo_001">→ See a real signed manifest verify in your browser</a>
   </div>
 </section>
 
@@ -349,11 +350,11 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
       <div class="prov-vs-col us">
         <h3>Ledatic Provenance</h3>
         <ul>
-          <li>Signed by a Pi Zero you can SSH into and inspect</li>
+          <li>Signed by a dedicated physical witness device — not the model host</li>
           <li>Public Ed25519 pubkey, browser-verifiable signatures</li>
           <li>Independent witness node, separately controlled</li>
           <li>Chained to a public entropy beacon you can read live</li>
-          <li>Decentralized witness network (more nodes coming)</li>
+          <li>One public witness node today — more planned</li>
           <li>"Trust the cryptography"</li>
         </ul>
       </div>
@@ -388,7 +389,7 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
     <h2 class="prov-h">Common questions<span class="accent">.</span></h2>
     <dl class="prov-faq">
       <dt>How is this different from OpenAI signing my output?</dt>
-      <dd>OpenAI signs with a key they control, against an audit log they maintain. You're trusting them. We sign with a Pi Zero you can SSH into, verifiable against a public Ed25519 key, chained to a public beacon. The witness is independent of the signer. Anyone can verify the chain end-to-end without contacting us.</dd>
+      <dd>OpenAI signs with a key they control, against an audit log they maintain. You're trusting them. We sign with a dedicated Pi Zero witness, verifiable against a public Ed25519 key, chained to a public beacon. The witness is independent of the signer. Anyone can verify the chain end-to-end without contacting us.</dd>
 
       <dt>What if fleet0 (the Pi) goes down or is compromised?</dt>
       <dd>If fleet0 is unreachable at sign-time, the report is delivered unsigned with a clear "unwitnessed" disclosure — no false claims. Provenance+Audit tier provisions a secondary witness so single-node outages don't block signing. If a key is ever compromised we publish a revocation and rotate; affected manifests are flagged on /verify.</dd>
@@ -400,7 +401,7 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
       <dd>No. The witness signs over the current pulse_id of the public entropy beacon. Pulses are append-only and timestamp-anchored on Cloudflare. To backdate, we would have to forge the public beacon — which third parties read continuously. Not happening.</dd>
 
       <dt>Does the verify page need our backend?</dt>
-      <dd>No &mdash; with one honest qualifier. /verify/&lt;id&gt; serves a static HTML/JS page that fetches the manifest JSON and runs <code>crypto.subtle.verify</code> in the visitor's browser. The fleet0 public key is a constant in the page. The only network call is to fetch the manifest. You can clone the page, change the manifest URL, run it from disk — same result. <strong>For maximum independence, do that.</strong> Public verifications via the live URL trust Cloudflare's CDN to deliver the same JS to every visitor; that is industry-standard but not zero-trust. Belt-and-suspenders auditors should fetch a local copy of <code>verify.html</code>, verify its hash matches the published value, and run it from disk. We also publish a fully self-contained, zero-CDN verifier at <code>tools/verify/standalone.html</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site">ledatic-site</a> repo (SHA-256 <code>fe114e269380c5b47883a12ccf3c6740b414e98eadb7cc72a667ac8ae24df821</code>); download it, verify the hash with <code>shasum -a 256 standalone.html</code>, and open it in any modern browser to verify any manifest URL or pasted JSON without trusting our CDN at all.</dd>
+      <dd>No &mdash; with one honest qualifier. /verify/&lt;id&gt; serves a static HTML/JS page that fetches the manifest JSON and runs <code>crypto.subtle.verify</code> in the visitor's browser. The fleet0 public key is a constant in the page. The only network call is to fetch the manifest. You can clone the page, change the manifest URL, run it from disk — same result. <strong>For maximum independence, do that.</strong> Public verifications via the live URL trust Cloudflare's CDN to deliver the same JS to every visitor; that is industry-standard but not zero-trust. Belt-and-suspenders auditors should fetch a local copy of <code>verify.html</code>, verify its hash matches the published value, and run it from disk. We also publish a fully self-contained, zero-CDN verifier at <code>tools/verify/standalone.html</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site">ledatic-site</a> repo (SHA-256 <code>90b0daaca3858c18a138ce829128bcefc59f273cf9f01726197395937e699289</code>); download it, verify the hash with <code>shasum -a 256 standalone.html</code>, and open it in any modern browser to verify any manifest URL or pasted JSON without trusting our CDN at all.</dd>
 
       <dt>Browser support for Ed25519?</dt>
       <dd>Chrome 137+, Safari 17+, Firefox 138+. The verify page also displays the manifest fields and the inner-message integrity check independently of WebCrypto, so older browsers still see most of the chain — they just can't run the final signature check.</dd>
@@ -429,7 +430,7 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
       <div class="prov-card">
         <span class="num">/pulse</span>
         <h3>Public entropy beacon</h3>
-        <p><a href="https://ledatic.org/entropy/pulse">/entropy/pulse</a> — append-only, every ~30s, the chain anchor every Provenance manifest binds against.</p>
+        <p><a href="https://ledatic.org/entropy/pulse">/entropy/pulse</a> — append-only, every ~2s, the chain anchor every Provenance manifest binds against.</p>
       </div>
       <div class="prov-card">
         <span class="num">/log</span>
@@ -444,7 +445,7 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
   <div class="prov-section-title">Ready &middot; 07</div>
   <h2 class="prov-h">Your AI generated something<span class="accent">.</span><br>Prove it<span class="accent">.</span></h2>
   <div class="prov-cta-row" style="justify-content: center;">
-    <a class="btn btn-primary" href="https://reports.ledatic.org">Start a conversation</a>
+    <a class="btn btn-primary" href="mailto:z3m0g@icloud.com?subject=Provenance">Start a conversation</a>
     <a class="btn btn-secondary" href="/verify/rep_demo_001">Verify a sample report</a>
   </div>
 </section>
@@ -456,13 +457,5 @@ no backend trust required. fleet0's pubkey is constant. you own the verification
   <a href="https://github.com/zemo-g/rail" style="color: hsl(var(--muted-foreground));">code</a>
 </footer>
 
-<script>
-// Set the demo verify link to the latest known signed report (best-effort).
-// If we want to point this at a stable demo manifest, it can be hardcoded.
-(function() {
-  const link = document.getElementById("demo-link");
-  if (link) link.href = "/verify/rep_demo_001";
-})();
-</script>
 </body>
 </html>

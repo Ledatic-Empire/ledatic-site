@@ -3,22 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Single-node today, multi-witness Ed25519 cosignature in v2.">
+<meta name="description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Pulses are independently observed and Ed25519-cosigned by an external witness.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/entropy">
 <meta property="og:title" content="Entropy — Ledatic">
-<meta property="og:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Single-node today, multi-witness Ed25519 cosignature in v2.">
+<meta property="og:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Pulses are independently observed and Ed25519-cosigned by an external witness.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Entropy — Ledatic">
-<meta name="twitter:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Single-node today, multi-witness Ed25519 cosignature in v2.">
+<meta name="twitter:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Pulses are independently observed and Ed25519-cosigned by an external witness.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Entropy — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/entropy">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -96,7 +97,7 @@
       <span class="visor-value" data-live="entropy-pulse">&mdash;</span>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.9s">
-      Emitted by one node today &middot; multi-witness Ed25519 cosignature on the way
+      Emitted by one node &middot; independently Ed25519-cosigned by an external witness
     </p>
   </div>
 </section>
@@ -109,9 +110,9 @@
       Every two seconds, the Ledatic MHD solver runs one more step.
       The resulting plasma state is hashed, concatenated with the
       previous pulse hash, and posted to a public store. Anyone can
-      walk the chain. Today the chain is produced by a single node;
-      external Ed25519 cosignatures from independent witnesses
-      will land in v2.
+      walk the chain. The chain is produced by a single node and
+      independently observed by an external Ed25519 witness that
+      cosigns the pulses it sees.
     </p>
 
     <div class="grid grid-3 reveal" style="margin-top: 2rem;">
@@ -128,7 +129,7 @@
       <div class="card">
         <span class="eyebrow">Step 3</span>
         <h3>Publish</h3>
-        <p>Pushed to Cloudflare KV as a new pulse row. Visible to the world on this page.</p>
+        <p>Published as a new pulse to a public store at the edge. Visible to the world on this page.</p>
       </div>
     </div>
   </div>
@@ -159,7 +160,7 @@
       <div class="mhd-overlay">
         <span class="live-dot"></span>
         <span>Orszag-Tang</span>
-        <span class="mhd-kernel">// live</span>
+        <span class="mhd-kernel">// &hellip;</span>
       </div>
       <div class="mhd-readouts">
         <span>Grid <span class="mhd-num">128&times;128</span></span>
@@ -170,8 +171,8 @@
     <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: hsl(var(--muted-foreground) / 0.75);">
       Live density field (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the 128&times;128
       solver grid on a 2&pi; periodic domain, min-max normalized and color-mapped in your GPU. A new
-      attested frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
-      cross-dissolves between them for smooth motion. Every keyframe has been hashed and signed into the
+      frame lands ~every 2&nbsp;s &mdash; one per beacon pulse &mdash; and the display
+      cross-dissolves between them for smooth motion. Every keyframe is hashed into the
       entropy chain. Deeper write-up on <a href="plasma.html">the plasma page</a>.
     </p>
   </div>
@@ -182,9 +183,9 @@
     <span class="eyebrow reveal">Feed</span>
     <h2 class="reveal">Recent pulses.</h2>
     <p class="body reveal">
-      Last 50 pulses. Refresh to see new ones, or watch the ticker in
-      the nav. Each hash is clickable &mdash; copy and feed it to the
-      verifier below.
+      Pulses land here as they happen, newest first &mdash; the feed
+      keeps the most recent twenty. The full log of the last 50 lives
+      at <code>/entropy/pulse/log</code>, which the verifier below walks.
     </p>
 
     <div class="pulse-feed reveal" id="pulse-feed" style="margin-top: 2rem;">
@@ -207,8 +208,8 @@
 
     <div class="card reveal" style="margin-top: 2rem;">
       <span class="eyebrow">Shell</span>
-      <h3>Verify the chain in three lines</h3>
-      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/log | jq -e '. as $l | all(range(1; length); $l[.].prev_value_hex == $l[.-1].value_hex)' &amp;&amp; echo "chain OK"</code></pre>
+      <h3>Verify the chain in one line</h3>
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.85rem; line-height: 1.6;"><code>curl -s https://ledatic.org/entropy/pulse/log | jq -e '. as $l | all(range(1; length); $l[.].prev_value_hex == $l[.-1].value_hex)' &amp;&amp; echo "chain OK" || echo "chain BROKEN"</code></pre>
       <p style="margin-top: 1rem; font-size: 0.85rem; color: hsl(var(--muted-foreground));">
         Fetches the last 50 pulses and confirms each one's
         <code>prev_value_hex</code> matches the previous pulse's
@@ -259,5 +260,29 @@
 </footer>
 
 <script src="_shared/site.js"></script>
+<script>
+/* Badge honesty guard: site.js sets data-live-mounted="1" on the canvas only
+   once real attested frames stream. Until then the badge stays neutral; if
+   the procedural fallback shader is showing instead, say so. */
+(function () {
+  var canvas = document.querySelector('canvas[data-mhd-live]');
+  var badge = document.querySelector('.mhd-overlay .mhd-kernel');
+  var dot = document.querySelector('.mhd-overlay .live-dot');
+  if (!canvas || !badge) return;
+  var ticks = 0;
+  var t = setInterval(function () {
+    if (canvas.getAttribute('data-live-mounted') === '1') {
+      clearInterval(t);
+      badge.textContent = '// live';
+      if (dot) dot.style.display = '';
+      return;
+    }
+    if (++ticks === 12) { /* ~12 s with no attested frame: fallback replay */
+      badge.textContent = '// replay — beacon unreachable';
+      if (dot) dot.style.display = 'none';
+    }
+  }, 1000);
+})();
+</script>
 </body>
 </html>

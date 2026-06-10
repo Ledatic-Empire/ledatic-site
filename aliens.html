@@ -3,20 +3,21 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A live, content-addressed mirror of the U.S. Department of War's Presidential Unsealing and Reporting System for UAP Encounters (PURSUE). Every byte hashed, signed against a live entropy beacon, and browsable across the timeline of the records.">
+<meta name="description" content="A content-addressed mirror of the U.S. Department of War's Presidential Unsealing and Reporting System for UAP Encounters (PURSUE). Every byte hashed, signed against a live entropy beacon, and browsable across the timeline of the records.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/aliens">
 <meta property="og:title" content="Aliens — Ledatic">
-<meta property="og:description" content="Live mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
+<meta property="og:description" content="Attested mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
 <meta property="og:image" content="https://ledatic.org/_shared/img/aliens-og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Aliens — Ledatic">
-<meta name="twitter:description" content="Live mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
+<meta name="twitter:description" content="Attested mirror of the U.S. Department of War's PURSUE archive — UAP records by year, every byte signed.">
 <meta name="twitter:image" content="https://ledatic.org/_shared/img/aliens-og.png">
 <title>Aliens — UAP Records by Year — Ledatic PURSUE Mirror</title>
+<link rel="canonical" href="https://ledatic.org/aliens">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -96,7 +97,8 @@
     font-size: 0.78rem;
     color: hsl(var(--muted-foreground));
   }
-  .timeline-controls .preset {
+  .timeline-controls .preset,
+  .timeline-controls .undated-toggle {
     padding: 0.3rem 0.65rem;
     border: 1px solid hsl(var(--border));
     background: transparent;
@@ -106,8 +108,10 @@
     border-radius: 4px; cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease;
   }
-  .timeline-controls .preset:hover { color: hsl(var(--foreground)); }
-  .timeline-controls .preset.active { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.5); }
+  .timeline-controls .preset:hover,
+  .timeline-controls .undated-toggle:hover { color: hsl(var(--foreground)); }
+  .timeline-controls .preset.active,
+  .timeline-controls .undated-toggle.active { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.5); }
   .timeline-controls select {
     background: hsl(var(--muted) / 0.3);
     border: 1px solid hsl(var(--border));
@@ -568,7 +572,7 @@
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">PURSUE &mdash; live mirror</span>
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">PURSUE &mdash; attested mirror</span>
     <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Aliens</h1>
     <p class="hero-sub fade-up" style="animation-delay: 0.4s">
       The Presidential Unsealing and Reporting System for UAP Encounters,
@@ -587,7 +591,7 @@
       <span>agencies: <span class="v" id="agency-count">&mdash;</span></span>
       <span>signed: <span class="v ok" id="signed-count">&mdash;</span></span>
       <span>span: <span class="v" id="year-span">&mdash;</span></span>
-      <span>watchdog: <a href="/pursue/source_check.json" class="v" id="watchdog-status" title="loading">&mdash;</a></span>
+      <span>source re-check: <a class="v" id="watchdog-status" title="loading">&mdash;</a></span>
     </div>
   </div>
 </section>
@@ -611,6 +615,7 @@
         <button class="preset" data-preset="early">Early (pre-1970)</button>
         <button class="preset" data-preset="modern">Modern (1990&rarr;)</button>
         <button class="preset" data-preset="recent">Recent (2020&rarr;)</button>
+        <button class="undated-toggle active" id="undated-toggle" aria-pressed="true" title="Records with no parseable incident or release year &mdash; a year window can&#39;t place them">Undated</button>
         <span class="spacer"></span>
         <input type="search" id="q" placeholder="Search title, description, location" aria-label="Search records">
         <label>Sort
@@ -655,7 +660,9 @@
         compute their SHA-256 in pure Rail and bind the digest to a
         live entropy beacon pulse, signed by an independent fleet0
         Ed25519 witness. If the source ever quietly changes a file,
-        we'll know. If we ever quietly change one, you can prove it.
+        re-checking it against these digests will show it &mdash;
+        automatic re-checks are currently paused. If we ever quietly
+        change one, you can prove it.
       </p>
       <p style="color: hsl(var(--muted-foreground));">
         It's a single Rail binary called <code>pursue</code>. Pure
@@ -730,9 +737,10 @@ const MANIFEST_PATHS = ["pursue/manifest.jsonl", "/pursue/manifest.jsonl"];
 const FILES_BASE = "/pursue/files/";
 
 // ── Geocode table ───────────────────────────────────────────────
-// Hand-curated lat/lng for every unique incident_location string the
-// PURSUE manifest currently uses.  "*" entries are off-Earth markers
-// that render in the offearth gutter at the top of the map.
+// Hand-curated lat/lng for incident_location strings seen in the
+// PURSUE manifest.  Not exhaustive: strings without an entry count
+// toward "unspecified" below the map.  "*" entries are off-Earth
+// markers that render in the offearth gutter at the top of the map.
 // Lat positive = north; lng positive = east.
 const GEO = {
   "Western United States":   { lat: 40.0, lng: -110.0 },
@@ -829,6 +837,7 @@ const STATE = {
   agencyFilter: "",
   typeFilter: "",   // "" | "doc" | "photo" | "video"
   releaseFilter: "",  // "" | "wave1" | "wave2"
+  includeUndated: true,  // records with no parseable year — shown by default so the list matches the record count
   query: "",
   sort: "date_desc",
 };
@@ -884,7 +893,7 @@ function setSourceBadge(src) {
   if (src === "live") {
     badge.classList.add("live");
     badge.classList.remove("empty");
-    label.textContent = "live · pursue mirror";
+    label.textContent = "attested · pursue mirror";
   } else {
     badge.classList.add("empty");
     badge.classList.remove("live");
@@ -917,10 +926,15 @@ function renderWatchdog(data) {
   if (!el) return;
   el.classList.remove("ok", "warn", "fail");
   if (!data) {
-    el.textContent = "—";
-    el.title = "no source_check.json yet";
+    // Honest paused state: the automatic source re-check is not
+    // currently running. The mirror's signed digests below remain
+    // verifiable; only the *recurring* source comparison is paused.
+    el.textContent = "paused";
+    el.title = "automatic source re-checks are not currently running — every record below is still hash-verifiable on demand";
+    el.removeAttribute("href");
     return;
   }
+  el.setAttribute("href", "/pursue/source_check.json");
   const total = data.total_checked || 0;
   const m = data.match_count || 0;
   const d = data.drift_count || 0;
@@ -957,6 +971,13 @@ function summary() {
     span = STATE.yearMin === STATE.yearMax ? `${STATE.yearMin}` : `${STATE.yearMin}–${STATE.yearMax}`;
   }
   document.getElementById("year-span").textContent = span;
+
+  const undated = recs.filter(r => r._range && r._range.primary == null).length;
+  const ub = document.getElementById("undated-toggle");
+  if (ub) {
+    ub.textContent = `Undated (${undated})`;
+    if (!undated) ub.style.display = "none";
+  }
 
   const sel = document.getElementById("agency-filter");
   while (sel.options.length > 1) sel.remove(1);
@@ -1087,11 +1108,16 @@ function recordsInWindow() {
   const q = STATE.query.trim().toLowerCase();
   const out = STATE.records.filter(r => {
     const yr = r._range;
-    if (yr.primary == null) return false;
-    // Include records whose date range overlaps the window.
-    const s = yr.start ?? yr.primary;
-    const e = yr.end ?? yr.primary;
-    if (e < STATE.windowMin || s > STATE.windowMax) return false;
+    if (yr.primary == null) {
+      // Dateless records: no year window can place them, so the
+      // "Undated" toggle decides — they're never silently hidden.
+      if (!STATE.includeUndated) return false;
+    } else {
+      // Include records whose date range overlaps the window.
+      const s = yr.start ?? yr.primary;
+      const e = yr.end ?? yr.primary;
+      if (e < STATE.windowMin || s > STATE.windowMax) return false;
+    }
     if (STATE.agencyFilter && r.agency !== STATE.agencyFilter) return false;
     if (STATE.typeFilter && recordType(r) !== STATE.typeFilter) return false;
     if (STATE.releaseFilter && recordRelease(r) !== STATE.releaseFilter) return false;
@@ -1732,6 +1758,13 @@ function bindControls() {
       drawTimeline(); renderRecords();
     });
   }
+  const undatedBtn = document.getElementById("undated-toggle");
+  if (undatedBtn) undatedBtn.addEventListener("click", () => {
+    STATE.includeUndated = !STATE.includeUndated;
+    undatedBtn.classList.toggle("active", STATE.includeUndated);
+    undatedBtn.setAttribute("aria-pressed", STATE.includeUndated ? "true" : "false");
+    renderRecords();
+  });
   document.getElementById("sort").addEventListener("change", (e) => {
     STATE.sort = e.target.value; renderRecords();
   });
@@ -1826,5 +1859,5 @@ function buildReleaseChips() {
 </script>
 
 <script src="_shared/site.js?v=34a4421d"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f9993ea2b291126',t:'MTc3ODQyMjc1NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

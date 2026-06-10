@@ -10,6 +10,7 @@
 <meta property="og:description" content="Competitive intelligence and research synthesis delivered daily. Your own AI. Your data. No cloud LLM fees. Cryptographically verifiable provenance available.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:site_name" content="Ledatic">
+<link rel="canonical" href="https://ledatic.org/intel">
 <title>Intel — Ledatic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,22 +27,8 @@
   .feature.provenance h3 a { color: hsl(var(--primary)); text-decoration: none; }
   .feature.provenance h3 a:hover { text-decoration: underline; }
 
-  .pricing-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 3rem; }
-  @media (min-width: 1024px) { .pricing-grid { grid-template-columns: repeat(3, 1fr); } }
-  .pricing-card { border: 2px solid hsl(var(--border)); border-radius: 8px; padding: 2.5rem 2rem; background: hsl(var(--muted) / 0.15); position: relative; transition: border-color 0.2s, transform 0.2s; }
-  .pricing-card.featured { border-color: hsl(var(--primary)); background: hsl(var(--primary) / 0.05); transform: scale(1.02); }
-  .pricing-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
-  .pricing-card .price { font-size: 2rem; font-weight: bold; color: hsl(var(--primary)); margin: 1rem 0; font-family: 'IBM Plex Mono', ui-monospace; }
-  .pricing-card .price .per { font-size: 0.75rem; color: hsl(var(--muted-foreground)); font-weight: normal; }
-  .pricing-card ul { list-style: none; margin: 1.5rem 0; }
-  .pricing-card li { padding: 0.4rem 0; color: hsl(var(--muted-foreground)); font-size: 0.9rem; }
-  .pricing-card li::before { content: "✓ "; color: hsl(var(--primary)); font-weight: bold; margin-right: 0.5rem; }
-  .pricing-card .cta { margin-top: 2rem; }
-
   .sample-section { margin: 4rem 0; padding: 2rem; border: 1px solid hsl(var(--border)); border-radius: 6px; background: hsl(var(--muted) / 0.1); }
   .sample-section h3 { margin-bottom: 1.5rem; }
-  .sample-output { background: hsl(var(--hero-bg)); border: 1px solid hsl(var(--border)); padding: 1.5rem; border-radius: 4px; font-family: 'IBM Plex Mono', ui-monospace; font-size: 0.85rem; color: hsl(var(--muted-foreground)); line-height: 1.6; max-height: 320px; overflow-y: auto; white-space: pre-wrap; }
-  .sample-output code { color: hsl(var(--primary)); }
 
   .social-proof { margin: 3rem 0; padding: 2rem; text-align: center; border-top: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
   @media (max-width: 700px) { .social-proof { grid-template-columns: 1fr; } }
@@ -51,16 +38,6 @@
   .cta-signup { background: hsl(var(--muted) / 0.3); padding: 2.5rem 2rem; border-radius: 8px; text-align: center; margin: 3rem 0; }
   .cta-signup h2 { margin-bottom: 1rem; }
   .cta-signup p { margin-bottom: 1.5rem; color: hsl(var(--muted-foreground)); }
-  .email-input { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; max-width: 500px; margin: 0 auto; }
-  .email-input input { flex: 1; min-width: 250px; padding: 0.85rem 1rem; background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: 4px; color: hsl(var(--foreground)); font-size: 0.95rem; font-family: inherit; }
-  .email-input input::placeholder { color: hsl(var(--muted-foreground)); }
-  .email-input input:focus { outline: none; border-color: hsl(var(--primary)); background: hsl(var(--hero-bg)); }
-  .email-input button { padding: 0.85rem 2rem; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: filter 0.2s; font-family: inherit; }
-  .email-input button:hover { filter: brightness(1.1); }
-  .email-input button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .signup-msg { margin-top: 1rem; font-size: 0.9rem; }
-  .signup-msg.ok { color: hsl(var(--primary)); }
-  .signup-msg.err { color: hsl(0 80% 65%); }
 
   .faqs { margin: 4rem 0; }
   .faq-item { border-bottom: 1px dashed hsl(var(--border)); padding: 1.5rem 0; }
@@ -88,7 +65,7 @@
     <a href="/system">System</a>
     <a href="/changelog">Changelog</a>
   </div>
-  <a class="nav-cta" href="#signup">Request early access</a>
+  <a class="nav-cta" href="#signup">Get in touch</a>
 </nav>
 
 <section class="hero" style="min-height: 80vh;">
@@ -114,12 +91,12 @@
       <a class="btn btn-secondary" href="#sample">See a sample brief</a>
     </div>
     <p class="trust fade-up" style="animation-delay: 0.85s">
-      30/30 on Rail's canonical bench at N=20 &middot; 15-min wall-clock &middot; Every brief signed against a live pulse_id
+      Every brief signed against a live pulse_id &middot; verifiable in any browser
     </p>
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="features">
   <div class="wrap" style="max-width: 64rem;">
     <span class="eyebrow reveal">What you get</span>
     <h2 class="reveal">Daily briefings. Weekly synthesis. Queryable corpus.</h2>
@@ -156,13 +133,13 @@
       <div class="feature provenance reveal">
         <div class="icon">/06</div>
         <h3><a href="/provenance">Cryptographic provenance →</a></h3>
-        <p>Every report optionally signed by a Pi&nbsp;Zero physical witness, chained to a public entropy beacon. Verify in any browser, no backend trust. EU&nbsp;AI&nbsp;Act ready.</p>
+        <p>Every report optionally signed by a dedicated physical witness device, chained to a public entropy beacon. Verify in any browser, no backend trust. EU&nbsp;AI&nbsp;Act ready.</p>
       </div>
     </div>
 
     <div class="demo-strip reveal">
-      <span class="label">Live demo</span>
-      <span class="text">A real EU AI Act compliance brief, generated this week, signed by fleet0, verifies in your browser:</span>
+      <span class="label">Signed demo</span>
+      <span class="text">A real EU AI Act compliance brief from the May 2026 POC, witness-signed, verifies in your browser:</span>
       <a class="demo-cta" href="/verify/rep_demo_001">→ verify rep_demo_001</a>
     </div>
   </div>
@@ -184,7 +161,7 @@
     </div>
 
     <p class="body reveal" style="margin-top: 2rem;">
-      This is a fully cryptographically attested daily brief, generated by the same 122B model that powers the portal, signed by the fleet0 witness node, verifiable in your browser. Specific verticals (legal research, regulatory monitoring, competitive intelligence, fraud signals) are scoped per-customer during onboarding.
+      This is a fully cryptographically attested daily brief &mdash; generated entirely on owned hardware, signed by a physical witness, verifiable in your browser. Specific verticals (legal research, regulatory monitoring, competitive intelligence, fraud signals) are scoped per-customer during onboarding.
     </p>
   </div>
 </section>
@@ -210,8 +187,8 @@
 
     <div class="social-proof reveal">
       <div>
-        <div class="stat-value">30/30</div>
-        <div class="stat-label">Rail bench at N=20 &middot; 15-min wall-clock &middot; 122B teacher</div>
+        <div class="stat-value">3&times;/wk</div>
+        <div class="stat-label">Mon/Wed/Fri cadence &middot; every brief signed against a live pulse</div>
       </div>
       <div>
         <div class="stat-value">30</div>
@@ -249,35 +226,35 @@
       <div class="faq-item">
         <div class="faq-q">Where does my data live?</div>
         <div class="faq-a">
-          By default, data is stored and processed on Ledatic's hardware (Mac Studio + Mini in Detroit). All LLM inference is local &mdash; the 122B Qwen variant runs on Studio's Apple Silicon, never touches a cloud API. Enterprise plans support on-premise deployment.
+          By default, data is stored and processed on hardware we own and operate in Detroit. All LLM inference is local &mdash; your data never touches a cloud API. On-premise deployment is available for engagements that need it.
         </div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q">What's "Provenance" and why would I want it?</div>
         <div class="faq-a">
-          For regulated workflows (legal discovery, EU&nbsp;AI&nbsp;Act compliance, financial audit), every report is cryptographically signed by a third-party witness node and chained to a public entropy beacon. Auditors verify the chain in their own browser &mdash; no backend trust required. <a href="/provenance">See the chain</a> or <a href="/verify/rep_demo_001">verify a real signed report</a>.
+          For regulated workflows (legal discovery, EU&nbsp;AI&nbsp;Act compliance, financial audit), every report is cryptographically signed by a dedicated physical witness device &mdash; separate from the machine that generated it &mdash; and chained to a public entropy beacon. Auditors verify the chain in their own browser &mdash; no backend trust required. <a href="/provenance">See the chain</a> or <a href="/verify/rep_demo_001">verify a real signed report</a>.
         </div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q">Can I ask custom questions against the corpus?</div>
         <div class="faq-a">
-          Yes. Professional and Provenance plans include access to a token-gated Q&amp;A portal. Ask the 30-day (or longer) corpus anything. Answered by the local LLM in seconds.
+          Yes. Engagements can include access to a token-gated Q&amp;A portal. Ask the 30-day (or longer) corpus anything. Answered by the local LLM in seconds.
         </div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q">What if your LLM goes down?</div>
         <div class="faq-a">
-          Briefs are queued and regenerated. You get notified of any delays. Provenance plans maintain a hot-standby inference engine. Enterprise customers can self-host.
+          Briefs are queued and regenerated, and you&rsquo;re notified of any delay. Engagements that need stronger guarantees &mdash; including self-hosting &mdash; are scoped individually.
         </div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q">Do you have a contract?</div>
         <div class="faq-a">
-          Starter and Professional are month-to-month, cancel anytime. Provenance and Enterprise deals negotiable &mdash; 1-year terms common. We don't lock you in on data; all your briefs, digests, and the corpus are exportable in standard formats.
+          Engagements are scoped individually &mdash; month-to-month is typical, longer terms negotiable. We don't lock you in on data; all your briefs, digests, and the corpus are exportable in standard formats.
         </div>
       </div>
     </div>
@@ -296,7 +273,7 @@
         <ul>
           <li><a href="#features">Features</a></li>
           <li><a href="#sample">Sample</a></li>
-          <li><a href="#signup">Pricing</a></li>
+          <li><a href="#signup">Contact</a></li>
           <li><a href="/provenance">Provenance</a></li>
         </ul>
       </div>
@@ -324,55 +301,6 @@
 </footer>
 
 <script src="_shared/site.js"></script>
-<script>
-(function() {
-  const form = document.getElementById('signup-form');
-  const btn = document.getElementById('signup-btn');
-  const msg = document.getElementById('signup-msg');
-  if (!form) return;
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = form.querySelector('input[name="email"]').value.trim();
-    const hpEl = form.querySelector('input[name="hp_field"]');
-    const hp_field = hpEl ? hpEl.value : "";
-    if (!email || !email.includes("@")) {
-      msg.textContent = "Please enter a valid email.";
-      msg.className = "signup-msg err";
-      msg.style.display = "block";
-      return;
-    }
-    btn.disabled = true;
-    btn.textContent = "Sending…";
-    msg.style.display = "none";
-    try {
-      const r = await fetch("/api/intel/waitlist", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: email, ref: window.location.pathname, hp_field: hp_field })
-      });
-      if (r.ok) {
-        form.style.display = "none";
-        msg.textContent = "Got it. Check your email — we'll be in touch within a day.";
-        msg.className = "signup-msg ok";
-        msg.style.display = "block";
-      } else {
-        const text = await r.text();
-        msg.textContent = "Couldn't add you to the waitlist (" + r.status + "). Email z3m0g@icloud.com directly.";
-        msg.className = "signup-msg err";
-        msg.style.display = "block";
-        btn.disabled = false;
-        btn.textContent = "Request access";
-      }
-    } catch (err) {
-      msg.textContent = "Network error. Email z3m0g@icloud.com directly.";
-      msg.className = "signup-msg err";
-      msg.style.display = "block";
-      btn.disabled = false;
-      btn.textContent = "Request access";
-    }
-  });
-})();
-</script>
 
 </body>
 </html>

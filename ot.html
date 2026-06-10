@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A live, attested, citable Orszag-Tang vortex on a public site. Numerical method documented; every rendered frame hashed and signed by an Ed25519 witness. Sister artifact to /entropy.">
+<meta name="description" content="An attested, citable Orszag-Tang vortex on a public site. Numerical method documented; published frames hashed and signed by an Ed25519 witness. Publisher currently paused — the last attested state remains verifiable. Sister artifact to /entropy.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/ot">
-<meta property="og:title" content="OT — Live attested Orszag-Tang vortex — Ledatic">
-<meta property="og:description" content="A live, attested, citable Orszag-Tang vortex on a public site. Numerical method documented; every rendered frame hashed and signed by an Ed25519 witness.">
+<meta property="og:title" content="OT — Attested Orszag-Tang vortex — Ledatic">
+<meta property="og:description" content="An attested, citable Orszag-Tang vortex on a public site. Numerical method documented; published frames hashed and signed by an Ed25519 witness. Currently paused — the last attested state remains verifiable.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="OT — Ledatic">
-<meta name="twitter:description" content="Live attested Orszag-Tang vortex with public verifiable provenance.">
+<meta name="twitter:description" content="Attested Orszag-Tang vortex with publicly verifiable provenance. Currently paused — the last attested state remains verifiable.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <title>OT &mdash; Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/ot">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -107,18 +108,20 @@
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content" style="padding-top: 9rem; padding-bottom: 3rem;">
-    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Research artifact &mdash; live, attested</span>
+    <span class="eyebrow fade-up" style="animation-delay: 0.1s">Research artifact &mdash; attested &middot; publisher paused</span>
     <h1 class="hero-title fade-up" style="animation-delay: 0.2s">OT</h1>
     <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      Orszag-Tang vortex, observable in real time.
+      Orszag-Tang vortex, preserved in a verifiable public record.
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      The canonical 2D ideal-MHD test (Orszag &amp; Tang, 1979) running
-      live on a periodic 128&sup2; grid, integrated by Lax-Friedrichs on
-      a self-hosting Rail compiler. Each rendered frame is hashed and
-      signed by an Ed25519 witness against the entropy beacon, so a
-      paper citing a state at pulse_id <em>N</em> can be verified years
-      later from the public record.
+      The canonical 2D ideal-MHD test (Orszag &amp; Tang, 1979) on a
+      periodic 256&sup2; grid, integrated by Lax-Friedrichs in a GPU
+      compute kernel; signing and verification run through Rail. Each
+      published frame was hashed and signed by an Ed25519 witness
+      against the entropy beacon, so a paper citing a state at pulse_id
+      <em>N</em> can be verified years later from the public record.
+      The publisher is currently paused &mdash; the frame below is the
+      last attested state, and it still verifies.
     </p>
   </div>
 </section>
@@ -133,12 +136,21 @@
               data-mhd-fallback="_shared/shaders/mhd.frag"
               aria-hidden="true"></canvas>
       <div class="ot-readouts">
+        <div><span class="lab">state</span> paused</div>
         <div><span class="lab">grid</span> 256&times;256</div>
         <div><span class="lab">field</span> &rho;</div>
         <div><span class="lab">frame</span> <span data-live="mhd-step">&mdash;</span></div>
-        <div><span class="lab">pulse</span> <span data-sys="pulse.id">&mdash;</span></div>
+        <div><span class="lab">pulse</span> <span data-sys="att.pulse">396703</span></div>
       </div>
     </div>
+
+    <p style="font-family: 'Sora', sans-serif; font-size: 0.85rem; color: hsl(var(--muted-foreground)); margin: -0.5rem auto 1.5rem; max-width: 640px;">
+      <strong style="color: hsl(var(--foreground));">Status: paused.</strong>
+      The OT publisher has been offline since <span data-sys="att.date">2026-04-29</span>.
+      The frame above is the last attested state &mdash; signed at beacon pulse
+      <span data-sys="att.pulse">396703</span> &mdash; and still verifies against
+      the public key below.
+    </p>
 
     <div class="methodology">
       <h3>Numerical method</h3>
@@ -149,28 +161,29 @@
         <div class="k">timestep</div>    <div class="v">CFL-bounded: dt = 0.3 &middot; &Delta;x / max|c<sub>fast</sub>|, host-side max reduction every frame</div>
         <div class="k">init</div>        <div class="v">OT vortex: &rho;<sub>0</sub> = 25/(36&pi;), p<sub>0</sub> = 5/(12&pi;), v = (&minus;sin y, sin x), B = (&minus;sin y / &radic;(4&pi;), sin 2x / &radic;(4&pi;))</div>
         <div class="k">conservation</div><div class="v">&Delta;m/m &asymp; 10<sup>&minus;7</sup>, &Delta;E/E &asymp; 10<sup>&minus;7</sup>, &nabla;&middot;B &asymp; 10<sup>&minus;6</sup> (f32 precision; the lower-resolution sister at /plasma runs in f64 and conserves to 10<sup>&minus;15</sup>)</div>
-        <div class="k">runtime</div>     <div class="v">Metal compute kernel on Apple Silicon GPU (M1 Ultra, 64 cores), two-pass LF dispatched per step. Host driver in Objective-C; bytes published via the same primitive that signs every other Ledatic surface.</div>
-        <div class="k">cadence</div>     <div class="v">~388 frames/s solver, attestation re-signed every 30 s against the live entropy pulse</div>
+        <div class="k">runtime</div>     <div class="v">Metal compute kernel on an Apple-silicon GPU, two-pass LF dispatched per step. Host driver in Objective-C; bytes published via the same primitive that signs every other Ledatic surface.</div>
+        <div class="k">cadence</div>     <div class="v">~388 frames/s solver while running; attestations were re-signed every 30&nbsp;s against the live entropy pulse. Publisher paused since 2026-04-29 &mdash; the last attestation remains verifiable.</div>
       </div>
     </div>
 
     <div id="cite" class="methodology">
       <h3>Cite this state</h3>
       <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-bottom: 1rem;">
-        Each frame's bytes are signed against the live beacon. To cite a
-        state, capture both the frame attestation and the beacon pulse it
-        was bound to. Anyone can verify with the public verifier
+        Each published frame's bytes were signed against the beacon pulse
+        current at signing time. To cite a state, capture both the frame
+        attestation and the beacon pulse it was bound to. Anyone can
+        verify with the public verifier
         (<a href="/attest/verify.sh">/attest/verify.sh</a>) and the public
         key (<a href="/attest/fleet0.pub.pem">/attest/fleet0.pub.pem</a>,
         <code>fp = cac5f21a70564aeb</code>).
       </p>
       <div class="citation">
-<span class="lab"># live citation, current pulse</span><br>
-"OT MHD live, ledatic.org/ot,<br>
+<span class="lab"># citation &mdash; last attested state</span><br>
+"OT MHD, ledatic.org/ot,<br>
  frame_id=<span data-sys="frame.id">&hellip;</span>,
  sha=<span data-sys="frame.sha">&hellip;</span>,<br>
- pulse_id=<span data-sys="pulse.id">&hellip;</span>,
- sig=<span data-sys="witness.pkfp">&hellip;</span>,<br>
+ pulse_id=<span data-sys="att.pulse">&hellip;</span>,
+ pk_fp=<span data-sys="witness.pkfp">&hellip;</span>,<br>
  accessed=<span data-sys="now">&hellip;</span>"
       </div>
       <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-top: 1rem;">
@@ -191,8 +204,8 @@ curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /
         Sits in conversation with the conservation-law numerics tradition
         (van Leer, Roe, Harten, Toro) and the cryptographic-attestation
         lineage (Drand, NIST randomness beacon). The intersection &mdash;
-        live chaos plus public Ed25519 provenance plus self-hosting
-        compiler in the production path &mdash; is what's novel here.
+        physical chaos plus public Ed25519 provenance plus a self-hosting
+        compiler in the signing path &mdash; is what's novel here.
       </p>
       <p style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-top: 0.75rem;">
         References:
@@ -200,7 +213,7 @@ curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /
       <ul style="font-family: 'Sora', sans-serif; color: hsl(var(--muted-foreground)); font-size: 0.85rem; margin-left: 1.25rem; line-height: 1.7;">
         <li>Orszag, S. A. &amp; Tang, C. M. (1979). <em>Small-scale structure of two-dimensional magnetohydrodynamic turbulence.</em> J. Fluid Mech. 90, 129&ndash;143.</li>
         <li>2024 Phys. Plasmas comparison of 16 numerical schemes on the OT vortex: <a href="https://pubs.aip.org/aip/pop/article/31/1/012101/2932188/" rel="noopener">aip 31, 012101</a></li>
-        <li>Solver source: <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd.rail">tools/plasma/mhd.rail</a> (Rail)</li>
+        <li>Solver source: <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd_ot_2d_256_host.m">tools/plasma/mhd_ot_2d_256_host.m</a> + <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd_ot_2d_256.metal">mhd_ot_2d_256.metal</a> (Metal / Obj-C). The 128&sup2; beacon sister solver is pure Rail: <a href="https://github.com/zemo-g/rail/blob/master/tools/plasma/mhd.rail">tools/plasma/mhd.rail</a></li>
         <li>Beacon design: <a href="entropy.html">/entropy</a> &nbsp;&middot;&nbsp; mission control: <a href="system.html">/system</a></li>
       </ul>
     </div>
@@ -249,5 +262,26 @@ curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /
 
 <script src="_shared/site.js"></script>
 <script src="_shared/ot-cite.js"></script>
+<script>
+/* Paused-state honesty: bind the readout + citation to the attestation's own
+   pulse (not the live beacon) and date the pause from witnessed_at. The
+   static values in the markup are the last known attested state. */
+(function () {
+  fetch('/entropy/frame/ot256/latest.attestation.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (att) {
+      var w = att && att.witness;
+      if (!w) return;
+      var set = function (k, v) {
+        document.querySelectorAll('[data-sys="' + k + '"]').forEach(function (el) {
+          el.textContent = v;
+        });
+      };
+      if (w.pulse_id !== undefined) set('att.pulse', String(w.pulse_id));
+      if (w.witnessed_at) set('att.date', new Date(w.witnessed_at * 1000).toISOString().slice(0, 10));
+    })
+    .catch(function () {});
+})();
+</script>
 </body>
 </html>

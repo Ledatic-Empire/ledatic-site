@@ -40,11 +40,11 @@ deploy.sh          push pages + shared assets to KV (shell-only, no Rail dep)
 
 ## Deploy
 
-Requires a Cloudflare API token with `Workers KV:Edit` on the correct namespace. Token path defaults to `~/Desktop/rings`; override via `CF_TOKEN`.
+Requires a Cloudflare API token with `Workers KV:Edit` on the correct namespace. Token path defaults to `~/.fleet/cf_token` (legacy fallback `~/Desktop/rings`); override via `CF_TOKEN`.
 
 ```sh
-CF_TOKEN=$(cat ~/Desktop/rings) ./deploy.sh              # push all pages + shared assets
-CF_TOKEN=$(cat ~/Desktop/rings) ./deploy.sh index.html   # push one file
+CF_TOKEN=$(cat ~/.fleet/cf_token) ./deploy.sh              # push all pages + shared assets
+CF_TOKEN=$(cat ~/.fleet/cf_token) ./deploy.sh index.html   # push one file
 cd worker && ./deploy_worker.sh                          # push Worker code
 ```
 

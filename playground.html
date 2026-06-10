@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Public Rail playground — write Rail in the browser, compile to WebAssembly server-side, run locally.">
+<meta name="description" content="Rail playground — a browser editor for the Rail language. Programs compile to WebAssembly and run in-tab when the compile service is online.">
 <title>Playground &mdash; Rail &mdash; Ledatic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -138,7 +138,7 @@
 <main class="pg-page">
   <div class="pg-head">
     <h1>Rail playground <span style="color:hsl(var(--muted-foreground));font-weight:400">v0</span></h1>
-    <span class="sub">edit &middot; compile &middot; run &middot; in your browser</span>
+    <span class="sub">browser editor for the Rail language</span>
   </div>
 
   <div class="pg-grid">
@@ -173,14 +173,12 @@
   </div>
 
   <p class="pg-foot">
-    Source compiles on a small Rail service over Tailscale, returns WebAssembly,
-    runs in this tab. <a href="rail/docs/">Docs</a> &middot; <a href="rail.html">About Rail</a>
+    When the compile service is online, source compiles to WebAssembly server-side
+    and runs in this tab. <a href="rail/docs/">Docs</a> &middot; <a href="rail.html">About Rail</a>
   </p>
 </main>
 
 <script type="module">
-  import { runRailSource, STARTERS } from './_shared/rail_playground.js';
-
   const editor = document.getElementById('editor');
   const output = document.getElementById('output');
   const runBtn = document.getElementById('run-btn');
@@ -188,20 +186,6 @@
   const srcMeta = document.getElementById('src-meta');
   const outMeta = document.getElementById('out-meta');
   const startersUl = document.getElementById('starters');
-
-  // Populate starter snippets — pulled from the same 8 demos shipped on /rail.
-  for (const s of STARTERS) {
-    const li = document.createElement('li');
-    li.textContent = s.label;
-    li.title = s.label;
-    li.addEventListener('click', () => {
-      editor.value = s.src;
-      updateMeta();
-      output.className = 'pg-out';
-      output.textContent = '(click Run)';
-    });
-    startersUl.appendChild(li);
-  }
 
   function updateMeta() {
     srcMeta.textContent = `${editor.value.length} chars`;
@@ -214,7 +198,41 @@
     status.className = 'pg-status' + (kind ? ' ' + kind : '');
   }
 
+  // Load the runner module dynamically so a missing file degrades to an
+  // honest "unavailable" state instead of a silently dead Run button.
+  let runRailSource = null;
+  try {
+    const mod = await import('./_shared/rail_playground.js');
+    runRailSource = mod.runRailSource;
+    // Populate starter snippets — pulled from the same 8 demos shipped on /rail.
+    for (const s of mod.STARTERS) {
+      const li = document.createElement('li');
+      li.textContent = s.label;
+      li.title = s.label;
+      li.addEventListener('click', () => {
+        editor.value = s.src;
+        updateMeta();
+        output.className = 'pg-out';
+        output.textContent = '(click Run)';
+      });
+      startersUl.appendChild(li);
+    }
+  } catch (e) {
+    runBtn.disabled = true;
+    setStatus('playground unavailable', 'err');
+    output.className = 'pg-out err';
+    output.textContent = 'Playground unavailable.\n\nThe playground code did not load on this page, so Run is disabled.';
+  }
+
+  // The server returns 503 when the compile service behind this page is
+  // down. Surface that honestly — it is not a problem with your code.
+  function isBackendOffline(result) {
+    return !!(result && result.reason &&
+      (/backend not configured/i.test(result.reason) || /HTTP 503/.test(result.reason)));
+  }
+
   runBtn.addEventListener('click', async () => {
+    if (!runRailSource) return;
     runBtn.disabled = true;
     setStatus('compiling...');
     output.className = 'pg-out';
@@ -224,7 +242,11 @@
     try {
       const result = await runRailSource(editor.value, { endpoint: '/api/playground/compile' });
       const wall = (performance.now() - t0) | 0;
-      if (result.kind === 'sanitize-rejected') {
+      if (isBackendOffline(result)) {
+        setStatus('compiler backend offline', 'err');
+        output.className = 'pg-out err';
+        output.textContent = 'Compiler backend offline.\n\nThe compile service behind this page is not running right now, so nothing was compiled or run. Your code is fine to keep editing — Run will work again once the service is back.';
+      } else if (result.kind === 'sanitize-rejected') {
         setStatus('rejected', 'err');
         output.className = 'pg-out err';
         output.textContent = `Rejected by sanitizer:\n${result.reason}`;

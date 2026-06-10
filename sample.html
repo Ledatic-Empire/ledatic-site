@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Sample Ledatic Intel brief — EU AI Act enforcement signals. Cryptographically signed, browser-verifiable. See what daily intelligence with provenance looks like.">
+<link rel="canonical" href="https://ledatic.org/sample">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ledatic.org/sample">
 <meta property="og:title" content="Sample Brief — EU AI Act, May 2026">
@@ -133,23 +134,8 @@
   }
   .verify-cta a:hover { background: hsl(var(--primary) / 0.18); text-decoration: none; }
 
-  /* Footer pricing tease */
+  /* Footer */
   .doc-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid hsl(var(--border)); }
-  .pitch-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  .pitch-card {
-    border: 1px solid hsl(var(--border));
-    border-radius: 0.375rem;
-    padding: 1rem 1.25rem;
-  }
-  .pitch-card .name { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 0.4rem; }
-  .pitch-card .price { font-size: 1.4rem; font-weight: 500; }
-  .pitch-card .desc { color: hsl(var(--muted-foreground)); font-size: 0.78rem; margin-top: 0.4rem; line-height: 1.5; }
-  .pitch-card.featured { border-color: hsl(var(--primary) / 0.4); background: hsl(var(--primary) / 0.04); }
   .final-cta {
     text-align: center;
     margin-top: 1.5rem;
@@ -162,7 +148,7 @@
   @media print {
     body { background: white; color: black; padding: 0; }
     .doc { box-shadow: none; border: none; max-width: none; padding: 1rem; background: white; color: black; }
-    .receipt, .verify-cta, .pitch-card { background: white; border-color: #ccc; color: black; }
+    .receipt, .verify-cta { background: white; border-color: #ccc; color: black; }
     .receipt .v, .brief li, .brief strong { color: black; }
     .receipt .k, .verify-cta a { color: #006400; }
     .brief h2 { color: #006400; }
@@ -188,12 +174,12 @@
 
   <div class="receipt">
     <span class="k">REPORT_ID</span>           <span class="v">rep_demo_001</span>
-    <span class="k">MODEL</span>               <span class="v">Qwen3.5-122B-A10B-heretic-v2-2.34bit-msq</span>
+    <span class="k">MODEL</span>               <span class="v">self-hosted model — identity pinned by WEIGHTS_SHA256 below; full string in the signed manifest</span>
     <span class="k">WEIGHTS_SHA256</span>      <span class="v">fd3aa7f3883b2e7200e298bb9bb50a1ae4ac142c3e7cb42f443a15c61bcc1c47</span>
     <span class="k">PROMPT_SHA256</span>       <span class="v">2c07b88fc672d7e90eb07a39d553f9d3264b1c5b38185ee58e0d1c18adfdaa4d</span>
     <span class="k">RESPONSE_SHA256</span>     <span class="v">aa0d39342b2414cc89650fe29e45cfab57097c26110d94481efa3ae5e1e8abc5</span>
     <span class="k">GENERATED_AT</span>        <span class="v">2026-05-09T15:36:21Z</span>
-    <span class="k">WITNESS</span>             <span class="v">fleet0 (Pi Zero 2 W) · pk_fp <strong>cac5f21a70564aeb</strong> · pulse <strong>774434</strong></span>
+    <span class="k">WITNESS</span>             <span class="v">fleet0 (Pi Zero witness) · pk_fp <strong>cac5f21a70564aeb</strong> · pulse <strong>774434</strong></span>
     <span class="k">VERIFY</span>              <span class="v"><a class="verify-link" href="/verify/rep_demo_001">https://ledatic.org/verify/rep_demo_001</a></span>
   </div>
 
@@ -239,9 +225,10 @@
       The receipt above is not a logo. Each field is bound into a single
       canonical message, hashed, and Ed25519-signed by a Pi Zero physical
       witness node. Open the verify URL and your browser cryptographically
-      checks the signature against the public fleet0 key &mdash; no Ledatic
-      backend trust required. Try changing one character of the brief on
-      this page; the hash diverges and the chain breaks.
+      checks the signature against the public fleet0 key &mdash; the check
+      runs in your browser, not on our servers. Alter any field of the
+      signed manifest and verification fails. Provenance proves origin
+      and timing, not the accuracy of the content.
     </p>
     <a href="/verify/rep_demo_001">→ verify rep_demo_001</a>
   </div>

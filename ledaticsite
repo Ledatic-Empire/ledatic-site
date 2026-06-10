@@ -25,7 +25,7 @@ Subcommands:
                                  update home-page focus copy (replaces
                                  the deleted update_site_data.py)
 
-Token: defaults to $(cat ~/Desktop/rings); override via CF_TOKEN.
+Token: defaults to ~/.fleet/cf_token (fallback ~/Desktop/rings); override via CF_TOKEN.
 """
 
 from __future__ import annotations

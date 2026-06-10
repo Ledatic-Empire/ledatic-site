@@ -16,8 +16,8 @@
  *   LEDATIC_KV  — KV namespace (site content + client/report/session records)
  *   REPORTS_R2  — R2 bucket `ledatic-reports` (PDF storage)
  *
- * Source of truth: tools/deploy/worker.js in the rail repo. Deploy via
- *   tools/deploy/deploy_worker.sh
+ * Source of truth: worker/worker.js in the ledatic-site repo. Deploy via
+ *   worker/deploy_worker.sh
  */
 
 // ─── Security ────────────────────────────────────────────────────────────────
@@ -97,8 +97,8 @@ function secGreatlakes(headers) {
 const DENY_EXACT = new Set([
   // Internal data with no dedicated /data/ handler
   "intakes",
-  "snapshot",          // served via /data/snapshot.json
-  "devlog",            // served via /data/devlog.json
+  "snapshot",          // written via /api/update; public read route retired 2026-06-10
+  "devlog",            // written via /api/update; public read route retired 2026-06-10
   "_test_ping",
   // Dead-page orphans from older site incarnations
   "agent.html",
@@ -195,6 +195,39 @@ function notFound() {
     status: 404,
     headers: sec({
       "content-type": "text/plain; charset=utf-8",
+      "cache-control": "public, max-age=60",
+    }),
+  });
+}
+
+// Branded 404 for page-shaped URLs — an honest empty state instead of the
+// old homepage fallback, which 200'd every unknown path and lied to both
+// humans and crawlers about what exists. Inline + dependency-free so it
+// renders even if KV is unreachable.
+function notFoundPage() {
+  const html = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Ledatic</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #33ff33; font-family: 'Courier New', monospace;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .box { text-align: center; padding: 24px; }
+  .code { font-size: 2.2em; font-weight: bold; letter-spacing: 4px;
+    text-shadow: 0 0 12px rgba(51,255,51,0.35); }
+  .msg { color: #1a8a1a; margin-top: 12px; font-size: 0.9em; }
+  a { color: #33ff33; }
+</style></head><body>
+<div class="box">
+  <div class="code">&gt; 404</div>
+  <div class="msg">no such page on this server.</div>
+  <div class="msg"><a href="/">return home</a></div>
+</div></body></html>`;
+  return new Response(html, {
+    status: 404,
+    headers: sec({
+      "content-type": MIME.html,
       "cache-control": "public, max-age=60",
     }),
   });
@@ -358,10 +391,35 @@ async function serveFromKV(key, env) {
 
 const SESSION_TTL = 86400 * 30; // 30 days
 
+// TODO(security): unsalted single SHA-256. Migrating to salted PBKDF2 via
+// crypto.subtle.deriveBits would invalidate every client.password_hash already
+// stored in KV (provisioned via /api/update create_client), so it must ship as
+// a coordinated re-hash/rotation of stored client records — not a drive-by
+// edit here. Brute-force exposure is mitigated by the login rate limit below.
 async function hashPassword(password) {
   const data = new TextEncoder().encode(password);
   const hash = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Login brute-force guard — KV-counted POST /login attempts per IP.
+// 10 attempts per 15-minute window; KV TTL handles cleanup. Colon-namespaced
+// key is auto-denied from public KV reads. Fails OPEN on KV errors (same
+// rationale as the playground limiter: a flaky KV must not lock out clients).
+const LOGIN_RL_MAX = 10;
+const LOGIN_RL_WINDOW_MS = 15 * 60 * 1000;
+async function loginRateLimited(request, env) {
+  try {
+    const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
+    const bucket = Math.floor(Date.now() / LOGIN_RL_WINDOW_MS);
+    const key = `reports:rl:${ip}:${bucket}`;
+    const n = parseInt((await env.LEDATIC_KV.get(key)) || "0", 10);
+    if (n >= LOGIN_RL_MAX) return true;
+    await env.LEDATIC_KV.put(key, String(n + 1), { expirationTtl: 16 * 60 });
+    return false;
+  } catch (_) {
+    return false; // fail open
+  }
 }
 
 async function createSession(clientId, env) {
@@ -504,6 +562,27 @@ ${verticalCards || '<div class="empty">No reports yet. They will appear here as 
 
 // ─── reports.ledatic.org handler ─────────────────────────────────────────────
 
+// Public access switch. false = portal archived (410 + honest page); all
+// portal code below is preserved and the /api/update ingestion endpoint
+// stays live, so flipping this back fully restores the product.
+const REPORTS_PUBLIC = false;
+
+function reportsArchivedPage() {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>archived — ledatic</title>
+<style>body{background:#050805;color:#7dff9a;font:16px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;display:grid;place-items:center;min-height:100vh;margin:0}
+main{max-width:34rem;padding:2rem;text-align:center}
+h1{font-size:1.1rem;letter-spacing:.12em;font-weight:600}
+p{color:#4eae68}a{color:#7dff9a}</style></head><body><main>
+<h1>// REPORT PORTAL — ARCHIVED</h1>
+<p>This client portal completed its engagement and has been archived
+from public view. The reports, their attestations, and the software
+that produced them are preserved intact.</p>
+<p><a href="https://ledatic.org/">ledatic.org</a></p>
+</main></body></html>`;
+}
+
 async function handleReports(request, env, pathname) {
   const method = request.method;
   const host = request.headers.get("Host") || "";
@@ -515,6 +594,11 @@ async function handleReports(request, env, pathname) {
       return new Response(loginPage(), { headers: sec({ "content-type": MIME.html }) });
     }
     if (method === "POST") {
+      if (await loginRateLimited(request, env)) {
+        return new Response(loginPage("Too many attempts — try again in a few minutes"), {
+          status: 429, headers: sec({ "content-type": MIME.html, "retry-after": "900" }),
+        });
+      }
       const form = await request.formData();
       const clientId = (form.get("client_id") || "").trim().toLowerCase();
       const password = form.get("password") || "";
@@ -590,6 +674,40 @@ function jsonResponse(data, status = 200) {
     status,
     headers: sec({ "content-type": "application/json" }),
   });
+}
+
+// ─── Verifiability SDK witness counter-signer (WebCrypto Ed25519) ────────────
+// Backs POST /attest/witness. The pubkey is public and pinned in the SDK
+// verifier (rail repo: tools/verify_sdk/sdk.rail); only the 32-byte seed is
+// secret, held as the SDK_WITNESS_KEY env binding — a DEDICATED key, not
+// the fleet witness key, so a CF-secret leak is contained to this product.
+// Verified byte-identical to the Rail reference signer
+// (tools/verify_sdk/witness_sign.rail) over RFC 8032, so prod is a drop-in
+// for the selftest's offline oracle.
+const SDK_WITNESS_PUBKEY = "45ad2e2d671eab439f1e201b9b52bc40803c3f09fd2553d1e751e4a9afe768a7";
+const SDK_WITNESS_PK_FP  = SDK_WITNESS_PUBKEY.slice(0, 16);
+// PKCS8 DER header for an Ed25519 private key: SEQUENCE(version=0,
+// AlgorithmId(1.3.101.112), OCTET STRING(OCTET STRING(seed))). Fixed 16 bytes,
+// then the raw 32-byte seed — the standard way to feed a seed to WebCrypto.
+const ED25519_PKCS8_PREFIX = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);
+function sdkHexToBytes(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
+}
+function sdkBytesToHex(bytes) {
+  let s = "";
+  for (const b of bytes) s += b.toString(16).padStart(2, "0");
+  return s;
+}
+async function sdkWitnessSign(seedHex, msg) {
+  const seed = sdkHexToBytes(seedHex);
+  const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + 32);
+  pkcs8.set(ED25519_PKCS8_PREFIX, 0);
+  pkcs8.set(seed, ED25519_PKCS8_PREFIX.length);
+  const key = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign({ name: "Ed25519" }, key, new TextEncoder().encode(msg));
+  return sdkBytesToHex(new Uint8Array(sig));
 }
 
 async function handleAPI(request, env) {
@@ -698,25 +816,10 @@ async function handleSite(request, env, url) {
   const pathname = url.pathname;
   const method = request.method;
 
-  // Dynamic public JSON. KV values may be malformed (e.g. legacy "undefined"
-  // strings from earlier deploy tooling); fall through to empty default rather
-  // than 500.
-  if (pathname === "/data/devlog.json") {
-    const raw = await env.LEDATIC_KV.get("devlog");
-    let data = [];
-    try { if (raw) data = JSON.parse(raw); } catch (_) { data = []; }
-    return new Response(JSON.stringify(data), {
-      headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
-    });
-  }
-  if (pathname === "/data/snapshot.json") {
-    const raw = await env.LEDATIC_KV.get("snapshot");
-    let data = {};
-    try { if (raw) data = JSON.parse(raw); } catch (_) { data = {}; }
-    return new Response(JSON.stringify(data), {
-      headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
-    });
-  }
+  // NOTE: /data/devlog.json + /data/snapshot.json read routes were retired
+  // 2026-06-10 — zero consumers in any site page or generator. The underlying
+  // KV keys ("devlog", "snapshot") are still written via /api/update and stay
+  // on the deny list below.
 
   // ── /greatlakes — password-gated commercial demo ──────────────────────
   // Page + AIS attestation feed for the Great Lakes logistics POC.  Gated
@@ -907,10 +1010,9 @@ async function handleSite(request, env, url) {
     }
 
     // 3a''''. AI proxy — page POSTs natural-language queries; Worker forwards
-    // to the Mini fleet tunnel which then talks to Studio's 122B over TB mesh.
-    // env.LAKES_FLEET_URL is the Cloudflare Tunnel public hostname for the
-    // Mini's AI proxy endpoint (set as a secret_text binding). If unset, this
-    // route returns a friendly "AI offline" instead of crashing.
+    // them to the configured upstream (env.LAKES_FLEET_URL, a secret_text
+    // binding). If unset, this route returns a friendly "AI offline"
+    // instead of crashing.
     if (pathname.startsWith("/greatlakes/api/ai/") && method === "POST") {
       if (!env.LAKES_FLEET_URL || !env.LAKES_FLEET_TOKEN) {
         return new Response('{"error":"ai offline"}', {
@@ -1004,6 +1106,19 @@ async function handleSite(request, env, url) {
       if (log.length > 50) log.splice(0, log.length - 50);
       await env.LEDATIC_KV.put("entropy:pulse:log", JSON.stringify(log));
     } catch (e) { /* swallow — primary write already succeeded */ }
+    // Persist this pulse under a by-id key so a verifier can confirm a
+    // receipt's cited pulse_id -> value_hex on the public chain. This is what
+    // lights up the SDK's already-built `verify --check-beacon` membership
+    // proof (forward time-binding). Best-effort; forward-only — pulses from
+    // before this write path shipped are not backfilled.
+    try {
+      const p = JSON.parse(body);
+      if (p && Number.isInteger(p.pulse_id)) {
+        await env.REPORTS_R2.put(`entropy/pulse/${p.pulse_id}.json`, body, {
+          httpMetadata: { contentType: "application/json" },
+        });
+      }
+    } catch (e) { /* swallow — primary write already succeeded */ }
     return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
   }
   if (pathname === "/entropy/pulse") {
@@ -1022,6 +1137,19 @@ async function handleSite(request, env, url) {
   if (pathname === "/entropy/pulse/log") {
     const log = await env.LEDATIC_KV.get("entropy:pulse:log");
     return new Response(log || "[]", {
+      headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
+    });
+  }
+  // Pulse-by-id (free, public): the membership oracle for `verify --check-beacon`.
+  // Digits-only, so it never shadows /entropy/pulse or /entropy/pulse/log above.
+  const pulseByIdMatch = pathname.match(/^\/entropy\/pulse\/(\d+)$/);
+  if (pulseByIdMatch && method === "GET") {
+    const obj = await env.REPORTS_R2.get(`entropy/pulse/${pulseByIdMatch[1]}.json`);
+    if (!obj) return new Response('{"error":"no pulse for that id"}', {
+      status: 404,
+      headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+    });
+    return new Response(await obj.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
@@ -1094,6 +1222,83 @@ async function handleSite(request, env, url) {
         }),
       });
     }
+  }
+
+  // ─── Verifiability SDK: metered witness counter-signature ────────────────
+  // The paid grade of the SDK (rail repo: tools/verify_sdk). A "bare" receipt
+  // is the caller's own Ed25519 sig, verified fully offline and never touching
+  // us — the free distribution flywheel. An ANCHORED receipt additionally
+  // carries OUR counter-signature over the same canonical attest message the
+  // rest of the attest infra uses:
+  //   attest|v1|<sha256>|<pulse_id>|<value_hex>|<witnessed_at>
+  // proving "Ledatic observed digest D at pulse N at server-time T". We set
+  // witnessed_at, so an anchored receipt cannot be backdated. We sign the
+  // tuple as presented (no PII, opaque digests only); whether value_hex truly
+  // belongs to pulse_id is the verifier's job via the free /entropy/pulse/<id>
+  // chain — that separation keeps this endpoint cheap and stateless.
+  //
+  // PHASING: ship token-gated first (un-metered beta) by minting keys with a
+  // large balance. The balance check below IS the metering, so beta vs paid is
+  // a provisioning choice, not a code change.
+  if (pathname === "/attest/witness" && method === "POST") {
+    const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
+    if (!(await playgroundRateLimit(ip, env))) return jsonResponse({ error: "rate_limited" }, 429);
+
+    const apiKey = request.headers.get("x-sdk-key") || "";
+    if (!apiKey) return jsonResponse({ error: "unauthorized" }, 401);
+    const acctRaw = await env.LEDATIC_KV.get(`account:${apiKey}`);
+    if (!acctRaw) return jsonResponse({ error: "unauthorized" }, 401);
+    let acct;
+    try { acct = JSON.parse(acctRaw); } catch { return jsonResponse({ error: "unauthorized" }, 401); }
+    const now = Math.floor(Date.now() / 1000);
+    if ((acct.expires_at && now > acct.expires_at) || (acct.balance || 0) <= 0) {
+      return jsonResponse({ error: "payment_required" }, 402);
+    }
+
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ error: "bad_request" }, 400); }
+    const sha256 = String(body.sha256 || "");
+    const value_hex = String(body.value_hex || "");
+    const pulse_id = body.pulse_id;
+    if (!/^[0-9a-f]{64}$/.test(sha256) || !/^[0-9a-f]{64}$/.test(value_hex) || !Number.isInteger(pulse_id)) {
+      return jsonResponse({ error: "bad_request" }, 400);
+    }
+    if (!env.SDK_WITNESS_KEY || !/^[0-9a-f]{64}$/.test(env.SDK_WITNESS_KEY)) {
+      return jsonResponse({ error: "witness_unconfigured" }, 503);
+    }
+
+    const witnessed_at = now;
+    const msg = `attest|v1|${sha256}|${pulse_id}|${value_hex}|${witnessed_at}`;
+    const sig = await sdkWitnessSign(env.SDK_WITNESS_KEY, msg);
+
+    // Commit the spend. A race can under-charge by <=1 (two requests read the
+    // same balance), never over — the same safety direction as the limiter.
+    acct.balance = (acct.balance || 0) - 1;
+    await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
+
+    return jsonResponse({ witnessed_at, alg: "ed25519", pk_fp: SDK_WITNESS_PK_FP, sig }, 200);
+  }
+
+  // POST /attest/admin/mint {pack} — manual provisioning, Bearer API_BEARER.
+  // Zero-human-compatible: no signup flow. Keys are minted out of band and
+  // handed to the buyer; the 402 wall above is the whole retention mechanism.
+  // Stripe self-serve top-up is a later phase, not this.
+  if (pathname === "/attest/admin/mint" && method === "POST") {
+    if (!env.API_BEARER || request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
+      return jsonResponse({ error: "forbidden" }, 403);
+    }
+    let body;
+    try { body = await request.json(); } catch { body = {}; }
+    const PACKS = { starter: 10000, growth: 100000, scale: 1000000 };
+    const pack = String(body.pack || "starter");
+    const credits = PACKS[pack];
+    if (!credits) return jsonResponse({ error: "unknown_pack", packs: Object.keys(PACKS) }, 400);
+    const apiKey = "lsk_" + sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
+    const now = Math.floor(Date.now() / 1000);
+    const expires_at = now + 365 * 24 * 3600; // ~12 months
+    const acct = { balance: credits, expires_at, pack, created_at: now };
+    await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
+    return jsonResponse({ api_key: apiKey, pack, balance: credits, expires_at }, 200);
   }
 
   // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
@@ -1552,19 +1757,11 @@ async function handleSite(request, env, url) {
     }
   }
 
-  // ─── DDA Live Q&A portal ─────────────────────────────────────────────────
+  // ─── DDA archive (engagement closed 2026-05-12) ──────────────────────────
   // /dda             → static portal HTML from KV (key: dda.html)
   // /dda/handoff.pdf → R2-served handoff document
-  // /dda/api/ask     → POST {question}; Worker validates token, rate-limits,
-  //                     forwards to Mini's fleet HTTP control plane.
-  // /dda/api/health  → GET; returns engine state {idle|warming|ready}.
-  //
-  // Auth: env.DDA_PORTAL_TOKEN is the shared client-side bearer token that
-  // every DDA team member uses (sent as X-DDA-Token by the page). The Worker
-  // re-authenticates to Mini using env.DDA_FLEET_TOKEN. env.DDA_API_HOST is
-  // the cftunnel hostname (e.g. dda-api.ledatic.org) that points at Mini :9101.
-  // Rate limit: env.DDA_RATE_PER_DAY (default 50) per token+UTC-day, KV-backed.
-  // The corpus never traverses the Worker — only the question text in, answer text out.
+  // The live Q&A engine that once backed /dda/api/* was decommissioned when
+  // the engagement closed; those routes now return an honest 410 below.
   if (pathname === "/dda" || pathname === "/dda/") {
     const html = await env.LEDATIC_KV.get("dda.html");
     if (!html) return notFound();
@@ -1586,109 +1783,11 @@ async function handleSite(request, env, url) {
       }),
     });
   }
-  if (pathname === "/dda/api/ask" && method === "POST") {
-    if (!env.DDA_PORTAL_TOKEN || request.headers.get("X-DDA-Token") !== env.DDA_PORTAL_TOKEN) {
-      return jsonResponse({ message: "Unauthorized" }, 401);
-    }
-    if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
-      return jsonResponse({ message: "Portal misconfigured server-side" }, 500);
-    }
-    // Rate limit: defense in depth — token-wide bucket AND per-IP bucket.
-    // The token-wide bucket caps total abuse if the shared token leaks; the
-    // per-IP bucket protects against one bad actor exhausting the global cap.
-    const today = new Date().toISOString().slice(0, 10);
-    const ddaIp = request.headers.get("cf-connecting-ip") || "0.0.0.0";
-    const rateKey   = `dda:rate:${env.DDA_PORTAL_TOKEN.slice(0, 8)}:${today}`;
-    const rateKeyIp = `dda:rate:${env.DDA_PORTAL_TOKEN.slice(0, 8)}:${ddaIp}:${today}`;
-    const rawCount = await env.LEDATIC_KV.get(rateKey);
-    const rawCountIp = await env.LEDATIC_KV.get(rateKeyIp);
-    const count   = rawCount   ? parseInt(rawCount,   10) || 0 : 0;
-    const countIp = rawCountIp ? parseInt(rawCountIp, 10) || 0 : 0;
-    const cap = parseInt(env.DDA_RATE_PER_DAY || "50", 10);
-    const capIp = parseInt(env.DDA_RATE_PER_IP_PER_DAY || "20", 10);
-    if (count >= cap) {
-      return jsonResponse({ message: `Daily limit (${cap}) reached.` }, 429);
-    }
-    if (countIp >= capIp) {
-      return jsonResponse({ message: `Per-IP daily limit (${capIp}) reached.` }, 429);
-    }
-    let body;
-    try { body = await request.json(); } catch { return jsonResponse({ message: "Bad JSON" }, 400); }
-    const question = (body.question || "").toString().slice(0, 4000);
-    if (!question.trim()) return jsonResponse({ message: "Empty question" }, 400);
-    let upstream;
-    try {
-      upstream = await fetch(`https://${env.DDA_API_HOST}/dda_ask`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Fleet-Token": env.DDA_FLEET_TOKEN,
-        },
-        body: JSON.stringify({ question }),
-      });
-    } catch (e) {
-      return jsonResponse({ message: "Engine unreachable: " + e.message }, 503);
-    }
-    if (upstream.status === 503) {
-      const j = await upstream.json().catch(() => ({}));
-      return jsonResponse(j.message ? j : { message: "Engine warming up — try again in 60s." }, 503);
-    }
-    const text = await upstream.text();
-    if (!upstream.ok) {
-      return jsonResponse({ message: "Engine error: " + upstream.status }, 502);
-    }
-    // Increment both rate-limit counters only on successful answer
-    await env.LEDATIC_KV.put(rateKey,   String(count   + 1), { expirationTtl: 86400 * 2 });
-    await env.LEDATIC_KV.put(rateKeyIp, String(countIp + 1), { expirationTtl: 86400 * 2 });
-    return new Response(text, {
-      headers: sec({
-        "content-type": "application/json",
-        "cache-control": "no-store",
-      }),
-    });
-  }
-  if (pathname === "/dda/api/health" && method === "GET") {
-    if (!env.DDA_PORTAL_TOKEN || request.headers.get("X-DDA-Token") !== env.DDA_PORTAL_TOKEN) {
-      return jsonResponse({ message: "Unauthorized" }, 401);
-    }
-    if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
-      return jsonResponse({ state: "idle", note: "portal not configured" });
-    }
-    try {
-      const r = await fetch(`https://${env.DDA_API_HOST}/dda_health`, {
-        headers: { "X-Fleet-Token": env.DDA_FLEET_TOKEN },
-      });
-      const t = await r.text();
-      return new Response(t, {
-        headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
-      });
-    } catch (e) {
-      return jsonResponse({ state: "idle", note: "engine unreachable" });
-    }
-  }
-  if (pathname.startsWith("/dda/api/poll/") && method === "GET") {
-    if (!env.DDA_PORTAL_TOKEN || request.headers.get("X-DDA-Token") !== env.DDA_PORTAL_TOKEN) {
-      return jsonResponse({ message: "Unauthorized" }, 401);
-    }
-    if (!env.DDA_API_HOST || !env.DDA_FLEET_TOKEN) {
-      return jsonResponse({ message: "Portal misconfigured server-side" }, 500);
-    }
-    const jobId = pathname.slice("/dda/api/poll/".length);
-    if (!/^[a-f0-9]{8,64}$/i.test(jobId)) {
-      return jsonResponse({ message: "Bad job_id" }, 400);
-    }
-    try {
-      const r = await fetch(`https://${env.DDA_API_HOST}/dda_job/${jobId}`, {
-        headers: { "X-Fleet-Token": env.DDA_FLEET_TOKEN },
-      });
-      const text = await r.text();
-      return new Response(text, {
-        status: r.status,
-        headers: sec({ "content-type": "application/json", "cache-control": "no-store" }),
-      });
-    } catch (e) {
-      return jsonResponse({ message: "Engine unreachable: " + e.message }, 503);
-    }
+  // /dda/api/* — Q&A engine retired with the engagement (closed 2026-05-12,
+  // backend decommissioned). Honest 410 Gone, not a dead proxy or a silent
+  // homepage fallthrough. Attestation archive + static surfaces stay live.
+  if (pathname.startsWith("/dda/api/")) {
+    return jsonResponse({ error: "gone", message: "This engagement closed 2026-05-12; the Q&A engine has been retired." }, 410);
   }
 
   // DDA brief attestation surface — pulse + sig + sha256 only, NEVER
@@ -1776,9 +1875,9 @@ async function handleSite(request, env, url) {
 
   // ── Playground compile proxy (v0, 2026-05-13) ───────────────────────
   // POST /api/playground/compile  →  { src }  →  proxied to the Rail
-  // compile_server (tools/playground/compile_server.rail) running on
-  // Mini (or Studio fallback) over Tailscale. Returns the upstream
-  // JSON response verbatim with CORS headers.
+  // compile_server (tools/playground/compile_server.rail) at the
+  // env.PLAYGROUND_BACKEND origin. Returns the upstream JSON response
+  // verbatim with CORS headers.
   //
   // Caps:
   //   - body ≤ 32 KB (matches sanitize.rail's source-size guard)
@@ -1875,7 +1974,9 @@ async function handleSite(request, env, url) {
       // AbortSignal.timeout() throws TimeoutError / DOMException("...timed out").
       const isTimeout = /timeout|aborted/i.test(msg);
       try { await pgMetricsInc(env, isTimeout ? "timeout" : "upstream_unreachable"); } catch (_) {}
-      return new Response(JSON.stringify({ ok: false, error: `upstream unreachable: ${msg}` }), {
+      // Generic error only — raw e.message can name the backend origin on an
+      // unauthenticated route.
+      return new Response(JSON.stringify({ ok: false, error: isTimeout ? "upstream timeout" : "upstream unreachable" }), {
         status: 502,
         headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
       });
@@ -2055,15 +2156,10 @@ async function handleSite(request, env, url) {
     }
   }
 
-  // Last-resort fallback: clean URL without extension → homepage.
-  // Keeps old inbound links alive; unknown extensioned paths still 404.
-  if (!extOf(key)) {
-    const fallback = await env.LEDATIC_KV.get("index.html");
-    if (fallback) {
-      return new Response(fallback, {
-        headers: sec({ "content-type": MIME.html, "cache-control": "public, max-age=300, s-maxage=300" }),
-      });
-    }
+  // Unknown page-shaped URL → honest branded 404. (Previously fell back to
+  // serving the homepage with a 200, which misrepresented what exists.)
+  if (!extOf(key) || extOf(key) === "html" || extOf(key) === "htm") {
+    return notFoundPage();
   }
 
   return notFound();
@@ -2075,13 +2171,38 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.hostname.startsWith("reports.") || url.hostname.startsWith("reports-")) {
-      if (url.pathname === "/api/update" && request.method === "POST") {
-        return handleAPI(request, env);
-      }
-      return handleReports(request, env, url.pathname);
+    // HEAD = GET minus body. Route handlers below branch on GET, so HEAD on
+    // real resources (/dda/handoff.pdf, /fleet/status.json, …) used to fall
+    // through to 404. Re-dispatch as GET, then strip the body but keep
+    // status + headers. /pursue/files/ keeps its native HEAD path — its
+    // R2 .head() answers without fetching the object bytes at all.
+    const isHead = request.method === "HEAD" && !url.pathname.startsWith("/pursue/files/");
+    if (isHead) {
+      request = new Request(request.url, { method: "GET", headers: request.headers });
     }
 
-    return handleSite(request, env, url);
+    let resp;
+    if (url.hostname.startsWith("reports.") || url.hostname.startsWith("reports-")) {
+      if (url.pathname === "/api/update" && request.method === "POST") {
+        resp = await handleAPI(request, env);
+      } else if (!REPORTS_PUBLIC) {
+        // Portal archived from public view 2026-06-10 (engagement closed;
+        // data, format, and software fully preserved). Flip REPORTS_PUBLIC
+        // to true to restore the login-gated portal as-was.
+        resp = new Response(reportsArchivedPage(), {
+          status: 410,
+          headers: sec({ "content-type": MIME.html, "x-robots-tag": "noindex" }),
+        });
+      } else {
+        resp = await handleReports(request, env, url.pathname);
+      }
+    } else {
+      resp = await handleSite(request, env, url);
+    }
+
+    if (isHead) {
+      return new Response(null, { status: resp.status, headers: resp.headers });
+    }
+    return resp;
   },
 };

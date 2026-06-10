@@ -1,9 +1,11 @@
 // system-live.js — wires /system to live data.
 //
 // Each panel is fed by one or more JSON GETs.  All reads are best-effort:
-// failures leave the panel in its "stale" state with the loaded values
-// untouched.  Cards labelled "live" only when the relevant fetch returns
-// fresh data within the polling window.
+// a failed read flips the panel to "stale" and says so in its age line —
+// frozen numbers are never left posing as current.  Cards are labelled
+// "live" only when the relevant fetch returns fresh data within the
+// polling window.  Polling pauses while the tab is hidden and backs off
+// when the beacon stops advancing.
 
 (() => {
   const $ = (sel) => document.querySelectorAll(`[data-sys="${sel}"]`);
@@ -16,12 +18,20 @@
     el.classList.add(cls);
   };
 
+  const STALE_MSG = "stale — no response";
+
   async function fetchJson(url) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
     try {
-      const r = await fetch(url, { cache: "no-store" });
+      const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
       if (!r.ok) return null;
       return await r.json();
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    } finally {
+      clearTimeout(t);
+    }
   }
 
   function ageString(unix_ts) {
@@ -35,21 +45,46 @@
     return `${Math.floor(dt/86400)}d`;
   }
 
+  // Monotonic pulse guard: a slow, overlapping response must never
+  // overwrite a newer pulse with an older one.
+  let lastPulseId = -1;
+  let pulseUnchanged = 0;
+  let pulseDown = false;
+
   async function tickPulse() {
     const d = await fetchJson("/entropy/pulse");
-    if (!d) { mark("panel-pulse", "stale"); return; }
+    if (!d) {
+      pulseDown = true;
+      mark("panel-pulse", "stale");
+      set("pulse.age", STALE_MSG);
+      return;
+    }
+    pulseDown = false;
+    if (typeof d.pulse_id === "number") {
+      if (d.pulse_id < lastPulseId) return; // late out-of-order response
+      pulseUnchanged = d.pulse_id === lastPulseId ? pulseUnchanged + 1 : 0;
+      lastPulseId = d.pulse_id;
+    }
     set("pulse.id", d.pulse_id);
     set("pulse.hex", d.value_hex);
     set("pulse.ts", d.timestamp_utc || "");
     set("pulse.age", d.unix_timestamp ? ageString(d.unix_timestamp) : "?");
-    mark("panel-pulse", "live");
+    // A beacon that has stopped advancing is not live, even if it answers.
+    mark("panel-pulse", pulseUnchanged < 4 ? "live" : "stale");
   }
 
   async function tickWitness() {
     const d = await fetchJson("/witness/fleet0/latest");
-    if (!d) { mark("panel-witness", "stale"); return; }
+    if (!d) {
+      mark("panel-witness", "stale");
+      set("witness.ts", STALE_MSG);
+      return;
+    }
     set("witness.pulse", d.pulse_id);
-    set("witness.chain", String(d.chain_verified));
+    set("witness.chain",
+        d.chain_verified === true  ? "true"
+      : d.chain_verified === false ? "false"
+      : "unverified");
     set("witness.pkfp", d.pk_fp || "");
     set("witness.ts", d.witnessed_at ? ageString(d.witnessed_at) : "");
     mark("panel-witness", d.chain_verified === true ? "live" : "stale");
@@ -103,7 +138,11 @@
 
   async function tickFleet() {
     const d = await fetchJson("/fleet/status.json");
-    if (!d) { mark("panel-fleet", "stale"); return; }
+    if (!d) {
+      mark("panel-fleet", "stale");
+      set("fleet.age", STALE_MSG);
+      return;
+    }
     set("fleet.pulse", d.pulse_id);
     const up = (d.nodes || []).filter(n => n.alive).length;
     const total = (d.nodes || []).length;
@@ -117,13 +156,45 @@
     mark("panel-fleet", fresh && allUp ? "live" : "stale");
   }
 
-  async function refreshAll() {
-    await Promise.all([tickPulse(), tickWitness(), tickFleet(), tickBuild(), tickSelfhost()]);
+  // Cadence split: pulse + witness change every ~2s and poll fast.  The
+  // fleet snapshot updates about once a minute; build/selfhost artifacts
+  // change daily (and the server caches them for 5 minutes anyway), so
+  // hammering them on the fast clock buys nothing.
+  const FAST_MS  = 2500;
+  const SLOW_MS  = 10000;   // backoff while the beacon is stalled/unreachable
+  const FLEET_MS = 30000;
+  const DAILY_MS = 300000;
+
+  let inFlight = false;
+  let timer = null;
+  let lastFleet = 0;
+  let lastDaily = 0;
+
+  async function refresh(force) {
+    if (inFlight) return;
+    inFlight = true;
+    try {
+      const now = Date.now();
+      const jobs = [tickPulse(), tickWitness()];
+      if (force || now - lastFleet >= FLEET_MS) { lastFleet = now; jobs.push(tickFleet()); }
+      if (force || now - lastDaily >= DAILY_MS) { lastDaily = now; jobs.push(tickBuild(), tickSelfhost()); }
+      await Promise.all(jobs);
+    } finally {
+      inFlight = false;
+    }
   }
 
-  refreshAll();
-  // Pulse + witness change every ~2s; build/selfhost change daily.  Poll
-  // pulse/witness on a 2.5s clock; let the others ride along (cheap, all
-  // 200-byte JSONs).
-  setInterval(refreshAll, 2500);
+  function schedule() {
+    if (document.hidden) return;
+    clearTimeout(timer);
+    const delay = (pulseDown || pulseUnchanged >= 4) ? SLOW_MS : FAST_MS;
+    timer = setTimeout(async () => { await refresh(false); schedule(); }, delay);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { clearTimeout(timer); return; }
+    refresh(true).then(schedule);
+  });
+
+  refresh(true).then(schedule);
 })();

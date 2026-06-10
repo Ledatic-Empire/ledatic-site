@@ -8,16 +8,16 @@
 # BINDING-DRIFT RULE (earned 2026-05-29, validated 2026-06-09): this is a
 # full-replace deploy — any live binding NOT listed below gets WIPED. Before
 # adding/removing bindings, diff against the live list:
-#   curl -s -H "Authorization: Bearer $(cat ~/Desktop/rings)" \
+#   curl -s -H "Authorization: Bearer $(cat ~/.fleet/cf_token)" \
 #     "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts/ledatic/bindings"
 #
 # Usage: ./worker/deploy_worker.sh   (run from ledatic-site/ or anywhere)
-# Env:   CF_TOKEN read from ~/Desktop/rings (must have Account:Workers:Edit)
+# Env:   CF_TOKEN read from ~/.fleet/cf_token, fallback ~/Desktop/rings (Account:Workers:Edit)
 
 set -e
 cd "$(dirname "$0")/.."
 
-TOKEN=$(cat ~/Desktop/rings)
+TOKEN=$(cat "$HOME/.fleet/cf_token" 2>/dev/null || cat ~/Desktop/rings)
 [ -f "$HOME/.ledatic/cf_ids.env" ] && . "$HOME/.ledatic/cf_ids.env"
 ACC="${CF_ACCOUNT:?set CF_ACCOUNT (in ~/.ledatic/cf_ids.env)}"
 SCRIPT=ledatic

@@ -3,21 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Four independent nodes on a 10 Gb/s Thunderbolt star, every one running the same pure-Rail HTTP control plane. No tmux. No ssh fan-out. One binary, shared state.">
+<meta name="description" content="Four independent nodes — three on a Thunderbolt star, one at the edge — answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/fleet">
 <meta property="og:title" content="Fleet — Ledatic">
-<meta property="og:description" content="Four independent nodes on a 10 Gb/s Thunderbolt star, every one running the same pure-Rail HTTP control plane. No tmux. No ssh fan-out. One binary, shared state.">
+<meta property="og:description" content="Four independent nodes — three on a Thunderbolt star, one at the edge — answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fleet — Ledatic">
-<meta name="twitter:description" content="Four independent nodes on a 10 Gb/s Thunderbolt star, every one running the same pure-Rail HTTP control plane. No tmux. No ssh fan-out. One binary, shared state.">
+<meta name="twitter:description" content="Four independent nodes — three on a Thunderbolt star, one at the edge — answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
+<link rel="canonical" href="https://ledatic.org/fleet">
 <title>Fleet — Ledatic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,15 +54,20 @@
     gap: 0.5rem;
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
     font-size: 0.75rem;
-    color: hsl(var(--primary));
+    color: hsl(var(--muted-foreground));
   }
   .node-card .dot {
     width: 0.5rem;
     height: 0.5rem;
-    background: hsl(var(--primary));
+    background: hsl(var(--muted-foreground) / 0.5);
     border-radius: 50%;
+  }
+  .node-card .status.up { color: hsl(var(--primary)); }
+  .node-card .status.up .dot {
+    background: hsl(var(--primary));
     animation: pulse 2s ease-in-out infinite;
   }
+  .node-card .status.down .dot { background: hsl(0 65% 50%); }
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.35; }
@@ -93,12 +99,13 @@
     <span class="eyebrow fade-up" style="animation-delay: 0.1s">Infrastructure</span>
     <h1 class="hero-title fade-up" style="animation-delay: 0.2s">Fleet</h1>
     <p class="hero-sub fade-up" style="animation-delay: 0.4s">
-      Four nodes. Thunderbolt mesh. One HTTP surface.
+      Four nodes. Star topology. One HTTP surface.
     </p>
     <p class="hero-desc fade-up" style="animation-delay: 0.55s">
-      Four independent nodes talk to each other on a
-      10 Gb/s Thunderbolt star. Every node runs the same pure-Rail
-      HTTP control plane on port 9101. No tmux. No ssh fan-out.
+      Three nodes form a Thunderbolt star, measured at up to 9.16 Gb/s;
+      the fourth joins over the private mesh. Every node answers the same
+      HTTP control plane &mdash; pure Rail on three of the four. No tmux.
+      No ssh fan-out.
     </p>
     <div class="cta-row fade-up" style="animation-delay: 0.7s">
       <a class="btn btn-primary" href="#nodes">See the nodes</a>
@@ -106,7 +113,7 @@
     </div>
     <div class="visor-mini fade-up" style="animation-delay: 0.78s; margin-top: 1.25rem;">
       <span class="visor-label">Nodes</span>
-      <span class="visor-value" data-live="fleet-status">4/4 <span class="dim">//</span> ONLINE</span>
+      <span class="visor-value" data-live="fleet-status">&mdash; <span class="dim">//</span> CHECKING</span>
     </div>
   </div>
 </section>
@@ -122,28 +129,28 @@
         <h3>Node 01</h3>
         <p class="specs">Apple silicon &middot; desktop class</p>
         <p>Primary inference, compilation, and orchestration. Runs the entropy beacon and the self-healer.</p>
-        <div class="status"><span class="dot"></span> UP</div>
+        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
       </div>
       <div class="node-card">
         <span class="role">Reasoning</span>
         <h3>Node 02</h3>
         <p class="specs">Apple silicon &middot; workstation class</p>
-        <p>Large-model MLX reasoning. Dedicated Thunderbolt link to the hub at near-TB5 ceiling.</p>
-        <div class="status"><span class="dot"></span> UP</div>
+        <p>Large-model reasoning. Dedicated Thunderbolt link to the hub, measured at 9.16 Gb/s.</p>
+        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
       </div>
       <div class="node-card">
         <span class="role">Orchestrator</span>
         <h3>Node 03</h3>
         <p class="specs">Apple silicon &middot; laptop class</p>
         <p>Spoke on the Thunderbolt star. Hits the fleet HTTP surface over the mesh.</p>
-        <div class="status"><span class="dot"></span> UP</div>
+        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
       </div>
       <div class="node-card">
         <span class="role">Control plane</span>
         <h3>Node 04</h3>
         <p class="specs">ARM64 Linux &middot; SBC class</p>
         <p>Edge observatory. Fleet control-plane node. Reachable over the private mesh.</p>
-        <div class="status"><span class="dot"></span> UP</div>
+        <div class="status" data-node-status><span class="dot"></span> <span class="status-text">&mdash;</span></div>
       </div>
     </div>
   </div>
@@ -185,18 +192,17 @@
     <span class="eyebrow reveal">Control plane</span>
     <h2 class="reveal">One HTTP surface.</h2>
     <p class="body reveal">
-      Every node answers on a single port. <code>GET /health</code> returns its
-      status. <code>POST /exec</code> runs a whitelisted command. <code>POST /jobs</code>
-      enqueues an async one. No ssh fan-out. Shared state is file-based, so a
-      binary swap is a drop-in upgrade.
+      Every node answers the same small HTTP surface: report health, run a
+      whitelisted command, queue an async job. No ssh fan-out. Shared state
+      is file-based, so a binary swap is a drop-in upgrade.
     </p>
 
     <div class="card reveal" style="margin-top: 2rem;">
       <span class="eyebrow">Shell</span>
       <h3>Fleet health, one command</h3>
-      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.8rem; line-height: 1.6;"><code>HDR="X-Fleet-Token: $TOKEN"
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; color: hsl(var(--foreground) / 0.85); font-size: 0.8rem; line-height: 1.6;"><code># $AUTH carries the per-fleet token header.
 for N in $NODES; do
-  echo "$N: $(curl -sH "$HDR" http://$N/health)"
+  echo "$N: $(curl -sH "$AUTH" http://$N/health)"
 done</code></pre>
     </div>
   </div>
@@ -242,5 +248,35 @@ done</code></pre>
 </footer>
 
 <script src="_shared/site.js"></script>
+<script>
+// Node-card status: wired to the witnessed fleet feed. Cards stay in the
+// neutral "—" state until a fetch succeeds; a stale feed shows STALE, not UP.
+(function () {
+  var cards = document.querySelectorAll('[data-node-status]');
+  if (!cards.length) return;
+  var STALE_S = 900; // feed older than 15 min: stop claiming liveness
+  function set(el, cls, txt) {
+    el.classList.remove('up', 'down');
+    if (cls) el.classList.add(cls);
+    el.querySelector('.status-text').textContent = txt;
+  }
+  function render(d) {
+    if (!d || !Array.isArray(d.nodes) || d.nodes.length !== cards.length) return;
+    var stale = d.asof_unix && (Date.now() / 1000 - d.asof_unix) > STALE_S;
+    cards.forEach(function (el, i) {
+      if (stale) { set(el, null, 'STALE'); return; }
+      set(el, d.nodes[i].alive ? 'up' : 'down', d.nodes[i].alive ? 'UP' : 'DOWN');
+    });
+  }
+  function tick() {
+    fetch('/fleet/status.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(render)
+      .catch(function () {});
+  }
+  tick();
+  setInterval(tick, 15000);
+})();
+</script>
 </body>
 </html>

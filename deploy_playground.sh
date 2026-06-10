@@ -9,7 +9,7 @@
 #   grep -n '# AUTHORIZED?' deploy_playground.sh
 #
 # ## Pre-flight
-#   - CF_TOKEN must be readable (default: ssh the Mini 'cat ~/Desktop/rings')
+#   - CF_TOKEN must be readable (default: ssh the Mini 'cat ~/.fleet/cf_token')
 #   - wrangler installed (or curl-only fallback used; see notes per step)
 #   - Mini reachable on Tailscale (its Tailscale IP)
 #   - Session A binary built on Mini at
@@ -80,8 +80,8 @@ gate() {
 preflight() {
   say "Pre-flight checks..."
   if [ -z "${CF_TOKEN:-}" ]; then
-    say "  CF_TOKEN not in env. Trying ssh ${MINI_HOST} 'cat ~/Desktop/rings'..."
-    CF_TOKEN=$(ssh "${MINI_HOST}" 'cat ~/Desktop/rings' 2>/dev/null) || {
+    say "  CF_TOKEN not in env. Trying ssh ${MINI_HOST} 'cat ~/.fleet/cf_token'..."
+    CF_TOKEN=$(ssh "${MINI_HOST}" 'cat ~/.fleet/cf_token 2>/dev/null || cat ~/Desktop/rings' 2>/dev/null) || {
       echo "  FAIL: could not source CF_TOKEN" >&2
       echo "  Either: export CF_TOKEN=...; or fix Mini SSH access" >&2
       exit 10

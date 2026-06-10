@@ -3,22 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Notes from a 30-day campaign-intelligence POC, currently in flight. What we're shipping, the brief shape we landed on, and where attestation fits. Honest write-up, not a marketing case study.">
+<meta name="description" content="Notes from a 30-day campaign-intelligence POC, closed May 2026 and paid in full. What we shipped, the brief shape we landed on, and where attestation fits. Honest write-up, not a marketing case study.">
 <!-- og:start -->
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ledatic.org/case-campaign-intel">
 <meta property="og:title" content="Notes from a campaign-intelligence POC — Ledatic">
-<meta property="og:description" content="A 30-day POC, in flight. Three briefs a week, attested against a live physics beacon, local inference on our hardware.">
+<meta property="og:description" content="A 30-day POC, closed 2026-05-12. Three briefs a week, each attested against a live physics beacon, local inference on our hardware.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Notes from a campaign-intelligence POC">
-<meta name="twitter:description" content="A 30-day POC, in flight. Three briefs a week, attested against a live beacon, local inference on our hardware.">
+<meta name="twitter:description" content="A 30-day POC, closed 2026-05-12. Three briefs a week, each attested against a live beacon, local inference on our hardware.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Notes from a campaign-intelligence POC — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/case-campaign-intel">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -78,6 +79,7 @@
     font-size: 0.84rem;
     line-height: 1.75;
     color: hsl(var(--muted-foreground));
+    white-space: pre-wrap;
   }
   .brief-shape .day { color: hsl(var(--primary)); }
   .brief-shape .sec { color: hsl(var(--foreground)); }
@@ -143,7 +145,7 @@
     <article class="case">
 
       <div class="case-meta reveal">
-        <div class="row"><span class="lab">Status</span><span class="val ok">Closed 2026-05-12</span></div>
+        <div class="row"><span class="lab">Status</span><span class="val ok">Closed 2026-05-12 &middot; paid in full</span></div>
         <div class="row"><span class="lab">Engagement</span><span class="val">30-day fixed-scope POC &middot; Apr 13 &ndash; May 12, 2026</span></div>
         <div class="row"><span class="lab">Cadence</span><span class="val">Mon &middot; Wed &middot; Fri</span></div>
         <div class="row"><span class="lab">Compute</span><span class="val">Local, on our hardware</span></div>
@@ -167,8 +169,7 @@
         decision surface, so the week reads as a sequence rather than three
         copies of the same digest:
       </p>
-      <div class="brief-shape reveal">
-<span class="day">Monday</span>     &mdash; Arena Map
+      <div class="brief-shape reveal"><span class="day">Monday</span>     &mdash; Arena Map
             <span class="sec">/  what's in the market this week</span>
             <span class="sec">/  notable moments</span>
             <span class="sec">/  a suggested play for the week</span>
@@ -181,27 +182,26 @@
 <span class="day">Friday</span>     &mdash; Verdict
             <span class="sec">/  HIT / PARTIAL / MISS header</span>
             <span class="sec">/  cross-week arc</span>
-            <span class="sec">/  market snapshot + movement</span>
-      </div>
+            <span class="sec">/  market snapshot + movement</span></div>
       <p class="reveal">
         Friday checks itself against Monday. We don't claim that loop is
         perfect &mdash; we claim it's the smallest honest feedback shape we
         could build, and that having one matters more than not having one.
       </p>
 
-      <h2 class="reveal">How it actually runs</h2>
+      <h2 class="reveal">How it actually ran</h2>
       <p class="reveal">
-        The pipeline lives on hardware we own. There are no public endpoints
-        reachable from the open internet; everything is on a private fabric.
-        Briefs are delivered to a private channel. The client's source
-        material never crosses our wire to a third-party model.
+        The pipeline lived on hardware we own. There were no public endpoints
+        reachable from the open internet; everything stayed on a private fabric.
+        Briefs were delivered to a private channel. The client's source
+        material never crossed our wire to a third-party model.
       </p>
       <p class="reveal">
-        Every brief is bound to a <code>pulse_id</code> from our live plasma
+        Every brief was bound to a <code>pulse_id</code> from our live plasma
         physics beacon at the moment of delivery, signed by an Ed25519 key
-        held on a Pi at our edge. Months from now the client can re-derive
-        the digest, fetch the witness pubkey from
-        <a href="/attest/fleet0.pub.pem">/attest/fleet0.pub.pem</a>, and
+        held on independent witness hardware at our edge. Months from now
+        the client can re-derive the digest, fetch the
+        <a href="/attest/fleet0.pub.pem">witness public key</a>, and
         verify the signature with the same one-liner we publish on every
         Rail release. That's the same primitive Ledatic uses for itself,
         not a separate marketing layer. See <a href="/entropy">/entropy</a>
