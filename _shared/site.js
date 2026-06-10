@@ -55,16 +55,24 @@
       const done = (api) => { if (!settled) { settled = true; resolve(api || null); } };
       window.addEventListener('ledatic:pulsebus', (e) => done(e.detail), { once: true });
       try {
-        import(new URL('pulse-clock.js', SCRIPT_URL).href)
-          .then(() => done(window.LedaticPulse))
-          .catch(() => {
-            // dynamic-import rejection (very old engines): script-tag fallback
-            const s = document.createElement('script');
-            s.type = 'module';
-            s.src = new URL('pulse-clock.js', SCRIPT_URL).href;
-            s.onerror = () => done(null);
-            document.head.appendChild(s);
-          });
+        // Pages carry their own (?v=-stamped) pulse-clock module tag.
+        // Importing the unstamped URL here keys a SECOND module instance
+        // (ES module cache is URL-keyed) — a second PulseBus and, when the
+        // race splits element vs inline-import subscribers across the two,
+        // a second fetch loop. Wait for the tag's 'ledatic:pulsebus'
+        // announce instead; import only when no tag exists.
+        if (!document.querySelector('script[type="module"][src*="pulse-clock.js"]')) {
+          import(new URL('pulse-clock.js', SCRIPT_URL).href)
+            .then(() => done(window.LedaticPulse))
+            .catch(() => {
+              // dynamic-import rejection (very old engines): script-tag fallback
+              const s = document.createElement('script');
+              s.type = 'module';
+              s.src = new URL('pulse-clock.js', SCRIPT_URL).href;
+              s.onerror = () => done(null);
+              document.head.appendChild(s);
+            });
+        }
       } catch (e) { done(null); }
       setTimeout(() => done(null), 8000);  // never wedge page boot on the bus
     });
@@ -526,6 +534,15 @@
     if (window.LedaticField) { cb(window.LedaticField); return; }
     if (!fieldLoading) {
       fieldLoading = new Promise((resolve) => {
+        // Field pages carry their own (deferred, ?v=-stamped) field.js tag
+        // that executes after this script. Injecting a second copy here
+        // double-booted every canvas — wait for the existing tag instead.
+        const existing = document.querySelector('script[src*="field.js"]');
+        if (existing) {
+          existing.addEventListener('load', () => resolve(window.LedaticField || null));
+          existing.addEventListener('error', () => resolve(null));
+          return;
+        }
         const s = document.createElement('script');
         s.src = new URL('field.js', SCRIPT_URL).href;
         s.onload = () => resolve(window.LedaticField || null);

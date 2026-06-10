@@ -41,6 +41,10 @@
 (() => {
   'use strict';
 
+  // Double-load guard: a second copy of this script (e.g. injected by a
+  // loader that raced the page's own tag) must not re-boot every canvas.
+  if (window.LedaticField) return;
+
   const FRAG_DEFAULT  = '_shared/shaders/field.frag';
   const CADENCE_MS    = 2000;     // beacon cadence ~2 s
   const FRESH_PULSES  = 5;        // LIVE → STALE after 5 quiet pulses (§4)
@@ -345,6 +349,8 @@
 
   function boot() {
     document.querySelectorAll('canvas[data-field]').forEach((c) => {
+      if (c.dataset.fieldBooted) return; // declarative boot is once-only
+      c.dataset.fieldBooted = '1';
       init(c, c.getAttribute('data-field') || 'home');
     });
   }

@@ -119,6 +119,30 @@ gate_on_beacon() {
   echo "deploy: physics gate ok — pulse $p1 → $p2 in 4 s"
 }
 
+# ── Gate 4: signing pre-flight (full deploys only) ──────────────────────
+# A full deploy that uploads everything and THEN discovers it can't sign
+# (key missing/unreadable, or a LibreSSL openssl without Ed25519 -rawin)
+# leaves the live site updated but unattested. Prove the whole sign+verify
+# path with the real key pair BEFORE the first upload.
+gate_on_signing() {
+  [ -f "$SIGN_KEY" ] || {
+    echo "deploy: signing key missing at $SIGN_KEY — every full deploy must be signed." >&2
+    echo "        generate: openssl genpkey -algorithm ed25519 -out $SIGN_KEY && chmod 600 $SIGN_KEY" >&2
+    exit 7
+  }
+  [ -f "$SIGN_PUB" ] || { echo "deploy: $SIGN_PUB missing from repo" >&2; exit 7; }
+  local d; d=$(mktemp -d)
+  printf 'site-deploy|preflight' > "$d/msg"
+  if ! openssl pkeyutl -sign -inkey "$SIGN_KEY" -rawin -in "$d/msg" -out "$d/sig" 2>"$d/err" \
+     || ! openssl pkeyutl -verify -pubin -inkey "$SIGN_PUB" -rawin -in "$d/msg" -sigfile "$d/sig" >/dev/null 2>>"$d/err"; then
+    echo "deploy: Ed25519 sign/verify pre-flight FAILED — refusing to start an unattestable deploy" >&2
+    cat "$d/err" >&2
+    rm -rf "$d"; exit 7
+  fi
+  rm -rf "$d"
+  echo "deploy: signing pre-flight ok — $(openssl version)"
+}
+
 mime_of() {
   case "$1" in
     *.css)  echo "text/css" ;;
@@ -266,10 +290,25 @@ publish_signed_manifest() {
   [ -f "$SIGN_PUB" ] || { echo "deploy: $SIGN_PUB missing from repo" >&2; exit 7; }
 
   # Sequence number: live pointer + 1 (first signed deploy = 1).
-  local prev n
-  prev=$(curl -sf --max-time 8 "$SITE_ORIGIN/attest/site/latest.json" 2>/dev/null \
-    | python3 -c "import sys,json;print(json.load(sys.stdin).get('n',0))" 2>/dev/null || echo 0)
-  case "$prev" in (''|*[!0-9]*) prev=0 ;; esac
+  # Only an explicit 404 means "no manifest yet". Any other failure aborts:
+  # treating a transient fetch error as prev=0 would re-issue an existing
+  # sequence number and silently overwrite a published manifest.
+  local prev n code body
+  body=$(curl -s --max-time 8 -w $'\n%{http_code}' "$SITE_ORIGIN/attest/site/latest.json" 2>/dev/null) || body=$'\n000'
+  code=${body##*$'\n'}
+  if [ "$code" = "404" ]; then
+    prev=0
+  elif [ "$code" = "200" ]; then
+    prev=$(printf '%s' "${body%$'\n'*}" \
+      | python3 -c "import sys,json;print(json.load(sys.stdin)['n'])" 2>/dev/null) || true
+    case "$prev" in (''|*[!0-9]*)
+      echo "deploy: attest/site/latest.json returned 200 but no usable 'n' — refusing to guess a sequence number" >&2
+      exit 7 ;;
+    esac
+  else
+    echo "deploy: could not read attest/site/latest.json (HTTP $code) — refusing to guess a sequence number" >&2
+    exit 7
+  fi
   n=$((prev + 1))
 
   # Pulse anchor — a deploy manifest without a pulse is not a manifest.
@@ -453,13 +492,12 @@ deploy_one() {
 
 deploy_all() {
   compute_asset_versions
-  # Top-level HTML pages — playground.html is live at /playground but deploys
-  # only via deploy_playground.sh, which keeps the HTML in lockstep with its
-  # rail_playground.js + WASM worker pieces. Refreshing the HTML alone here
-  # could desync it from those assets.
+  # Top-level HTML pages. playground.html is the static honest placard since
+  # the 2040 rebuild (no rail_playground.js/WASM dependency), so it deploys
+  # with everything else. If the live WASM playground ever returns, restore
+  # the lockstep skip and ship it via deploy_playground.sh again.
   for f in *.html; do
     [ -f "$f" ] || continue
-    [ "$f" = "playground.html" ] && { echo "skip $f (deploys via deploy_playground.sh)"; continue; }
     stage_html_versioned "$f"
     upload "$STAGE_DIR/$f" "$f"
   done
@@ -493,8 +531,11 @@ deploy_all() {
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
   done
-  # Root-level static assets (social card; referenced as https://ledatic.org/og.png)
-  for f in og.png; do
+  # Root-level static assets: social card (https://ledatic.org/og.png) +
+  # crawler/agent surface (robots.txt, llms.txt, sitemap.xml). These drift
+  # silently if left out of deploy_all — the live sitemap had 4 URLs while
+  # the repo's had 17 (found 2026-06-10).
+  for f in og.png robots.txt llms.txt sitemap.xml; do
     [ -f "$f" ] || continue
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
@@ -508,6 +549,7 @@ gen_stats
 honesty_gate
 gate_on_beacon
 if [ $# -eq 0 ]; then
+  gate_on_signing
   deploy_all
   publish_signed_manifest
   verify_manifest_bytes
