@@ -383,18 +383,44 @@ PYEOF
 # Mismatch → one re-upload retry from the staged bytes, then exit nonzero
 # loudly. No silent auto-revert: a deploy that doesn't verify is a FAILED
 # deploy and the operator must see it.
+#
+# KNOWN EDGE REWRITE (found 2026-06-10): Cloudflare Bot Fight Mode "JS
+# Detections" appends one per-request challenge <script> (rotating ray id +
+# timestamp, marker /cdn-cgi/challenge-platform/) to every text/html
+# response. The KV bytes ARE the signed bytes; the edge decorates them in
+# transit, so raw-byte HTML comparison can never pass while the zone
+# feature is on. We strip exactly that one known injection before hashing
+# HTML and say so in the output. The honest fix is zone-level (disable JS
+# Detections) — needs a dashboard / bot-management-scope token decision.
+strip_cf_injection() {
+  python3 -c '
+import re, sys
+b = sys.stdin.buffer.read()
+b = re.sub(rb"<script>(?:(?!</script>).)*challenge-platform(?:(?!</script>).)*</script>",
+           b"", b, count=1, flags=re.S)
+sys.stdout.buffer.write(b)
+'
+}
+
+served_sha() { # url, key — sha256 of served bytes (HTML: modulo CF injection)
+  case "$2" in
+    (*.html) curl -sf --max-time 15 "$1" | strip_cf_injection | shasum -a 256 | cut -d' ' -f1 ;;
+    (*)      curl -sf --max-time 15 "$1" | shasum -a 256 | cut -d' ' -f1 ;;
+  esac
+}
+
 verify_manifest_bytes() {
-  echo "— post-deploy byte-diff (served bytes vs signed manifest) —"
+  echo "— post-deploy byte-diff (served bytes vs signed manifest; HTML compared modulo the CF bot-script injection) —"
   local fails=0 cb key sha bytes url got
   cb=$(date +%s)
   while IFS=$'	' read -r key sha bytes; do
     url="$(key_to_url "$key")?cb=$cb"
-    got=$(curl -sf --max-time 15 "$url" | shasum -a 256 | cut -d' ' -f1) || got="fetch-failed"
+    got=$(served_sha "$url" "$key") || got="fetch-failed"
     if [ "$got" != "$sha" ]; then
       echo "byte-diff MISMATCH $key (got ${got:0:12}, manifest ${sha:0:12}) — re-uploading once" >&2
       upload "$STAGE_DIR/$key" "$key" || true
       sleep 3
-      got=$(curl -sf --max-time 15 "$(key_to_url "$key")?cb=$((cb + 1))" | shasum -a 256 | cut -d' ' -f1) || got="fetch-failed"
+      got=$(served_sha "$(key_to_url "$key")?cb=$((cb + 1))" "$key") || got="fetch-failed"
       if [ "$got" != "$sha" ]; then
         echo "byte-diff FAIL $key — served bytes still do not match the signed manifest" >&2
         fails=$((fails + 1))
@@ -408,7 +434,7 @@ verify_manifest_bytes() {
     echo "        The signed manifest at attest/site/latest.json now describes bytes the edge is not serving." >&2
     exit 6
   fi
-  echo "byte-diff: live site matches signed manifest #${MANIFEST_N:-?}"
+  echo "byte-diff: live site matches signed manifest #${MANIFEST_N:-?} (HTML modulo CF bot-script injection)"
 }
 
 # ── Legacy route verification (markers at canonical extensionless URLs) ──
