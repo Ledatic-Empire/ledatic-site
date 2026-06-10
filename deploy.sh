@@ -444,7 +444,7 @@ verify_manifest_bytes() {
 VERIFY_FAILS=0
 
 verify_route() {
-  local url="$1" marker="$2" tries=3 body
+  local url="$1" marker="$2" tries=${3:-3} body
   while :; do
     if body=$(curl -sf --max-time 10 "$url") \
        && printf '%s' "$body" | grep -qF -- "$marker"; then
@@ -493,7 +493,9 @@ verify_deploy_all() {
   verify_route "$SITE_ORIGIN/_shared/site.js"  "."
   verify_route "$SITE_ORIGIN/_shared/shaders/field.frag" "."
   if [ -n "${MANIFEST_N:-}" ]; then
-    verify_route "$SITE_ORIGIN/attest/site/latest.json" "site-deploy|v1|${MANIFEST_N}|"
+    # KV writes are eventually consistent (~60 s) and the worker's KV read
+    # holds a ~60 s edge cache — give latest.json up to ~80 s before failing.
+    verify_route "$SITE_ORIGIN/attest/site/latest.json" "site-deploy|v1|${MANIFEST_N}|" 16
   fi
   verify_finish
 }
