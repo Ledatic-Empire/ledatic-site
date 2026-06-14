@@ -104,6 +104,9 @@
   font-size: var(--t-data);
   color: var(--tx-dim);
 }
+/* author display:grid above defeats the bare [hidden] UA rule, so the
+   caption would otherwise overlay a working render — restore the toggle */
+.mhd-empty[hidden] { display: none; }
 
 /* Witness receipt card */
 .witness-card {
