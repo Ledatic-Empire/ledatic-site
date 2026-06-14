@@ -234,8 +234,8 @@
       <canvas id="mhd-canvas" aria-hidden="true"></canvas>
       <div class="mhd-frame" aria-hidden="true"></div>
       <div class="mhd-empty" id="mhd-empty" hidden>
-        this browser has no WebGL2 &mdash; the raw frame bytes are
-        still public at <code>/entropy/frame/current</code>
+        this browser can&rsquo;t draw to a canvas &mdash; the raw frame
+        bytes are still public at <code>/entropy/frame/current</code>
       </div>
       <noscript>
         <div class="mhd-empty">
@@ -412,12 +412,19 @@ const hexOf = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).joi
 const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 
 /* MHD viewport: real frames only, 64 KB density-plane budget. Polls
-   via the shared pulse-bus, reads header + density plane (48+65 536 B)
+   via the shared pulse-bus, reads header + density plane (64+65 536 B)
    with a streaming reader, then cancels the body — the endpoint serves
    the full frame, so the budget is enforced client-side. Dedupe by
-   step. NO procedural fallback: no real frame → claim nothing. */
+   step. NO procedural fallback: no real frame → claim nothing.
+
+   Two DRAW paths for the SAME real bytes (§4 honesty intact — the
+   fallback renders published density, never anything synthetic):
+   WebGL2 + the green shader when available, else a Canvas2D LUT path
+   so a browser without WebGL2 still sees the plasma instead of a dead
+   panel. The step readout and the live/stale/replay chip are driven by
+   the frame fetch, NOT the renderer, so they report truth on both. */
 (async function mhdStream() {
-  const canvas = $('#mhd-canvas');
+  let canvas = $('#mhd-canvas');
   const chipEl = $('#mhd-state');
   if (!canvas || !chipEl) return;
   const viewport = canvas.closest('.mhd-viewport');
@@ -426,34 +433,116 @@ const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.dige
   const chip = sentinel(chipEl, { freshPulses: 8 });
   chip.set('unknown');
 
-  const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
-  if (!gl) { canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return; }
+  const W = 128, H = 128, HDR = 64, CAP = HDR + W * H * 4; /* 64 B header + f32 density plane */
 
-  let fragSrc;
-  try { fragSrc = await (await fetch('_shared/shaders/mhd_live.frag')).text(); }
-  catch { canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return; }
-
-  const VS = '#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}';
-  const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return o; };
-  const prog = gl.createProgram();
-  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
-  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fragSrc));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return;
+  /* ── WebGL2 renderer: green shader, GPU upscale. null = unavailable ── */
+  function makeGLRenderer(cv, fragSrc) {
+    const gl = cv.getContext('webgl2', { alpha: false, antialias: false });
+    if (!gl) return null;
+    const VS = '#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}';
+    const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return o; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fragSrc));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    const uRes = gl.getUniformLocation(prog, 'u_res');
+    const uTime = gl.getUniformLocation(prog, 'u_time');
+    const uFrame = gl.getUniformLocation(prog, 'u_frame');
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, W, H, 0, gl.RED, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return {
+      upload(src) { gl.bindTexture(gl.TEXTURE_2D, tex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RED, gl.UNSIGNED_BYTE, src); },
+      draw(tms) {
+        const w = cv.clientWidth | 0, h = cv.clientHeight | 0;
+        if (w && h && (cv.width !== w || cv.height !== h)) { cv.width = w; cv.height = h; }
+        gl.viewport(0, 0, cv.width, cv.height);
+        gl.useProgram(prog);
+        gl.uniform2f(uRes, cv.width, cv.height);
+        gl.uniform1f(uTime, tms / 1000);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.uniform1i(uFrame, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      },
+    };
   }
-  const uRes = gl.getUniformLocation(prog, 'u_res');
-  const uTime = gl.getUniformLocation(prog, 'u_time');
-  const uFrame = gl.getUniformLocation(prog, 'u_frame');
-  const W = 128, H = 128, HDR = 48, CAP = HDR + W * H * 4; /* f32 density plane */
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-  const tex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, W, H, 0, gl.RED, gl.UNSIGNED_BYTE, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  /* ── Canvas2D renderer: the same 4-stop green colormap as the shader
+     (mhd_live.frag), precomputed into a 256-entry LUT, then a 128² image
+     scaled up with bilinear smoothing. Y is flipped to match the GL
+     origin (bottom-left), so both paths look identical. ── */
+  function makeLUT() {
+    const c = [[0.018, 0.040, 0.022], [0.030, 0.320, 0.045], [0.180, 0.950, 0.240], [0.720, 1.100, 0.780]];
+    const mix = (a, b, t, i) => a[i] + (b[i] - a[i]) * t;
+    const lut = new Uint8Array(256 * 3);
+    for (let n = 0; n < 256; n++) {
+      const d = n / 255;
+      let a, b, t;
+      if (d < 0.33) { a = c[0]; b = c[1]; t = d / 0.33; }
+      else if (d < 0.66) { a = c[1]; b = c[2]; t = (d - 0.33) / 0.33; }
+      else { a = c[2]; b = c[3]; t = (d - 0.66) / 0.34; }
+      for (let i = 0; i < 3; i++) {
+        let v = mix(a, b, t, i);
+        v = v / (1 + v);           /* tonemap, matching the shader */
+        v = Math.pow(v, 0.92);     /* gamma, matching the shader */
+        lut[n * 3 + i] = Math.max(0, Math.min(255, v * 255));
+      }
+    }
+    return lut;
+  }
+  function make2DRenderer(cv) {
+    const ctx = cv.getContext('2d', { alpha: false });
+    if (!ctx) return null;
+    const lut = makeLUT();
+    const off = document.createElement('canvas'); off.width = W; off.height = H;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(W, H);
+    const px = img.data;
+    return {
+      upload(src) {
+        for (let i = 0, j = 0; i < src.length; i++, j += 4) {
+          const k = src[i] * 3;
+          px[j] = lut[k]; px[j + 1] = lut[k + 1]; px[j + 2] = lut[k + 2]; px[j + 3] = 255;
+        }
+        octx.putImageData(img, 0, 0);
+      },
+      draw() {
+        const w = cv.clientWidth | 0, h = cv.clientHeight | 0;
+        if (w && h && (cv.width !== w || cv.height !== h)) { cv.width = w; cv.height = h; }
+        ctx.imageSmoothingEnabled = true;
+        ctx.save();
+        ctx.translate(0, cv.height); ctx.scale(1, -1);   /* match GL bottom-left origin */
+        ctx.drawImage(off, 0, 0, cv.width, cv.height);
+        ctx.restore();
+      },
+    };
+  }
+
+  /* Decide the path. Probe WebGL2 on a throwaway canvas so a failure
+     doesn't poison the real one (a canvas bound to a dead GL context
+     can't switch to 2D). Only fetch the shader if GL is in play. */
+  let renderer = null;
+  let glAvailable = false;
+  try { glAvailable = !!document.createElement('canvas').getContext('webgl2', { alpha: false }); } catch (e) { glAvailable = false; }
+  if (glAvailable) {
+    let fragSrc = null;
+    try { fragSrc = await (await fetch('_shared/shaders/mhd_live.frag')).text(); } catch (e) { fragSrc = null; }
+    if (fragSrc) renderer = makeGLRenderer(canvas, fragSrc);
+    if (!renderer) {           /* GL context or link failed — swap in a clean clone for 2D */
+      const clone = canvas.cloneNode(false);
+      canvas.replaceWith(clone);
+      canvas = clone;
+    }
+  }
+  if (!renderer) renderer = make2DRenderer(canvas);
+  if (!renderer) { canvas.hidden = true; if (emptyEl) emptyEl.hidden = false; return; }
 
   let planeEtag = null;
   async function fetchPlane() {
@@ -473,7 +562,7 @@ const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.dige
       buf.set(value.subarray(0, take), got);
       got += take;
     }
-    reader.cancel().catch(() => {});           /* budget: stop at 65 584 B */
+    reader.cancel().catch(() => {});           /* budget: stop at 65 600 B */
     if (got < CAP) throw new Error('short frame');
     const dv = new DataView(buf.buffer);
     if (dv.getUint32(0, true) !== W || dv.getUint32(4, true) !== H) throw new Error('grid changed');
@@ -490,40 +579,27 @@ const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.dige
   let prev = null, cur = null, mixT = 1, lastStep = -1, lastFrameAt = 0, raf = 0, lastT = 0;
   const lerped = new Uint8Array(W * H);
 
-  function upload() {
-    let src = cur;
+  function srcNow() {
     if (prev && mixT < 1) {
       for (let i = 0; i < lerped.length; i++) lerped[i] = prev[i] + (cur[i] - prev[i]) * mixT;
-      src = lerped;
+      return lerped;
     }
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RED, gl.UNSIGNED_BYTE, src);
+    return cur;
   }
-  function draw(tms) {
-    const w = canvas.clientWidth | 0, h = canvas.clientHeight | 0;
-    if (w && h && (canvas.width !== w || canvas.height !== h)) { canvas.width = w; canvas.height = h; }
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.useProgram(prog);
-    gl.uniform2f(uRes, canvas.width, canvas.height);
-    gl.uniform1f(uTime, tms / 1000);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.uniform1i(uFrame, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  }
+  function paint(tms) { renderer.upload(srcNow()); renderer.draw(tms); }
   function frame(t) {
     raf = 0;
     if (document.hidden || !cur) return;
     /* motion runs only while the chip has EARNED live — recorded or
        stale pixels freeze, honestly (§4) */
-    if (chipEl.dataset.state !== 'live') { mixT = 1; upload(); draw(t); return; }
+    if (chipEl.dataset.state !== 'live') { mixT = 1; paint(t); return; }
     const dt = lastT ? t - lastT : 16; lastT = t;
     if (mixT < 1) mixT = Math.min(1, mixT + dt / 600);
-    upload(); draw(t);
+    paint(t);
     if (!prm.matches) raf = requestAnimationFrame(frame);
   }
   function startLoop() {
-    if (prm.matches) { mixT = 1; upload(); draw(performance.now()); return; }
+    if (prm.matches) { mixT = 1; paint(performance.now()); return; }
     if (!raf) { lastT = 0; raf = requestAnimationFrame(frame); }
   }
   function demoteReplay() {
@@ -531,7 +607,7 @@ const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.dige
     chip.set('replay', { note: 'recorded step ' + fmtPulse(lastStep) });
     if (viewport) viewport.classList.add('panel-replay');
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
-    if (cur) { mixT = 1; upload(); draw(performance.now()); }
+    if (cur) { mixT = 1; paint(performance.now()); }
   }
 
   bus.schedule(4000, async () => {
