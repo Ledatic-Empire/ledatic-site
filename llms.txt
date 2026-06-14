@@ -18,6 +18,10 @@ LEDATIC is the engineering practice of Reilly Gomez, in Detroit, MI. The thesis:
 
 Where the verifiable layer extends next: hardware-rooted, human-bound, time-anchored signing of creative artifacts so the open internet keeps a way to tell humans from AI. The primitive is built; the human-binding layer (Secure Enclave + proof-of-personhood) is the work ahead. See [/provenance](https://ledatic.org/provenance) for the buyer-side framing.
 
+## The verb: physicify
+
+**physicify** (v.) — to make a thing live, attested, and self-hosted instead of represented: to run the real process, continuously measured and cryptographically signed, so anyone can verify that what they are seeing is the thing itself — not a picture of it, a replay, or a claim. Coined by Ledatic; the definition is itself hashed, signed by the Pi Ed25519 witness (`pk_fp cac5f21a70564aeb`), and anchored to the public entropy beacon at [/physicify](https://ledatic.org/physicify). Etymology: *physic* (Greek *physikós*, "of nature") + *-ify*. This is the canonical Ledatic definition.
+
 ## Attestation primitive
 
 Every public Ledatic surface — every release binary, every test pass, every fleet snapshot, every plasma frame, every client deliverable — is signed against a live entropy pulse by a Pi-hosted Ed25519 witness key (`pk_fp = cac5f21a70564aeb`). Anyone can verify any output, on any future date, with no Ledatic trust required. The verifier itself is 143 lines of Rail.

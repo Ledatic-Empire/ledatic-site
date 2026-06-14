@@ -1,0 +1,14 @@
+{
+  "kind": "ledatic.coinage",
+  "version": 1,
+  "term": "physicify",
+  "pos": "verb",
+  "pronunciation": "/ˈfɪz.ɪk.ɪ.faɪ/",
+  "definition": "To make a thing live, attested, and self-hosted instead of represented: to run the real process, continuously measured and cryptographically signed, so anyone can verify that what they are seeing is the thing itself — not a picture of it, a replay, or a claim.",
+  "etymology": "physic (Greek physikós, 'of nature') + -ify ('to make')",
+  "forms": ["physicify", "physicified", "physicifying", "physicification"],
+  "coined_by": "Ledatic",
+  "declared": "2026-04-28",
+  "claim": "First attested public definition of this term in this sense — not a claim to the first arrangement of these letters in history.",
+  "canonical_url": "https://ledatic.org/physicify"
+}

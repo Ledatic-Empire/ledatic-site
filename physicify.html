@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="physicify (verb) — to make a thing live, attested, and self-hosted instead of represented. The canonical definition, coined by Ledatic and anchored to a public entropy beacon. This page proves its own coinage.">
+<link rel="canonical" href="https://ledatic.org/physicify">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/physicify">
+<meta property="og:title" content="physicify — coined by Ledatic">
+<meta property="og:description" content="physicify (v.) — to make a thing live, attested, and self-hosted instead of represented. The canonical definition, with a signed coinage record you can verify in your browser.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="physicify — coined by Ledatic">
+<meta name="twitter:description" content="To make a thing live, attested, and self-hosted instead of represented. Coinage anchored to a public beacon, verifiable in your browser.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>physicify — Ledatic</title>
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "DefinedTerm",
+  "name": "physicify",
+  "alternateName": ["physicification", "physicified"],
+  "description": "To make a thing live, attested, and self-hosted instead of represented: to run the real process, continuously measured and cryptographically signed, so anyone can verify that what they are seeing is the thing itself, not a picture of it, a replay, or a claim.",
+  "inDefinedTermSet": {
+    "@type": "DefinedTermSet",
+    "name": "The Ledatic Lexicon",
+    "url": "https://ledatic.org/physicify"
+  },
+  "url": "https://ledatic.org/physicify",
+  "sameAs": "https://ledatic.org/physicify"
+}
+</script>
+<style>
+  .navend { display: flex; align-items: center; gap: 1.25rem; }
+
+  /* Ledger-class page: no shader. The entry is the hero. */
+  .dict {
+    padding: 9rem 1.5rem 4rem;
+    max-width: 64rem;
+    margin: 0 auto;
+  }
+  @media (min-width: 1024px) { .dict { padding-left: 4rem; padding-right: 4rem; } }
+
+  .dict-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.75rem 1.5rem; }
+  .dict-term {
+    font-family: var(--font-body);
+    font-size: clamp(2.75rem, 9vw, 5.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .dict-term .accent { color: var(--ph-600); }
+  .dict-say { color: var(--tx-lo); font-size: var(--t-data); }
+  .dict-pos { color: var(--ph-600); font-style: italic; font-size: 1rem; }
+
+  .dict-def {
+    margin-top: 1.5rem;
+    font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+    line-height: 1.5;
+    color: var(--tx-hi);
+    max-width: 46ch;
+  }
+  .dict-gloss { margin-top: 1rem; color: var(--tx-lo); font-size: 0.95rem; max-width: 60ch; }
+
+  .dict-meta { margin-top: 2rem; display: grid; gap: 0.75rem; max-width: 52rem; }
+  .dict-row { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; font-size: 0.9rem; }
+  @media (max-width: 600px) { .dict-row { grid-template-columns: 1fr; gap: 0.15rem; } }
+  .dict-row dt { color: var(--ph-600); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; padding-top: 0.15rem; }
+  .dict-row dd { color: var(--tx-hi); margin: 0; }
+  .dict-row dd .quiet { color: var(--tx-lo); }
+  .dict-row code {
+    font-family: var(--font-body); font-size: 0.85em;
+    background: var(--ink-1); padding: 0.1em 0.4em; border-radius: var(--r-1);
+  }
+
+  .dict-cta { margin-top: 2.25rem; }
+  .dict-trust { margin-top: 1.25rem; color: var(--tx-dim); font-size: 0.8rem; }
+  .dict-trust a { color: var(--tx-lo); }
+
+  /* usage examples */
+  .usage { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.85rem; }
+  .usage li { color: var(--tx-lo); font-size: 0.95rem; line-height: 1.5; padding-left: 1.1rem; position: relative; }
+  .usage li::before { content: "—"; position: absolute; left: 0; color: var(--ph-600); }
+  .usage b { color: var(--tx-hi); font-weight: 500; }
+
+  /* the coinage record, as a mono ledger block (mirrors /provenance) */
+  .coin-rec {
+    background: var(--ink-2); box-shadow: var(--e1); border-radius: var(--r-0);
+    padding: 1.5rem; font-family: var(--font-body); font-size: var(--t-data);
+    color: var(--tx-lo); line-height: 1.9; overflow-x: auto;
+  }
+  .coin-rec .step { color: var(--tx-hi); }
+  .coin-rec .arrow { color: var(--ph-600); margin: 0 0.4rem; }
+  .coin-rec code {
+    font-family: var(--font-body); font-size: 0.9em;
+    background: var(--ink-1); padding: 0.1em 0.4em; border-radius: var(--r-1);
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="provenance.html">Provenance</a>
+    <a href="system.html">System</a>
+    <a href="manifesto.html">Manifesto</a>
+  </div>
+  <div class="navend">
+    <pulse-clock data-fresh-pulses="5"></pulse-clock>
+    <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=physicify">Get in touch</a>
+  </div>
+</nav>
+
+<section class="dict">
+  <span class="eyebrow fade-up">The Ledatic lexicon &middot; coinage</span>
+
+  <div class="dict-head fade-up">
+    <h1 class="dict-term">physicif<span class="accent">y</span></h1>
+    <span class="dict-say">/&#712;f&#618;z.&#618;k.&#618;.fa&#618;/ &middot; FIZ-ik-uh-fy</span>
+    <span class="dict-pos">verb</span>
+  </div>
+
+  <p class="dict-def fade-up">
+    To make a thing live, attested, and self-hosted instead of
+    <span style="color:var(--tx-lo)">represented</span> &mdash; to run the real
+    process, continuously measured and cryptographically signed, so anyone can
+    verify that what they are seeing is the thing itself: not a picture of it, a
+    replay, or a claim.
+  </p>
+  <p class="dict-gloss fade-up">
+    The opposite of a screenshot. The opposite of &ldquo;trust us.&rdquo;
+    If it&rsquo;s live, we prove it&rsquo;s live. If it&rsquo;s a model, we say
+    model. The map is never sold as the territory.
+  </p>
+
+  <div class="dict-cta fade-up">
+    <button class="prove" id="prove-coinage" aria-expanded="false" aria-controls="coin-tray"
+            data-manifest="/attest/coinage/physicify.json.attestation.json"
+            data-artifact="/attest/coinage/physicify.json"
+            data-name="physicify &middot; signed coinage record"><span class="prove-val">Prove the coinage</span><span class="affix" aria-hidden="true">&#8961;</span></button>
+    <a class="btn btn-ghost" href="manifesto.html">Read the manifesto</a>
+  </div>
+  <div class="tray" id="coin-tray" role="log" aria-live="polite" hidden></div>
+  <p class="dict-trust fade-up">
+    record: <a href="/attest/coinage/physicify.json">/attest/coinage/physicify.json</a> &middot;
+    signature: <a href="/attest/coinage/physicify.json.attestation.json">witness attestation</a> &middot;
+    reproduce offline: <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">attest/verify.sh</a>
+  </p>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Etymology &amp; forms</span>
+    <h2 class="reveal">An old root, made to do new work.</h2>
+    <dl class="dict-meta reveal">
+      <div class="dict-row"><dt>Root</dt><dd><code>physic</code> &mdash; from Greek <i>physik&oacute;s</i>, &ldquo;of nature, of the physical world.&rdquo; <span class="quiet">+</span> <code>-ify</code> &mdash; &ldquo;to make, to render.&rdquo; To <i>physicify</i> is to make a thing answer to physics.</dd></div>
+      <div class="dict-row"><dt>Forms</dt><dd>physicify <span class="quiet">(v.)</span> &middot; physicified &middot; physicifying &middot; physicification <span class="quiet">(n.)</span></dd></div>
+      <div class="dict-row"><dt>Coined by</dt><dd>Ledatic. Declared <span class="quiet">2026-04-28</span>; coinage attested to the public entropy beacon, <span class="quiet">verifiable above</span>.</dd></div>
+    </dl>
+    <h3 class="reveal" style="margin-top:2.5rem;">In use</h3>
+    <ul class="usage reveal">
+      <li>&ldquo;We didn&rsquo;t chart the plasma &mdash; we <b>physicified</b> it. The beacon you&rsquo;re watching is a live magnetohydrodynamics sim signing its own frames.&rdquo;</li>
+      <li>&ldquo;Don&rsquo;t report the result. <b>Physicify</b> it: ship the run, the weights, and the signature, so a stranger can re-derive it without us.&rdquo;</li>
+      <li>&ldquo;A benchmark that can&rsquo;t be reproduced is a press release. <b>Physicified</b> benchmarks carry their receipts.&rdquo;</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Why a word carries a receipt</span>
+    <h2 class="reveal">We physicified the word, too.</h2>
+    <p class="lead reveal">
+      A company verb is easy to claim and easy to copy. So we didn&rsquo;t just
+      claim it. The definition above is hashed, signed by an independent witness,
+      and anchored to a public entropy beacon &mdash; an append-only heartbeat no
+      one can rewind. You cannot retro-fabricate a pulse. The origin of this word
+      is now a fact you can check, not a story we tell.
+    </p>
+    <div class="coin-rec reveal">
+<span class="step">the definition</span> <span class="arrow">&rarr;</span> sha-256 <span class="arrow">&rarr;</span> <span class="step">digest</span><br>
+<span class="step">the witness</span> reads the current public beacon pulse <span class="arrow">&rarr;</span> pulse_id, value_hex<br>
+<span class="step">the witness</span> Ed25519-signs <code>attest|v1|digest|pulse_id|value_hex|witnessed_at</code><br>
+<br>
+the record is published at <code>/attest/coinage/physicify.json</code><br>
+the proof runs in any modern browser: <code>crypto.subtle.verify</code>
+    </div>
+    <p class="body reveal" style="margin-top: 1rem;">
+      The honest claim, stated plainly: this is the first attested <em>public
+      definition</em> of the term in this sense &mdash; not a claim to the first
+      arrangement of these letters in history. We label what we can prove, and
+      only that. That restraint is the point of the word.
+    </p>
+    <div class="cta-row push reveal">
+      <a class="btn btn-primary" href="/">See what we&rsquo;ve physicified</a>
+      <a class="btn btn-ghost" href="entropy.html">Watch the beacon</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Proof over promise. We physicify it. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="provenance.html">Provenance</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="physicify.html">physicify</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><span data-selfcheck>page self-check runs in your browser &middot; requires JavaScript</span></span>
+      <span>RAIL <data class="fig" value="v5.1.0" data-src="repo:version">v5.1.0</data></span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+/* Self-demonstrating: open the coinage proof in its tray on arrival.
+   A missing/unsigned record renders an honest "could not verify here" —
+   never green, never alarm. */
+const P = window.LedaticProof;
+const btn = document.getElementById('prove-coinage');
+if (P && btn) {
+  requestAnimationFrame(() => {
+    if (btn.getAttribute('aria-expanded') !== 'true') btn.click();
+  });
+}
+const strip = document.querySelector('.trust-strip [data-selfcheck]');
+if (P && strip) P.mountSelfCheck(strip);
+</script>
+</body>
+</html>

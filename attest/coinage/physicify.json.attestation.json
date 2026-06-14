@@ -1,0 +1,27 @@
+{
+  "kind": "ledatic.attestation",
+  "version": 1,
+  "artifact": {
+    "name": "physicify.json",
+    "size_bytes": 814,
+    "sha256": "eb2429362daffdfb0e597a1012fbab6ac735fd06005ce3ab3e3cfe20a5005a2c"
+  },
+  "beacon": {
+    "url": "https://ledatic.org/entropy/pulse",
+    "pulse_id": 2080347,
+    "value_hex": "05379d59bc35dcc75424aeccbcd46399b41f640374060e4fa11277e43eb239d3",
+    "timestamp_utc": "2026-06-14T15:27:29Z"
+  },
+  "witness": {
+    "kind": "attestation",
+    "version": 1,
+    "digest_sha256": "eb2429362daffdfb0e597a1012fbab6ac735fd06005ce3ab3e3cfe20a5005a2c",
+    "pulse_id": 2080347,
+    "value_hex": "05379d59bc35dcc75424aeccbcd46399b41f640374060e4fa11277e43eb239d3",
+    "witnessed_at": 1781450849,
+    "sig": "tOv6zmSc/mZ5Kc8ESdatkFGvd3KqmGURq5f7nkTcIKfRCX2LM2tsxW5wpOioGeWB088FxM6+sHzlprwbNUWXAg==",
+    "pk_fp": "cac5f21a70564aeb",
+    "witness": "fleet0"
+  },
+  "created_at": 1781450849
+}
