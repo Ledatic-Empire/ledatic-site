@@ -8,20 +8,10 @@
   },
   "beacon": {
     "url": "https://ledatic.org/entropy/pulse",
-    "pulse_id": 2080347,
-    "value_hex": "05379d59bc35dcc75424aeccbcd46399b41f640374060e4fa11277e43eb239d3",
-    "timestamp_utc": "2026-06-14T15:27:29Z"
+    "pulse_id": 2120979,
+    "value_hex": "191594809fc9124ec09763f174de3f04e83ee57358748e3a31c7d1e9af29f2a0",
+    "timestamp_utc": "2026-06-15T18:12:38Z"
   },
-  "witness": {
-    "kind": "attestation",
-    "version": 1,
-    "digest_sha256": "eb2429362daffdfb0e597a1012fbab6ac735fd06005ce3ab3e3cfe20a5005a2c",
-    "pulse_id": 2080347,
-    "value_hex": "05379d59bc35dcc75424aeccbcd46399b41f640374060e4fa11277e43eb239d3",
-    "witnessed_at": 1781450849,
-    "sig": "tOv6zmSc/mZ5Kc8ESdatkFGvd3KqmGURq5f7nkTcIKfRCX2LM2tsxW5wpOioGeWB088FxM6+sHzlprwbNUWXAg==",
-    "pk_fp": "cac5f21a70564aeb",
-    "witness": "fleet0"
-  },
-  "created_at": 1781450849
+  "witness": {"kind":"attestation","version":1,"digest_sha256":"eb2429362daffdfb0e597a1012fbab6ac735fd06005ce3ab3e3cfe20a5005a2c","pulse_id":2120979,"value_hex":"191594809fc9124ec09763f174de3f04e83ee57358748e3a31c7d1e9af29f2a0","witnessed_at":1781547160,"sig":"AY+hOi7QGOfFaxk3zW8HWLp1q+tDatBnbUrRIJklrwPrTt0/VRdgMXGK0ZJZGmELSb+080ELFRh0i6KqXJnXCQ==","pk_fp":"cac5f21a70564aeb","witness":"fleet0"},
+  "created_at": 1781547160
 }
