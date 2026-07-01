@@ -89,6 +89,34 @@ function secGreatlakes(headers) {
   return sec({ "X-Robots-Tag": "noindex, nofollow, noarchive", ...headers });
 }
 
+// ── /portcall single-password splash (one field, password = GREATLAKES_PASS).
+// Friendlier than the /greatlakes Basic dialog: no username, sets a cookie.
+function pcCookieOk(request) {
+  return /(?:^|;\s*)pc_ok=1(?:;|$)/.test(request.headers.get("Cookie") || "");
+}
+function pcSplash(wrong) {
+  const err = wrong ? '<div class="e">Incorrect password — try again.</div>' : '';
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08172a"><meta name="robots" content="noindex,nofollow"><title>Great Lakes — Port Call</title><style>
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{min-height:100vh;display:grid;place-items:center;padding:24px;color:#eef5fd;font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(900px 500px at 70% -10%,rgba(86,164,240,.12),transparent 60%),radial-gradient(700px 400px at 0% 10%,rgba(52,204,190,.10),transparent 55%),#08172a}
+.card{width:100%;max-width:362px;background:linear-gradient(180deg,#0f2740,#143655);border:1px solid rgba(125,175,215,.22);border-radius:16px;padding:30px 26px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.logo{width:46px;height:46px;border-radius:12px;margin:0 auto 16px;background:linear-gradient(135deg,#34ccbe,#56a4f0);display:grid;place-items:center}
+.logo svg{width:26px;height:26px}
+h1{font-size:19px;margin:0 0 5px;letter-spacing:-.2px;font-weight:700}
+.sub{color:#a3c0dc;font-size:13.5px;margin:0 0 18px}
+.e{color:#f26b83;font-size:12.5px;margin:-6px 0 14px;font-weight:500}
+input{width:100%;background:#08172a;border:1px solid rgba(125,175,215,.4);color:#eef5fd;font:inherit;font-size:15px;padding:12px 14px;border-radius:10px;text-align:center;letter-spacing:.3px}
+input::placeholder{color:#6c8eac}
+input:focus{outline:none;border-color:#34ccbe;box-shadow:0 0 0 3px rgba(52,204,190,.15)}
+button{width:100%;margin-top:12px;border:0;border-radius:10px;padding:12px;font:inherit;font-weight:700;font-size:14px;color:#04121f;background:linear-gradient(135deg,#34ccbe,#56a4f0);cursor:pointer}
+.f{margin-top:16px;font-size:11px;color:#7693b1;letter-spacing:.2px}
+</style></head><body><form class="card" method="POST" action="/portcall">
+<div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#04121f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v7"/><path d="M5 9h14l-7 12L5 9z"/></svg></div>
+<h1>Great Lakes — Port Call</h1><div class="sub">Enter the password to view the demo.</div>
+${err}<input type="password" name="pw" placeholder="Password" autofocus autocomplete="current-password" aria-label="Password">
+<button type="submit">View demo →</button><div class="f">Private demo · Ledatic</div></form></body></html>`;
+}
+
 // ─── Deny list ───────────────────────────────────────────────────────────────
 
 // Any KV key whose raw value must never be exposed via a public URL.
@@ -821,6 +849,126 @@ async function handleSite(request, env, url) {
   // KV keys ("devlog", "snapshot") are still written via /api/update and stay
   // on the deny list below.
 
+  // ── /portcall — single-password demo (password = GREATLAKES_PASS, e.g. "lakes").
+  // One-field splash → sets cookie pc_ok=1 → serves the page. No username, unlike
+  // the /greatlakes Basic gate. noindex stays. The /portcall/*.json feeds below
+  // are public (real AIS is public data); this gate is for the demo page itself.
+  if (pathname === "/portcall" || pathname === "/portcall/") {
+    if (method === "POST") {
+      const pw = new URLSearchParams(await request.text()).get("pw") || "";
+      if (env.GREATLAKES_PASS && pw === env.GREATLAKES_PASS) {
+        return new Response(null, {
+          status: 303,
+          headers: secGreatlakes({
+            "Location": "/portcall",
+            "Set-Cookie": "pc_ok=1; Path=/portcall; Max-Age=2592000; Secure; HttpOnly; SameSite=Lax",
+            "cache-control": "no-store",
+          }),
+        });
+      }
+      return new Response(pcSplash(true), { status: 401, headers: secGreatlakes({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": GREATLAKES_CSP }) });
+    }
+    if (!pcCookieOk(request)) {
+      return new Response(pcSplash(false), { status: 401, headers: secGreatlakes({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": GREATLAKES_CSP }) });
+    }
+    const html = await env.LEDATIC_KV.get("portcall.html");
+    if (!html) {
+      return new Response("portcall page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+    }
+    return new Response(html, {
+      headers: secGreatlakes({
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": GREATLAKES_CSP,
+      }),
+    });
+  }
+  // Public read-only mirrors of the two feeds the portcall map renders (real
+  // AIS snapshot + latest attestation). Same R2 objects /greatlakes serves
+  // behind auth; exposed here unauthenticated because the demo is public now.
+  if (pathname === "/portcall/fleet.json" && method === "GET") {
+    const obj = await env.REPORTS_R2.get("greatlakes/data/vessels/index.json");
+    const body = obj ? await obj.arrayBuffer() : '{"vessels":[]}';
+    return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }) });
+  }
+  if (pathname === "/portcall/attestation.json" && method === "GET") {
+    const obj = await env.REPORTS_R2.get("greatlakes/ais/latest.attestation.json");
+    const body = obj ? await obj.arrayBuffer() : "{}";
+    return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }) });
+  }
+  // Real order pipeline: the ship app POSTs an attested order; the operator
+  // console polls them back. Capped ring in KV (demo-scale — bounded at 25, no
+  // cleanup needed). Public so the bundled APK can submit too; size-guarded.
+  if (pathname === "/portcall/order" && method === "POST") {
+    const txt = await request.text();
+    if (txt.length > 8192) {
+      return new Response('{"error":"too large"}', { status: 413, headers: secGreatlakes({ "content-type": "application/json" }) });
+    }
+    let body;
+    try { body = JSON.parse(txt); } catch (e) {
+      return new Response('{"error":"bad json"}', { status: 400, headers: secGreatlakes({ "content-type": "application/json" }) });
+    }
+    if (!body || typeof body !== "object" || !body.order || !body.receipt) {
+      return new Response('{"error":"order+receipt required"}', { status: 400, headers: secGreatlakes({ "content-type": "application/json" }) });
+    }
+    let arr = [];
+    try { const cur = await env.LEDATIC_KV.get("portcall_orders"); if (cur) arr = JSON.parse(cur); } catch (e) {}
+    arr.unshift({ order: body.order, receipt: body.receipt, received_at: new Date().toISOString() });
+    if (arr.length > 25) arr = arr.slice(0, 25);
+    await env.LEDATIC_KV.put("portcall_orders", JSON.stringify(arr));
+    return new Response(JSON.stringify({ ok: true, count: arr.length }), { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
+  }
+  if (pathname === "/portcall/orders" && method === "GET") {
+    const cur = await env.LEDATIC_KV.get("portcall_orders");
+    return new Response(cur || "[]", { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
+  }
+  // CORS preflight for the bundled APK's cross-origin order POST.
+  if (pathname === "/portcall/order" && method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400",
+    } });
+  }
+  // Second attested leg: the operator signs an ack of the order's sha (anchored
+  // to the beacon) and we attach it to the order, so the ship can verify the
+  // supplier actually committed. Two-sided, both legs independently provable.
+  if (pathname === "/portcall/order/ack" && method === "POST") {
+    const txt = await request.text();
+    if (txt.length > 8192) return new Response('{"error":"too large"}', { status: 413, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
+    let body;
+    try { body = JSON.parse(txt); } catch (e) { return new Response('{"error":"bad json"}', { status: 400, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) }); }
+    if (!body || !body.sha || !body.ack) return new Response('{"error":"sha+ack required"}', { status: 400, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
+    let arr = [];
+    try { const cur = await env.LEDATIC_KV.get("portcall_orders"); if (cur) arr = JSON.parse(cur); } catch (e) {}
+    let found = false;
+    for (const o of arr) { if (o.receipt && o.receipt.sha === body.sha) { o.ack = body.ack; o.status = "acknowledged"; o.acked_at = new Date().toISOString(); found = true; break; } }
+    if (!found) return new Response('{"error":"order not found"}', { status: 404, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
+    await env.LEDATIC_KV.put("portcall_orders", JSON.stringify(arr));
+    return new Response('{"ok":true}', { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
+  }
+  if (pathname === "/portcall/order/ack" && method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400",
+    } });
+  }
+  // Anchor proxy: lets the bundled APK fetch the live beacon pulse cross-origin.
+  if (pathname === "/portcall/pulse.json" && method === "GET") {
+    const obj = await env.REPORTS_R2.get("entropy/pulse.json");
+    const body = obj ? await obj.text() : "{}";
+    return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
+  }
+  // Vendored Ed25519 (noble) served same-origin so the page needs no CDN.
+  if (pathname === "/portcall/ed25519.js" && method === "GET") {
+    const js = await env.LEDATIC_KV.get("ed25519.js");
+    if (!js) return new Response("// ed25519 not deployed", { status: 503, headers: sec({ "content-type": "application/javascript" }) });
+    return new Response(js, { headers: secGreatlakes({ "content-type": "application/javascript; charset=utf-8", "cache-control": "public, max-age=3600", "access-control-allow-origin": "*" }) });
+  }
+
   // ── /greatlakes — password-gated commercial demo ──────────────────────
   // Page + AIS attestation feed for the Great Lakes logistics POC.  Gated
   // by HTTP Basic over env.GREATLAKES_PASS (single shared password, user
@@ -978,6 +1126,22 @@ async function handleSite(request, env, url) {
       const html = await env.LEDATIC_KV.get("anomalies.html");
       if (!html) {
         return new Response("anomaly page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+      }
+      return new Response(html, {
+        headers: secGreatlakes({
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": GREATLAKES_CSP,
+        }),
+      });
+    }
+
+    // 3a''b. Port Call product demo. /greatlakes/portcall serves portcall.html
+    // (self-contained, no external deps). Same gate + CSP as the other pages.
+    if (pathname === "/greatlakes/portcall" || pathname === "/greatlakes/portcall/") {
+      const html = await env.LEDATIC_KV.get("portcall.html");
+      if (!html) {
+        return new Response("portcall page not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
       }
       return new Response(html, {
         headers: secGreatlakes({
