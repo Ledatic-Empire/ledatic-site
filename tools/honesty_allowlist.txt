@@ -17,7 +17,7 @@
 *.html|<div class="value">(v5\.1\.0|141|94|45|1\.2 MB|0)</div>
 
 # ── Release-pinned URLs + recipes [keep]: they name the tagged artifact ──
-*.html|/releases/v5\.1\.0/
+*.html|/releases/v5\.[0-9]+\.[0-9]+/
 rail.html|latest tagged release \(v5\.1\.0\)
 
 # ── /changelog + /rail release ledger — HISTORICAL release notes. Each
