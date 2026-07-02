@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Signed, beacon-anchored receipts for anything your software produces. Free to sign and verify offline; one credit buys a Ledatic witness counter-signature that makes the receipt backdate-proof. Pay per use, no subscription.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/receipts">
+<meta property="og:title" content="Receipts — Ledatic">
+<meta property="og:description" content="Signed, beacon-anchored receipts for anything your software produces. Free to sign and verify offline; one credit buys a witness counter-signature that makes the receipt backdate-proof.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Receipts — Ledatic">
+<meta name="twitter:description" content="Signed, beacon-anchored receipts for anything your software produces. Verify offline with standard Ed25519 — no account, no trust in us required.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Receipts — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/receipts">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests. -->
+<link rel="preload" href="/_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="/_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="/_shared/tokens.css">
+<link rel="stylesheet" href="/_shared/fonts.css">
+<link rel="stylesheet" href="/_shared/site.css">
+<link rel="stylesheet" href="/_shared/proof.css">
+<style>
+/* ── /receipts page styles — consumes tokens only ── */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+.hero.compact { min-height: 46vh; }
+.hero.compact .hero-content { padding-top: 7rem; padding-bottom: 2rem; }
+.hero-content a { pointer-events: auto; }
+
+/* grade cards: BARE vs ANCHORED */
+.grades { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin-top: var(--sp-6); }
+.grade {
+  border: 1px solid var(--line);
+  padding: var(--sp-6);
+  background: color-mix(in srgb, var(--background) 92%, var(--ph-500) 8%);
+}
+.grade h3 { margin: 0 0 var(--sp-2); font-size: 1.05rem; letter-spacing: .04em; }
+.grade .tag { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #05e601); }
+.grade p { margin: var(--sp-2) 0 0; }
+.grade ul { margin: var(--sp-3) 0 0; padding-left: 1.1rem; }
+.grade li { margin: .35rem 0; }
+
+/* pricing */
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-4); margin-top: var(--sp-6); }
+.plan {
+  border: 1px solid var(--line);
+  padding: var(--sp-6);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.plan.featured { border-color: var(--accent, #05e601); }
+.plan .name { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; }
+.plan .price { font-size: 2rem; font-weight: 600; }
+.plan .per { font-size: .8rem; opacity: .7; }
+.plan .credits { margin-top: var(--sp-1); }
+.plan .btn { margin-top: auto; text-align: center; }
+
+/* code blocks */
+pre.snippet {
+  border: 1px solid var(--line);
+  padding: var(--sp-4);
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  background: color-mix(in srgb, var(--background) 94%, black 6%);
+  margin: var(--sp-3) 0 0;
+}
+pre.snippet .c { opacity: .55; }
+.step-label { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #05e601); margin-top: var(--sp-6); display: block; }
+
+/* honest-limits list */
+.limits li { margin: .5rem 0; }
+
+/* live pulse chip */
+.pulsebox { display: inline-flex; gap: .6rem; align-items: baseline; border: 1px solid var(--line); padding: .5rem .8rem; font-size: .82rem; margin-top: var(--sp-3); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="receipts.html" class="active">Receipts</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="system.html">System</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="verify.html">Verify</a>
+  </div>
+</nav>
+
+<section class="hero compact">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Product &mdash; pay per use</span>
+    <h1 class="hero-title fade-up">Receipts</h1>
+    <p class="hero-sub fade-up">
+      Give every artifact your software produces a receipt.
+    </p>
+    <p class="hero-desc fade-up">
+      A receipt binds a file's SHA-256 to a live public entropy pulse and a
+      timestamp, signed with <em>your</em> key. Anyone can verify it offline
+      with standard Ed25519 &mdash; no account, no API call, no trust in us.
+      One credit adds our witness counter-signature, making the receipt
+      backdate-proof. AI agent outputs, build artifacts, datasets, reports:
+      if you might ever need to prove it existed, unchanged, at a point in
+      time &mdash; give it a receipt.
+    </p>
+    <div class="cta-row fade-up">
+      <a class="btn btn-primary" href="#pricing">Get a key</a>
+      <a class="btn btn-secondary" href="#quickstart">Quickstart</a>
+      <a class="btn btn-secondary" href="verify.html">Verify in browser</a>
+    </div>
+    <p class="trust fade-up">
+      Verification is free forever &middot; receipts are plain JSON &middot; format v1 is frozen
+    </p>
+  </div>
+</section>
+
+<main>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">The model</span>
+    <h2 class="reveal">Two grades. One is free forever.</h2>
+    <p class="gloss reveal">
+      everyone else's AI says trust me &mdash; a receipt is how your software says check me
+    </p>
+
+    <div class="grades">
+      <div class="grade reveal">
+        <span class="tag">Bare &mdash; free, offline</span>
+        <h3>Your signature over {digest, pulse, time}</h3>
+        <p>
+          Sign locally with your own Ed25519 key. The only network touch is a
+          free read of the public entropy beacon &mdash; the pulse proves the
+          receipt was made <em>after</em> that moment in physics.
+        </p>
+        <ul>
+          <li>No key, no account, no charge</li>
+          <li>Verifies offline in any language with an Ed25519 library</li>
+          <li>Proves: this exact file, cited pulse, signed by this key</li>
+        </ul>
+      </div>
+      <div class="grade reveal">
+        <span class="tag">Anchored &mdash; 1 credit</span>
+        <h3>+ Ledatic witness counter-signature</h3>
+        <p>
+          Our witness key counter-signs the same binding: <em>&ldquo;we observed
+          digest D at pulse N at server time T.&rdquo;</em> We set the time,
+          so an anchored receipt cannot be backdated &mdash; even by you.
+        </p>
+        <ul>
+          <li>Backdate-proof and non-repudiable</li>
+          <li>Verifier pins our pubkey &mdash; forged witness blocks fail closed</li>
+          <li>Still verifies offline; the credit is spent at signing, never at verify</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pulsebox reveal">
+      <span>live beacon:</span>
+      <span id="live-pulse">fetching pulse&hellip;</span>
+    </div>
+    <p class="gloss reveal">
+      the beacon is a live magnetohydrodynamics simulation on our own hardware,
+      publishing a hash-chained pulse stream &mdash; watch it at
+      <a href="entropy.html">/entropy</a>
+    </p>
+  </div>
+</section>
+
+<section class="section" id="quickstart">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Quickstart</span>
+    <h2 class="reveal">Sixty seconds to a verified receipt.</h2>
+
+    <span class="step-label reveal">1 &middot; get the client (single file, Python 3)</span>
+    <pre class="snippet reveal"><code>curl -o ledatic_receipts.py https://ledatic.org/sdk/ledatic_receipts.py
+pip install cryptography</code></pre>
+
+    <span class="step-label reveal">2 &middot; sign anything &mdash; free</span>
+    <pre class="snippet reveal"><code>python3 ledatic_receipts.py sign model_output.json
+<span class="c"># receipt: model_output.json.receipt.json  pk_fp=59f61409…  pulse_id=2667061</span></code></pre>
+
+    <span class="step-label reveal">3 &middot; verify &mdash; free, offline, anyone</span>
+    <pre class="snippet reveal"><code>python3 ledatic_receipts.py verify model_output.json model_output.json.receipt.json
+<span class="c"># ok   artifact=model_output.json  pulse_id=2667061  pk_fp=59f61409…</span>
+<span class="c"># exit codes are scriptable: 0 ok · 5 wrong file · 6 forged signature</span></code></pre>
+
+    <span class="step-label reveal">4 &middot; anchor it &mdash; 1 credit, backdate-proof</span>
+    <pre class="snippet reveal"><code>export LEDATIC_SDK_API_KEY=lsk_…        <span class="c"># from a pack below</span>
+python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
+<span class="c"># receipt: receipt.json  …  + witnessed at 1783016427</span></code></pre>
+
+    <p class="gloss reveal">
+      prefer raw HTTP? the witness endpoint is one POST &mdash;
+      <code>POST /attest/witness</code> with <code>{sha256, pulse_id, value_hex}</code>
+      and your <code>x-sdk-key</code> header returns the counter-signature.
+      works from any language. the receipt format is
+      <a href="https://github.com/zemo-g/rail/blob/feat/verify-sdk/tools/verify_sdk/sdk.rail" rel="noopener">documented in the reference SDK</a>,
+      which is written in <a href="rail.html">Rail</a> and signs byte-identical receipts.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Pricing</span>
+    <h2 class="reveal">Pay per anchored receipt. Nothing else costs anything.</h2>
+    <p class="gloss reveal">
+      credits are spent only when we counter-sign &mdash; bare receipts and all
+      verification are free forever. keys expire after ~12 months; unused
+      credits expire with them. no subscription, no seat, no sales call.
+    </p>
+
+    <div class="plans">
+      <div class="plan reveal">
+        <span class="name">Starter</span>
+        <span class="price">$80</span>
+        <span class="credits">10,000 anchored receipts</span>
+        <span class="per">$8 per 1,000</span>
+        <a class="btn btn-secondary buy" data-pack="starter" href="#">Buy Starter</a>
+      </div>
+      <div class="plan featured reveal">
+        <span class="name">Growth</span>
+        <span class="price">$500</span>
+        <span class="credits">100,000 anchored receipts</span>
+        <span class="per">$5 per 1,000</span>
+        <a class="btn btn-primary buy" data-pack="growth" href="#">Buy Growth</a>
+      </div>
+      <div class="plan reveal">
+        <span class="name">Scale</span>
+        <span class="price">$2,000</span>
+        <span class="credits">1,000,000 anchored receipts</span>
+        <span class="per">$2 per 1,000</span>
+        <a class="btn btn-secondary buy" data-pack="scale" href="#">Buy Scale</a>
+      </div>
+    </div>
+
+    <p class="gloss reveal">
+      delivery: your <code>lsk_&hellip;</code> key is minted and emailed the
+      same day. need an invoice, a bigger pack, or a pilot?
+      <a href="mailto:31zemogyllier@gmail.com?subject=Receipts%20—%20custom">email us</a>.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Honest limits</span>
+    <h2 class="reveal">What a receipt proves &mdash; and what it doesn't.</h2>
+    <ul class="limits reveal">
+      <li><strong>A bare receipt proves</strong> the exact bytes, the cited pulse, and the signer's key. It binds &ldquo;not before&rdquo; the pulse; the <em>created_at</em> time is the signer's own claim.</li>
+      <li><strong>An anchored receipt additionally proves</strong> the binding was presented to our witness at a server-set time &mdash; it cannot be backdated, by anyone, including the signer and including us.</li>
+      <li><strong>No receipt proves</strong> the content is true, good, or yours. It proves existence, integrity, and time. That's the honest boundary and it is exactly what disputes usually turn on.</li>
+      <li><strong>If we disappear</strong>, every receipt still verifies: the format is frozen plain JSON, the crypto is standard Ed25519, and the client is a single readable Python file you already downloaded.</li>
+      <li><strong>Rotation:</strong> the witness pubkey is pinned in the verifier (<code>45ad2e2d&hellip;</code>). If we ever rotate it, old receipts verify against the old pin &mdash; published, dated, chained.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="receipts.html">Receipts</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-note">&copy; 2026 Ledatic. Everything above is verifiable; nothing above asks you to trust it.</p>
+  </div>
+</footer>
+
+<script src="/_shared/site.js" defer></script>
+<script type="module" src="/_shared/pulse-clock.js"></script>
+<script>
+// ── payment links — swap in real checkout URLs, redeploy this one file ──
+// Empty string = fall back to a prefilled email order. No other code change
+// is needed when Stripe Payment Links exist.
+const PAYMENT_LINKS = {
+  starter: "",
+  growth:  "",
+  scale:   "",
+};
+const ORDER_EMAIL = "31zemogyllier@gmail.com";
+
+document.querySelectorAll("a.buy").forEach((a) => {
+  const pack = a.dataset.pack;
+  const url = PAYMENT_LINKS[pack];
+  if (url) {
+    a.href = url;
+    a.rel = "noopener";
+  } else {
+    const subj = encodeURIComponent(`Receipts — ${pack} pack order`);
+    const body = encodeURIComponent(
+      `I'd like the ${pack} pack.\n\nReply-to email for key delivery:\n\n(We mint your lsk_ key and send payment details the same day.)`
+    );
+    a.href = `mailto:${ORDER_EMAIL}?subject=${subj}&body=${body}`;
+  }
+});
+
+// live pulse chip — same free endpoint the SDK uses
+fetch("/entropy/pulse", { cache: "no-store" })
+  .then((r) => r.json())
+  .then((p) => {
+    document.getElementById("live-pulse").textContent =
+      `pulse #${p.pulse_id} · ${p.value_hex.slice(0, 16)}… · ${p.timestamp_utc}`;
+  })
+  .catch(() => {
+    document.getElementById("live-pulse").textContent = "beacon unreachable from your network";
+  });
+</script>
+
+</body>
+</html>
