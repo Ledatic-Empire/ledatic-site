@@ -329,7 +329,7 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
 // switch: while false, buy buttons use the prefilled email-order fallback
 // (the Stripe account isn't activated to accept charges yet). Flip to true
 // + redeploy the instant the account is activated — no other change needed.
-const CHECKOUT_LIVE = false;
+const CHECKOUT_LIVE = true;
 const PAYMENT_LINKS = {
   starter: "https://buy.stripe.com/aFa4gr7kJ9kvbsG4pR0Fi00",
   growth:  "https://buy.stripe.com/aFa8wHdJ70NZaoCbSj0Fi01",
