@@ -1,0 +1,34 @@
+{
+  "run": "attested-base-specialize",
+  "ledger_tip_record_hash": "5e206463ea62fb94a309dfba65c52b0a47c3f01dc6cc6de7637e796f15151255",
+  "final": {
+    "step": 4000,
+    "compile_at_1": 16,
+    "pass_at_1": 11,
+    "bench_n": 16,
+    "ckpt_sha256": "5936a520a8821e73e4e113844a2fc637c011cc54bfa26906b87511e28c40363e"
+  },
+  "best": {
+    "step": 3500,
+    "compile_at_1": 16,
+    "pass_at_1": 11,
+    "ckpt_sha256": "8dbbda0e98e91996e7af4ad5f34ba3eb7bcc8d4d42993cac1d2e37127df58316"
+  },
+  "inner_msg_scheme": "ledger|v1|<run>|<tip_record_hash>|steps<N>|compile<c>of<n>|pass<p>of<n>|<pulse_id>",
+  "inner_msg": "ledger|v1|attested-base-specialize|5e206463ea62fb94a309dfba65c52b0a47c3f01dc6cc6de7637e796f15151255|steps9|compile16of16|pass11of16|2641877",
+  "digest_sha256": "15f2dda1c81ac440b4c673bcc1e7b59cc86c1a09d781d3333a48fe040a01fc63",
+  "beacon_pulse_id": "2641877",
+  "beacon_value_hex": "61250e39079deb922f79bd8991e990ade3ec312627ca94d278d7bb8bb08c30a3",
+  "witness_envelope": {
+    "kind": "attestation",
+    "version": 1,
+    "digest_sha256": "15f2dda1c81ac440b4c673bcc1e7b59cc86c1a09d781d3333a48fe040a01fc63",
+    "pulse_id": 2641877,
+    "value_hex": "61250e39079deb922f79bd8991e990ade3ec312627ca94d278d7bb8bb08c30a3",
+    "witnessed_at": 1782958533,
+    "sig": "hkiT2N+V8mecz0RXEeD2BE0EPPNd1SAakcZoW0FmawxJHt+bCm62LN+Kig5ItBBCNgOunlMbG0wJDkGliEM3BA==",
+    "pk_fp": "cac5f21a70564aeb",
+    "witness": "fleet0"
+  },
+  "signature_verified_local": true
+}

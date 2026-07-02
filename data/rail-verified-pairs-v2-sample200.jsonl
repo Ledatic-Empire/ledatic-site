@@ -1,0 +1,200 @@
+{"skill": "map", "text": "-- Scale each item of [4, 7, 17] by 2 and print it.\ndouble x = x * 2\nmain = let _ = print (show (map double [4, 7, 17]))\n  0\n"}
+{"skill": "gcd", "text": "-- the GCD of two numbers a and b\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 123 36))\n  0\n"}
+{"skill": "fib", "text": "-- compute the nth fibonacci value\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 8))\n  0\n"}
+{"skill": "pow", "text": "-- b to the eth power\npow b e = (if e == 0 then 1 else b * pow b (e - 1))\nmain = let _ = print (show (pow 2 6))\n  0\n"}
+{"skill": "count", "text": "-- Count how many elements of [6, 17, 15, 19, 13] are greater than 4.\ngt3 n = n > 4\nmain = let _ = print (show (length (filter gt3 [6, 17, 15, 19, 13])))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [13, 9, 6, 10, 4, 5] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [13, 9, 6, 10, 4, 5]))\n  0\n"}
+{"skill": "min2", "text": "-- the lower of a and b\nmin2 a b = (if a <= b then a else b)\nmain = let _ = print (show (min2 65 62))\n  0\n"}
+{"skill": "mul", "text": "-- Print 71 multiplied by 35.\nmain = let _ = print (show (71 * 35))\n  0\n"}
+{"skill": "fib", "text": "-- Fibonacci number at position n\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 0))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [5, 3, 14] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [5, 3, 14]))\n  0\n"}
+{"skill": "fib", "text": "-- compute the nth fibonacci value\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 62))\n  0\n"}
+{"skill": "gcd", "text": "-- gcd of a and b (Euclid)\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 5 144))\n  0\n"}
+{"skill": "sum", "text": "-- Add 401 and 574 and print the result.\nmain = let _ = print (show (401 + 574))\n  0\n"}
+{"skill": "foldsum", "text": "-- Sum the list [30, 12, 29] with fold and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [30, 12, 29]))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [1, 7, 20, 17] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [1, 7, 20, 17]))\n  0\n"}
+{"skill": "length", "text": "-- How many elements are in [11, 0, 16, 22, 30, 27]? Print it.\nmain = let _ = print (show (length [11, 0, 16, 22, 30, 27]))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [19, 4, 9, 10, 19] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [19, 4, 9, 10, 19]))\n  0\n"}
+{"skill": "map", "text": "-- Scale each item of [11, 8] by 2 and print it.\ndouble x = x * 2\nmain = let _ = print (show (map double [11, 8]))\n  0\n"}
+{"skill": "sum", "text": "-- Compute 646 + 170 and print it.\nmain = let _ = print (show (646 + 170))\n  0\n"}
+{"skill": "gcd", "text": "-- compute gcd(a, b) recursively\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 68 113))\n  0\n"}
+{"skill": "min2", "text": "-- the smaller of two integers\nmin2 a b = (if a <= b then a else b)\nmain = let _ = print (show (min2 87 85))\n  0\n"}
+{"skill": "foldsum", "text": "-- Print the sum of the list [23, 17] using fold.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [23, 17]))\n  0\n"}
+{"skill": "prodlist", "text": "-- compute the product of a list with recursion\nproduct_list xs = (if length xs == 0 then 1 else head xs * product_list (tail xs))\nmain = let _ = print (show (product_list [8, 2, 4, 7, 5]))\n  0\n"}
+{"skill": "join", "text": "-- Print [\"cat\", \"hello\", \"cat\", \"n\"] joined by \",\".\nmain = let _ = print (join \",\" [\"cat\", \"hello\", \"cat\", \"n\"])\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [14, 19, 12, 20, 13, 6] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [14, 19, 12, 20, 13, 6]))\n  0\n"}
+{"skill": "sum", "text": "-- Add 904 and 653 and print the result.\nmain = let _ = print (show (904 + 653))\n  0\n"}
+{"skill": "min2", "text": "-- Give back the lower of two numbers.\nmin2 a b = (if a <= b then a else b)\nmain = let _ = print (show (min2 81 68))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [9, 6, 24] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [9, 6, 24]))\n  0\n"}
+{"skill": "clamp", "text": "-- restrict x to the range [lo, hi]\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 9 36 32))\n  0\n"}
+{"skill": "gcd", "text": "-- gcd of a and b (Euclid)\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 94 173))\n  0\n"}
+{"skill": "gcd", "text": "-- compute gcd(a, b) recursively\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 106 155))\n  0\n"}
+{"skill": "factorial", "text": "-- compute factorial of the argument n\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 62))\n  0\n"}
+{"skill": "count", "text": "-- How many items in [5, 8, 17, 2, 2, 10, 8] exceed 5? Print the count.\ngt3 n = n > 5\nmain = let _ = print (show (length (filter gt3 [5, 8, 17, 2, 2, 10, 8])))\n  0\n"}
+{"skill": "map", "text": "-- Triple each element of [18, 17] and print it.\ndouble x = x * 3\nmain = let _ = print (show (map double [18, 17]))\n  0\n"}
+{"skill": "clamp", "text": "-- clamp x between lo and hi\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 8 15 6))\n  0\n"}
+{"skill": "maxlist", "text": "-- the max of a list of integers recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [22, 11, 3, 22, 24]))\n  0\n"}
+{"skill": "factorial", "text": "-- n! (factorial)\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 104))\n  0\n"}
+{"skill": "safediv", "text": "-- safely divide a by b, returning the quotient or 0 when b is 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 141 1)))\n  0\n"}
+{"skill": "min2", "text": "-- the smaller of two integers\nmin2 a b = (if a <= b then a else b)\nmain = let _ = print (show (min2 39 13))\n  0\n"}
+{"skill": "option", "text": "-- Option type; getOrDefault returns the wrapped value or 0\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 418)))\n  0\n"}
+{"skill": "join", "text": "-- Print [\"y\", \"l\", \"j\"] joined by \"|\".\nmain = let _ = print (join \"|\" [\"y\", \"l\", \"j\"])\n  0\n"}
+{"skill": "count", "text": "-- How many items in [6, 16, 8, 3] exceed 6? Print the count.\ngt3 n = n > 6\nmain = let _ = print (show (length (filter gt3 [6, 16, 8, 3])))\n  0\n"}
+{"skill": "clamp", "text": "-- clamp x between lo and hi\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 6 38 16))\n  0\n"}
+{"skill": "mul", "text": "-- Multiply 29 by 48 and print it.\nmain = let _ = print (show (29 * 48))\n  0\n"}
+{"skill": "option", "text": "-- an Option type and a getOrDefault that yields the value or 0\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 61)))\n  0\n"}
+{"skill": "mul", "text": "-- Print 9 times 98.\nmain = let _ = print (show (9 * 98))\n  0\n"}
+{"skill": "reverse", "text": "-- Reverse [0, 0, 18, 25, 22] and print it.\nmain = let _ = print (show (reverse [0, 0, 18, 25, 22]))\n  0\n"}
+{"skill": "factorial", "text": "-- compute factorial of the argument n\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 7))\n  0\n"}
+{"skill": "foldsum", "text": "-- Sum the list [13, 16, 23] with fold and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [13, 16, 23]))\n  0\n"}
+{"skill": "sumlist", "text": "-- recursive sum of a list of integers\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [7, 11, 29, 28, 20, 14]))\n  0\n"}
+{"skill": "map", "text": "-- Quintuple each element of [18, 15, 1, 11] and print it.\ndouble x = x * 5\nmain = let _ = print (show (map double [18, 15, 1, 11]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Print the sum of the list [29, 1] using fold.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [29, 1]))\n  0\n"}
+{"skill": "sum", "text": "-- Compute 853 + 590 and print it.\nmain = let _ = print (show (853 + 590))\n  0\n"}
+{"skill": "maxlist", "text": "-- return the greatest element of a list recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [20, 7]))\n  0\n"}
+{"skill": "maxlist", "text": "-- recursively find the biggest number in a list\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [18, 10]))\n  0\n"}
+{"skill": "maxlist", "text": "-- the max of a list of integers recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [34, 21]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [21, 17, 15, 5, 25] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [21, 17, 15, 5, 25]))\n  0\n"}
+{"skill": "clamp", "text": "-- keep x inside the low/high bounds\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 1 37 29))\n  0\n"}
+{"skill": "maxlist", "text": "-- return the greatest element of a list recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [28, 17, 21, 33, 1]))\n  0\n"}
+{"skill": "gcd", "text": "-- gcd of a and b (Euclid)\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 84 152))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [22, 29, 28, 7] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [22, 29, 28, 7]))\n  0\n"}
+{"skill": "maxlist", "text": "-- the largest value in a list via recursion\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [15, 4, 39, 14, 40, 33]))\n  0\n"}
+{"skill": "maxlist", "text": "-- the max of a list of integers recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [27, 27, 15]))\n  0\n"}
+{"skill": "max2", "text": "-- the maximum of two numbers\nmax2 a b = (if a >= b then a else b)\nmain = let _ = print (show (max2 52 91))\n  0\n"}
+{"skill": "maxlist", "text": "-- recursively find the biggest number in a list\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [7, 5]))\n  0\n"}
+{"skill": "clamp", "text": "-- restrict x to the range [lo, hi]\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 6 27 42))\n  0\n"}
+{"skill": "maxlist", "text": "-- the max of a list of integers recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [8, 36, 21, 0]))\n  0\n"}
+{"skill": "count", "text": "-- Count how many elements of [17, 14, 3, 12, 12, 15, 2] are greater than 5.\ngt3 n = n > 5\nmain = let _ = print (show (length (filter gt3 [17, 14, 3, 12, 12, 15, 2])))\n  0\n"}
+{"skill": "sumto", "text": "-- recursively add 0+1+...+n\nsumto n = (if n == 0 then 0 else n + sumto (n - 1))\nmain = let _ = print (show (sumto 100))\n  0\n"}
+{"skill": "prodlist", "text": "-- compute the product of a list with recursion\nproduct_list xs = (if length xs == 0 then 1 else head xs * product_list (tail xs))\nmain = let _ = print (show (product_list [4, 8, 3, 9]))\n  0\n"}
+{"skill": "join", "text": "-- Print [\"river\", \"f\", \"y\", \"d\"] joined by \"-\".\nmain = let _ = print (join \"-\" [\"river\", \"f\", \"y\", \"d\"])\n  0\n"}
+{"skill": "length", "text": "-- Print the length of the list [22, 11, 22, 25].\nmain = let _ = print (show (length [22, 11, 22, 25]))\n  0\n"}
+{"skill": "prodlist", "text": "-- multiply together every number in a list recursively\nproduct_list xs = (if length xs == 0 then 1 else head xs * product_list (tail xs))\nmain = let _ = print (show (product_list [1, 2]))\n  0\n"}
+{"skill": "gcd", "text": "-- the greatest common divisor of a and b\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 124 172))\n  0\n"}
+{"skill": "option", "text": "-- Option (Some/None) and a function returning the value or a default of zero\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 405)))\n  0\n"}
+{"skill": "sign", "text": "-- 1 when n is positive, 0 otherwise\nsign n = (if n == 0 then 0 else if n > 0 then 1 else 0)\nmain = let _ = print (show (sign 73))\n  0\n"}
+{"skill": "sumto", "text": "-- sum the integers up to n with recursion\nsumto n = (if n == 0 then 0 else n + sumto (n - 1))\nmain = let _ = print (show (sumto 63))\n  0\n"}
+{"skill": "factorial", "text": "-- compute n factorial recursively\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 157))\n  0\n"}
+{"skill": "reverse", "text": "-- Reverse [15, 23] and print it.\nmain = let _ = print (show (reverse [15, 23]))\n  0\n"}
+{"skill": "clamp", "text": "-- clamp x between lo and hi\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 0 18 35))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [16, 4, 2, 8] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [16, 4, 2, 8]))\n  0\n"}
+{"skill": "range", "text": "-- Add up every integer from 0 through 7 and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 (range 8)))\n  0\n"}
+{"skill": "gcd", "text": "-- the greatest common divisor of a and b\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 22 185))\n  0\n"}
+{"skill": "option", "text": "-- Option type; getOrDefault returns the wrapped value or 0\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 82)))\n  0\n"}
+{"skill": "count", "text": "-- How many items in [15, 10, 16, 15, 2, 17, 8, 9] exceed 10? Print the count.\ngt3 n = n > 10\nmain = let _ = print (show (length (filter gt3 [15, 10, 16, 15, 2, 17, 8, 9])))\n  0\n"}
+{"skill": "join", "text": "-- Join [\"forest\", \"sun\", \"fire\"] with \"_\" and print it.\nmain = let _ = print (join \"_\" [\"forest\", \"sun\", \"fire\"])\n  0\n"}
+{"skill": "count", "text": "-- How many items in [20, 11, 1, 7, 10, 10] exceed 4? Print the count.\ngt3 n = n > 4\nmain = let _ = print (show (length (filter gt3 [20, 11, 1, 7, 10, 10])))\n  0\n"}
+{"skill": "fib", "text": "-- nth Fibonacci term\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 15))\n  0\n"}
+{"skill": "option", "text": "-- define an Option type; unwrap Some to its value, None to 0\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 27)))\n  0\n"}
+{"skill": "reverse", "text": "-- Print [25, 23, 8, 5, 4, 30] in reverse order.\nmain = let _ = print (show (reverse [25, 23, 8, 5, 4, 30]))\n  0\n"}
+{"skill": "gcd", "text": "-- the largest number dividing both a and b\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 22 53))\n  0\n"}
+{"skill": "maxlist", "text": "-- the maximum element of a list recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [31, 15, 10]))\n  0\n"}
+{"skill": "gcd", "text": "-- gcd of a and b (Euclid)\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 177 186))\n  0\n"}
+{"skill": "sumlist", "text": "-- Add up a list of numbers using recursion.\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [25, 12, 18]))\n  0\n"}
+{"skill": "option", "text": "-- an Option type and a getOrDefault that yields the value or 0\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 274)))\n  0\n"}
+{"skill": "sumlist", "text": "-- recursive sum of a list of integers\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [17, 4, 1, 3]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Print the sum of the list [7, 20, 0, 4, 16, 19] using fold.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [7, 20, 0, 4, 16, 19]))\n  0\n"}
+{"skill": "maxlist", "text": "-- the maximum element of a list recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [20, 10, 31, 17]))\n  0\n"}
+{"skill": "count", "text": "-- Count how many elements of [18, 8, 13, 20, 18] are greater than 10.\ngt3 n = n > 10\nmain = let _ = print (show (length (filter gt3 [18, 8, 13, 20, 18])))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [20, 8, 19] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [20, 8, 19]))\n  0\n"}
+{"skill": "max2", "text": "-- the greater of two integers\nmax2 a b = (if a >= b then a else b)\nmain = let _ = print (show (max2 62 66))\n  0\n"}
+{"skill": "count", "text": "-- How many items in [10, 17, 1, 0, 3, 14, 7, 9] exceed 6? Print the count.\ngt3 n = n > 6\nmain = let _ = print (show (length (filter gt3 [10, 17, 1, 0, 3, 14, 7, 9])))\n  0\n"}
+{"skill": "map", "text": "-- Quadruple each element of [16, 20, 7, 20, 4] and print it.\ndouble x = x * 4\nmain = let _ = print (show (map double [16, 20, 7, 20, 4]))\n  0\n"}
+{"skill": "sumlist", "text": "-- recursive sum of a list of integers\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [6, 21]))\n  0\n"}
+{"skill": "join", "text": "-- Print [\"wind\", \"wind\", \"signed\"] joined by \"+\".\nmain = let _ = print (join \"+\" [\"wind\", \"wind\", \"signed\"])\n  0\n"}
+{"skill": "mul", "text": "-- Print 84 times 17.\nmain = let _ = print (show (84 * 17))\n  0\n"}
+{"skill": "reverse", "text": "-- Reverse [28, 10] and print it.\nmain = let _ = print (show (reverse [28, 10]))\n  0\n"}
+{"skill": "maxlist", "text": "-- recursively find the biggest number in a list\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [22, 16, 5]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Sum the list [29, 24, 14] with fold and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [29, 24, 14]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [17, 30, 30] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [17, 30, 30]))\n  0\n"}
+{"skill": "map", "text": "-- Multiply every element of [18, 12] by 5 and print the result.\ndouble x = x * 5\nmain = let _ = print (show (map double [18, 12]))\n  0\n"}
+{"skill": "sum", "text": "-- Add 643 and 556 and print the result.\nmain = let _ = print (show (643 + 556))\n  0\n"}
+{"skill": "gcd", "text": "-- compute gcd(a, b) recursively\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 74 146))\n  0\n"}
+{"skill": "safediv", "text": "-- safely divide a by b, returning the quotient or 0 when b is 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 100 0)))\n  0\n"}
+{"skill": "max2", "text": "-- the larger of the two arguments\nmax2 a b = (if a >= b then a else b)\nmain = let _ = print (show (max2 69 34))\n  0\n"}
+{"skill": "min2", "text": "-- Return the smaller of two numbers.\nmin2 a b = (if a <= b then a else b)\nmain = let _ = print (show (min2 32 94))\n  0\n"}
+{"skill": "member", "text": "-- test list membership of x recursively\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 0 [14, 17, 9, 11, 3, 19]))\n  0\n"}
+{"skill": "abs", "text": "-- the absolute value of n\nabs n = (if n <= 0 then 0 - n else n)\nmain = let _ = print (show (abs 153))\n  0\n"}
+{"skill": "member", "text": "-- test list membership of x recursively\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 19 [15, 2, 10, 12]))\n  0\n"}
+{"skill": "safediv", "text": "-- an Option-returning safe divide, unwrapped to a value or 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 181 3)))\n  0\n"}
+{"skill": "safediv", "text": "-- safe integer division using Option, default 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 70 0)))\n  0\n"}
+{"skill": "reverse", "text": "-- Reverse [13, 11, 6, 20] and print it.\nmain = let _ = print (show (reverse [13, 11, 6, 20]))\n  0\n"}
+{"skill": "abs", "text": "-- the absolute value of n\nabs n = (if n <= 0 then 0 - n else n)\nmain = let _ = print (show (abs 2))\n  0\n"}
+{"skill": "length", "text": "-- Print the length of the list [26, 24, 20, 14].\nmain = let _ = print (show (length [26, 24, 20, 14]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [24, 13, 10, 3, 5, 18] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [24, 13, 10, 3, 5, 18]))\n  0\n"}
+{"skill": "member", "text": "-- does x appear in the list? 1 if yes, 0 if no\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 18 [14, 2, 12, 18, 2, 4]))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [8, 19, 15, 8, 10, 5] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [8, 19, 15, 8, 10, 5]))\n  0\n"}
+{"skill": "sign", "text": "-- the signum-like indicator of n\nsign n = (if n == 0 then 0 else if n > 0 then 1 else 0)\nmain = let _ = print (show (sign 77))\n  0\n"}
+{"skill": "gcd", "text": "-- greatest common divisor using recursion\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 125 100))\n  0\n"}
+{"skill": "member", "text": "-- does x appear in the list? 1 if yes, 0 if no\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 1 [15, 11, 11, 0, 2, 20, 12]))\n  0\n"}
+{"skill": "member", "text": "-- return 1 if x is in the list, else 0\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 19 [8, 15, 2, 13, 8, 13]))\n  0\n"}
+{"skill": "filter", "text": "-- Keep the even numbers in [11, 6, 10, 11, 3, 17] and print them.\nis_even n = n - (n / 2) * 2 == 0\nmain = let _ = print (show (filter is_even [11, 6, 10, 11, 3, 17]))\n  0\n"}
+{"skill": "gcd", "text": "-- greatest common divisor using recursion\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 196 65))\n  0\n"}
+{"skill": "mul", "text": "-- Print the product of 62 and 78.\nmain = let _ = print (show (62 * 78))\n  0\n"}
+{"skill": "sum", "text": "-- Compute 73 + 386 and print it.\nmain = let _ = print (show (73 + 386))\n  0\n"}
+{"skill": "safediv", "text": "-- safely divide a by b, returning the quotient or 0 when b is 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 7 5)))\n  0\n"}
+{"skill": "reverse", "text": "-- Print [0, 5, 29] in reverse order.\nmain = let _ = print (show (reverse [0, 5, 29]))\n  0\n"}
+{"skill": "sumlist", "text": "-- sum the elements of a list recursively\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [22, 20, 17, 28]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [28, 12, 15, 23] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [28, 12, 15, 23]))\n  0\n"}
+{"skill": "clamp", "text": "-- keep x inside the low/high bounds\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 10 39 23))\n  0\n"}
+{"skill": "sumlist", "text": "-- add all integers in a list with recursion\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [20, 15, 18, 7, 8, 29]))\n  0\n"}
+{"skill": "max2", "text": "-- Return the bigger of two numbers.\nmax2 a b = (if a >= b then a else b)\nmain = let _ = print (show (max2 57 20))\n  0\n"}
+{"skill": "join", "text": "-- Join [\"table\", \"cat\"] with \":\" and print it.\nmain = let _ = print (join \":\" [\"table\", \"cat\"])\n  0\n"}
+{"skill": "sumto", "text": "-- the sum of all integers from 0 to n recursively\nsumto n = (if n == 0 then 0 else n + sumto (n - 1))\nmain = let _ = print (show (sumto 180))\n  0\n"}
+{"skill": "map", "text": "-- Scale each item of [3, 13, 16] by 3 and print it.\ndouble x = x * 3\nmain = let _ = print (show (map double [3, 13, 16]))\n  0\n"}
+{"skill": "map", "text": "-- Double every element of [15, 19, 16, 13] and print the result.\ndouble x = x * 2\nmain = let _ = print (show (map double [15, 19, 16, 13]))\n  0\n"}
+{"skill": "member", "text": "-- does x appear in the list? 1 if yes, 0 if no\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 11 [3, 1, 7, 13, 17, 17, 8]))\n  0\n"}
+{"skill": "gcd", "text": "-- the largest number dividing both a and b\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 40 114))\n  0\n"}
+{"skill": "sumto", "text": "-- sum the integers up to n with recursion\nsumto n = (if n == 0 then 0 else n + sumto (n - 1))\nmain = let _ = print (show (sumto 189))\n  0\n"}
+{"skill": "mul", "text": "-- Print the product of 34 and 83.\nmain = let _ = print (show (34 * 83))\n  0\n"}
+{"skill": "sum", "text": "-- Compute 220 + 312 and print it.\nmain = let _ = print (show (220 + 312))\n  0\n"}
+{"skill": "fib", "text": "-- compute fib of n recursively\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 40))\n  0\n"}
+{"skill": "foldsum", "text": "-- Sum the list [8, 18, 8, 4, 22, 24] with fold and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [8, 18, 8, 4, 22, 24]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Sum the list [11, 25, 3, 11] with fold and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [11, 25, 3, 11]))\n  0\n"}
+{"skill": "clamp", "text": "-- clamp x between lo and hi\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 0 26 54))\n  0\n"}
+{"skill": "maxlist", "text": "-- the max of a list of integers recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [14, 32, 13, 30, 23]))\n  0\n"}
+{"skill": "safediv", "text": "-- an Option-returning safe divide, unwrapped to a value or 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 123 3)))\n  0\n"}
+{"skill": "reverse", "text": "-- Reverse [20, 2] and print it.\nmain = let _ = print (show (reverse [20, 2]))\n  0\n"}
+{"skill": "option", "text": "-- define Option with Some and None; get the value or default 0\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 307)))\n  0\n"}
+{"skill": "count", "text": "-- How many items in [6, 17, 15, 12, 0, 12, 15, 12] exceed 3? Print the count.\ngt3 n = n > 3\nmain = let _ = print (show (length (filter gt3 [6, 17, 15, 12, 0, 12, 15, 12])))\n  0\n"}
+{"skill": "join", "text": "-- Print [\"star\", \"music\", \"star\"] joined by \"/\".\nmain = let _ = print (join \"/\" [\"star\", \"music\", \"star\"])\n  0\n"}
+{"skill": "fib", "text": "-- recursive Fibonacci of n\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 51))\n  0\n"}
+{"skill": "count", "text": "-- Count how many elements of [1, 16, 16, 14, 5, 3] are greater than 3.\ngt3 n = n > 3\nmain = let _ = print (show (length (filter gt3 [1, 16, 16, 14, 5, 3])))\n  0\n"}
+{"skill": "mul", "text": "-- Print 71 times 75.\nmain = let _ = print (show (71 * 75))\n  0\n"}
+{"skill": "factorial", "text": "-- compute factorial of the argument n\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 48))\n  0\n"}
+{"skill": "maxlist", "text": "-- recursively find the biggest number in a list\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [0, 29, 23, 20, 9, 19]))\n  0\n"}
+{"skill": "prodlist", "text": "-- multiply together every number in a list recursively\nproduct_list xs = (if length xs == 0 then 1 else head xs * product_list (tail xs))\nmain = let _ = print (show (product_list [7, 6, 2, 7, 5]))\n  0\n"}
+{"skill": "maxlist", "text": "-- recursively find the biggest number in a list\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [16, 7, 37, 27, 20, 25]))\n  0\n"}
+{"skill": "count", "text": "-- How many items in [12, 10, 10, 5, 7] exceed 7? Print the count.\ngt3 n = n > 7\nmain = let _ = print (show (length (filter gt3 [12, 10, 10, 5, 7])))\n  0\n"}
+{"skill": "foldsum", "text": "-- Print the sum of the list [8, 20, 22, 21, 6, 29] using fold.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [8, 20, 22, 21, 6, 29]))\n  0\n"}
+{"skill": "gcd", "text": "-- gcd of a and b (Euclid)\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 22 35))\n  0\n"}
+{"skill": "clamp", "text": "-- restrict x to the range [lo, hi]\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 4 15 14))\n  0\n"}
+{"skill": "reverse", "text": "-- Print [2, 16, 28] in reverse order.\nmain = let _ = print (show (reverse [2, 16, 28]))\n  0\n"}
+{"skill": "clamp", "text": "-- clamp the value x to lo..hi\nclamp lo hi x = (if x <= lo then lo else if x >= hi then hi else x)\nmain = let _ = print (show (clamp 1 36 6))\n  0\n"}
+{"skill": "maxlist", "text": "-- the largest value in a list via recursion\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [36, 23, 36]))\n  0\n"}
+{"skill": "fib", "text": "-- fibonacci of the index n\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 28))\n  0\n"}
+{"skill": "maxlist", "text": "-- the largest value in a list via recursion\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [17, 21, 30]))\n  0\n"}
+{"skill": "fib", "text": "-- recursive nth Fibonacci number\nfib n = (if n <= 1 then n else fib (n - 1) + fib (n - 2))\nmain = let _ = print (show (fib 23))\n  0\n"}
+{"skill": "map", "text": "-- Scale each item of [20, 4, 18, 15, 2] by 3 and print it.\ndouble x = x * 3\nmain = let _ = print (show (map double [20, 4, 18, 15, 2]))\n  0\n"}
+{"skill": "sumlist", "text": "-- Add up a list of numbers using recursion.\nsum_list xs = (if length xs == 0 then 0 else head xs + sum_list (tail xs))\nmain = let _ = print (show (sum_list [18, 15, 28, 24, 0, 26]))\n  0\n"}
+{"skill": "max2", "text": "-- return whichever of two numbers is larger\nmax2 a b = (if a >= b then a else b)\nmain = let _ = print (show (max2 5 95))\n  0\n"}
+{"skill": "factorial", "text": "-- return the factorial of n\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 114))\n  0\n"}
+{"skill": "option", "text": "-- Option (Some/None) and a function returning the value or a default of zero\ntype Option = | Some x | None\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (Some 344)))\n  0\n"}
+{"skill": "member", "text": "-- return 1 if x is in the list, else 0\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 14 [0, 0, 4, 11]))\n  0\n"}
+{"skill": "map", "text": "-- Quadruple every element of [12, 14, 11, 19] and print the result.\ndouble x = x * 4\nmain = let _ = print (show (map double [12, 14, 11, 19]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Sum the list [9, 16] with fold and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [9, 16]))\n  0\n"}
+{"skill": "min2", "text": "-- Return the smaller of two numbers.\nmin2 a b = (if a <= b then a else b)\nmain = let _ = print (show (min2 79 58))\n  0\n"}
+{"skill": "gcd", "text": "-- gcd of a and b (Euclid)\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 135 198))\n  0\n"}
+{"skill": "reverse", "text": "-- Reverse [7, 12, 25] and print it.\nmain = let _ = print (show (reverse [7, 12, 25]))\n  0\n"}
+{"skill": "member", "text": "-- does x appear in the list? 1 if yes, 0 if no\nmember x xs = (if length xs == 0 then 0 else if head xs == x then 1 else member x (tail xs))\nmain = let _ = print (show (member 1 [10, 8, 14, 20]))\n  0\n"}
+{"skill": "gcd", "text": "-- greatest common divisor using recursion\ngcd a b = (if b == 0 then a else gcd b (a - (a / b) * b))\nmain = let _ = print (show (gcd 41 163))\n  0\n"}
+{"skill": "factorial", "text": "-- n factorial\nfact n = (if n <= 1 then 1 else n * fact (n - 1))\nmain = let _ = print (show (fact 106))\n  0\n"}
+{"skill": "maxlist", "text": "-- return the greatest element of a list recursively\nmaxlist xs = (if length xs == 0 then 0 else if head xs >= maxlist (tail xs) then head xs else maxlist (tail xs))\nmain = let _ = print (show (maxlist [9, 30, 0, 39]))\n  0\n"}
+{"skill": "safediv", "text": "-- safely divide a by b, returning the quotient or 0 when b is 0\ntype Option = | Some x | None\nsafeDiv a b = (if b == 0 then None else Some (a / b))\ngetOrDefault opt = (match opt\n  | Some x -> x\n  | None -> 0)\nmain = let _ = print (show (getOrDefault (safeDiv 185 5)))\n  0\n"}
+{"skill": "range", "text": "-- Add up every integer from 0 through 54 and print it.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 (range 55)))\n  0\n"}
+{"skill": "map", "text": "-- Multiply every element of [12, 14, 1, 19] by 5 and print the result.\ndouble x = x * 5\nmain = let _ = print (show (map double [12, 14, 1, 19]))\n  0\n"}
+{"skill": "prodlist", "text": "-- the product of a list of integers recursively\nproduct_list xs = (if length xs == 0 then 1 else head xs * product_list (tail xs))\nmain = let _ = print (show (product_list [8, 1, 8, 6]))\n  0\n"}
+{"skill": "foldsum", "text": "-- Use fold to add up [11, 21] and print the total.\nadd a b = a + b\nmain = let _ = print (show (fold add 0 [11, 21]))\n  0\n"}
+{"skill": "mul", "text": "-- Print 26 multiplied by 66.\nmain = let _ = print (show (26 * 66))\n  0\n"}
+{"skill": "join", "text": "-- Print [\"q\", \"book\", \"stone\"] joined by \"-\".\nmain = let _ = print (join \"-\" [\"q\", \"book\", \"stone\"])\n  0\n"}
