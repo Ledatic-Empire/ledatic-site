@@ -161,6 +161,8 @@ mime_of() {
     *.woff2) echo "font/woff2" ;;
     *.txt)  echo "text/plain; charset=utf-8" ;;
     *.py)   echo "text/plain; charset=utf-8" ;;
+    *.jsonl) echo "application/jsonl" ;;
+    *.sha256) echo "text/plain; charset=utf-8" ;;
     *)      echo "text/html; charset=utf-8" ;;
   esac
 }
@@ -574,6 +576,12 @@ deploy_all() {
   # SDK client downloads (/receipts quickstart step 1). Fetched via curl -o,
   # so the worker's text/html fallback MIME for .py is tolerable for now.
   for f in sdk/*.py; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
+  # /data free-tier artifacts: samples, signed ledgers, tarball hashes.
+  for f in data/*; do
     [ -f "$f" ] || continue
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
