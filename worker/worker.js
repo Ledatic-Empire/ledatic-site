@@ -1486,7 +1486,7 @@ async function handleSite(request, env, url) {
     }
     let body;
     try { body = await request.json(); } catch { body = {}; }
-    const PACKS = { starter: 10000, growth: 100000, scale: 1000000 };
+    const PACKS = { micro: 500, starter: 10000, growth: 100000, scale: 1000000 };
     const pack = String(body.pack || "starter");
     const credits = PACKS[pack];
     if (!credits) return jsonResponse({ error: "unknown_pack", packs: Object.keys(PACKS) }, 400);
@@ -1555,7 +1555,7 @@ async function handleSite(request, env, url) {
       amount_total: session.amount_total, currency: session.currency,
       created_at: now, kind: "unknown",
     };
-    const PACKS = { starter: 10000, growth: 100000, scale: 1000000 };
+    const PACKS = { micro: 500, starter: 10000, growth: 100000, scale: 1000000 };
     if (PACKS[pack]) {
       const apiKey = "lsk_" + sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
       const acct = { balance: PACKS[pack], expires_at: now + 365 * 24 * 3600, pack, created_at: now };

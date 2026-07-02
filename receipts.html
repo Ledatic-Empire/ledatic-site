@@ -250,6 +250,13 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
 
     <div class="plans">
       <div class="plan reveal">
+        <span class="name">Micro</span>
+        <span class="price">$5</span>
+        <span class="credits">500 anchored receipts</span>
+        <span class="per">try it &middot; $10 per 1,000</span>
+        <a class="btn btn-secondary buy" data-pack="micro" href="#">Buy Micro</a>
+      </div>
+      <div class="plan reveal">
         <span class="name">Starter</span>
         <span class="price">$80</span>
         <span class="credits">10,000 anchored receipts</span>
@@ -343,6 +350,7 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
 // + redeploy the instant the account is activated — no other change needed.
 const CHECKOUT_LIVE = true;
 const PAYMENT_LINKS = {
+  micro:   "https://buy.stripe.com/5kQ00b6gF2W77cq3lN0Fi05",
   starter: "https://buy.stripe.com/aFa4gr7kJ9kvbsG4pR0Fi00",
   growth:  "https://buy.stripe.com/aFa8wHdJ70NZaoCbSj0Fi01",
   scale:   "https://buy.stripe.com/7sYbITeNb2W77cq4pR0Fi02",
