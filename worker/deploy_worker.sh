@@ -2,7 +2,7 @@
 # deploy_worker.sh — push worker/worker.js to Cloudflare as the `ledatic`
 # Worker. Preserves bindings (LEDATIC_KV + REPORTS_R2 + BEACON_TOKEN +
 # API_BEARER + DDA_FLEET_TOKEN + DDA_PORTAL_TOKEN + GREATLAKES_PASS +
-# LAKES_FLEET_URL + LAKES_FLEET_TOKEN + SDK_WITNESS_KEY) exactly as
+# LAKES_FLEET_URL + LAKES_FLEET_TOKEN + SDK_WITNESS_KEY + STRIPE_WEBHOOK_SECRET)
 # configured. Each new secret needs its source file + a binding entry.
 #
 # BINDING-DRIFT RULE (earned 2026-05-29, validated 2026-06-09): this is a
@@ -47,6 +47,10 @@ LAKES_FLEET_TOKEN_VAL=$(cat ~/.ledatic/lakes_fleet_token)
 # (that's the CALLER's key). Was live-only until 2026-06-09; a deploy without
 # this line wipes it.
 SDK_WITNESS_KEY_VAL=$(cat ~/.ledatic/sdk_witness/key.hex)
+# Stripe autopilot webhook secret (feat/stripe-autopilot). Empty until Reilly
+# creates the Stripe webhook endpoint and saves its whsec_… here — the worker
+# route answers 503 unconfigured while empty, so deploys stay safe pre-Stripe.
+STRIPE_WEBHOOK_SECRET_VAL=$(cat ~/.ledatic/stripe/webhook_secret 2>/dev/null || echo "")
 cat > "$META" <<JSON
 {
   "main_module": "worker.js",
@@ -61,7 +65,8 @@ cat > "$META" <<JSON
     {"type":"secret_text","name":"GREATLAKES_PASS","text":"$GREATLAKES_PASS_VAL"},
     {"type":"secret_text","name":"LAKES_FLEET_URL","text":"$LAKES_FLEET_URL_VAL"},
     {"type":"secret_text","name":"LAKES_FLEET_TOKEN","text":"$LAKES_FLEET_TOKEN_VAL"},
-    {"type":"secret_text","name":"SDK_WITNESS_KEY","text":"$SDK_WITNESS_KEY_VAL"}
+    {"type":"secret_text","name":"SDK_WITNESS_KEY","text":"$SDK_WITNESS_KEY_VAL"},
+    {"type":"secret_text","name":"STRIPE_WEBHOOK_SECRET","text":"$STRIPE_WEBHOOK_SECRET_VAL"}
   ]
 }
 JSON

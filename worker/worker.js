@@ -159,6 +159,8 @@ const MIME = {
   xml:  "application/xml; charset=utf-8",
   xsl:  "text/xsl; charset=utf-8",
   txt:  "text/plain; charset=utf-8",
+  py:   "text/plain; charset=utf-8",
+  sha256: "text/plain; charset=utf-8",
   svg:  "image/svg+xml",
   png:  "image/png",
   jpg:  "image/jpeg",
@@ -1463,6 +1465,101 @@ async function handleSite(request, env, url) {
     const acct = { balance: credits, expires_at, pack, created_at: now };
     await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
     return jsonResponse({ api_key: apiKey, pack, balance: credits, expires_at }, 200);
+  }
+
+  // ─── Stripe autopilot (self-serve fulfillment, zero-human) ──────────────
+  //
+  // Flow: Payment Link (metadata.pack = starter|growth|scale|pairs|corpus,
+  // success URL → /thanks?session_id={CHECKOUT_SESSION_ID})
+  //   → Stripe POSTs checkout.session.completed to /attest/stripe/webhook
+  //   → signature verified (HMAC-SHA256, STRIPE_WEBHOOK_SECRET binding)
+  //   → receipts packs: mint an lsk_ key; data products: record the order
+  //   → sale stored at KV stripesale:<session_id>
+  //   → the /thanks page calls GET /attest/stripe/claim?session_id=… and
+  //     shows the customer their key immediately. No email in the loop.
+  //
+  // Fails closed: missing secret → 503; bad signature → 401; unknown pack →
+  // recorded but nothing minted (manual follow-up via sales ledger).
+  // Dataset orders are recorded + surfaced on claim as "delivery by email
+  // within 24h" — data delivery stays manual until R2 links exist.
+  if (pathname === "/attest/stripe/webhook" && method === "POST") {
+    if (!env.STRIPE_WEBHOOK_SECRET) return jsonResponse({ error: "unconfigured" }, 503);
+    const sigHeader = request.headers.get("stripe-signature") || "";
+    const rawBody = await request.text();
+    const parts = Object.fromEntries(
+      sigHeader.split(",").map((kv) => kv.split("=", 2)).filter((p) => p.length === 2)
+    );
+    const t = parts.t, v1 = parts.v1;
+    if (!t || !v1) return jsonResponse({ error: "bad_signature_header" }, 401);
+    // 5-minute tolerance window against replay.
+    if (Math.abs(Math.floor(Date.now() / 1000) - Number(t)) > 300) {
+      return jsonResponse({ error: "timestamp_out_of_tolerance" }, 401);
+    }
+    const enc = new TextEncoder();
+    const hmacKey = await crypto.subtle.importKey(
+      "raw", enc.encode(env.STRIPE_WEBHOOK_SECRET),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const mac = await crypto.subtle.sign("HMAC", hmacKey, enc.encode(`${t}.${rawBody}`));
+    const expected = sdkBytesToHex(new Uint8Array(mac));
+    if (expected !== v1) return jsonResponse({ error: "bad_signature" }, 401);
+
+    let event;
+    try { event = JSON.parse(rawBody); } catch { return jsonResponse({ error: "bad_json" }, 400); }
+    if (event.type !== "checkout.session.completed") {
+      return jsonResponse({ received: true, ignored: event.type }, 200);
+    }
+    const session = event.data?.object || {};
+    const sessionId = String(session.id || "");
+    if (!sessionId) return jsonResponse({ error: "no_session_id" }, 400);
+    // Idempotent: Stripe retries webhooks — never mint twice for one session.
+    const existing = await env.LEDATIC_KV.get(`stripesale:${sessionId}`);
+    if (existing) return jsonResponse({ received: true, duplicate: true }, 200);
+
+    const pack = String(session.metadata?.pack || "");
+    const email = String(session.customer_details?.email || session.customer_email || "");
+    const now = Math.floor(Date.now() / 1000);
+    const sale = {
+      session_id: sessionId, pack, email,
+      amount_total: session.amount_total, currency: session.currency,
+      created_at: now, kind: "unknown",
+    };
+    const PACKS = { starter: 10000, growth: 100000, scale: 1000000 };
+    if (PACKS[pack]) {
+      const apiKey = "lsk_" + sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
+      const acct = { balance: PACKS[pack], expires_at: now + 365 * 24 * 3600, pack, created_at: now };
+      await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
+      sale.kind = "receipts";
+      sale.api_key = apiKey;
+    } else if (pack === "pairs" || pack === "corpus") {
+      sale.kind = "data"; // delivery is manual; the claim page says so
+    }
+    await env.LEDATIC_KV.put(`stripesale:${sessionId}`, JSON.stringify(sale));
+    // Running order log for reconciliation (best-effort, last-writer-wins).
+    try {
+      const logRaw = (await env.LEDATIC_KV.get("stripesales:log")) || "[]";
+      const log = JSON.parse(logRaw);
+      log.push({ session_id: sessionId, pack, email, kind: sale.kind, ts: now });
+      await env.LEDATIC_KV.put("stripesales:log", JSON.stringify(log.slice(-500)));
+    } catch (e) { /* best-effort */ }
+    return jsonResponse({ received: true, kind: sale.kind }, 200);
+  }
+
+  // The /thanks page exchanges the Stripe session id for the purchase
+  // result. Session ids are unguessable (cs_live_… high entropy) and the
+  // response contains only what the buyer already owns.
+  if (pathname === "/attest/stripe/claim" && method === "GET") {
+    const sessionId = url.searchParams.get("session_id") || "";
+    if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sessionId)) {
+      return jsonResponse({ error: "bad_session_id" }, 400);
+    }
+    const raw = await env.LEDATIC_KV.get(`stripesale:${sessionId}`);
+    if (!raw) return jsonResponse({ error: "not_found_yet", hint: "webhook may lag a few seconds; retry" }, 404);
+    const sale = JSON.parse(raw);
+    if (sale.kind === "receipts") {
+      return jsonResponse({ kind: "receipts", pack: sale.pack, api_key: sale.api_key }, 200);
+    }
+    return jsonResponse({ kind: sale.kind, pack: sale.pack, note: "delivery by email within 24h" }, 200);
   }
 
   // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
