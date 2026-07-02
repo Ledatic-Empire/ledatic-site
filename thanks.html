@@ -59,7 +59,9 @@ python3 ledatic_receipts.py sign your_file --anchor</code></pre>
       <p>Docs: <a href="receipts.html">ledatic.org/receipts</a> &middot; questions: <a href="mailto:31zemogyllier@gmail.com">email us</a> (include your session id).</p>
     </div>
     <div id="data-block" hidden>
-      <p>Your dataset order (<span id="dpack"></span>) is confirmed. Delivery lands in your inbox <strong>within 24 hours</strong> — usually much sooner. The free verification artifacts are on <a href="data.html">/data</a> in the meantime, so you can prepare the checks the download must pass.</p>
+      <p>Your dataset order (<span id="dpack"></span>) is confirmed. Download it now:</p>
+      <p><a id="dl" class="keybox" style="display:block;text-align:center;text-decoration:none" href="#">Download <span id="dfile"></span></a></p>
+      <p class="state" id="dnote">Link is valid for 30 days and a handful of downloads — save the file locally. The free verification artifacts are on <a href="data.html">/data</a>; the download must pass those checks.</p>
     </div>
   </div>
   <div id="fail" hidden class="state">
@@ -91,6 +93,13 @@ async function claim(attempt = 0) {
     } else {
       el("data-block").hidden = false;
       el("dpack").textContent = d.pack || "dataset";
+      if (d.download_url) {
+        el("dl").href = d.download_url;
+        el("dfile").textContent = d.filename || "dataset";
+      } else {
+        el("dl").hidden = true;
+        el("dnote").textContent = "Delivery lands in your inbox within 24 hours. Free verification artifacts are on /data.";
+      }
     }
   } catch (e) {
     el("status").hidden = true;

@@ -730,6 +730,37 @@ function sdkBytesToHex(bytes) {
   for (const b of bytes) s += b.toString(16).padStart(2, "0");
   return s;
 }
+
+// ─── Dataset delivery (R2-gated downloads) ───────────────────────────────────
+// Each data SKU maps to an R2 object under the REPORTS_R2 bucket. A purchase
+// (or admin grant) mints a random, time-limited, download-capped token in KV;
+// GET /data/download/<token> streams the object. No public bucket, no S3 creds.
+const DATA_DELIVERABLES = {
+  pairs: {
+    r2_key: "data-deliverables/rail-verified-pairs-v2.tar.gz",
+    filename: "rail-verified-pairs-v2.tar.gz",
+    size_bytes: 805232,
+  },
+  corpus: {
+    r2_key: "data-deliverables/attested-text-corpus-v2.tar.gz",
+    filename: "attested-text-corpus-v2.tar.gz",
+    size_bytes: 2449467895,
+  },
+};
+
+async function mintDownloadToken(env, pack, ref) {
+  const meta = DATA_DELIVERABLES[pack];
+  if (!meta) return null;
+  const token = sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
+  const now = Math.floor(Date.now() / 1000);
+  const grant = {
+    pack, r2_key: meta.r2_key, filename: meta.filename,
+    created_at: now, expires_at: now + 30 * 24 * 3600, max: 25, used: 0, ref,
+  };
+  // KV TTL as a backstop to the explicit expiry check.
+  await env.LEDATIC_KV.put(`dl:${token}`, JSON.stringify(grant), { expirationTtl: 30 * 24 * 3600 });
+  return token;
+}
 async function sdkWitnessSign(seedHex, msg) {
   const seed = sdkHexToBytes(seedHex);
   const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + 32);
@@ -1531,8 +1562,9 @@ async function handleSite(request, env, url) {
       await env.LEDATIC_KV.put(`account:${apiKey}`, JSON.stringify(acct));
       sale.kind = "receipts";
       sale.api_key = apiKey;
-    } else if (pack === "pairs" || pack === "corpus") {
-      sale.kind = "data"; // delivery is manual; the claim page says so
+    } else if (DATA_DELIVERABLES[pack]) {
+      sale.kind = "data";
+      sale.download_token = await mintDownloadToken(env, pack, sessionId);
     }
     await env.LEDATIC_KV.put(`stripesale:${sessionId}`, JSON.stringify(sale));
     // Running order log for reconciliation (best-effort, last-writer-wins).
@@ -1559,7 +1591,66 @@ async function handleSite(request, env, url) {
     if (sale.kind === "receipts") {
       return jsonResponse({ kind: "receipts", pack: sale.pack, api_key: sale.api_key }, 200);
     }
+    if (sale.kind === "data" && sale.download_token) {
+      const meta = DATA_DELIVERABLES[sale.pack] || {};
+      return jsonResponse({
+        kind: "data", pack: sale.pack,
+        download_url: `https://ledatic.org/data/download/${sale.download_token}`,
+        filename: meta.filename, size_bytes: meta.size_bytes,
+      }, 200);
+    }
     return jsonResponse({ kind: sale.kind, pack: sale.pack, note: "delivery by email within 24h" }, 200);
+  }
+
+  // Gated dataset download. The token is minted at purchase (or by admin
+  // grant), unguessable, time-limited, and download-capped — a worker-native
+  // stand-in for an S3 presigned URL that needs no S3 credentials. Streams
+  // the object straight from R2; the bucket is never public.
+  if (pathname.startsWith("/data/download/") && (method === "GET" || method === "HEAD")) {
+    const token = pathname.slice("/data/download/".length);
+    if (!/^[0-9a-f]{48}$/.test(token)) return notFound();
+    const raw = await env.LEDATIC_KV.get(`dl:${token}`);
+    if (!raw) return new Response("link expired or invalid", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+    const grant = JSON.parse(raw);
+    const now = Math.floor(Date.now() / 1000);
+    if (grant.expires_at && now > grant.expires_at) {
+      return new Response("download link expired — contact 31zemogyllier@gmail.com", { status: 410, headers: sec({ "content-type": "text/plain" }) });
+    }
+    if ((grant.used || 0) >= (grant.max || 25)) {
+      return new Response("download limit reached — contact 31zemogyllier@gmail.com", { status: 429, headers: sec({ "content-type": "text/plain" }) });
+    }
+    const obj = await env.REPORTS_R2.get(grant.r2_key);
+    if (!obj) return notFound();
+    if (method === "GET") {
+      grant.used = (grant.used || 0) + 1;
+      await env.LEDATIC_KV.put(`dl:${token}`, JSON.stringify(grant)); // best-effort meter
+    }
+    return new Response(method === "HEAD" ? null : obj.body, {
+      headers: sec({
+        "content-type": "application/gzip",
+        "content-disposition": `attachment; filename="${grant.filename}"`,
+        "content-length": String(obj.size),
+        "cache-control": "private, no-store",
+      }),
+    });
+  }
+
+  // Admin: mint a dataset download link out of band (manual fulfillment /
+  // re-issue). Bearer API_BEARER. Body {pack}. Returns the download URL so
+  // fulfill.sh can email a link instead of a 2.4 GB attachment.
+  if (pathname === "/attest/data/grant" && method === "POST") {
+    if (!env.API_BEARER || request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
+      return jsonResponse({ error: "forbidden" }, 403);
+    }
+    let body; try { body = await request.json(); } catch { body = {}; }
+    const pack = String(body.pack || "");
+    if (!DATA_DELIVERABLES[pack]) return jsonResponse({ error: "unknown_pack", packs: Object.keys(DATA_DELIVERABLES) }, 400);
+    const token = await mintDownloadToken(env, pack, `admin:${body.note || ""}`);
+    const meta = DATA_DELIVERABLES[pack];
+    return jsonResponse({
+      pack, download_url: `https://ledatic.org/data/download/${token}`,
+      filename: meta.filename, expires_in_days: 30,
+    }, 200);
   }
 
   // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
