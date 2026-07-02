@@ -324,19 +324,22 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
 <script src="/_shared/site.js" defer></script>
 <script type="module" src="/_shared/pulse-clock.js"></script>
 <script>
-// ── payment links — swap in real checkout URLs, redeploy this one file ──
-// Empty string = fall back to a prefilled email order. No other code change
-// is needed when Stripe Payment Links exist.
+// ── payment links ──────────────────────────────────────────────────────
+// Live Stripe Payment Links are wired below. CHECKOUT_LIVE is the go-live
+// switch: while false, buy buttons use the prefilled email-order fallback
+// (the Stripe account isn't activated to accept charges yet). Flip to true
+// + redeploy the instant the account is activated — no other change needed.
+const CHECKOUT_LIVE = false;
 const PAYMENT_LINKS = {
-  starter: "",
-  growth:  "",
-  scale:   "",
+  starter: "https://buy.stripe.com/aFa4gr7kJ9kvbsG4pR0Fi00",
+  growth:  "https://buy.stripe.com/aFa8wHdJ70NZaoCbSj0Fi01",
+  scale:   "https://buy.stripe.com/7sYbITeNb2W77cq4pR0Fi02",
 };
 const ORDER_EMAIL = "31zemogyllier@gmail.com";
 
 document.querySelectorAll("a.buy").forEach((a) => {
   const pack = a.dataset.pack;
-  const url = PAYMENT_LINKS[pack];
+  const url = CHECKOUT_LIVE ? PAYMENT_LINKS[pack] : "";
   if (url) {
     a.href = url;
     a.rel = "noopener";

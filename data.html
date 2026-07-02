@@ -255,17 +255,21 @@ python3 verify_pairs.py pairs_v6.jsonl attested_ledger.jsonl</code></pre>
 <script src="/_shared/site.js" defer></script>
 <script type="module" src="/_shared/pulse-clock.js"></script>
 <script>
-// ── payment links — swap in real checkout URLs, redeploy this one file ──
+// ── payment links ──────────────────────────────────────────────────────
+// CHECKOUT_LIVE is the go-live switch: while false, buy buttons use the
+// email-order fallback (Stripe account not yet activated). Flip to true +
+// redeploy once activated.
+const CHECKOUT_LIVE = false;
 const PAYMENT_LINKS = {
-  pairs:  "",
-  corpus: "",
+  pairs:  "https://buy.stripe.com/6oU28j5cBbsDaoC3lN0Fi03",
+  corpus: "https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04",
 };
 const ORDER_EMAIL = "31zemogyllier@gmail.com";
-const NAMES = { pairs: "Rail Verified-Pairs Corpus v1 ($199)", corpus: "Attested Text Corpus v2 ($499)" };
+const NAMES = { pairs: "Rail Verified-Pairs Corpus v2 ($199)", corpus: "Attested Text Corpus v2 ($499)" };
 
 document.querySelectorAll("a.buy").forEach((a) => {
   const p = a.dataset.product;
-  const url = PAYMENT_LINKS[p];
+  const url = CHECKOUT_LIVE ? PAYMENT_LINKS[p] : "";
   if (url) {
     a.href = url;
     a.rel = "noopener";
