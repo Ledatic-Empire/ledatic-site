@@ -160,6 +160,7 @@ mime_of() {
     *.pem)  echo "application/x-pem-file" ;;
     *.woff2) echo "font/woff2" ;;
     *.txt)  echo "text/plain; charset=utf-8" ;;
+    *.py)   echo "text/plain; charset=utf-8" ;;
     *)      echo "text/html; charset=utf-8" ;;
   esac
 }
@@ -566,6 +567,13 @@ deploy_all() {
   # silently if left out of deploy_all — the live sitemap had 4 URLs while
   # the repo's had 17 (found 2026-06-10).
   for f in og.png robots.txt llms.txt sitemap.xml; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
+  # SDK client downloads (/receipts quickstart step 1). Fetched via curl -o,
+  # so the worker's text/html fallback MIME for .py is tolerable for now.
+  for f in sdk/*.py; do
     [ -f "$f" ] || continue
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
