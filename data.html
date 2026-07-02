@@ -130,20 +130,20 @@ pre.snippet .c { opacity: .55; }
     <div class="products">
       <div class="product featured reveal">
         <span class="tag">Code &mdash; oracle-verified</span>
-        <span class="name">Rail Verified-Pairs Corpus v1</span>
+        <span class="name">Rail Verified-Pairs Corpus v2</span>
         <span class="price">$199</span>
         <span class="per">single-organization license &middot; delivered same day</span>
         <ul>
-          <li><strong>27,136</strong> comment&rarr;program pairs; <strong>every program compiles</strong> — verified by running the compiler on each one, re-verifiable by you</li>
-          <li>Bit-reproducible: generator + seed 1234 + oracle &rArr; byte-identical file (sha256 <code>af4087d9&hellip;</code> — see the signed ledger)</li>
-          <li>This exact file trained a from-scratch 138M model to 81% compile@1 — the run's hash-chained ledger binds corpus&rarr;weights and ships in the box</li>
+          <li><strong>52,243</strong> comment&rarr;program pairs; <strong>every program compiles</strong> — verified by running the compiler on each one at generation time, and re-verified end-to-end (all 52,243) before this page went live</li>
+          <li>Bit-reproducible: generator + seed 1234 + oracle &rArr; byte-identical file (sha256 <code>1a6941af&hellip;</code> — see the signed ledger)</li>
+          <li>This exact file trained a from-scratch 138M model to <strong>16/16 compile@1 and 16/16 function-correctness</strong> on its frozen benchmark — the run's hash-chained ledger binds corpus&rarr;weights and ships in the box</li>
           <li>Synthetic + oracle-verified: zero scraped code, zero license ambiguity</li>
         </ul>
         <a class="btn btn-primary buy" data-product="pairs" href="#">Buy &mdash; $199</a>
         <p class="freebies">
-          free first: <a href="/data/rail-verified-pairs-sample200.jsonl">200-pair sample</a> &middot;
-          <a href="/data/rail-verified-pairs-v1.ledger.sig.json">signed ledger</a> &middot;
-          <a href="/data/rail-verified-pairs-v1.tar.gz.sha256">tarball sha256</a>
+          free first: <a href="/data/rail-verified-pairs-v2-sample200.jsonl">200-pair sample</a> &middot;
+          <a href="/data/rail-verified-pairs-v2.ledger.sig.json">signed ledger</a> &middot;
+          <a href="/data/rail-verified-pairs-v2.tar.gz.sha256">tarball sha256</a>
         </p>
       </div>
 
@@ -186,16 +186,16 @@ pre.snippet .c { opacity: .55; }
 curl -O https://ledatic.org/data/rail-verified-pairs-sample200.jsonl
 
 <span class="c"># 2 — the signed ledger: corpus sha256 bound to a training run,</span>
-<span class="c">#     witness-signed against public entropy pulse 2629457</span>
+<span class="c">#     witness-signed against public entropy pulse 2641877</span>
 curl -O https://ledatic.org/data/rail-verified-pairs-v1.ledger.sig.json
-curl https://ledatic.org/entropy/pulse/2629457   <span class="c"># the pulse, live, hash-chained</span>
+curl https://ledatic.org/entropy/pulse/2641877   <span class="c"># the pulse, live, hash-chained</span>
 
-<span class="c"># 3 — after purchase: re-verify all 27,136 programs against the public</span>
+<span class="c"># 3 — after purchase: re-verify all 52,243 programs against the public</span>
 <span class="c">#     Rail compiler (github.com/zemo-g/rail) with the included verify_pairs.py</span>
-python3 verify_pairs.py pairs.jsonl attested_ledger.jsonl</code></pre>
+python3 verify_pairs.py pairs_v6.jsonl attested_ledger.jsonl</code></pre>
 
     <div class="chainrow reveal">
-      chain: generator(seed 1234) &rarr; oracle-verify each program &rarr; corpus sha256 &rarr; training ledger record 0 &rarr; hash-chained per-checkpoint &rarr; Ed25519 witness signature &rarr; public pulse 2629457
+      chain: generator(seed 1234) &rarr; oracle-verify each program &rarr; corpus sha256 &rarr; training ledger record 0 &rarr; hash-chained per-checkpoint &rarr; Ed25519 witness signature &rarr; public pulse 2641877
     </div>
   </div>
 </section>
@@ -207,7 +207,7 @@ python3 verify_pairs.py pairs.jsonl attested_ledger.jsonl</code></pre>
     <h2 class="reveal">What the chain proves &mdash; and what it doesn't.</h2>
     <ul class="limits reveal">
       <li><strong>It proves</strong> exactly which bytes you're getting, where each record came from by our stated basis, that the code compiles under a public compiler, and that none of it was swapped after signing.</li>
-      <li><strong>It does not prove</strong> the data will make your model good. The included ledger shows what it did for ours (a 138M from-scratch model: 81% compile@1); your mileage is an empirical question &mdash; which is why the sample is free.</li>
+      <li><strong>It does not prove</strong> the data will make your model good. The included ledger shows what it did for ours (a 138M from-scratch model: 16/16 compile@1 on its frozen bench); your mileage is an empirical question &mdash; which is why the sample is free.</li>
       <li><strong>Provenance basis is per-record and explicit.</strong> "pre-1929" is a bright legal line; "source-cleared" means the source declares it public-domain and we did not independently date-verify; "operated-substrate" means we generated and machine-verified it. We report the split; we don't blur it.</li>
       <li><strong>If we disappear</strong>, verification still works: the Merkle scheme is documented in the manifest, the signatures are standard Ed25519, and the entropy pulse chain is archived by anyone who ever mirrored it.</li>
     </ul>
