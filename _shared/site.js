@@ -562,8 +562,34 @@
     }
   }
 
+  // Explore dropdown: click-toggle (touch/keyboard) atop the CSS hover, plus
+  // auto-active — mark the primary link (or Explore) matching the current path.
+  function initNavMore() {
+    var here = location.pathname.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+    if (here.length > 1) here = here.replace(/\/$/, '');
+    document.querySelectorAll('.navlinks a[href]').forEach(function (a) {
+      var p = a.getAttribute('href').replace(/\.html$/, '').replace(/\/$/, '');
+      if (p && (p === here || (p !== '/' && here.indexOf(p) === 0))) a.classList.add('active');
+    });
+    var more = document.querySelector('.navmore');
+    if (!more) return;
+    var btn = more.querySelector('.navmore-btn');
+    var inMenu = more.querySelector('.navmore-menu a.active, .navmore-menu a[href="' + here + '"]');
+    if (inMenu && btn) btn.classList.add('active');
+    if (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = more.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function () { more.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { more.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } });
+    }
+  }
+
   function init() {
     initNav();
+    initNavMore();
     initScrollProgress();
     initLiveData();
     initLiveMHD();
