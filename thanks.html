@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Order confirmation — your key is minted the moment payment clears, no email required.">
+<meta name="robots" content="noindex">
+<title>Thanks — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/thanks">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<link rel="stylesheet" href="/_shared/tokens.css">
+<link rel="stylesheet" href="/_shared/fonts.css">
+<link rel="stylesheet" href="/_shared/site.css">
+<style>
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+.thanks-wrap { max-width: 720px; margin: 0 auto; padding: 9rem 1.5rem 4rem; }
+.keybox {
+  border: 1px solid var(--accent, #05e601);
+  padding: var(--sp-4);
+  font-size: 1rem;
+  word-break: break-all;
+  margin: var(--sp-4) 0;
+  user-select: all;
+}
+pre.snippet {
+  border: 1px solid var(--line);
+  padding: var(--sp-4);
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: var(--sp-3) 0 0;
+}
+.state { opacity: .75; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="receipts.html">Receipts</a>
+    <a href="data.html">Data</a>
+    <a href="verify.html">Verify</a>
+  </div>
+</nav>
+
+<main class="thanks-wrap">
+  <h1>Thank you.</h1>
+  <div id="status" class="state">Confirming your payment&hellip;</div>
+  <div id="result" hidden>
+    <div id="receipts-block" hidden>
+      <p>Your key (<span id="pack"></span> pack) — save it now, it is shown here and nowhere else:</p>
+      <div class="keybox" id="apikey"></div>
+      <pre class="snippet"><code>curl -o ledatic_receipts.py https://ledatic.org/sdk/ledatic_receipts.py
+pip install cryptography
+export LEDATIC_SDK_API_KEY=&lt;your key above&gt;
+python3 ledatic_receipts.py sign your_file --anchor</code></pre>
+      <p>Docs: <a href="receipts.html">ledatic.org/receipts</a> &middot; questions: <a href="mailto:31zemogyllier@gmail.com">email us</a> (include your session id).</p>
+    </div>
+    <div id="data-block" hidden>
+      <p>Your dataset order (<span id="dpack"></span>) is confirmed. Delivery lands in your inbox <strong>within 24 hours</strong> — usually much sooner. The free verification artifacts are on <a href="data.html">/data</a> in the meantime, so you can prepare the checks the download must pass.</p>
+    </div>
+  </div>
+  <div id="fail" hidden class="state">
+    We couldn't confirm this session automatically. Your payment is safe —
+    email <a href="mailto:31zemogyllier@gmail.com">31zemogyllier@gmail.com</a> with your
+    Stripe receipt and we'll deliver by hand, fast.
+  </div>
+</main>
+
+<script>
+const sid = new URLSearchParams(location.search).get("session_id") || "";
+const el = (id) => document.getElementById(id);
+async function claim(attempt = 0) {
+  if (!sid) { el("status").hidden = true; el("fail").hidden = false; return; }
+  try {
+    const r = await fetch(`/attest/stripe/claim?session_id=${encodeURIComponent(sid)}`);
+    if (r.status === 404 && attempt < 10) {
+      el("status").textContent = "Confirming your payment… (webhook settling)";
+      return setTimeout(() => claim(attempt + 1), 2000);
+    }
+    if (!r.ok) throw new Error(String(r.status));
+    const d = await r.json();
+    el("status").hidden = true;
+    el("result").hidden = false;
+    if (d.kind === "receipts") {
+      el("receipts-block").hidden = false;
+      el("pack").textContent = d.pack;
+      el("apikey").textContent = d.api_key;
+    } else {
+      el("data-block").hidden = false;
+      el("dpack").textContent = d.pack || "dataset";
+    }
+  } catch (e) {
+    el("status").hidden = true;
+    el("fail").hidden = false;
+  }
+}
+claim();
+</script>
+
+</body>
+</html>
