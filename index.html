@@ -137,6 +137,21 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 .section .chain-link { display: block; margin-bottom: 0.75rem; }
 
 .push { margin-top: var(--sp-8); }
+
+/* home products band — the live commercial offering, foregrounded */
+.home-products { display: grid; gap: var(--sp-4); grid-template-columns: 1fr; margin-top: var(--sp-6); }
+@media (min-width: 760px) { .home-products { grid-template-columns: 1fr 1fr; } }
+.hp-card {
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  border: 1px solid var(--line); padding: var(--sp-6);
+  text-decoration: none; color: inherit;
+  transition: border-color var(--hover-in, .2s) ease, transform var(--hover-in, .2s) ease;
+}
+.hp-card:hover { border-color: var(--accent, #05e601); transform: translateY(-2px); }
+.hp-tag { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent, #05e601); }
+.hp-card h3 { margin: 0; font-size: 1.1rem; line-height: 1.3; }
+.hp-card p { margin: 0; font-size: .92rem; color: var(--tx-lo); }
+.hp-go { margin-top: auto; font-size: .9rem; color: var(--accent, #05e601); }
 </style>
 <script type="speculationrules">
 {
@@ -198,6 +213,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       <button class="prove" id="prove-page" aria-expanded="false" aria-controls="prove-page-tray"
               data-manifest="/attest/site/latest.json"
               data-name="this page &middot; signed deploy manifest"><span class="prove-val">Prove this page</span><span class="affix" aria-hidden="true">⌁</span></button>
+      <a class="btn btn-primary" href="#products">What&rsquo;s live &darr;</a>
       <a class="btn btn-ghost" href="manifesto.html">Read the manifesto</a>
     </div>
     <div class="tray" id="prove-page-tray" role="log" aria-live="polite" hidden></div>
@@ -205,6 +221,33 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 </section>
 
 <main>
+
+<section class="section" id="products">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Now live</span>
+    <h2 class="reveal">Buy proof &mdash; and data you can prove.</h2>
+    <p class="lead reveal">
+      Two products, both built on the same attestation spine you just
+      verified with the button above. Verification is free; you only pay to
+      anchor or to license.
+    </p>
+    <div class="home-products">
+      <a class="hp-card reveal" href="/receipts">
+        <span class="hp-tag">Receipts &middot; pay per use</span>
+        <h3>Signed, physics-anchored proof for anything your software produces</h3>
+        <p>Give every artifact, agent output, or build a receipt &mdash; verifiable offline, free forever. Anchored, backdate-proof receipts from $8 per 1,000.</p>
+        <span class="hp-go">Get Receipts &rarr;</span>
+      </a>
+      <a class="hp-card reveal" href="/data">
+        <span class="hp-tag">Data &middot; provenance-attested</span>
+        <h3>Training datasets you can audit before you buy</h3>
+        <p>Oracle-verified code pairs and provenance-gated text, each with a signed chain you can re-verify yourself. Free sample first. From $199.</p>
+        <span class="hp-go">Browse datasets &rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
 
 <section class="section">
   <div class="wrap">
