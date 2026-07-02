@@ -144,6 +144,44 @@ nav.topnav.scrolled {
 .navlinks a:hover::after,
 .navlinks a.active::after { transform: scaleX(1); transition-duration: var(--hover-in); }
 
+/* ── Explore dropdown (secondary/lab pages tucked under one control) ── */
+.navmore { position: relative; }
+.navmore-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--tx-lo);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: none; border: 0; padding: 0; cursor: pointer;
+}
+.navmore-btn:hover, .navmore.open .navmore-btn { color: var(--tx-hi); }
+.navmore-menu {
+  position: absolute;
+  top: calc(100% + 0.9rem);
+  right: 0;
+  min-width: 12rem;
+  display: grid;
+  background: var(--nav-bg, var(--panel, #141414));
+  border: 1px solid var(--line);
+  padding: 0.4rem;
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity var(--hover-out) var(--ease), transform var(--hover-out) var(--ease), visibility var(--hover-out);
+  z-index: 60;
+}
+.navmore:hover .navmore-menu, .navmore.open .navmore-menu {
+  opacity: 1; visibility: visible; transform: translateY(0);
+  transition-duration: var(--hover-in);
+}
+.navmore-menu a {
+  font-size: 0.78rem;
+  color: var(--tx-lo);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  padding: 0.5rem 0.6rem;
+}
+.navmore-menu a:hover { color: var(--tx-hi); background: color-mix(in srgb, var(--tx-hi) 8%, transparent); }
+
 .nav-cta {
   display: none;
   font-family: var(--font-body);
