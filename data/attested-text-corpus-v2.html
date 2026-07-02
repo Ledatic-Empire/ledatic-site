@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="25,541 documents / ~1.54B tokens with per-document provenance — Merkle-rooted and witness-signed. Provenance-attested, independently verifiable, single-organization license.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/data/attested-text-corpus-v2">
+<meta property="og:title" content="Attested Text Corpus v2 — Ledatic">
+<meta property="og:description" content="25,541 documents / ~1.54B tokens with per-document provenance — Merkle-rooted and witness-signed. Provenance-attested, independently verifiable, single-organization license.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Attested Text Corpus v2 — Ledatic">
+<meta name="twitter:description" content="25,541 documents / ~1.54B tokens with per-document provenance — Merkle-rooted and witness-signed. Provenance-attested, independently verifiable, single-organization license.">
+<title>Attested Text Corpus v2 — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/data/attested-text-corpus-v2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<link rel="preload" href="/_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="/_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="/_shared/tokens.css">
+<link rel="stylesheet" href="/_shared/fonts.css">
+<link rel="stylesheet" href="/_shared/site.css">
+<link rel="stylesheet" href="/_shared/proof.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "Attested Text Corpus v2", "description": "25,541 documents / ~1.54B tokens with per-document provenance — Merkle-rooted and witness-signed. Each document carries its own provenance basis, cryptographically bound into the Merkle root: 8,643 bright-line pre-1929 public domain, 12,077 source-cleared (Project Gutenberg PD, not independently date-verified), 4,821 oracle-verified code. We report the split exactly and never describe the corpus as fully public-domain.", "url": "https://ledatic.org/data/attested-text-corpus-v2", "identifier": "sha256:92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63", "keywords": ["public domain training data", "provenance training corpus", "attested text corpus", "merkle-rooted dataset", "pre-1929 public domain text", "clean training data provenance"], "license": "https://ledatic.org/data/attested-text-corpus-v2#license", "isAccessibleForFree": false, "creator": {"@type": "Organization", "name": "Ledatic", "url": "https://ledatic.org"}, "provider": {"@type": "Organization", "name": "Ledatic", "url": "https://ledatic.org"}, "distribution": [{"@type": "DataDownload", "encodingFormat": "application/gzip", "contentSize": "2.45 GB (gzip)"}], "measurementTechnique": "Cryptographic provenance: SHA-256 leaves, Merkle root, Ed25519 witness signature anchored to a public entropy beacon pulse."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is this really public domain?", "acceptedAnswer": {"@type": "Answer", "text": "The provenance is stated exactly per document, not blurred. 8,643 documents are bright-line pre-1929 public domain; 12,077 are source-cleared (Project Gutenberg declares them PD, we did not independently date-verify each); 4,821 are code we generated and machine-verified. We never describe the whole corpus as fully public-domain."}}, {"@type": "Question", "name": "What am I actually buying if the texts are public?", "acceptedAnswer": {"@type": "Answer", "text": "The assembly and the proof: 21k books resolved, cleaned, deduplicated and provenance-gated to 25,541 documents, plus a signed, independently re-verifiable provenance chain. Raw public archives cannot answer “prove where each document came from.” This can."}}, {"@type": "Question", "name": "How do I verify it?", "acceptedAnswer": {"@type": "Answer", "text": "The signed manifest, the Merkle scheme, and a verifier ship in the package. A second, independent root recompute is provided in Rail. The witness signature is anchored to public entropy pulse 2516402, which you can fetch live."}}, {"@type": "Question", "name": "What license do I get?", "acceptedAnswer": {"@type": "Answer", "text": "A single-organization commercial license: train and ship models freely, including commercially. You may not redistribute the corpus itself. See LICENSE.md."}}, {"@type": "Question", "name": "Can I get the full manifest before buying?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — email 31zemogyllier@gmail.com for the full document manifest and signed root."}}]}</script>
+<style>
+.nav-side { display:flex; align-items:center; gap:1rem; }
+.hero.compact { min-height: 42vh; }
+.hero.compact .hero-content { padding-top:7rem; padding-bottom:2rem; }
+.hero-content a { pointer-events:auto; }
+.specs { width:100%; border-collapse:collapse; margin-top:var(--sp-4); font-size:.9rem; }
+.specs td { border-bottom:1px solid var(--line); padding:.6rem .4rem; vertical-align:top; }
+.specs td:first-child { color:var(--tx-lo); white-space:nowrap; padding-right:var(--sp-4); }
+.buybar { display:flex; flex-wrap:wrap; gap:var(--sp-3); align-items:center; margin-top:var(--sp-4); }
+.price-lg { font-size:2rem; font-weight:600; }
+.qa { border-top:1px solid var(--line); padding-top:var(--sp-3); margin-top:var(--sp-4); }
+.qa h3 { font-size:1rem; margin:0 0 .4rem; }
+.qa p { margin:0; }
+.free { font-size:.85rem; }
+pre.snippet { border:1px solid var(--line); padding:var(--sp-4); overflow-x:auto; font-size:.82rem; line-height:1.55; margin:var(--sp-3) 0 0; }
+pre.snippet .c { opacity:.55; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/receipts">Receipts</a>
+    <a href="/data" class="active">Data</a>
+    <a href="/rail">Rail</a>
+    <a href="/entropy">Entropy</a>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌼ p#—</pulse-clock>
+    <a class="nav-cta" href="/verify">Verify</a>
+  </div>
+</nav>
+
+<section class="hero compact">
+  <div class="scene"><div class="scene-fallback" aria-hidden="true"></div></div>
+  <div class="overlay" aria-hidden="true"></div>
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Text training data · provenance-gated · Merkle-rooted</span>
+    <h1 class="hero-title fade-up">Attested Text Corpus v2</h1>
+    <p class="hero-sub fade-up">25,541 documents / ~1.54B tokens with per-document provenance — Merkle-rooted and witness-signed.</p>
+    <div class="buybar fade-up">
+      <span class="price-lg">$499</span>
+      <a class="btn btn-primary" href="https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04" rel="noopener">Buy now</a>
+      <a class="btn btn-secondary" href="#verify">Verify first</a>
+      <a class="btn btn-secondary" href="/data">All datasets</a>
+    </div>
+    <p class="trust fade-up">Single-organization license · instant download on purchase · provenance stated exactly</p>
+  </div>
+</section>
+
+<main>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">What it is</span>
+    <h2 class="reveal">Training data you can audit before you buy.</h2>
+    <ul class="reveal">
+        <li>25,541 documents / ~1.54B tokens, Merkle root <code>92e9af57…</code>, witness-signed at public pulse 2516402</li>
+        <li>Per-document provenance basis — source, id, year, license — bound into the root</li>
+        <li>Deduplicated (MinHash/LSH), provenance-gated; five independent verification checks pass</li>
+        <li>Provenance split stated exactly — never sold as “fully public-domain”</li>
+    </ul>
+    <table class="specs reveal">
+      <tr><td>Records</td><td>25,541 documents / ~1.54B tokens</td></tr>
+      <tr><td>Size</td><td>2.45 GB (gzip)</td></tr>
+      <tr><td>SHA-256</td><td><code>92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63</code></td></tr>
+      <tr><td>Witness pulse</td><td><a href="/entropy/pulse/2516402">2516402</a> (public entropy beacon)</td></tr>
+      <tr><td>Provenance basis</td><td>per-document: pre-1929 PD / source-cleared / operated-substrate</td></tr>
+      <tr><td>License</td><td>Single-organization commercial</td></tr>
+    </table>
+    <p class="free reveal">Free before you buy: <a href="mailto:31zemogyllier@gmail.com?subject=Attested%20Text%20Corpus%20v2%20manifest">request the full manifest + signed root</a></p>
+  </div>
+</section>
+
+<section class="section" id="verify">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Check first</span>
+    <h2 class="reveal">Run the verification before you spend a dollar.</h2>
+    <p class="gloss reveal">Each document carries its own provenance basis, cryptographically bound into the Merkle root: 8,643 bright-line pre-1929 public domain, 12,077 source-cleared (Project Gutenberg PD, not independently date-verified), 4,821 oracle-verified code. We report the split exactly and never describe the corpus as fully public-domain.</p>
+    <pre class="snippet reveal"><code><span class="c"># the signed provenance chain is public; the data is licensed</span>
+curl https://ledatic.org/entropy/pulse/2516402   <span class="c"># the witness pulse, live</span>
+<span class="c"># after purchase, the included verifier re-checks the hash + every record</span></code></pre>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Questions</span>
+    <h2 class="reveal">Straight answers.</h2>
+      <div class="qa reveal"><h3>Is this really public domain?</h3><p>The provenance is stated exactly per document, not blurred. 8,643 documents are bright-line pre-1929 public domain; 12,077 are source-cleared (Project Gutenberg declares them PD, we did not independently date-verify each); 4,821 are code we generated and machine-verified. We never describe the whole corpus as fully public-domain.</p></div>
+      <div class="qa reveal"><h3>What am I actually buying if the texts are public?</h3><p>The assembly and the proof: 21k books resolved, cleaned, deduplicated and provenance-gated to 25,541 documents, plus a signed, independently re-verifiable provenance chain. Raw public archives cannot answer “prove where each document came from.” This can.</p></div>
+      <div class="qa reveal"><h3>How do I verify it?</h3><p>The signed manifest, the Merkle scheme, and a verifier ship in the package. A second, independent root recompute is provided in Rail. The witness signature is anchored to public entropy pulse 2516402, which you can fetch live.</p></div>
+      <div class="qa reveal"><h3>What license do I get?</h3><p>A single-organization commercial license: train and ship models freely, including commercially. You may not redistribute the corpus itself. See LICENSE.md.</p></div>
+      <div class="qa reveal"><h3>Can I get the full manifest before buying?</h3><p>Yes — email 31zemogyllier@gmail.com for the full document manifest and signed root.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="buybar">
+      <span class="price-lg">$499</span>
+      <a class="btn btn-primary" href="https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04" rel="noopener">Buy Attested Text Corpus v2</a>
+      <a class="btn btn-secondary" href="/data">See the other dataset</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <p class="foot-note" id="license">&copy; 2026 Ledatic · Detroit, MI · single-organization license · <a href="/data">all datasets</a> · <a href="/receipts">Receipts</a> · everything above is verifiable; nothing above asks you to trust it.</p>
+  </div>
+</footer>
+
+<script src="/_shared/site.js" defer></script>
+<script type="module" src="/_shared/pulse-clock.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "catalog": "ledatic-attested-data",
+  "updated": "2026-07-02",
+  "verify_note": "Every listing's provenance chain is independently re-verifiable; see each dataset page.",
+  "datasets": [
+    {
+      "name": "Rail Verified-Pairs Corpus v2",
+      "slug": "rail-verified-pairs-v2",
+      "price_usd": 199,
+      "url": "https://ledatic.org/data/rail-verified-pairs-v2",
+      "buy_url": "https://buy.stripe.com/6oU28j5cBbsDaoC3lN0Fi03",
+      "records": "52,243 pairs",
+      "size": "4.4 MB (JSONL)",
+      "format": "application/jsonl",
+      "sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
+      "witness_pulse": 2641877,
+      "provenance_basis": "operated-substrate (synthetic, machine-verified)",
+      "license": "single-organization commercial"
+    },
+    {
+      "name": "Attested Text Corpus v2",
+      "slug": "attested-text-corpus-v2",
+      "price_usd": 499,
+      "url": "https://ledatic.org/data/attested-text-corpus-v2",
+      "buy_url": "https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04",
+      "records": "25,541 documents / ~1.54B tokens",
+      "size": "2.45 GB (gzip)",
+      "format": "application/gzip",
+      "sha256": "92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63",
+      "witness_pulse": 2516402,
+      "provenance_basis": "per-document: pre-1929 PD / source-cleared / operated-substrate",
+      "license": "single-organization commercial"
+    }
+  ]
+}
