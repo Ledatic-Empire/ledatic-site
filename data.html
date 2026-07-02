@@ -197,11 +197,11 @@ pre.snippet .c { opacity: .55; }
     </p>
 
     <pre class="snippet reveal"><code><span class="c"># 1 — the sample: 200 real records, free</span>
-curl -O https://ledatic.org/data/rail-verified-pairs-sample200.jsonl
+curl -O https://ledatic.org/data/rail-verified-pairs-v2-sample200.jsonl
 
 <span class="c"># 2 — the signed ledger: corpus sha256 bound to a training run,</span>
 <span class="c">#     witness-signed against public entropy pulse 2641877</span>
-curl -O https://ledatic.org/data/rail-verified-pairs-v1.ledger.sig.json
+curl -O https://ledatic.org/data/rail-verified-pairs-v2.ledger.sig.json
 curl https://ledatic.org/entropy/pulse/2641877   <span class="c"># the pulse, live, hash-chained</span>
 
 <span class="c"># 3 — after purchase: re-verify all 52,243 programs against the public</span>

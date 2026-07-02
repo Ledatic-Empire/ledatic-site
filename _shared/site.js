@@ -587,9 +587,38 @@
     }
   }
 
+  // Firefly wax — a finishing sheen. Injects one decorative layer of slow,
+  // low-opacity phosphor motes behind the content. Fixed scatter (no RNG, so
+  // it is identical every load and never perturbs anything data-bearing);
+  // CSS disables it under prefers-reduced-motion.
+  function initFireflies() {
+    if (document.querySelector('.fireflies')) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // x%, y%, glow-dur, drift-dur, delay, dx, dy — a hand-tuned scatter.
+    var motes = [
+      [8, 72, 6, 17, 0.0, 14, -20], [19, 33, 8, 22, 2.3, -12, 16], [31, 61, 7, 19, 4.1, 10, -14],
+      [44, 18, 9, 24, 1.2, 16, 12], [52, 80, 6, 16, 3.4, -14, -18], [63, 44, 8, 21, 5.0, 12, 15],
+      [71, 26, 7, 23, 0.8, -10, -16], [78, 67, 9, 18, 2.9, 15, 14], [86, 39, 6, 20, 4.6, -13, -12],
+      [92, 74, 8, 25, 1.7, 11, 17], [15, 88, 7, 22, 5.6, -12, -15], [58, 12, 8, 19, 3.1, 14, 13],
+    ];
+    var layer = document.createElement('div');
+    layer.className = 'fireflies';
+    layer.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < motes.length; i++) {
+      var m = motes[i], s = document.createElement('span');
+      s.className = 'firefly';
+      s.style.cssText =
+        'left:' + m[0] + '%;top:' + m[1] + '%;--fg:' + m[2] + 's;--fdr:' + m[3] +
+        's;--fd:' + m[4] + 's;--dx:' + m[5] + 'px;--dy:' + m[6] + 'px';
+      layer.appendChild(s);
+    }
+    document.body.appendChild(layer);
+  }
+
   function init() {
     initNav();
     initNavMore();
+    initFireflies();
     initScrollProgress();
     initLiveData();
     initLiveMHD();

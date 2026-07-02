@@ -47,13 +47,26 @@ pre.snippet .c { opacity:.55; }
 <nav class="topnav">
   <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
   <div class="navlinks">
-    <a href="/receipts">Receipts</a>
-    <a href="/data" class="active">Data</a>
     <a href="/rail">Rail</a>
-    <a href="/entropy">Entropy</a>
+    <a href="/receipts">Receipts</a>
+    <a href="/data">Data</a>
+    <div class="navmore">
+      <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
+      <div class="navmore-menu" role="menu">
+        <a href="/verify" role="menuitem">Verify</a>
+        <a href="/entropy" role="menuitem">Entropy beacon</a>
+        <a href="/system" role="menuitem">System</a>
+        <a href="/changelog" role="menuitem">Changelog</a>
+        <a href="/physicify" role="menuitem">Physicify</a>
+        <a href="/plasma" role="menuitem">Plasma</a>
+        <a href="/aliens" role="menuitem">Aliens</a>
+        <a href="/work" role="menuitem">Work</a>
+        <a href="/manifesto" role="menuitem">Manifesto</a>
+      </div>
+    </div>
   </div>
   <div class="nav-side">
-    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌼ p#—</pulse-clock>
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
     <a class="nav-cta" href="/verify">Verify</a>
   </div>
 </nav>
