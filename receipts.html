@@ -123,27 +123,25 @@ pre.snippet .c { opacity: .55; }
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up">Product &mdash; pay per use</span>
+    <span class="eyebrow fade-up">Access to the instrument</span>
     <h1 class="hero-title fade-up">Receipts</h1>
     <p class="hero-sub fade-up">
-      Give every artifact your software produces a receipt.
+      Ledatic runs a live attestation instrument. This is how you get in.
     </p>
     <p class="hero-desc fade-up">
-      A receipt binds a file's SHA-256 to a live public entropy pulse and a
-      timestamp, signed with <em>your</em> key. Anyone can verify it offline
-      with standard Ed25519 &mdash; no account, no API call, no trust in us.
-      One credit adds our witness counter-signature, making the receipt
-      backdate-proof. AI agent outputs, build artifacts, datasets, reports:
-      if you might ever need to prove it existed, unchanged, at a point in
-      time &mdash; give it a receipt.
+      A physics beacon and an independent witness, running around the clock,
+      that turn any file into proof no one has to trust you for &mdash;
+      existence, integrity, and time, verifiable offline by anyone with
+      standard Ed25519. Access is how you put your own work through it. Not
+      credits. Not a plan. A key to the instrument.
     </p>
     <div class="cta-row fade-up">
-      <a class="btn btn-primary" href="#pricing">Get a key</a>
-      <a class="btn btn-secondary" href="#quickstart">Quickstart</a>
+      <a class="btn btn-primary" href="#pricing">Get access</a>
+      <a class="btn btn-secondary" href="#pricing">Look inside &mdash; $5</a>
       <a class="btn btn-secondary" href="verify.html">Verify in browser</a>
     </div>
     <p class="trust fade-up">
-      Verification is free forever &middot; receipts are plain JSON &middot; format v1 is frozen
+      Verification is free forever &middot; the $5 door is always open &middot; format v1 is frozen
     </p>
   </div>
 </section>
@@ -240,49 +238,49 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
 <section class="section" id="pricing">
   <div class="wrap">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Pricing</span>
-    <h2 class="reveal">Pay per anchored receipt. Nothing else costs anything.</h2>
+    <span class="eyebrow reveal">Access</span>
+    <h2 class="reveal">Choose how far in you want to be.</h2>
     <p class="gloss reveal">
-      credits are spent only when we counter-sign &mdash; bare receipts and all
-      verification are free forever. keys expire after ~12 months; unused
-      credits expire with them. no subscription, no seat, no sales call.
+      access is a key to the instrument. verification and bare signing stay
+      free forever &mdash; you only spend when the witness counter-signs. no
+      subscription, no seat, no sales call. the $5 door is always open.
     </p>
 
     <div class="plans">
       <div class="plan reveal">
-        <span class="name">Micro</span>
+        <span class="name">Look inside</span>
         <span class="price">$5</span>
-        <span class="credits">500 anchored receipts</span>
-        <span class="per">try it &middot; $10 per 1,000</span>
-        <a class="btn btn-secondary buy" data-pack="micro" href="#">Buy Micro</a>
-      </div>
-      <div class="plan reveal">
-        <span class="name">Starter</span>
-        <span class="price">$80</span>
-        <span class="credits">10,000 anchored receipts</span>
-        <span class="per">$8 per 1,000</span>
-        <a class="btn btn-secondary buy" data-pack="starter" href="#">Buy Starter</a>
+        <span class="credits">the open door &middot; 500 anchored receipts</span>
+        <span class="per">no invite, no catch &mdash; kick the tires all day</span>
+        <a class="btn btn-secondary buy" data-pack="micro" href="#">Look inside</a>
       </div>
       <div class="plan featured reveal">
-        <span class="name">Growth</span>
-        <span class="price">$500</span>
-        <span class="credits">100,000 anchored receipts</span>
-        <span class="per">$5 per 1,000</span>
-        <a class="btn btn-primary buy" data-pack="growth" href="#">Buy Growth</a>
+        <span class="name">Operator</span>
+        <span class="price">$250</span>
+        <span class="credits">run your own work through it</span>
+        <span class="per">10,000 anchored receipts</span>
+        <a class="btn btn-primary buy" data-pack="starter" href="#">Get Operator</a>
       </div>
       <div class="plan reveal">
-        <span class="name">Scale</span>
-        <span class="price">$2,000</span>
-        <span class="credits">1,000,000 anchored receipts</span>
-        <span class="per">$2 per 1,000</span>
-        <a class="btn btn-secondary buy" data-pack="scale" href="#">Buy Scale</a>
+        <span class="name">Studio</span>
+        <span class="price">$1,500</span>
+        <span class="credits">a team on the instrument</span>
+        <span class="per">100,000 anchored receipts</span>
+        <a class="btn btn-secondary buy" data-pack="growth" href="#">Get Studio</a>
+      </div>
+      <div class="plan reveal">
+        <span class="name">Institution</span>
+        <span class="price">$5,000</span>
+        <span class="credits">org-scale, everything you produce</span>
+        <span class="per">1,000,000 anchored receipts</span>
+        <a class="btn btn-secondary buy" data-pack="scale" href="#">Get Institution</a>
       </div>
     </div>
 
     <p class="gloss reveal">
-      delivery: your <code>lsk_&hellip;</code> key is minted and emailed the
-      same day. need an invoice, a bigger pack, or a pilot?
-      <a href="mailto:31zemogyllier@gmail.com?subject=Receipts%20—%20custom">email us</a>.
+      your <code>lsk_&hellip;</code> key appears the instant you pay. need an
+      invoice, a larger allotment, or a private deployment?
+      <a href="mailto:31zemogyllier@gmail.com?subject=Ledatic%20access%20—%20custom">talk to us</a>.
     </p>
   </div>
 </section>
@@ -351,9 +349,9 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
 const CHECKOUT_LIVE = true;
 const PAYMENT_LINKS = {
   micro:   "https://buy.stripe.com/5kQ00b6gF2W77cq3lN0Fi05",
-  starter: "https://buy.stripe.com/aFa4gr7kJ9kvbsG4pR0Fi00",
-  growth:  "https://buy.stripe.com/aFa8wHdJ70NZaoCbSj0Fi01",
-  scale:   "https://buy.stripe.com/7sYbITeNb2W77cq4pR0Fi02",
+  starter: "https://buy.stripe.com/8x2fZ96gF40b40eg8z0Fi06",
+  growth:  "https://buy.stripe.com/3cI28jfRf68jbsGg8z0Fi07",
+  scale:   "https://buy.stripe.com/bJe7sDbAZ0NZeESg8z0Fi08",
 };
 const ORDER_EMAIL = "31zemogyllier@gmail.com";
 
