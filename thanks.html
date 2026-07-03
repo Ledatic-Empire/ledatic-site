@@ -99,6 +99,11 @@ async function claim(attempt = 0) {
     if (!r.ok) throw new Error(String(r.status));
     const d = await r.json();
     el("status").hidden = true;
+    if (d.expired) {
+      el("fail").hidden = false;
+      el("fail").textContent = d.note;
+      return;
+    }
     el("result").hidden = false;
     if (d.kind === "receipts") {
       el("receipts-block").hidden = false;

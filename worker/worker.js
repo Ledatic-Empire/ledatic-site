@@ -731,6 +731,15 @@ function sdkBytesToHex(bytes) {
   return s;
 }
 
+// Constant-time compare of two equal-length hex strings — no early exit, so
+// signature verification leaks no timing signal about how many chars matched.
+function timingSafeEqualHex(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 // ─── Dataset delivery (R2-gated downloads) ───────────────────────────────────
 // Each data SKU maps to an R2 object under the REPORTS_R2 bucket. A purchase
 // (or admin grant) mints a random, time-limited, download-capped token in KV;
@@ -1533,7 +1542,7 @@ async function handleSite(request, env, url) {
     );
     const mac = await crypto.subtle.sign("HMAC", hmacKey, enc.encode(`${t}.${rawBody}`));
     const expected = sdkBytesToHex(new Uint8Array(mac));
-    if (expected !== v1) return jsonResponse({ error: "bad_signature" }, 401);
+    if (!timingSafeEqualHex(expected, v1)) return jsonResponse({ error: "bad_signature" }, 401);
 
     let event;
     try { event = JSON.parse(rawBody); } catch { return jsonResponse({ error: "bad_json" }, 400); }
@@ -1554,6 +1563,10 @@ async function handleSite(request, env, url) {
       session_id: sessionId, pack, email,
       amount_total: session.amount_total, currency: session.currency,
       created_at: now, kind: "unknown",
+      // The session_id rides in the /thanks URL, so cap how long it can be
+      // exchanged for the secret. The key/download itself has its own
+      // lifetime; this only bounds re-fetch via the URL param.
+      claim_until: now + 24 * 3600,
     };
     const PACKS = { micro: 100, starter: 10000, growth: 100000, scale: 1000000 };
     if (PACKS[pack]) {
@@ -1588,6 +1601,13 @@ async function handleSite(request, env, url) {
     const raw = await env.LEDATIC_KV.get(`stripesale:${sessionId}`);
     if (!raw) return jsonResponse({ error: "not_found_yet", hint: "webhook may lag a few seconds; retry" }, 404);
     const sale = JSON.parse(raw);
+    // After the claim window, the session_id URL no longer yields the secret.
+    if (sale.claim_until && Math.floor(Date.now() / 1000) > sale.claim_until) {
+      return jsonResponse({
+        kind: sale.kind, pack: sale.pack, expired: true,
+        note: "This confirmation link has expired for security. If you saved your key or download, keep using it — otherwise email 31zemogyllier@gmail.com with your Stripe receipt and we'll re-send it.",
+      }, 200);
+    }
     if (sale.kind === "receipts") {
       return jsonResponse({ kind: "receipts", pack: sale.pack, api_key: sale.api_key }, 200);
     }
