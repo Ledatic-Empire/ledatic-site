@@ -15,7 +15,18 @@
       "sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
       "witness_pulse": 2641877,
       "provenance_basis": "operated-substrate (synthetic, machine-verified)",
-      "license": "single-organization commercial"
+      "license": "single-organization commercial",
+      "x402": {
+        "endpoint": "https://ledatic.org/x402/rail-verified-pairs-v2",
+        "network": "base",
+        "asset": "USDC",
+        "maxAmountRequired": "199000000",
+        "payTo": "0x0129b9e66C449b4c7027F07A7b8811BBf6fb3301",
+        "attestation": "ed25519",
+        "content_sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
+        "witness_pulse": 2641877,
+        "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff"
+      }
     },
     {
       "name": "Attested Text Corpus v2",
@@ -29,7 +40,22 @@
       "sha256": "92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63",
       "witness_pulse": 2516402,
       "provenance_basis": "per-document: pre-1929 PD / source-cleared / operated-substrate",
-      "license": "single-organization commercial"
+      "license": "single-organization commercial",
+      "x402": {
+        "endpoint": "https://ledatic.org/x402/attested-text-corpus-v2",
+        "network": "base",
+        "asset": "USDC",
+        "maxAmountRequired": "499000000",
+        "payTo": "0x0129b9e66C449b4c7027F07A7b8811BBf6fb3301",
+        "attestation": "ed25519",
+        "content_sha256": "92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63",
+        "witness_pulse": 2516402
+      }
     }
-  ]
+  ],
+  "payment_rails": {
+    "human": "stripe \u2014 see each dataset's buy_url",
+    "agent": "x402 \u2014 see each dataset's x402.endpoint (per-request USDC, response is Ed25519-signed and verifiable against download_sha256 / content_sha256)"
+  },
+  "agents_note": "Machine buyers: GET this catalog, pick a dataset, pay its x402.endpoint (HTTP 402 -> stablecoin), receive the file + an Ed25519 attestation header. Verify the download against download_sha256 and the content against content_sha256. No account, no API key."
 }

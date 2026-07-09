@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="A tiny world grown from a live plasma hash. The beacon decides which cells are born; 32 steps of Conway's Life later, the whole history folds into one fingerprint. Same pulse, same world, same fingerprint — anywhere, forever.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/life">
+<meta property="og:title" content="Life — Ledatic">
+<meta property="og:description" content="A tiny world grown from a live plasma hash. Same pulse, same world, same fingerprint — anywhere, forever.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Life — Ledatic">
+<meta name="twitter:description" content="A tiny world grown from a live plasma hash. Same pulse, same world, same fingerprint — anywhere, forever.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Life — Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/life">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- self-hosted type only; preloads gated off under reduced-data -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- link order contract: tokens → fonts → site → proof, page styles last -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<style>
+/* /life page styles — consumes tokens only, defines no custom props */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+/* ── Universe panel ─────────────────────────────────────────────── */
+.universe-panel {
+  background: var(--ink-1);
+  box-shadow: var(--e1);
+  border-radius: var(--r-3);
+  padding: var(--sp-6);
+}
+.universe-frame {
+  background: var(--ink-0);
+  border-radius: var(--r-0);
+  box-shadow: var(--e1);
+  padding: var(--sp-3);
+  line-height: 0;
+}
+#board {
+  width: 100%;
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+}
+.universe-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  align-items: baseline;
+  margin-top: var(--sp-4);
+  font-family: var(--font-body);
+  font-size: var(--t-data, 0.85rem);
+  color: var(--tx-lo);
+}
+.universe-readout b { color: var(--tx-hi); font-weight: 600; }
+
+/* mode badge — liveness grammar: hue + glyph + word, never color-only */
+.mode-badge {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--r-1);
+  box-shadow: var(--e1);
+  color: var(--tx-dim);
+}
+.mode-badge[data-mode="live"]   { color: var(--st-live); }
+.mode-badge[data-mode="replay"] { color: var(--st-replay); }
+.mode-badge[data-mode="fail"]   { color: var(--st-fail); }
+
+/* ── Ledger ─────────────────────────────────────────────────────── */
+.life-ledger {
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-4) var(--sp-6);
+  font-family: var(--font-body);
+  font-size: var(--t-data, 0.85rem);
+  color: var(--tx-lo);
+  line-height: 1.8;
+  max-height: 15rem;
+  overflow-y: auto;
+  margin-top: var(--sp-6);
+  white-space: pre;
+}
+.life-ledger .gen-now { color: var(--tx-hi); }
+
+/* ── Head + certificate ───────────────────────────────────────────
+   The head rides the shared proof tray (proof.css): outcome glow and
+   the verified bloom are JS-set per the token law — no liveness
+   elevation is authored here. */
+.head-block { margin-top: var(--sp-6); word-break: break-all; }
+.head-block .label { color: var(--tx-dim); display: block; margin-bottom: var(--sp-2); }
+.cert-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  margin-top: var(--sp-4);
+}
+.cert-value {
+  font-family: var(--font-body);
+  font-size: var(--t-data, 0.8rem);
+  color: var(--tx-lo);
+  word-break: break-all;
+  flex: 1 1 24rem;
+}
+.copy-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  background: none;
+  color: var(--ph-600);
+  border: 0;
+  box-shadow: var(--e1);
+  border-radius: var(--r-1);
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+  transition: box-shadow var(--hover-out) var(--ease), color var(--hover-out) var(--ease);
+}
+.copy-btn:hover { box-shadow: var(--e2); color: var(--ph-500); transition-duration: var(--hover-in); }
+
+/* ── Replay input ───────────────────────────────────────────────── */
+.replay-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); }
+.replay-input {
+  flex: 1 1 26rem;
+  font-family: var(--font-body);
+  font-size: var(--t-data, 0.85rem);
+  color: var(--tx-hi);
+  background: var(--ink-0);
+  border: 0;
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-3) var(--sp-4);
+}
+.replay-input:focus { outline: none; box-shadow: var(--e2); }
+.replay-note { font-size: 0.85rem; color: var(--tx-dim); margin-top: var(--sp-3); }
+.replay-note[data-state="fail"] { color: var(--st-fail); }
+.replay-note[data-state="ok"] { color: var(--st-replay); }
+
+/* ── Reference vectors ──────────────────────────────────────────── */
+.vectors {
+  font-family: var(--font-body);
+  font-size: var(--t-data, 0.8rem);
+  color: var(--tx-lo);
+  line-height: 1.9;
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-4) var(--sp-6);
+  overflow-x: auto;
+  white-space: pre;
+}
+.vectors .ok { color: var(--st-live); }
+.vectors .bad { color: var(--st-fail); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail">Rail</a>
+    <a href="/receipts">Receipts</a>
+    <a href="/data">Data</a>
+    <a href="/tios">TIOS</a>
+    <div class="navmore">
+      <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
+      <div class="navmore-menu" role="menu">
+        <a href="/verify" role="menuitem">Verify</a>
+        <a href="/entropy" role="menuitem">Entropy beacon</a>
+        <a href="/system" role="menuitem">System</a>
+        <a href="/changelog" role="menuitem">Changelog</a>
+        <a href="/physicify" role="menuitem">Physicify</a>
+        <a href="/plasma" role="menuitem">Plasma</a>
+        <a href="/aliens" role="menuitem">Aliens</a>
+        <a href="/work" role="menuitem">Work</a>
+        <a href="/manifesto" role="menuitem">Manifesto</a>
+      </div>
+    </div>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="/entropy">Beacon</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Life from the beacon</span>
+    <h1 class="hero-title fade-up">Life</h1>
+    <p class="hero-sub fade-up">
+      Every ~2&nbsp;s the beacon hashes live plasma. Pick one hash, and
+      this page grows a small world from it.
+    </p>
+    <p class="hero-desc fade-up">
+      The hash decides which cells are born. Thirty-two steps of
+      Conway&rsquo;s Game of Life later, the entire history is folded into
+      one fingerprint. The same pulse always grows the same world &mdash;
+      so any world born here can be re-grown and checked, anywhere,
+      forever.
+    </p>
+    <div class="cta-row fade-up">
+      <button class="btn btn-primary" id="btn-live">Birth a universe</button>
+      <a class="btn btn-ghost" href="#replay">Replay one</a>
+    </div>
+    <div class="visor-mini fade-up" style="margin-top: 1.25rem;">
+      <span class="visor-label">Pulse</span>
+      <span class="visor-value" id="visor-pulse">&mdash;</span>
+    </div>
+    <p class="trust fade-up">
+      Runs entirely in your browser &middot; same algorithm as the Rail reference implementation &middot; fingerprints must match bit-for-bit
+    </p>
+  </div>
+</section>
+
+<section class="section" id="universe">
+  <div class="wrap">
+    <span class="eyebrow reveal">The universe</span>
+    <h2 class="reveal">One pulse, one world. <span class="mode-badge" id="mode-badge" data-mode="">&mdash;</span></h2>
+    <p class="lead reveal">
+      Cells live or die by Conway&rsquo;s rules on a 40&times;20 wrap-around
+      grid. Below the board, every generation is folded into a running
+      SHA-256 chain &mdash; the ledger is the world&rsquo;s diary, and the final
+      line commits all of it.
+    </p>
+
+    <div class="universe-panel reveal">
+      <div class="universe-frame">
+        <canvas id="board" width="640" height="320" role="img" aria-label="Game of Life board grown from the selected beacon pulse"></canvas>
+      </div>
+      <div class="universe-readout">
+        <span>gen <b id="ro-gen">&mdash;</b></span>
+        <span>alive <b id="ro-pop">&mdash;</b></span>
+        <span>chain <b id="ro-chain">&mdash;</b></span>
+      </div>
+      <div class="life-ledger" id="ledger" aria-live="off">awaiting a pulse…</div>
+      <div class="tray head-block" id="head-block">
+        <span class="label" id="head-label">chain head</span>
+        <span id="head-value">&mdash;</span>
+      </div>
+      <div class="cert-row">
+        <span class="cert-value" id="cert-value">&mdash;</span>
+        <button class="copy-btn" id="btn-copy" hidden>copy birth certificate</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="replay">
+  <div class="wrap">
+    <span class="eyebrow reveal">Replay</span>
+    <h2 class="reveal">Re-grow any world from its birth certificate.</h2>
+    <p class="lead reveal">
+      A world&rsquo;s birth certificate is just its pulse number and pulse
+      hash. Paste one below &mdash; yours from earlier, or a friend&rsquo;s &mdash; and
+      the same world unfolds again. If the fingerprint at the end
+      matches the original, nothing about that history was altered.
+      That&rsquo;s the whole trick: not <em>trust me</em>, <em>check me</em>.
+    </p>
+    <div class="replay-row reveal">
+      <input class="replay-input" id="replay-input" type="text" spellcheck="false"
+        placeholder="2935383 7f0af947a58e2a2c4705f792bde5cf8a62e6121875349e3a3533881f557dbfcb" />
+      <button class="btn btn-primary" id="btn-replay">Replay</button>
+    </div>
+    <p class="replay-note" id="replay-note">accepts &ldquo;pulse hash&rdquo;, &ldquo;pulse:hash&rdquo;, or a full seed string</p>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <span class="eyebrow reveal">How it works</span>
+    <h2 class="reveal">Born from a hash, judged by the same hash.</h2>
+    <div class="grid grid-3 reveal" style="margin-top: 2rem;">
+      <div class="card">
+        <span class="eyebrow">Step 1</span>
+        <h3>Seed</h3>
+        <p>The pulse hash is stretched by SHA-256 into 800 bytes; each byte
+        decides one cell. Nobody draws the starting pattern &mdash; the world
+        <em>is</em> the hash.</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">Step 2</span>
+        <h3>Evolve</h3>
+        <p>Conway&rsquo;s rules run 32 generations. No randomness anywhere:
+        the future was already implied the moment the pulse landed.
+        Running it doesn&rsquo;t create the history &mdash; it discovers it.</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">Step 3</span>
+        <h3>Witness</h3>
+        <p>Each generation is folded into a SHA-256 chain. Reorder, skip,
+        or retouch any frame and every later fingerprint changes. The
+        head is a 32-byte name for the entire history.</p>
+      </div>
+    </div>
+
+    <p class="lead reveal" style="margin-top: var(--sp-8);">
+      This page recomputes two reference worlds on load &mdash; produced
+      independently by the Rail implementation &mdash; and shows whether your
+      browser agrees:
+    </p>
+    <div class="vectors reveal" id="vectors">checking reference vectors…</div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module">
+/* ALGO-BEGIN — byte-parity with life_beacon.rail; do not edit casually.
+   Chain: h_0 = sha256(seed ++ board_0), h_n = sha256(h_{n-1} ++ board_n).
+   Seed:  "rail-life:v2:beacon:<pulse_id>:<value_hex>", cells from
+   sha256(seed + ":" + k) for k = 0..24, byte < 90 → alive. */
+const W = 40, H = 20, N = W * H, GENS = 32;
+const enc = new TextEncoder();
+
+async function shaBytes(s) {
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(s)));
+}
+async function shaHex(s) {
+  const d = await shaBytes(s);
+  let out = '';
+  for (const b of d) out += b.toString(16).padStart(2, '0');
+  return out;
+}
+async function seedBoard(seed) {
+  const b = new Uint8Array(N);
+  for (let k = 0; k < 25; k++) {
+    const d = await shaBytes(seed + ':' + k);
+    for (let j = 0; j < 32; j++) {
+      const idx = k * 32 + j;
+      if (idx < N) b[idx] = d[j] < 90 ? 1 : 0;
+    }
+  }
+  return b;
+}
+function ser(b) { let s = ''; for (let i = 0; i < N; i++) s += b[i] ? '1' : '0'; return s; }
+function lifeStep(b) {
+  const b2 = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    const y = (i / W) | 0, x = i - y * W;
+    let n = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      n += b[((y + dy + H) % H) * W + ((x + dx + W) % W)];
+    }
+    b2[i] = b[i] === 1 ? (n === 2 || n === 3 ? 1 : 0) : (n === 3 ? 1 : 0);
+  }
+  return b2;
+}
+async function chainHead(pid, vhex) {
+  const seed = `rail-life:v2:beacon:${pid}:${vhex}`;
+  let b = await seedBoard(seed);
+  let h = await shaHex(seed + ser(b));
+  for (let g = 1; g <= GENS; g++) {
+    b = lifeStep(b);
+    h = await shaHex(h + ser(b));
+  }
+  return h;
+}
+/* ALGO-END */
+
+const $ = (id) => document.getElementById(id);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = (name, fallback) =>
+  (getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback);
+
+const COLORS = {
+  live:   () => css('--st-live', '#3dfc71'),
+  replay: () => css('--st-replay', '#6fd7e8'),
+  dead:   () => css('--ink-3', '#1c221c'),
+};
+
+let runToken = 0;   // cancels a run when a newer one starts
+let currentCert = null;
+let lastBoard = null, lastMode = 'live';
+
+function drawBoard(b, mode) {
+  lastBoard = b; lastMode = mode;
+  const cv = $('board'), ctx = cv.getContext('2d');
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const cw = cv.clientWidth || 640;
+  if (cv.width !== Math.round(cw * dpr)) {
+    cv.width = Math.round(cw * dpr);
+    cv.height = Math.round(cw * dpr / 2);
+  }
+  const cell = cv.width / W;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const alive = mode === 'replay' ? COLORS.replay() : COLORS.live();
+  const dead = COLORS.dead();
+  const pad = Math.max(1, cell * 0.12);
+  for (let i = 0; i < N; i++) {
+    const y = (i / W) | 0, x = i - y * W;
+    ctx.fillStyle = b[i] ? alive : dead;
+    ctx.fillRect(x * cell + pad, y * cell + pad, cell - 2 * pad, cell - 2 * pad);
+  }
+}
+
+const pop = (b) => b.reduce((a, v) => a + v, 0);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function ledgerLine(gen, p, h) {
+  return `gen ${String(gen).padStart(2, ' ')}   pop ${String(p).padStart(3, ' ')}   chain ${h.slice(0, 16)}`;
+}
+
+async function runUniverse(pid, vhex, mode) {
+  const token = ++runToken;
+  const seed = `rail-life:v2:beacon:${pid}:${vhex}`;
+  const badge = $('mode-badge');
+  badge.dataset.mode = mode;
+  badge.textContent = mode === 'replay' ? '⟳ REPLAY' : '⌁ LIVE';
+  $('head-block').dataset.outcome = '';
+  $('head-block').classList.remove('bloom');
+  $('head-value').textContent = '—';
+  $('head-label').textContent = 'chain head — computing…';
+  $('cert-value').textContent = `birth certificate: ${pid} ${vhex}`;
+  $('btn-copy').hidden = false;
+  currentCert = `${pid} ${vhex}`;
+  const ledger = $('ledger');
+  ledger.textContent = `seed    ${seed}\n`;
+
+  let b = await seedBoard(seed);
+  let h = await shaHex(seed + ser(b));
+  const delay = reduced ? 0 : 170;
+
+  for (let gen = 0; gen <= GENS; gen++) {
+    if (token !== runToken) return;   // superseded
+    if (gen > 0) {
+      b = lifeStep(b);
+      h = await shaHex(h + ser(b));
+    }
+    drawBoard(b, mode);
+    const p = pop(b);
+    $('ro-gen').textContent = String(gen);
+    $('ro-pop').textContent = String(p);
+    $('ro-chain').textContent = h.slice(0, 16) + '…';
+    ledger.textContent += ledgerLine(gen, p, h) + '\n';
+    ledger.scrollTop = ledger.scrollHeight;
+    if (delay && gen < GENS) await sleep(delay);
+  }
+  if (token !== runToken) return;
+  $('head-label').textContent = `chain head — commits pulse #${pid} and all ${GENS + 1} states`;
+  $('head-value').textContent = h;
+  const hb = $('head-block');
+  hb.dataset.outcome = 'ok';
+  hb.classList.add('bloom');   // verified bloom: e3 for one frame, 1.6s decay to e2
+  requestAnimationFrame(() => requestAnimationFrame(() => hb.classList.remove('bloom')));
+}
+
+async function birthLive() {
+  const note = $('visor-pulse');
+  note.textContent = 'fetching…';
+  try {
+    const r = await fetch('/entropy/pulse', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const p = await r.json();
+    if (!/^[0-9a-f]{64}$/.test(p.value_hex)) throw new Error('bad pulse');
+    note.textContent = `#${p.pulse_id} · ${p.timestamp_utc}`;
+    await runUniverse(String(p.pulse_id), p.value_hex, 'live');
+  } catch (e) {
+    note.textContent = 'beacon unreachable — try replay below';
+    $('mode-badge').dataset.mode = 'fail';
+    $('mode-badge').textContent = '✕ OFFLINE';
+  }
+}
+
+function parseCert(s) {
+  const m = String(s).toLowerCase().match(/(\d{1,12})[:\s]+([0-9a-f]{64})/);
+  return m ? { pid: m[1], vhex: m[2] } : null;
+}
+
+$('btn-live').addEventListener('click', birthLive);
+$('btn-replay').addEventListener('click', async () => {
+  const note = $('replay-note');
+  const cert = parseCert($('replay-input').value);
+  if (!cert) {
+    note.dataset.state = 'fail';
+    note.textContent = 'could not read that — need a pulse number and a 64-char hash';
+    return;
+  }
+  note.dataset.state = 'ok';
+  note.textContent = `replaying pulse #${cert.pid} — the head must match the original exactly`;
+  document.getElementById('universe').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+  await runUniverse(cert.pid, cert.vhex, 'replay');
+});
+$('btn-copy').addEventListener('click', async () => {
+  if (!currentCert) return;
+  try {
+    await navigator.clipboard.writeText(currentCert);
+    $('btn-copy').textContent = 'copied ✓';
+    setTimeout(() => { $('btn-copy').textContent = 'copy birth certificate'; }, 1600);
+  } catch (e) { /* clipboard blocked; value is visible to select */ }
+});
+
+/* Reference vectors — produced by the Rail implementation 2026-07-09,
+   recomputed here on every load. If your browser disagrees, the page
+   says so out loud. */
+const VECTORS = [
+  ['2935383', '7f0af947a58e2a2c4705f792bde5cf8a62e6121875349e3a3533881f557dbfcb',
+   '2c3152defa243cd8728744d8b6b01c8ced8c84d452259e596d65dc98da192b7b'],
+  ['2935395', '14cd912d68d78f9f47aca40f8c408423e6077fa97ebb51317b5ffdc1b0af7532',
+   '98184f764a9565fc498a945d6ae06f24ef16ee4374ce39e95694025a9eabe89f'],
+];
+(async () => {
+  const el = $('vectors');
+  const lines = [];
+  for (const [pid, vhex, want] of VECTORS) {
+    const got = await chainHead(pid, vhex);
+    const ok = got === want;
+    lines.push(`pulse #${pid}  →  ${want.slice(0, 24)}…   ${ok
+      ? '<span class="ok">✓ this browser agrees</span>'
+      : '<span class="bad">✕ MISMATCH — this browser disagrees with the reference</span>'}`);
+  }
+  el.innerHTML = lines.join('\n');
+})();
+
+/* Auto-birth on load — the page opens with a world being born. */
+birthLive();
+window.addEventListener('resize', () => {
+  if (lastBoard) drawBoard(lastBoard, lastMode);
+});
+</script>
+</body>
+</html>
