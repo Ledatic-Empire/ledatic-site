@@ -471,11 +471,15 @@ verify_route() {
 # live); others fall back to their <title> text (proves the page itself is
 # served, not the extensionless homepage fallback).
 verify_one_html() {
-  local rel="$1" marker
-  if grep -q '_shared/site\.css' "$rel"; then
+  # Takes the repo-relative name; the route must NEVER be built from the
+  # staged path (a /var/folders tmp path glued onto SITE_ORIGIN). Marker
+  # extraction reads the staged copy — the exact bytes uploaded.
+  local rel="$1" marker src="$STAGE_DIR/$1"
+  [ -f "$src" ] || src="$rel"
+  if grep -q '_shared/site\.css' "$src"; then
     marker="_shared/site.css?v=${CSS_VER}"
   else
-    marker=$(tr -d '\n' < "$rel" \
+    marker=$(tr -d '\n' < "$src" \
       | sed -n 's|.*<title>\([^<]*\)</title>.*|\1|p' | cut -c1-40)
   fi
   verify_route "$(page_url "$rel")" "$marker"
@@ -513,7 +517,7 @@ deploy_one() {
       compute_asset_versions
       stage_html_versioned "$rel"
       upload "$STAGE_DIR/$rel" "$rel"
-      verify_one_html "$STAGE_DIR/$rel"
+      verify_one_html "$rel"
       ;;
     *)
       stage_raw "$rel"
