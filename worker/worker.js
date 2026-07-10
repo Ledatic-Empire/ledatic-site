@@ -172,6 +172,7 @@ const MIME = {
   woff2:"font/woff2",
   ttf:  "font/ttf",
   wasm: "application/wasm",
+  pck:  "application/octet-stream",
   frag: "text/plain; charset=utf-8",
   glsl: "text/plain; charset=utf-8",
   sh:   "text/x-shellscript; charset=utf-8",
@@ -198,6 +199,7 @@ const BINARY_EXT = new Set([
   "png", "jpg", "jpeg", "gif", "webp", "ico",
   "woff", "woff2", "ttf",
   "wasm",
+  "pck",
   "bin",
   "pdf",
   "mp4", "mov", "m4v", "webm",
@@ -208,6 +210,7 @@ const LONG_CACHE_EXT = new Set([
   "woff", "woff2", "ttf",
   "png", "jpg", "jpeg", "gif", "webp", "ico",
   "wasm",
+  "pck",
   "frag", "glsl",
   "bin",
   "pdf",
@@ -2529,6 +2532,83 @@ async function handleSite(request, env, url) {
       });
     }
     return new Response("bad multipart endpoint", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+  }
+
+  // ─── /tios telemetry — every public match feeds the AI harness ─────────
+  // POST /api/tios/match: anonymous match record (doctrine/outcome/metrics,
+  // no identity — disclosed on /tios). Validated + size-capped, stored one
+  // R2 object per record (append-safe, unlike KV last-writer-wins).
+  if (pathname === "/api/tios/match" && method === "POST") {
+    const raw = await request.text();
+    if (raw.length > 4096) return new Response("too large", { status: 413, headers: sec({}) });
+    let rec;
+    try { rec = JSON.parse(raw); } catch { return new Response("bad json", { status: 400, headers: sec({}) }); }
+    if (typeof rec.doctrine !== "string" || typeof rec.proctor_win !== "boolean"
+        || typeof rec.duration_s !== "number") {
+      return new Response("bad record", { status: 400, headers: sec({}) });
+    }
+    const key = `tios/matches/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
+    await env.REPORTS_R2.put(key, raw, { httpMetadata: { contentType: "application/json" } });
+    return new Response(null, { status: 204, headers: sec({}) });
+  }
+  // GET /api/tios/matches: harvest the corpus (bearer-protected, JSONL).
+  if (pathname === "/api/tios/matches" && method === "GET") {
+    const auth = request.headers.get("authorization") || "";
+    if (auth !== `Bearer ${env.API_BEARER}`) {
+      return new Response("unauthorized", { status: 401, headers: sec({}) });
+    }
+    const limit = Math.min(parseInt(url.searchParams.get("limit") || "500", 10), 1000);
+    const listed = await env.REPORTS_R2.list({ prefix: "tios/matches/", limit });
+    const lines = [];
+    for (const obj of listed.objects) {
+      const o = await env.REPORTS_R2.get(obj.key);
+      if (o) lines.push(await o.text());
+    }
+    return new Response(lines.join("\n") + "\n", {
+      headers: sec({ "content-type": "application/jsonl" }),
+    });
+  }
+
+  // ─── /tios — the playable web build ────────────────────────────────────
+  // Guide page lives at KV "tios.html" (generic fallthrough serves it at
+  // /tios). Versioned immutable bundles live at tios/v-<ver>/…; /tios/play
+  // 302s to the current version (KV "tios/current"). Game responses carry
+  // COOP/COEP (threaded build needs crossOriginIsolated) and a game CSP with
+  // worker-src blob: (emscripten pthreads). The 37 MB engine wasm exceeds
+  // KV's 25 MB value cap, so it's stored gzipped (~11 MB) and served
+  // pre-encoded with encodeBody:"manual".
+  if (pathname === "/tios/play" || pathname === "/tios/play/") {
+    const ver = await env.LEDATIC_KV.get("tios/current");
+    if (!ver) return notFound();
+    return Response.redirect(
+      new URL(`/tios/v-${ver.trim()}/index.html`, request.url).href, 302);
+  }
+  if (pathname.startsWith("/tios/v-")) {
+    const key = pathname.slice(1);
+    const gameHeaders = {
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-embedder-policy": "require-corp",
+      "content-security-policy": CSP.replace(
+        "default-src 'self'", "default-src 'self'; worker-src 'self' blob:"),
+      "cache-control": "public, max-age=31536000, immutable", // versioned = immutable
+    };
+    if (key.endsWith(".wasm")) {
+      const gz = await env.LEDATIC_KV.get(key + ".gz", "arrayBuffer");
+      if (!gz) return notFound();
+      return new Response(gz, {
+        encodeBody: "manual",
+        headers: sec({
+          "content-type": MIME.wasm,
+          "content-encoding": "gzip",
+          ...gameHeaders,
+        }),
+      });
+    }
+    const served = await serveFromKV(key, env);
+    if (!served) return notFound();
+    const h = new Headers(served.headers);
+    for (const [k, v] of Object.entries(gameHeaders)) h.set(k, v);
+    return new Response(served.body, { status: served.status, headers: h });
   }
 
   // Canonicalize /index.html → /
