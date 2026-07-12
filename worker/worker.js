@@ -172,6 +172,7 @@ const MIME = {
   woff2:"font/woff2",
   ttf:  "font/ttf",
   wasm: "application/wasm",
+  pck:  "application/octet-stream",
   frag: "text/plain; charset=utf-8",
   glsl: "text/plain; charset=utf-8",
   sh:   "text/x-shellscript; charset=utf-8",
@@ -198,6 +199,7 @@ const BINARY_EXT = new Set([
   "png", "jpg", "jpeg", "gif", "webp", "ico",
   "woff", "woff2", "ttf",
   "wasm",
+  "pck",
   "bin",
   "pdf",
   "mp4", "mov", "m4v", "webm",
@@ -208,6 +210,7 @@ const LONG_CACHE_EXT = new Set([
   "woff", "woff2", "ttf",
   "png", "jpg", "jpeg", "gif", "webp", "ico",
   "wasm",
+  "pck",
   "frag", "glsl",
   "bin",
   "pdf",
@@ -859,6 +862,43 @@ async function handleAPI(request, env) {
   return jsonResponse({ error: "Unknown type" }, 400);
 }
 
+// ─── Port Call app accounts (demo-grade, invite-code registration) ──────────
+// KV model: pc_user:<handle> {salt,hash,role,created,by} · pc_sess:<token>
+// {handle,role} (30-day TTL) · pc_invite:<CODE> {role,by} (7-day TTL, one-time,
+// deleted on use). Passwords are PBKDF2-SHA256 100k iterations via WebCrypto.
+// Sessions ride the x-pc-token header (avoids iOS-PWA cookie partitioning).
+// Deliberately demo-scale: a team demo's IAM, not a security-reviewed system.
+const PC_HANDLE_RE = /^[a-z0-9_-]{3,24}$/;
+function pcHex(buf) { return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join(""); }
+function pcRandHex(n) { const b = new Uint8Array(n); crypto.getRandomValues(b); return pcHex(b.buffer); }
+function pcInviteCode() {
+  const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L — codes get read out loud
+  const b = new Uint8Array(8); crypto.getRandomValues(b);
+  return Array.from(b).map(x => A[x % A.length]).join("");
+}
+async function pcHash(pass, saltHex) {
+  const salt = new Uint8Array(saltHex.match(/.{2}/g).map(h => parseInt(h, 16)));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 100000 }, key, 256);
+  return pcHex(bits);
+}
+async function pcAuth(request, env) {
+  const tok = request.headers.get("x-pc-token") || "";
+  if (!/^[0-9a-f]{64}$/.test(tok)) return null;
+  const raw = await env.LEDATIC_KV.get("pc_sess:" + tok);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (e) { return null; }
+}
+function pcHasCookie(request) { return /(^|;\s*)pc_ok=1(;|$)/.test(request.headers.get("cookie") || ""); }
+async function pcSession(env, handle, role) {
+  const tok = pcRandHex(32);
+  await env.LEDATIC_KV.put("pc_sess:" + tok, JSON.stringify({ handle, role }), { expirationTtl: 60 * 60 * 24 * 30 });
+  return tok;
+}
+function pcJson(data, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }) });
+}
+
 // ─── ledatic.org handler ─────────────────────────────────────────────────────
 
 async function handleSite(request, env, url) {
@@ -953,14 +993,23 @@ async function handleSite(request, env, url) {
     if (!body || typeof body !== "object" || !body.order || !body.receipt) {
       return new Response('{"error":"order+receipt required"}', { status: 400, headers: secGreatlakes({ "content-type": "application/json" }) });
     }
+    // App sessions or the demo-page cookie may submit; anonymous cross-origin may not.
+    const who = await pcAuth(request, env);
+    if (!who && !pcHasCookie(request)) {
+      return new Response('{"error":"login required"}', { status: 401, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
+    }
     let arr = [];
     try { const cur = await env.LEDATIC_KV.get("portcall_orders"); if (cur) arr = JSON.parse(cur); } catch (e) {}
-    arr.unshift({ order: body.order, receipt: body.receipt, received_at: new Date().toISOString() });
+    arr.unshift({ order: body.order, receipt: body.receipt, received_at: new Date().toISOString(), by: who ? who.handle : undefined });
     if (arr.length > 25) arr = arr.slice(0, 25);
     await env.LEDATIC_KV.put("portcall_orders", JSON.stringify(arr));
     return new Response(JSON.stringify({ ok: true, count: arr.length }), { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
   }
   if (pathname === "/portcall/orders" && method === "GET") {
+    const who = await pcAuth(request, env);
+    if (!who && !pcHasCookie(request)) {
+      return new Response('{"error":"login required"}', { status: 401, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
+    }
     const cur = await env.LEDATIC_KV.get("portcall_orders");
     return new Response(cur || "[]", { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
   }
@@ -977,6 +1026,10 @@ async function handleSite(request, env, url) {
   // to the beacon) and we attach it to the order, so the ship can verify the
   // supplier actually committed. Two-sided, both legs independently provable.
   if (pathname === "/portcall/order/ack" && method === "POST") {
+    const ackWho = await pcAuth(request, env);
+    if (!(ackWho && (ackWho.role === "admin" || ackWho.role === "operator")) && !pcHasCookie(request)) {
+      return new Response('{"error":"operator login required"}', { status: 401, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
+    }
     const txt = await request.text();
     if (txt.length > 8192) return new Response('{"error":"too large"}', { status: 413, headers: secGreatlakes({ "content-type": "application/json", "access-control-allow-origin": "*" }) });
     let body;
@@ -1009,6 +1062,95 @@ async function handleSite(request, env, url) {
     const js = await env.LEDATIC_KV.get("ed25519.js");
     if (!js) return new Response("// ed25519 not deployed", { status: 503, headers: sec({ "content-type": "application/javascript" }) });
     return new Response(js, { headers: secGreatlakes({ "content-type": "application/javascript; charset=utf-8", "cache-control": "public, max-age=3600", "access-control-allow-origin": "*" }) });
+  }
+
+  // ── /portcall/app — the installable Port Call app (PWA shell + assets) ──
+  if (pathname === "/portcall/app" || pathname === "/portcall/app/") {
+    const html = await env.LEDATIC_KV.get("portcall-app.html");
+    if (!html) return new Response("app not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
+    return new Response(html, { headers: secGreatlakes({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }) });
+  }
+  if (pathname === "/portcall/app/manifest.json" && method === "GET") {
+    const m = await env.LEDATIC_KV.get("portcall-app.manifest");
+    return new Response(m || "{}", { headers: secGreatlakes({ "content-type": "application/manifest+json", "cache-control": "public, max-age=3600" }) });
+  }
+  if (pathname === "/portcall/app/sw.js" && method === "GET") {
+    const s = await env.LEDATIC_KV.get("portcall-app.sw");
+    return new Response(s || "// not deployed", { headers: secGreatlakes({ "content-type": "application/javascript; charset=utf-8", "cache-control": "no-store" }) });
+  }
+  if (/^\/portcall\/app\/icon-(180|192|512)\.png$/.test(pathname) && method === "GET") {
+    const buf = await env.LEDATIC_KV.get("portcall-app.icon" + pathname.match(/icon-(\d+)/)[1], { type: "arrayBuffer" });
+    if (!buf) return notFound();
+    return new Response(buf, { headers: secGreatlakes({ "content-type": "image/png", "cache-control": "public, max-age=86400" }) });
+  }
+
+  // ── /portcall/auth — app accounts. Invite-code registration: an admin
+  // bootstrap code is seeded once by the operator of this Worker; every
+  // further account comes from an invite minted in-app by admin/operator.
+  if (pathname.startsWith("/portcall/auth/") && method === "POST") {
+    const txt = await request.text();
+    if (txt.length > 2048) return pcJson({ error: "too large" }, 413);
+    let b = {}; try { b = JSON.parse(txt || "{}"); } catch (e) { return pcJson({ error: "bad json" }, 400); }
+    if (pathname === "/portcall/auth/register") {
+      const code = String(b.code || "").trim().toUpperCase();
+      const handle = String(b.handle || "").trim().toLowerCase();
+      const pass = String(b.pass || "");
+      if (!PC_HANDLE_RE.test(handle)) return pcJson({ error: "handle: 3-24 chars, a-z 0-9 _ -" }, 400);
+      if (pass.length < 6 || pass.length > 64) return pcJson({ error: "password: 6-64 chars" }, 400);
+      const invRaw = await env.LEDATIC_KV.get("pc_invite:" + code);
+      if (!invRaw) return pcJson({ error: "invalid or already-used invite code" }, 403);
+      if (await env.LEDATIC_KV.get("pc_user:" + handle)) return pcJson({ error: "handle taken" }, 409);
+      let inv = {}; try { inv = JSON.parse(invRaw); } catch (e) {}
+      const role = ["admin", "operator", "crew"].includes(inv.role) ? inv.role : "crew";
+      const salt = pcRandHex(16);
+      const hash = await pcHash(pass, salt);
+      await env.LEDATIC_KV.put("pc_user:" + handle, JSON.stringify({ salt, hash, role, created: new Date().toISOString(), by: inv.by || "" }));
+      await env.LEDATIC_KV.delete("pc_invite:" + code);
+      const token = await pcSession(env, handle, role);
+      return pcJson({ ok: true, token, handle, role });
+    }
+    if (pathname === "/portcall/auth/login") {
+      const handle = String(b.handle || "").trim().toLowerCase();
+      const pass = String(b.pass || "");
+      const uRaw = PC_HANDLE_RE.test(handle) ? await env.LEDATIC_KV.get("pc_user:" + handle) : null;
+      if (!uRaw) return pcJson({ error: "no such account or wrong password" }, 403);
+      let u = {}; try { u = JSON.parse(uRaw); } catch (e) { return pcJson({ error: "account corrupt" }, 500); }
+      if (await pcHash(pass, u.salt) !== u.hash) return pcJson({ error: "no such account or wrong password" }, 403);
+      const token = await pcSession(env, handle, u.role);
+      return pcJson({ ok: true, token, handle, role: u.role });
+    }
+    if (pathname === "/portcall/auth/logout") {
+      const tok = request.headers.get("x-pc-token") || "";
+      if (/^[0-9a-f]{64}$/.test(tok)) await env.LEDATIC_KV.delete("pc_sess:" + tok);
+      return pcJson({ ok: true });
+    }
+    if (pathname === "/portcall/auth/invite") {
+      const who = await pcAuth(request, env);
+      if (!who) return pcJson({ error: "login required" }, 401);
+      const role = String(b.role || "crew");
+      const can = who.role === "admin" ? ["crew", "operator", "admin"] : who.role === "operator" ? ["crew"] : [];
+      if (!can.includes(role)) return pcJson({ error: "not allowed to invite that role" }, 403);
+      const code = pcInviteCode();
+      await env.LEDATIC_KV.put("pc_invite:" + code, JSON.stringify({ role, by: who.handle }), { expirationTtl: 60 * 60 * 24 * 7 });
+      return pcJson({ ok: true, code, role, expires_days: 7 });
+    }
+    return pcJson({ error: "unknown auth route" }, 404);
+  }
+  if (pathname === "/portcall/auth/me" && method === "GET") {
+    const who = await pcAuth(request, env);
+    return who ? pcJson({ ok: true, handle: who.handle, role: who.role }) : pcJson({ error: "login required" }, 401);
+  }
+  if (pathname === "/portcall/team" && method === "GET") {
+    const who = await pcAuth(request, env);
+    if (!who || who.role !== "admin") return pcJson({ error: "admin only" }, 403);
+    const list = await env.LEDATIC_KV.list({ prefix: "pc_user:" });
+    const team = [];
+    for (const k of list.keys) {
+      const raw = await env.LEDATIC_KV.get(k.name);
+      if (!raw) continue;
+      try { const u = JSON.parse(raw); team.push({ handle: k.name.slice(8), role: u.role, created: u.created, by: u.by || "" }); } catch (e) {}
+    }
+    return pcJson({ ok: true, team });
   }
 
   // ── /greatlakes — password-gated commercial demo ──────────────────────
@@ -2529,6 +2671,83 @@ async function handleSite(request, env, url) {
       });
     }
     return new Response("bad multipart endpoint", { status: 404, headers: sec({ "content-type": "text/plain" }) });
+  }
+
+  // ─── /tios telemetry — every public match feeds the AI harness ─────────
+  // POST /api/tios/match: anonymous match record (doctrine/outcome/metrics,
+  // no identity — disclosed on /tios). Validated + size-capped, stored one
+  // R2 object per record (append-safe, unlike KV last-writer-wins).
+  if (pathname === "/api/tios/match" && method === "POST") {
+    const raw = await request.text();
+    if (raw.length > 4096) return new Response("too large", { status: 413, headers: sec({}) });
+    let rec;
+    try { rec = JSON.parse(raw); } catch { return new Response("bad json", { status: 400, headers: sec({}) }); }
+    if (typeof rec.doctrine !== "string" || typeof rec.proctor_win !== "boolean"
+        || typeof rec.duration_s !== "number") {
+      return new Response("bad record", { status: 400, headers: sec({}) });
+    }
+    const key = `tios/matches/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
+    await env.REPORTS_R2.put(key, raw, { httpMetadata: { contentType: "application/json" } });
+    return new Response(null, { status: 204, headers: sec({}) });
+  }
+  // GET /api/tios/matches: harvest the corpus (bearer-protected, JSONL).
+  if (pathname === "/api/tios/matches" && method === "GET") {
+    const auth = request.headers.get("authorization") || "";
+    if (auth !== `Bearer ${env.API_BEARER}`) {
+      return new Response("unauthorized", { status: 401, headers: sec({}) });
+    }
+    const limit = Math.min(parseInt(url.searchParams.get("limit") || "500", 10), 1000);
+    const listed = await env.REPORTS_R2.list({ prefix: "tios/matches/", limit });
+    const lines = [];
+    for (const obj of listed.objects) {
+      const o = await env.REPORTS_R2.get(obj.key);
+      if (o) lines.push(await o.text());
+    }
+    return new Response(lines.join("\n") + "\n", {
+      headers: sec({ "content-type": "application/jsonl" }),
+    });
+  }
+
+  // ─── /tios — the playable web build ────────────────────────────────────
+  // Guide page lives at KV "tios.html" (generic fallthrough serves it at
+  // /tios). Versioned immutable bundles live at tios/v-<ver>/…; /tios/play
+  // 302s to the current version (KV "tios/current"). Game responses carry
+  // COOP/COEP (threaded build needs crossOriginIsolated) and a game CSP with
+  // worker-src blob: (emscripten pthreads). The 37 MB engine wasm exceeds
+  // KV's 25 MB value cap, so it's stored gzipped (~11 MB) and served
+  // pre-encoded with encodeBody:"manual".
+  if (pathname === "/tios/play" || pathname === "/tios/play/") {
+    const ver = await env.LEDATIC_KV.get("tios/current");
+    if (!ver) return notFound();
+    return Response.redirect(
+      new URL(`/tios/v-${ver.trim()}/index.html`, request.url).href, 302);
+  }
+  if (pathname.startsWith("/tios/v-")) {
+    const key = pathname.slice(1);
+    const gameHeaders = {
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-embedder-policy": "require-corp",
+      "content-security-policy": CSP.replace(
+        "default-src 'self'", "default-src 'self'; worker-src 'self' blob:"),
+      "cache-control": "public, max-age=31536000, immutable", // versioned = immutable
+    };
+    if (key.endsWith(".wasm")) {
+      const gz = await env.LEDATIC_KV.get(key + ".gz", "arrayBuffer");
+      if (!gz) return notFound();
+      return new Response(gz, {
+        encodeBody: "manual",
+        headers: sec({
+          "content-type": MIME.wasm,
+          "content-encoding": "gzip",
+          ...gameHeaders,
+        }),
+      });
+    }
+    const served = await serveFromKV(key, env);
+    if (!served) return notFound();
+    const h = new Headers(served.headers);
+    for (const [k, v] of Object.entries(gameHeaders)) h.set(k, v);
+    return new Response(served.body, { status: served.status, headers: h });
   }
 
   // Canonicalize /index.html → /
