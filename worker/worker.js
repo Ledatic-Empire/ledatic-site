@@ -2688,7 +2688,36 @@ async function handleSite(request, env, url) {
     }
     const key = `tios/matches/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
     await env.REPORTS_R2.put(key, raw, { httpMetadata: { contentType: "application/json" } });
+    // COMMUNAL FRONT: fold the record into the shared war aggregate. KV
+    // last-writer-wins means a concurrent post can lose one tick — tolerable
+    // for a scoreboard, same tradeoff as the playground rate limiter.
+    try {
+      const agg = await env.LEDATIC_KV.get("tios/war_agg", { type: "json" }) || {
+        total: 0, held: 0, lost: 0, web: 0, native: 0, real: 0, doctrines: {}, updated: 0 };
+      agg.total += 1;
+      if (rec.proctor_win) agg.lost += 1; else agg.held += 1;
+      if (rec.src === "web") agg.web += 1; else agg.native += 1;
+      if (rec.map === "THRESHOLD") agg.real += 1;
+      if (typeof rec.doctrine === "string" && rec.doctrine.length < 24) {
+        agg.doctrines[rec.doctrine] = (agg.doctrines[rec.doctrine] || 0) + 1;
+      }
+      agg.updated = Date.now();
+      await env.LEDATIC_KV.put("tios/war_agg", JSON.stringify(agg));
+    } catch (e) { console.warn("tios war_agg fold failed", e); }
     return new Response(null, { status: 204, headers: sec({}) });
+  }
+  // GET /api/tios/war: the communal front, public. Every commander moves the
+  // same line: position is the running balance of held vs lost, centered at
+  // 50 and clamped off the walls so the war is never displayed as over.
+  if (pathname === "/api/tios/war" && method === "GET") {
+    const agg = await env.LEDATIC_KV.get("tios/war_agg", { type: "json" }) || {
+      total: 0, held: 0, lost: 0, web: 0, native: 0, real: 0, doctrines: {}, updated: 0 };
+    const swing = agg.total ? (agg.held - agg.lost) / Math.max(agg.total, 20) : 0;
+    agg.front = Math.max(8, Math.min(92, Math.round(50 + swing * 42)));
+    return new Response(JSON.stringify(agg), {
+      headers: sec({ "content-type": "application/json",
+        "cache-control": "public, max-age=60" }),
+    });
   }
   // GET /api/tios/matches: harvest the corpus (bearer-protected, JSONL).
   if (pathname === "/api/tios/matches" && method === "GET") {
