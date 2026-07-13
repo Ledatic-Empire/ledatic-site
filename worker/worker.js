@@ -1068,7 +1068,9 @@ async function handleSite(request, env, url) {
   if (pathname === "/portcall/app" || pathname === "/portcall/app/") {
     const html = await env.LEDATIC_KV.get("portcall-app.html");
     if (!html) return new Response("app not deployed", { status: 503, headers: sec({ "content-type": "text/plain" }) });
-    return new Response(html, { headers: secGreatlakes({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }) });
+    // GREATLAKES_CSP (not the site default): the app loads Leaflet from unpkg
+    // and carto map tiles, same as the /portcall demo page.
+    return new Response(html, { headers: secGreatlakes({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": GREATLAKES_CSP }) });
   }
   if (pathname === "/portcall/app/manifest.json" && method === "GET") {
     const m = await env.LEDATIC_KV.get("portcall-app.manifest");
