@@ -34,6 +34,25 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   "https://api.cloudflare.com/client/v4/accounts/$ACC/workers/scripts/$SCRIPT" \
   > "$BACKUP_DIR/ledatic_worker_$TS.txt"
 
+# ROUTE-CLOBBER GUARD (earned 2026-07-13: a parallel session deployed from a
+# stale copy and silently wiped the /portcall/app auth routes for ~11 hours).
+# Any route matched in the LIVE worker but absent from the candidate aborts
+# the deploy. Additive WIP deploys pass untouched; removals must be explicit:
+#   DEPLOY_ALLOW_ROUTE_REMOVAL=1 ./worker/deploy_worker.sh
+echo "> Route-clobber guard"
+LIVE_ROUTES=$(mktemp); CAND_ROUTES=$(mktemp)
+grep -ohE 'pathname === "[^"]+"|pathname\.startsWith\("[^"]+"' "$BACKUP_DIR/ledatic_worker_$TS.txt" | sort -u > "$LIVE_ROUTES"
+grep -ohE 'pathname === "[^"]+"|pathname\.startsWith\("[^"]+"' "$SRC" | sort -u > "$CAND_ROUTES"
+MISSING=$(comm -23 "$LIVE_ROUTES" "$CAND_ROUTES")
+rm -f "$LIVE_ROUTES" "$CAND_ROUTES"
+if [ -n "$MISSING" ] && [ "${DEPLOY_ALLOW_ROUTE_REMOVAL:-0}" != "1" ]; then
+  echo "REFUSING DEPLOY — candidate worker.js is missing routes that are LIVE right now:" >&2
+  echo "$MISSING" >&2
+  echo "Your source is probably stale (pull/rebase first). If removal is intentional:" >&2
+  echo "  DEPLOY_ALLOW_ROUTE_REMOVAL=1 ./worker/deploy_worker.sh" >&2
+  exit 5
+fi
+
 echo "> Writing metadata"
 BEACON_TOKEN_VAL=$(cat ~/.ledatic/entropy/beacon_token)
 API_BEARER_VAL=$(cat ~/.ledatic/api/bearer_token)
