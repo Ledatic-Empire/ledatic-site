@@ -7,7 +7,12 @@ precision highp float;
    part of this program: they render attested frame data, which the seeded
    field must never impersonate (§0 rule 3).
 
-     u_mode 0 — home     stream-function band behind the / hero
+     u_mode 0 — home     domain-warped stream plasma behind the / hero.
+                         Each receipt fires a shockwave ring + reheat and
+                         re-seeds the grain; between receipts the flow
+                         advances only with phase, so a quiet beacon is a
+                         frozen field. Still decoration — never labeled
+                         as the beacon plasma itself (§0 rule 3).
      u_mode 1 — entropy  hash-rain band for the /entropy hero. Decoration
                          only — never labeled as the beacon. The real
                          chain renders from real pulse data elsewhere.
@@ -60,25 +65,57 @@ float fbm(vec2 p) {
   return v;
 }
 
-/* mode 0 — home. Scalar stream function ψ drawn as contour streamlines
-   with shock fronts, alive only inside a narrow horizontal band. */
-vec3 modeHome(vec2 uv, float t, float bloom) {
-  vec2 p = uv * 2.6 + vec2(t * 0.030, t * 0.016);
-  float psi = fbm(p) + 0.42 * fbm(p * 3.4 + vec2(t * 0.024, 0.0));
+/* mode 0 — home. Domain-warped stream plasma (q warps p, r warps q): the
+   flow reads as a magnetized fluid, striations as field lines. The core
+   sits right of the copy column. Everything is still a pure function of
+   (pulse_id, phase): the warp advances with pulse-time, the shockwave
+   ring and reheat ride the receipt (phase near 0), and both are gone by
+   phase 1 — a quiet beacon leaves a frozen, calm field. */
+vec3 modeHome(vec2 uv, float t, float phase, float bloom) {
+  vec2 c = uv - vec2(0.33, -0.02);          /* plasma core, right of copy */
+  float d = length(c);
 
-  float streams = pow(1.0 - smoothstep(0.0, 0.055, abs(fract(psi * 7.0) - 0.5)), 2.5);
-  float shocks  = smoothstep(0.70, 0.86, fbm(p * 6.5 - vec2(t * 0.040, t * 0.010)))
-                * smoothstep(0.30, 0.66, psi);
+  /* receipt shockwave: a refraction ring expanding from the core across
+     the ~2 s cadence. No receipt → bloom 0 → no ring, no displacement. */
+  float ring = smoothstep(0.045, 0.0, abs(d - phase * 1.5)) * bloom;
+  vec2 suv = uv + normalize(c + 1e-4) * ring * 0.05;
 
-  float band_y = 1.0 - smoothstep(0.30, 0.55, abs(uv.y + 0.04));
-  float band   = band_y * (1.0 - smoothstep(0.85, 1.20, abs(uv.x)));
+  vec2 p = suv * 2.2 + vec2(t * 0.026, t * 0.014);
 
-  vec3 col = STREAM * streams * band * (0.55 + 0.22 * bloom)
-           + SHOCK  * shocks  * band * 0.95;
+  /* q warps p, r warps q — computed once, shared by all three channels */
+  vec2 q = vec2(fbm(p),
+                fbm(p + vec2(5.2, 1.3)));
+  vec2 r = vec2(fbm(p + 2.6 * q + vec2(1.7, 9.2) + t * 0.020),
+                fbm(p + 2.6 * q + vec2(8.3, 2.8) - t * 0.016));
+  vec2 fp = p + 3.2 * r;
 
-  /* whisper outside the band — the field is everywhere; this is a slice */
-  float whisper = (1.0 - smoothstep(0.55, 0.95, abs(uv.y))) * (1.0 - band_y);
-  col += STREAM * streams * whisper * 0.05;
+  /* chromatic aberration on the final lookup only — widens on receipt */
+  float ca = 0.006 + 0.030 * bloom + 0.004 * d;
+  float f  = fbm(fp);
+  float fr = fbm(fp + vec2(ca, 0.0));
+  float fb = fbm(fp - vec2(ca, 0.0));
+
+  /* field-line striations riding the warped domain, advected by phase */
+  float lines = pow(abs(sin((f * 9.0 + r.x * 5.0 + t * 0.11) * 3.14159)), 12.0);
+
+  /* green ramp: charcoal → deep green → phosphor → hot mint core,
+     per-channel from the offset lookups so the aberration reads */
+  vec3 deep = vec3(0.015, 0.16, 0.055), hot = vec3(0.72, 1.0, 0.80);
+  vec3 col;
+  col.r = mix(mix(BASE.r, deep.r, smoothstep(0.18, 0.56, fr)),
+              mix(STREAM.r, hot.r, smoothstep(0.78, 1.0, fr)), smoothstep(0.46, 0.80, fr));
+  col.g = mix(mix(BASE.g, deep.g, smoothstep(0.18, 0.56, f)),
+              mix(STREAM.g, hot.g, smoothstep(0.78, 1.0, f)),  smoothstep(0.46, 0.80, f));
+  col.b = mix(mix(BASE.b, deep.b, smoothstep(0.18, 0.56, fb)),
+              mix(STREAM.b, hot.b, smoothstep(0.78, 1.0, fb)), smoothstep(0.46, 0.80, fb));
+  col *= f * f * 1.9 + 0.14;
+
+  col += SHOCK * lines * smoothstep(0.35, 0.75, f) * 0.45;   /* field lines */
+  col += hot * ring * 0.9;                                    /* the ring   */
+  col += SHOCK * bloom * 0.30 * exp(-d * 2.6);                /* reheat     */
+
+  /* keep the copy column readable: ease the field off to the left */
+  col *= 0.35 + 0.65 * smoothstep(-0.85, 0.05, uv.x);
   return col;
 }
 
@@ -135,7 +172,7 @@ void main() {
   vec3 col = BASE;
   if      (u_mode == 1) col += modeEntropy(uv, t, bloom);
   else if (u_mode == 2) col += modePlasma(uv, t, bloom);
-  else                  col += modeHome(uv, t, bloom);
+  else                  col += modeHome(uv, t, phase, bloom);
 
   float vign = 1.0 - smoothstep(0.45, 1.15, length(uv * vec2(0.65, 1.0)));
   col *= 0.40 + 0.60 * vign;
