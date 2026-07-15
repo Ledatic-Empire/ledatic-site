@@ -77,8 +77,8 @@ vec3 modeHome(vec2 uv, float t, float phase, float bloom) {
 
   /* receipt shockwave: a refraction ring expanding from the core across
      the ~2 s cadence. No receipt → bloom 0 → no ring, no displacement. */
-  float ring = smoothstep(0.045, 0.0, abs(d - phase * 1.5)) * bloom;
-  vec2 suv = uv + normalize(c + 1e-4) * ring * 0.05;
+  float ring = smoothstep(0.06, 0.0, abs(d - phase * 1.5)) * bloom;
+  vec2 suv = uv + normalize(c + 1e-4) * ring * 0.03;
 
   vec2 p = suv * 2.2 + vec2(t * 0.026, t * 0.014);
 
@@ -90,7 +90,7 @@ vec3 modeHome(vec2 uv, float t, float phase, float bloom) {
   vec2 fp = p + 3.2 * r;
 
   /* chromatic aberration on the final lookup only — widens on receipt */
-  float ca = 0.006 + 0.030 * bloom + 0.004 * d;
+  float ca = 0.006 + 0.012 * bloom + 0.004 * d;
   float f  = fbm(fp);
   float fr = fbm(fp + vec2(ca, 0.0));
   float fb = fbm(fp - vec2(ca, 0.0));
@@ -111,8 +111,8 @@ vec3 modeHome(vec2 uv, float t, float phase, float bloom) {
   col *= f * f * 1.9 + 0.14;
 
   col += SHOCK * lines * smoothstep(0.35, 0.75, f) * 0.45;   /* field lines */
-  col += hot * ring * 0.9;                                    /* the ring   */
-  col += SHOCK * bloom * 0.30 * exp(-d * 2.6);                /* reheat     */
+  col += hot * ring * 0.30;                                   /* the ring — understated */
+  col += SHOCK * bloom * 0.12 * exp(-d * 2.6);                /* reheat     */
 
   /* keep the copy column readable: ease the field off to the left */
   col *= 0.35 + 0.65 * smoothstep(-0.85, 0.05, uv.x);
