@@ -286,6 +286,39 @@
   </div>
 </section>
 
+<section class="section" id="homeworld">
+  <div class="wrap">
+    <span class="eyebrow reveal">Your world</span>
+    <h2 class="reveal">This browser keeps one world. The beacon ages it.
+      <span class="mode-badge" id="home-badge" data-mode="">&mdash;</span></h2>
+    <p class="lead reveal">
+      Born from whatever pulse was live the first time you opened this
+      page, and aged only as the beacon ticks &mdash; one generation every
+      128 pulses, about four minutes. Close the tab for a week and it
+      comes back a week older. It is recomputed from its birth
+      certificate on every visit, so nobody &mdash; not you, not us &mdash; can
+      age it faster, wind it back, or swap it out.
+    </p>
+
+    <div class="universe-panel reveal">
+      <div class="universe-frame">
+        <canvas id="home-board" width="640" height="320" role="img" aria-label="Your browser's own Game of Life world, aged by the beacon"></canvas>
+      </div>
+      <div class="universe-readout">
+        <span>born <b id="hw-born">&mdash;</b></span>
+        <span>age <b id="hw-age">&mdash;</b></span>
+        <span>alive <b id="hw-pop">&mdash;</b></span>
+        <span>fate <b id="hw-fate">&mdash;</b></span>
+      </div>
+      <div class="cert-row">
+        <span class="cert-value" id="hw-cert">&mdash;</span>
+        <button class="copy-btn" id="hw-release" hidden>release this world</button>
+      </div>
+      <p class="replay-note" id="hw-note"></p>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="how">
   <div class="wrap">
     <span class="eyebrow reveal">How it works</span>
@@ -572,8 +605,124 @@ const VECTORS = [
   el.innerHTML = lines.join('\n');
 })();
 
+/* ── Homeworld — one world per browser, aged only by the beacon ──────
+   Displayed state is a pure function of (birth certificate, current
+   pulse): age = floor((now_pulse − born_pulse) / 128). No wall clock,
+   no stored board, no increments — recomputed from the certificate on
+   every visit, so it cannot be aged faster, wound back, or swapped.
+   The certificate lives in this browser's localStorage only. */
+const HW_KEY = 'ledatic:life:homeworld';
+const PULSES_PER_GEN = 128;      // ≈ 4.3 min per generation at ~2 s cadence
+const HW_SIM_CAP = 20000;        // honest simulation horizon for one tab
+
+function hwLoad() {
+  try {
+    const v = JSON.parse(localStorage.getItem(HW_KEY));
+    return v && /^\d{1,12}$/.test(v.pid) && /^[0-9a-f]{64}$/.test(v.vhex) ? v : null;
+  } catch (e) { return null; }
+}
+function hwSave(v) { try { localStorage.setItem(HW_KEY, JSON.stringify(v)); } catch (e) {} }
+
+function hwDraw(b, mode) {
+  const cv = $('home-board'), ctx = cv.getContext('2d');
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const cw = cv.clientWidth || 640;
+  if (cv.width !== Math.round(cw * dpr)) {
+    cv.width = Math.round(cw * dpr);
+    cv.height = Math.round(cw * dpr / 2);
+  }
+  const cell = cv.width / W;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const alive = mode === 'replay' ? COLORS.replay() : COLORS.live();
+  const dead = COLORS.dead();
+  const pad = Math.max(1, cell * 0.12);
+  for (let i = 0; i < N; i++) {
+    const y = (i / W) | 0, x = i - y * W;
+    ctx.fillStyle = b[i] ? alive : dead;
+    ctx.fillRect(x * cell + pad, y * cell + pad, cell - 2 * pad, cell - 2 * pad);
+  }
+}
+
+/* Fast-forward with extinction + cycle detection, so an old world costs
+   milliseconds, not minutes: once the state repeats with period P, the
+   state at any later age is state(g0 + ((age − g0) mod P)). An empty
+   board stays empty under Conway's rules forever. */
+async function hwEvolve(seedStr, ageGens) {
+  let b = await seedBoard(seedStr);
+  if (ageGens <= 0) return { board: b, fate: null };
+  const seen = new Map([[ser(b), 0]]);
+  let g = 0, fate = null;
+  while (g < ageGens && g < HW_SIM_CAP) {
+    b = lifeStep(b); g++;
+    if (pop(b) === 0) { fate = { kind: 'extinct', at: g }; break; }
+    const key = ser(b);
+    if (seen.has(key)) {
+      const g0 = seen.get(key), period = g - g0;
+      const rem = (ageGens - g0) % period;
+      for (let i = 0; i < rem; i++) b = lifeStep(b);
+      fate = { kind: 'settled', at: g0, period };
+      break;
+    }
+    seen.set(key, g);
+  }
+  if (!fate && g >= HW_SIM_CAP && g < ageGens) fate = { kind: 'horizon', at: g };
+  return { board: b, fate };
+}
+
+async function homeworldTick() {
+  const badge = $('home-badge'), note = $('hw-note');
+  let nowP = null;
+  try {
+    const r = await fetch('/entropy/pulse', { cache: 'no-store' });
+    if (r.ok) {
+      const p = await r.json();
+      if (/^[0-9a-f]{64}$/.test(p.value_hex)) nowP = p;
+    }
+  } catch (e) { /* offline path below is honest about it */ }
+
+  let hw = hwLoad();
+  if (!hw) {
+    if (!nowP) {
+      badge.dataset.mode = 'fail';
+      badge.textContent = '✕ OFFLINE';
+      note.textContent = 'beacon unreachable — your world will be born the next time this page sees a live pulse';
+      return;
+    }
+    hw = { pid: String(nowP.pulse_id), vhex: nowP.value_hex, born_utc: nowP.timestamp_utc || '' };
+    hwSave(hw);
+  }
+  if (nowP) { hw.last_seen = String(nowP.pulse_id); hwSave(hw); }
+
+  const nowPid = Number(nowP ? nowP.pulse_id : (hw.last_seen || hw.pid));
+  const age = Math.max(0, Math.floor((nowPid - Number(hw.pid)) / PULSES_PER_GEN));
+  const { board, fate } = await hwEvolve(`rail-life:v2:beacon:${hw.pid}:${hw.vhex}`, age);
+
+  hwDraw(board, nowP ? 'live' : 'replay');
+  badge.dataset.mode = nowP ? 'live' : 'replay';
+  badge.textContent = nowP ? '⌁ LIVE' : '⟳ LAST KNOWN AGE';
+  $('hw-born').textContent = `p#${hw.pid}`;
+  $('hw-age').textContent = `${age.toLocaleString()} gen${age === 1 ? '' : 's'}`;
+  $('hw-pop').textContent = String(pop(board));
+  $('hw-fate').textContent =
+    fate === null ? (age === 0 ? 'newborn' : 'still churning')
+    : fate.kind === 'extinct' ? `extinct at gen ${fate.at}`
+    : fate.kind === 'settled' ? `settled, period ${fate.period}, at gen ${fate.at}`
+    : `aged past this tab's horizon (${HW_SIM_CAP.toLocaleString()} gens)`;
+  $('hw-cert').textContent = `birth certificate: ${hw.pid} ${hw.vhex} — replay its birth above`;
+  $('hw-release').hidden = false;
+  if (!nowP) note.textContent = 'beacon unreachable — showing the age at the last pulse this browser confirmed';
+  else note.textContent = '';
+}
+
+$('hw-release').addEventListener('click', () => {
+  try { localStorage.removeItem(HW_KEY); } catch (e) {}
+  $('hw-note').textContent = 'world released — a new one is being born…';
+  homeworldTick();
+});
+
 /* Auto-birth on load — the page opens with a world being born. */
 birthLive();
+homeworldTick();
 window.addEventListener('resize', () => {
   if (lastBoard) drawBoard(lastBoard, lastMode);
 });
