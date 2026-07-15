@@ -67,6 +67,16 @@ if [ -z "$TESTS_TOTAL" ]; then
 fi
 [ -n "$TESTS_TOTAL" ] || { echo "gen_stats: could not source test count" >&2; exit 1; }
 
+# ── Nightly reproducibility witness ─────────────────────────────────────
+# com.ledatic.rail_repro_witness (daily 04:37): Studio rebuilds public
+# master from source and byte-compares the committed seed. Last log line:
+#   2026-07-15T08:37:00Z PASS node=studio master=0980047 reproducible sha=…
+# Missing log or blank line → the Figure claims nothing ("not yet run").
+REPRO_LOG="${REPRO_LOG:-$HOME/.fleet/repro_witness.log}"
+REPRO_LINE=$(tail -1 "$REPRO_LOG" 2>/dev/null || true)
+REPRO_VERDICT=$(printf '%s' "$REPRO_LINE" | awk '{print $2}')
+REPRO_DATE=$(printf '%s' "$REPRO_LINE" | awk '{print substr($1,1,10)}')
+
 # ── Current pulse (for data-pulse stamping on Figures) ──────────────────
 PULSE_ID=$(curl -sf --max-time 8 "$SITE_ORIGIN/entropy/pulse" 2>/dev/null \
   | python3 -c "import sys,json;print(json.load(sys.stdin)['pulse_id'])" 2>/dev/null || true)
@@ -75,6 +85,7 @@ PULSE_ID=$(curl -sf --max-time 8 "$SITE_ORIGIN/entropy/pulse" 2>/dev/null \
 BIN_BYTES="$BIN_BYTES" TAG_COUNT="$TAG_COUNT" VERSION="$VERSION" \
 MODULES="$MODULES" TESTS_PASS="$TESTS_PASS" TESTS_TOTAL="$TESTS_TOTAL" \
 TESTS_SOURCE="$TESTS_SOURCE" TESTS_PULSE="$TESTS_PULSE" PULSE_ID="$PULSE_ID" \
+REPRO_VERDICT="$REPRO_VERDICT" REPRO_DATE="$REPRO_DATE" \
 RAIL_REF="$RAIL_REF" OUT="$OUT" python3 <<'PYEOF'
 import json, os, datetime
 
@@ -142,6 +153,26 @@ stats = {
         "formats": {"s": "~2 s", "words": "every ~2 s"},
         "source": "entropy beacon publish cadence (design constant; the pulse clock measures the real interval at runtime)",
     },
+}
+
+# Reproducibility witness — verdict-shaped, and it can go red. PASS shows
+# the re-proof date; anything else shows itself loudly; an absent log
+# claims nothing. No human types this line either.
+repro_verdict = os.environ.get("REPRO_VERDICT", "")
+repro_date    = os.environ.get("REPRO_DATE", "")
+if repro_verdict == "PASS" and repro_date:
+    repro_display, repro_short = f"re-proven {repro_date}", "reproduced"
+elif repro_verdict and repro_date:
+    repro_display = f"{repro_verdict} {repro_date}"
+    repro_short   = repro_verdict
+else:
+    repro_display, repro_short = "not yet run", "not yet run"
+stats["witness:repro"] = {
+    "value": repro_verdict or None,
+    "display": repro_display,
+    "formats": {"short": repro_short, "date": repro_date or "—"},
+    "source": "last line of the nightly repro-witness log (com.ledatic.rail_repro_witness, 04:37 daily: "
+              "Studio rebuilds public master from source, byte-compares the committed seed)",
 }
 
 out = {
