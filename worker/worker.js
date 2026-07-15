@@ -2747,6 +2747,23 @@ async function handleSite(request, env, url) {
   // worker-src blob: (emscripten pthreads). The 37 MB engine wasm exceeds
   // KV's 25 MB value cap, so it's stored gzipped (~11 MB) and served
   // pre-encoded with encodeBody:"manual".
+  // /tios/dist/<file>: native build downloads. R2, not KV — the zips run
+  // 85-116MB against KV's 25MB value cap. Same read-only pattern as
+  // /pursue/files; uploads happen via the R2 API from our end.
+  if (pathname.startsWith("/tios/dist/") && method === "GET") {
+    const key = pathname.slice(1);
+    if (key.includes("..") || key.length > 128) return notFound();
+    const obj = await env.REPORTS_R2.get(key);
+    if (!obj) return notFound();
+    return new Response(obj.body, {
+      headers: sec({
+        "content-type": "application/zip",
+        "content-length": String(obj.size),
+        "content-disposition": `attachment; filename="${key.split("/").pop()}"`,
+        "cache-control": "public, max-age=3600",
+      }),
+    });
+  }
   if (pathname === "/tios/play" || pathname === "/tios/play/") {
     const ver = await env.LEDATIC_KV.get("tios/current");
     if (!ver) return notFound();
