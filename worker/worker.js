@@ -1,25 +1,3 @@
-/**
- * Ledatic Worker — ledatic.org (public site) + reports.ledatic.org (client portal)
- *
- * Design:
- *   - ledatic.org: hybrid allow/deny. Internal KV keys (client:*, reports:*,
- *     session:*, entropy:* internals, snapshot, devlog, intakes, dead-page
- *     orphans) are denied at the Worker level. Everything else is served
- *     directly from KV with extension-based MIME + cache policy, so new
- *     pages (mission control, plasma landing, future tools) ship without
- *     Worker edits.
- *   - reports.ledatic.org: authed client portal, KV-backed client/session
- *     records, R2-backed PDF downloads.
- *   - Every response carries the strict-CSP security header stack.
- *
- * Bindings:
- *   LEDATIC_KV  — KV namespace (site content + client/report/session records)
- *   REPORTS_R2  — R2 bucket `ledatic-reports` (PDF storage)
- *
- * Source of truth: worker/worker.js in the ledatic-site repo. Deploy via
- *   worker/deploy_worker.sh
- */
-
 // ─── Security ────────────────────────────────────────────────────────────────
 
 const CSP = [
@@ -1817,8 +1795,8 @@ async function handleSite(request, env, url) {
     }, 200);
   }
 
-  // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
-  // beacon on Mini.  Same frame format (16B header + 32B metrics +
+  // 256² OT MHD on the training node's GPU — sister surface to the live
+  // 128² beacon.  Same frame format (16B header + 32B metrics +
   // planes), 4× resolution, ~388 fps.  Studio publisher PUTs the raw
   // frame bytes here; the attestation sidecar lives at
   // /entropy/frame/ot256/latest.attestation.json (signed by fleet0).
@@ -2680,6 +2658,12 @@ async function handleSite(request, env, url) {
   // no identity — disclosed on /tios). Validated + size-capped, stored one
   // R2 object per record (append-safe, unlike KV last-writer-wins).
   if (pathname === "/api/tios/match" && method === "POST") {
+    // Rate-limited like the playground: the communal front is unauthenticated
+    // by design, but one IP doesn't get to BE the war (audit, security lens).
+    const tip = request.headers.get("cf-connecting-ip") || "unknown";
+    if (!(await playgroundRateLimit("tios:" + tip, env))) {
+      return new Response("slow down, commander", { status: 429, headers: sec({}) });
+    }
     const raw = await request.text();
     if (raw.length > 4096) return new Response("too large", { status: 413, headers: sec({}) });
     let rec;
@@ -2747,6 +2731,23 @@ async function handleSite(request, env, url) {
   // worker-src blob: (emscripten pthreads). The 37 MB engine wasm exceeds
   // KV's 25 MB value cap, so it's stored gzipped (~11 MB) and served
   // pre-encoded with encodeBody:"manual".
+  // /tios/dist/<file>: native build downloads. R2, not KV — the zips run
+  // 85-116MB against KV's 25MB value cap. Same read-only pattern as
+  // /pursue/files; uploads happen via the R2 API from our end.
+  if (pathname.startsWith("/tios/dist/") && method === "GET") {
+    const key = pathname.slice(1);
+    if (key.includes("..") || key.length > 128) return notFound();
+    const obj = await env.REPORTS_R2.get(key);
+    if (!obj) return notFound();
+    return new Response(obj.body, {
+      headers: sec({
+        "content-type": "application/zip",
+        "content-length": String(obj.size),
+        "content-disposition": `attachment; filename="${key.split("/").pop()}"`,
+        "cache-control": "public, max-age=3600",
+      }),
+    });
+  }
   if (pathname === "/tios/play" || pathname === "/tios/play/") {
     const ver = await env.LEDATIC_KV.get("tios/current");
     if (!ver) return notFound();
