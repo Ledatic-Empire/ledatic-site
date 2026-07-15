@@ -1795,8 +1795,8 @@ async function handleSite(request, env, url) {
     }, 200);
   }
 
-  // 256² OT MHD on Studio's M1 Ultra GPU — sister surface to the 128²
-  // beacon on Mini.  Same frame format (16B header + 32B metrics +
+  // 256² OT MHD on the training node's GPU — sister surface to the live
+  // 128² beacon.  Same frame format (16B header + 32B metrics +
   // planes), 4× resolution, ~388 fps.  Studio publisher PUTs the raw
   // frame bytes here; the attestation sidecar lives at
   // /entropy/frame/ot256/latest.attestation.json (signed by fleet0).
