@@ -172,13 +172,13 @@ pre.recipe .ok { color: var(--ph-600); }
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up">Language &mdash; <data class="fig" data-src="repo:version">v5.1.0</data></span>
+    <span class="eyebrow fade-up">Language &mdash; <data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></span>
     <h1 class="hero-title fade-up">Rail</h1>
     <p class="hero-sub fade-up">
       A self-hosting compiler. Zero C dependencies.
     </p>
     <p class="hero-desc fade-up">
-      Rail compiles itself to a <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb">~1.2 MB</data> ARM64 binary. Six backends: native
+      Rail compiles itself to a <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> ARM64 binary. Six backends: native
       ARM64, Linux ARM64, Linux x86_64, WASM (early), Cortex-M4, RISC-V &mdash; and it
       JIT-emits its own Metal GPU kernels. One language for the whole stack
       &mdash; compiler, TLS, plasma sim, site generator, training loop.
@@ -190,7 +190,7 @@ pre.recipe .ok { color: var(--ph-600); }
     </div>
     <div class="visor-mini fade-up">
       <span class="visor-label">Rail</span>
-      <span class="visor-value"><data class="fig" data-src="repo:version">v5.1.0</data> <span class="dim">//</span> <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data></span>
+      <span class="visor-value"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data> <span class="dim">//</span> <data class="fig" data-src="tests:total" data-fmt="ratio" value="187" data-pulse="2941323">187/187</data></span>
     </div>
     <p class="trust fade-up">
       2-pass byte-identical self-compile &middot; BSL 1.1 &middot; Detroit, MI
@@ -212,23 +212,23 @@ pre.recipe .ok { color: var(--ph-600); }
 
     <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version">v5.1.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
+        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
         <div class="label">Current release</div>
       </div>
       <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data></div>
+        <div class="value"><data class="fig" data-src="tests:total" data-fmt="ratio" value="187" data-pulse="2941323">187/187</data></div>
         <div class="label">Tests green</div>
       </div>
       <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="repo:rail_native">1.2 MB</data></div>
+        <div class="value"><data class="fig" data-src="repo:rail_native" value="908360" data-pulse="2941323">0.9 MB</data></div>
         <div class="label">Seed binary</div>
       </div>
       <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="stdlib:modules" data-fmt="count">94</data></div>
+        <div class="value"><data class="fig" data-src="stdlib:modules" data-fmt="count" value="102" data-pulse="2941323">102</data></div>
         <div class="label">Stdlib modules</div>
       </div>
       <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="repo:tags" data-fmt="count">45</data></div>
+        <div class="value"><data class="fig" data-src="repo:tags" data-fmt="count" value="47" data-pulse="2941323">47</data></div>
         <div class="label">Tagged releases</div>
       </div>
       <div class="stat reveal">
@@ -251,7 +251,7 @@ pre.recipe .ok { color: var(--ph-600); }
     <h2 class="reveal">What ships in the box.</h2>
     <p class="lead reveal">
       Every module below is Rail source, compiled by Rail, running on the
-      same <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb">~1.2 MB</data> binary. No FFI shims. No package manager.
+      same <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> binary. No FFI shims. No package manager.
     </p>
 
     <div class="grid grid-2 grid-3 push">
@@ -287,7 +287,7 @@ pre.recipe .ok { color: var(--ph-600); }
       </div>
     </div>
     <p class="gloss push reveal">
-      <data class="fig" data-src="stdlib:modules" data-fmt="modules">94 modules</data> in the box &mdash; the six above are the headliners
+      <data class="fig" data-src="stdlib:modules" data-fmt="modules" value="102" data-pulse="2941323">102 modules</data> in the box &mdash; the six above are the headliners
     </p>
   </div>
 </section>
@@ -550,7 +550,7 @@ curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tm
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Ledatic</span>
-      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio" value="187" data-pulse="2941323">187/187</data> &middot; <data class="fig" data-src="repo:rail_native" value="908360" data-pulse="2941323">0.9 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags" value="47" data-pulse="2941323">47 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
     </div>
   </div>
 </footer>
