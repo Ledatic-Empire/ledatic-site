@@ -70,13 +70,17 @@ SDK_WITNESS_KEY_VAL=$(cat ~/.ledatic/sdk_witness/key.hex)
 # creates the Stripe webhook endpoint and saves its whsec_… here — the worker
 # route answers 503 unconfigured while empty, so deploys stay safe pre-Stripe.
 STRIPE_WEBHOOK_SECRET_VAL=$(cat ~/.ledatic/stripe/webhook_secret 2>/dev/null || echo "")
+# 2026-07-24 free-tier pivot: the REPORTS_R2 r2_bucket binding is REMOVED —
+# CF rejects deploys declaring R2 while R2 is disabled on the account.
+# worker.js stubs env.REPORTS_R2 so all call sites degrade safely. If R2 is
+# ever re-enabled, re-add:
+#   {"type":"r2_bucket","name":"REPORTS_R2","bucket_name":"ledatic-reports"},
 cat > "$META" <<JSON
 {
   "main_module": "worker.js",
   "compatibility_date": "2024-01-01",
   "bindings": [
     {"type":"kv_namespace","name":"LEDATIC_KV","namespace_id":"${CF_KV_NS:?set CF_KV_NS}"},
-    {"type":"r2_bucket","name":"REPORTS_R2","bucket_name":"ledatic-reports"},
     {"type":"secret_text","name":"BEACON_TOKEN","text":"$BEACON_TOKEN_VAL"},
     {"type":"secret_text","name":"API_BEARER","text":"$API_BEARER_VAL"},
     {"type":"secret_text","name":"DDA_FLEET_TOKEN","text":"$DDA_FLEET_TOKEN_VAL"},

@@ -1030,9 +1030,11 @@ async function handleSite(request, env, url) {
     } });
   }
   // Anchor proxy: lets the bundled APK fetch the live beacon pulse cross-origin.
+  // 2026-07-24: proxied to the Mini origin (beacon.ledatic.org, full-cadence
+  // local chain via tunnel) — R2 retired from the pulse path (free-tier pivot).
   if (pathname === "/portcall/pulse.json" && method === "GET") {
-    const obj = await env.REPORTS_R2.get("entropy/pulse.json");
-    const body = obj ? await obj.text() : "{}";
+    const r = await fetch("https://beacon.ledatic.org/pulse").catch(() => null);
+    const body = r && r.ok ? await r.text() : "{}";
     return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
   }
   // Vendored Ed25519 (noble) served same-origin so the page needs no CDN.
@@ -1450,15 +1452,14 @@ async function handleSite(request, env, url) {
     return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
   }
   if (pathname === "/entropy/pulse") {
-    // Read from R2 (strongly consistent, no KV 60s edge cache) with
-    // KV fallback during transition.
-    const obj = await env.REPORTS_R2.get("entropy/pulse.json");
-    const pulse = obj ? await obj.text() : await env.LEDATIC_KV.get("entropy:pulse:current");
-    if (!pulse) return new Response('{"error":"no pulse yet"}', {
+    // 2026-07-24: proxy the Mini origin (beacon.ledatic.org via tunnel) —
+    // the full-cadence local chain is the truth; R2 retired (free-tier pivot).
+    const r = await fetch("https://beacon.ledatic.org/pulse").catch(() => null);
+    if (!r || !r.ok) return new Response('{"error":"beacon origin unreachable"}', {
       status: 503,
       headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
     });
-    return new Response(pulse, {
+    return new Response(await r.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
@@ -1472,12 +1473,14 @@ async function handleSite(request, env, url) {
   // Digits-only, so it never shadows /entropy/pulse or /entropy/pulse/log above.
   const pulseByIdMatch = pathname.match(/^\/entropy\/pulse\/(\d+)$/);
   if (pulseByIdMatch && method === "GET") {
-    const obj = await env.REPORTS_R2.get(`entropy/pulse/${pulseByIdMatch[1]}.json`);
-    if (!obj) return new Response('{"error":"no pulse for that id"}', {
+    // 2026-07-24: by-id archive served by the Mini origin (full cadence,
+    // no quota) instead of R2 (free-tier pivot).
+    const r = await fetch(`https://beacon.ledatic.org/pulse/${pulseByIdMatch[1]}`).catch(() => null);
+    if (!r || !r.ok) return new Response('{"error":"no pulse for that id"}', {
       status: 404,
       headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
     });
-    return new Response(await obj.text(), {
+    return new Response(await r.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
@@ -1491,24 +1494,33 @@ async function handleSite(request, env, url) {
   if (witnessMatch) {
     const node = witnessMatch[1];
     if (!WITNESSES.has(node)) return notFound();
-    const r2Key = `witness/${node}/latest.json`;
+    // 2026-07-24 free-tier pivot: R2 -> KV with a write throttle. The Pi
+    // pushes every ~5s; KV free tier allows 1k writes/day, so we accept
+    // every PUT but persist only when the stored record is >180s old
+    // (~480 writes/day). Freshness contract stays inside the healer's
+    // 5-minute staleness alarm.
+    const kvKey = `witness:${node}:latest`;
     if (method === "PUT") {
       if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
         return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
       }
       const body = await request.text();
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      const prev = await env.LEDATIC_KV.get(kvKey, { type: "json" });
+      const nowS = Math.floor(Date.now() / 1000);
+      if (!prev || !prev.witnessed_at || (nowS - prev.witnessed_at) > 180) {
+        try { JSON.parse(body); }
+        catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+        await env.LEDATIC_KV.put(kvKey, body);
+      }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
-      const obj = await env.REPORTS_R2.get(r2Key);
-      if (!obj) return new Response('{"error":"no witness record yet"}', {
+      const rec = await env.LEDATIC_KV.get(kvKey);
+      if (!rec) return new Response('{"error":"no witness record yet"}', {
         status: 503,
         headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
       });
-      return new Response(await obj.text(), {
+      return new Response(rec, {
         headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
       });
     }
@@ -1520,7 +1532,9 @@ async function handleSite(request, env, url) {
   // tampering between writer and reader is detectable.  Cache: no-store
   // (fresh state each request, like the witness endpoint).
   if (pathname === "/fleet/status.json") {
-    const r2Key = "fleet/status.json";
+    // 2026-07-24 free-tier pivot: R2 -> KV, persisted at most every 600s
+    // (~144 writes/day) — snapshot freshness of minutes is fine for /system.
+    const kvKey = "fleet:status:latest";
     if (method === "PUT") {
       if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
         return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
@@ -1529,20 +1543,32 @@ async function handleSite(request, env, url) {
       if (!body || body.length > 64 * 1024) {
         return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
       }
-      try { JSON.parse(body); }
+      let parsed;
+      try { parsed = JSON.parse(body); }
       catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      const prevRaw = await env.LEDATIC_KV.get(kvKey);
+      let stale = true;
+      if (prevRaw) {
+        try {
+          const prev = JSON.parse(prevRaw);
+          const prevAt = prev.updated_at || prev.ts || 0;
+          const nowS = Math.floor(Date.now() / 1000);
+          stale = !prevAt || (nowS - prevAt) > 600;
+        } catch { stale = true; }
+      }
+      if (stale) {
+        if (!parsed.updated_at && !parsed.ts) parsed.updated_at = Math.floor(Date.now() / 1000);
+        await env.LEDATIC_KV.put(kvKey, JSON.stringify(parsed));
+      }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
-      const obj = await env.REPORTS_R2.get(r2Key);
-      if (!obj) return new Response('{"error":"no fleet snapshot yet"}', {
+      const rec = await env.LEDATIC_KV.get(kvKey);
+      if (!rec) return new Response('{"error":"no fleet snapshot yet"}', {
         status: 503,
         headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
       });
-      return new Response(await obj.text(), {
+      return new Response(rec, {
         headers: sec({
           "content-type": "application/json",
           "cache-control": "no-store",
@@ -2821,6 +2847,20 @@ async function handleSite(request, env, url) {
 
 export default {
   async fetch(request, env) {
+    // 2026-07-24 free-tier pivot: R2 is disabled on the account and the
+    // REPORTS_R2 binding is no longer deployable. This stub keeps all call
+    // sites safe: reads behave as "object not found" (routes take their
+    // existing 404/empty paths), writes throw and surface as the same 500s
+    // those routes already returned while R2 was dead. Live pulse traffic
+    // is served by the Mini origin (beacon.ledatic.org) instead.
+    if (!env.REPORTS_R2) {
+      env = Object.assign({}, env, { REPORTS_R2: {
+        get: async () => null,
+        put: async () => { throw new Error("R2 disabled (free-tier pivot 2026-07-24)"); },
+        delete: async () => null,
+        list: async () => ({ objects: [] }),
+      } });
+    }
     const url = new URL(request.url);
 
     // HEAD = GET minus body. Route handlers below branch on GET, so HEAD on
