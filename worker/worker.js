@@ -2625,6 +2625,25 @@ async function handleSite(request, env, url) {
     if (r2key.includes("..") || r2key.length > 512) {
       return notFound();
     }
+    // 2026-07-25: R2 is retired. Thumbnails (162 of them, 37.7 MB, each one
+    // byte-verified against its attested thumbnail_sha256 before publishing)
+    // now live in KV so the archive renders. Document bytes are NOT
+    // republished — 10.5 GB with a 513 MB tail is exactly the shape CF's ToS
+    // §2.8 prohibits on a Free zone, and war.gov 403s us so there is no
+    // upstream to redirect to either. The proof surface does not depend on
+    // them: every record verifies from its inline attestation in the manifest.
+    const kvBytes = await env.LEDATIC_KV.get(r2key, "arrayBuffer");
+    if (kvBytes) {
+      const kext = (r2key.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || "";
+      const kct = MIME[kext] || "application/octet-stream";
+      return new Response(method === "HEAD" ? null : kvBytes, {
+        headers: sec({
+          "content-type": kct,
+          "content-length": String(kvBytes.byteLength),
+          "cache-control": "public, max-age=31536000, immutable",
+        }),
+      });
+    }
     if (method === "HEAD") {
       const obj = await env.REPORTS_R2.head(r2key);
       if (!obj) return notFound();
