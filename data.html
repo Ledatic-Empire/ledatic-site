@@ -166,7 +166,7 @@ pre.snippet .c { opacity: .55; }
         <span class="tag">Text &mdash; provenance-gated</span>
         <span class="name">Attested Text Corpus v2</span>
         <span class="price">$499</span>
-        <span class="per">single-organization license &middot; instant download on purchase</span>
+        <span class="per">single-organization license &middot; delivered by email, same day</span>
         <ul>
           <li><strong>25,541 documents / ~1.54B tokens</strong>, Merkle root <code>92e9af57&hellip;</code>, Pi-witness-signed at public pulse 2516402</li>
           <li>Per-document provenance leaf: source, id, strand, provenance basis, year — 8,643 docs bright-line pre-1929 PD, 12,077 source-cleared (Gutenberg), 4,821 oracle-verified code (ours)</li>
@@ -194,15 +194,16 @@ pre.snippet .c { opacity: .55; }
     <span class="eyebrow reveal">For machines</span>
     <h2 class="reveal">Agents welcome &mdash; pay per request, verify what you get.</h2>
     <p class="gloss reveal">
-      Every dataset above has a second checkout lane built for software, not people.
-      Fetch <a href="/data/catalog.json">/data/catalog.json</a>, read each product's
-      <code>x402</code> block, and pay its endpoint in stablecoin over the
-      <a href="https://x402.org" rel="noopener">x402</a> protocol &mdash; HTTP 402,
-      no account, no API key. You get back an Ed25519-signed download grant, and the
-      file is verifiable against the <code>download_sha256</code> and
-      <code>content_sha256</code> we already publish. Humans pay by card; agents pay
-      by protocol &mdash; same shelf, same standard of proof. Your software says
-      <em>check me</em>, not trust me.
+      Every dataset above is <em>specified</em> for a second checkout lane built for
+      software, not people: fetch <a href="/data/catalog.json">/data/catalog.json</a>
+      and each product carries an <code>x402</code> block &mdash; endpoint, asset,
+      price, and the <code>download_sha256</code> / <code>content_sha256</code> any
+      grant would be checked against. The paid endpoints are not serving yet, and we
+      won't pretend otherwise: the block is a published intent, not a live lane. When
+      it opens, agents will pay by protocol over
+      <a href="https://x402.org" rel="noopener">x402</a> &mdash; HTTP 402, no account,
+      no API key &mdash; against exactly the hashes printed today. Until then, email
+      us and we'll settle it by hand.
     </p>
   </div>
 </section>

@@ -212,7 +212,7 @@ pre.recipe .ok { color: var(--ph-600); }
 
     <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
+        <div class="value"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></div>
         <div class="label">Current release</div>
       </div>
       <div class="stat reveal">
@@ -237,9 +237,10 @@ pre.recipe .ok { color: var(--ph-600); }
       </div>
     </div>
     <p class="gloss push reveal">
-      the release figure is a working prove button &mdash; press it and your
-      browser fetches the tagged binary's attestation and checks the witness
-      signature itself
+      the figures above are injected from a generated registry, never typed.
+      the working prove buttons are in the ledger below &mdash; each release
+      listed there carries a published attestation. newer tags are not yet
+      attested, and we don't render a button we can't honour
     </p>
   </div>
 </section>
@@ -498,7 +499,7 @@ pre.recipe .ok { color: var(--ph-600); }
       JavaScript &mdash; the verifier is one curl away:
     </p>
 
-    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the latest tagged release (v5.1.0).</span>
+    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the newest attested release (v5.1.0).</span>
 <span class="c"># Each release has the same shape; pin the tag you trust.</span>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh
 curl -sf https://ledatic.org/releases/v5.1.0/rail_native -o /tmp/rn

@@ -351,7 +351,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 
     <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
+        <div class="value"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></div>
         <div class="label">Current Rail</div>
       </div>
       <div class="stat reveal">
@@ -372,9 +372,10 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       </div>
     </div>
     <p class="gloss push reveal">
-      the release figure above is a working prove button &mdash; press it and
-      your browser fetches the tagged binary, hashes it, and checks the
-      witness signature itself
+      every figure above is injected at deploy time from a generated registry
+      &mdash; none of them is typed by hand. per-release attestations are not
+      published yet; the proof you <em>can</em> press today is the signed
+      deploy manifest at the top of this page.
     </p>
   </div>
 </section>

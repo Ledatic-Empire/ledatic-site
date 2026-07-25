@@ -725,6 +725,14 @@ function timingSafeEqualHex(a, b) {
 // Each data SKU maps to an R2 object under the REPORTS_R2 bucket. A purchase
 // (or admin grant) mints a random, time-limited, download-capped token in KV;
 // GET /data/download/<token> streams the object. No public bucket, no S3 creds.
+// 2026-07-25: automated delivery is OFF while R2 is retired (free-tier pivot).
+// The tarballs are intact on the Mini (~/.ledatic/data-products/, with their
+// .sha256 sidecars) — they just have no public origin, and streaming a 2.3 GB
+// object through a Free zone is exactly what CF's ToS §2.8 prohibits. So data
+// sales fall through to the existing "delivery by email within 24h" path
+// rather than minting a token that resolves to nothing. Flip to true once
+// /data/download has a real origin behind it.
+const DATA_DELIVERY_ONLINE = false;
 const DATA_DELIVERABLES = {
   pairs: {
     r2_key: "data-deliverables/rail-verified-pairs-v2.tar.gz",
@@ -741,6 +749,10 @@ const DATA_DELIVERABLES = {
 async function mintDownloadToken(env, pack, ref) {
   const meta = DATA_DELIVERABLES[pack];
   if (!meta) return null;
+  // No live origin → no token. A null here makes the claim endpoint report
+  // "delivery by email within 24h", which is true, instead of handing the
+  // buyer a download URL that 404s.
+  if (!DATA_DELIVERY_ONLINE) return null;
   const token = sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
   const now = Math.floor(Date.now() / 1000);
   const grant = {
@@ -1788,7 +1800,14 @@ async function handleSite(request, env, url) {
       return new Response("download limit reached — contact 31zemogyllier@gmail.com", { status: 429, headers: sec({ "content-type": "text/plain" }) });
     }
     const obj = await env.REPORTS_R2.get(grant.r2_key);
-    if (!obj) return notFound();
+    // A token minted before delivery went offline must not read as "your link
+    // is bad" — the purchase is valid, only the automated path is down.
+    if (!obj) return new Response(
+      "Your purchase is valid — automated download is temporarily offline.\n" +
+      "Email 31zemogyllier@gmail.com with your Stripe receipt and we'll send\n" +
+      "the file and its signed manifest directly, same day.\n",
+      { status: 503, headers: sec({ "content-type": "text/plain", "cache-control": "no-store" }) },
+    );
     if (method === "GET") {
       grant.used = (grant.used || 0) + 1;
       await env.LEDATIC_KV.put(`dl:${token}`, JSON.stringify(grant)); // best-effort meter
@@ -2276,7 +2295,39 @@ async function handleSite(request, env, url) {
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
-      const obj = await env.REPORTS_R2.get(r2Key);
+      let obj = await env.REPORTS_R2.get(r2Key);
+      // 2026-07-25: R2 is retired and these were never published anywhere
+      // else, so /rail's ledger buttons have been pressing dead links. The
+      // release attestations live on the Mini (~/projects/rail/releases/) and
+      // the Rail origin now serves them; fall through to it for reads.
+      if (!obj && kind === "releases" && isJson) {
+        const r = await fetch(`https://beacon.ledatic.org/releases/${ident}/${file}`).catch(() => null);
+        if (r && r.ok) {
+          return new Response(await r.text(), {
+            headers: sec({
+              "content-type": "application/json",
+              "cache-control": "public, max-age=3600",
+              "access-control-allow-origin": "*",
+            }),
+          });
+        }
+      }
+      // Release binaries come from KV, not the Rail origin: a Mach-O has NUL
+      // bytes, and Rail strings would truncate at the first one — silently
+      // serving short bytes on the one path whose whole job is byte-integrity.
+      // They are ~1 MB, immutable, and written once, so KV is the right shelf.
+      if (!obj && kind === "releases" && isBinary) {
+        const bin = await env.LEDATIC_KV.get(`releases/${ident}/${file}`, "arrayBuffer");
+        if (bin) {
+          return new Response(bin, {
+            headers: sec({
+              "content-type": "application/octet-stream",
+              "cache-control": "public, max-age=31536000, immutable",
+              "access-control-allow-origin": "*",
+            }),
+          });
+        }
+      }
       if (!obj) {
         return new Response(isJson ? '{"error":"not found"}' : "not found", {
           status: 404,
@@ -2366,9 +2417,12 @@ async function handleSite(request, env, url) {
     }
     if (method === "GET") {
       const obj = await env.REPORTS_R2.get(r2Key);
-      if (!obj) return new Response('{"error":"no dda index yet"}', {
-        status: 404, headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
-      });
+      // Engagement closed + paid 2026-05-12; the rollup lived in R2 and is not
+      // coming back. "no index yet" read as pending — 410 says retired, which
+      // is what it is, and lets the endpoint walker assert closure instead of
+      // alarming daily on a route that is correctly dark.
+      if (!obj) return jsonResponse(
+        { error: "gone", message: "This engagement closed 2026-05-12; the brief index has been retired." }, 410);
       return new Response(await obj.text(), {
         headers: sec({
           "content-type": "application/json",
@@ -2596,11 +2650,18 @@ async function handleSite(request, env, url) {
     });
   }
 
-  // /pursue/manifest.jsonl → R2 (small JSONL, not KV, so we can grow past 25MB).
+  // /pursue/manifest.jsonl → Mini origin (2026-07-25). R2 held a copy; the
+  // master has always been ~/projects/pursue/scrape/pursue.jsonl, now served
+  // by the pure-Rail beacon origin over the tunnel. Same pattern as the pulse
+  // routes above. /aliens needs only this file to verify: each record carries
+  // its inline Ed25519 attestation, checked over the attested digest.
   if (pathname === "/pursue/manifest.jsonl" && method === "GET") {
-    const obj = await env.REPORTS_R2.get("pursue/manifest.jsonl");
-    if (!obj) return notFound();
-    return new Response(obj.body, {
+    const r = await fetch("https://beacon.ledatic.org/pursue/manifest.jsonl").catch(() => null);
+    if (!r || !r.ok) return new Response("manifest origin unreachable", {
+      status: 503,
+      headers: sec({ "content-type": "text/plain", "cache-control": "no-store" }),
+    });
+    return new Response(r.body, {
       headers: sec({
         "content-type": "application/jsonl",
         "cache-control": "public, max-age=300, s-maxage=300",
@@ -2854,11 +2915,20 @@ export default {
     // those routes already returned while R2 was dead. Live pulse traffic
     // is served by the Mini origin (beacon.ledatic.org) instead.
     if (!env.REPORTS_R2) {
+      const r2Dead = () => { throw new Error("R2 disabled (free-tier pivot 2026-07-24)"); };
       env = Object.assign({}, env, { REPORTS_R2: {
         get: async () => null,
-        put: async () => { throw new Error("R2 disabled (free-tier pivot 2026-07-24)"); },
+        // head() was missing from the original stub, so HEAD /pursue/files/*
+        // threw an uncaught TypeError and surfaced as a 500 instead of the
+        // 404 the route already handles. Reads must degrade, never throw.
+        head: async () => null,
+        put: r2Dead,
         delete: async () => null,
         list: async () => ({ objects: [] }),
+        // Admin upload paths: throwing is correct (they must not silently
+        // appear to succeed), but they have to exist to throw.
+        createMultipartUpload: r2Dead,
+        resumeMultipartUpload: r2Dead,
       } });
     }
     const url = new URL(request.url);
