@@ -145,6 +145,7 @@ pre.recipe .ok { color: var(--ph-600); }
     <div class="navmore">
       <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
       <div class="navmore-menu" role="menu">
+        <a href="/oracle" role="menuitem">The oracle</a>
         <a href="/verify" role="menuitem">Verify</a>
         <a href="/entropy" role="menuitem">Entropy beacon</a>
         <a href="/life" role="menuitem">Life</a>
@@ -349,6 +350,32 @@ pre.recipe .ok { color: var(--ph-600); }
         <p class="ttl">A typed trust boundary: authenticated vs unauthenticated values.</p>
         <p class="gloss">plain words: data that came from a checked proof and data that didn't now have different types &mdash; the compiler refuses to confuse them</p>
         <p>Float type-inference plus auth/unauth desugaring, merged to master. Sound for arbitrary payloads.</p>
+      </li>
+
+      <li class="reveal" id="v5-3-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.3.0">v5.3.0</data></span>
+          <span class="ldate">2026-07-08</span>
+          <span class="anchor">attested <time-pulse data-pulse="2892871">@ p#2892871</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.3.0/rail_native.attestation.json" data-name="rail_native &middot; v5.3.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Independence checker, and a self-compile three times faster.</p>
+        <p class="gloss">plain words: the compiler now proves which parts of itself depend on which &mdash; and rebuilds itself in a third of the time</p>
+        <p>Allocator freelist buckets cut the self-compile from roughly a minute to under twenty seconds. The independence checker makes the module graph an assertion rather than a convention.</p>
+      </li>
+
+      <li class="reveal" id="v5-2-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.2.0">v5.2.0</data></span>
+          <span class="ldate">2026-06-19</span>
+          <span class="anchor">attested <time-pulse data-pulse="2892864">@ p#2892864</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.2.0/rail_native.attestation.json" data-name="rail_native &middot; v5.2.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail stands alone &mdash; no assembler, no linker, no codesign.</p>
+        <p class="gloss">plain words: nothing outside the language is left in the build; it assembles, links and signs its own binary</p>
+        <p>The strongest form of the self-hosting claim: <code>as</code>, <code>ld</code> and <code>codesign</code> all leave the path, and the self-compile becomes bit-reproducible &mdash; the committed seed rebuilds itself byte for byte. A nightly witness re-checks that on a second machine.</p>
       </li>
 
       <li class="reveal" id="v5-1-0">

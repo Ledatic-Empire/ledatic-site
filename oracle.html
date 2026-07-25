@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A model's claim that its code is correct is unfalsifiable. A compiler accepting that code is a fact anyone can reproduce. Ledatic trains models against a compiler you can re-run yourself — every corpus bit-reproducible, every step signed against a public beacon. Including the month it proved us wrong.">
+<link rel="canonical" href="https://ledatic.org/oracle">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/oracle">
+<meta property="og:title" content="The oracle — training AI against a checker you can re-run">
+<meta property="og:description" content="A model's claim of correctness is unfalsifiable. A compile is not. We train against the compiler, bind every corpus into a signed chain, and publish what it cost us when the method lied.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The oracle — training AI against a checker you can re-run">
+<meta name="twitter:description" content="A model's claim of correctness is unfalsifiable. A compile is not.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>The Oracle — Ledatic</title>
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<style>
+/* ── /oracle — consumes tokens only, defines no custom props ── */
+.navend { display: flex; align-items: center; gap: 1.25rem; }
+
+.lede { padding: 9rem 1.5rem 3rem; max-width: 64rem; margin: 0 auto; }
+@media (min-width: 1024px) { .lede { padding-left: 4rem; padding-right: 4rem; } }
+.lede h1 {
+  font-family: var(--font-body);
+  font-size: clamp(2.25rem, 7vw, 4rem);
+  font-weight: 600; letter-spacing: -0.02em; line-height: 1.05;
+  margin: 0.5rem 0 1.25rem;
+}
+.lede .standfirst { font-size: var(--t-data); color: var(--tx-lo); max-width: 58ch; line-height: 1.7; }
+
+/* The loop, as a plain readable diagram — no library, no image. */
+pre.loop {
+  margin: 2rem 0 0;
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  line-height: 1.9;
+  color: var(--tx-lo);
+  overflow-x: auto;
+}
+pre.loop .hi { color: var(--tx-hi); }
+pre.loop .c { color: var(--tx-dim); }
+
+.claimgrid { display: grid; gap: 1.25rem; grid-template-columns: 1fr; margin-top: 2rem; }
+@media (min-width: 760px) { .claimgrid { grid-template-columns: repeat(3, 1fr); } }
+.claim { border: 1px solid var(--line); padding: 1.5rem; background: var(--ink-1); }
+.claim .n {
+  font-family: var(--font-display);
+  font-size: 1.75rem; font-weight: 500; color: var(--tx-hi);
+  display: block; margin-bottom: 0.35rem;
+}
+.claim .l { font-size: 0.82rem; color: var(--tx-lo); line-height: 1.6; }
+
+/* The limit + the falsification are set apart deliberately. */
+.counter {
+  border-left: 2px solid var(--st-stale, var(--ph-600));
+  background: var(--ink-1);
+  padding: 1.5rem 1.75rem;
+  margin-top: 2rem;
+}
+.counter h3 {
+  font-family: var(--font-body);
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--st-stale, var(--ph-600)); margin: 0 0 0.75rem;
+}
+.counter p { color: var(--tx-lo); font-size: 0.94rem; line-height: 1.75; margin: 0 0 0.85rem; }
+.counter p:last-child { margin-bottom: 0; }
+.counter .flat { font-family: var(--font-display); color: var(--tx-hi); }
+
+.section .chain-link { display: block; margin-bottom: 0.75rem; }
+.push { margin-top: var(--sp-8); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail">Rail</a>
+    <a href="/receipts">Receipts</a>
+    <a href="/data">Data</a>
+    <a href="/tios">TIOS</a>
+    <div class="navmore">
+      <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
+      <div class="navmore-menu" role="menu">
+        <a href="/oracle" role="menuitem">The oracle</a>
+        <a href="/verify" role="menuitem">Verify</a>
+        <a href="/entropy" role="menuitem">Entropy beacon</a>
+        <a href="/life" role="menuitem">Life</a>
+        <a href="/system" role="menuitem">System</a>
+        <a href="/changelog" role="menuitem">Changelog</a>
+        <a href="/physicify" role="menuitem">Physicify</a>
+        <a href="/plasma" role="menuitem">Plasma</a>
+        <a href="/aliens" role="menuitem">Aliens</a>
+        <a href="/work" role="menuitem">Work</a>
+        <a href="/manifesto" role="menuitem">Manifesto</a>
+      </div>
+    </div>
+  </div>
+  <div class="navend">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="mailto:z3m0g@icloud.com?subject=The%20oracle">Get in touch</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="lede">
+  <span class="eyebrow">The oracle</span>
+  <h1>A compile is a fact. A claim is not.</h1>
+  <p class="standfirst">
+    Ask a model whether the code it just wrote is correct and it will tell
+    you yes. That answer is unfalsifiable &mdash; there is nothing underneath
+    it you can independently check. Hand the same code to a compiler and
+    something different happens: you get a result anyone can reproduce, from
+    the same source, on their own machine, without trusting whoever ran it
+    first. That is the whole idea on this page.
+  </p>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">The method</span>
+    <h2 class="reveal">Train against the checker, not the claim.</h2>
+    <p class="lead reveal">
+      Rail compiles itself, so the compiler is small enough to read and
+      reproducible enough to trust as a referee. We use it as the fitness
+      function. Programs it accepts become training data. Programs it rejects
+      are the gradient. Nothing in that path asks you to believe us &mdash;
+      you can re-run the referee.
+    </p>
+
+<pre class="loop"><code><span class="c">-- every arrow below is something a stranger can re-execute</span>
+
+  seeded generator  <span class="hi">→</span>  corpus  <span class="hi">→</span>  <span class="hi">rail_native verifies every program</span>
+                                       <span class="hi">→</span>  hash-chained ledger
+                                       <span class="hi">→</span>  Ed25519 witness on a separate machine
+                                       <span class="hi">→</span>  anchored to a public entropy pulse
+                                       <span class="hi">→</span>  training  <span class="hi">→</span>  the same oracle scores the result</code></pre>
+
+    <p class="gloss push reveal">
+      the corpus is regenerable from its seed; the ledger is a chain; the
+      witness key is not ours alone
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">How far it goes</span>
+    <h2 class="reveal">A model trained this way, from scratch.</h2>
+    <p class="lead reveal">
+      A 138M-parameter model, trained only on oracle-verified
+      <code>comment&nbsp;&rarr;&nbsp;program</code> pairs, writing Rail. Small
+      by design: the point was never to win a benchmark, it was to make every
+      input to the model something you could audit.
+    </p>
+
+    <div class="claimgrid">
+      <div class="claim reveal">
+        <span class="n">16/16</span>
+        <span class="l">compile@1 on its frozen benchmark &mdash; the bar was
+        set and hashed <em>before</em> training, so it could not be moved
+        afterwards to flatter the result.</span>
+      </div>
+      <div class="claim reveal">
+        <span class="n">16/16</span>
+        <span class="l">function-correctness &mdash; each synthesized function
+        actually run against the benchmark's own hidden test, not merely
+        parsed.</span>
+      </div>
+      <div class="claim reveal">
+        <span class="n">12/12</span>
+        <span class="l">exact agreement when a pure-Rail forward pass replays
+        the model's own greedy decode &mdash; then hands the output back to
+        the compiler, which builds and runs it.</span>
+      </div>
+    </div>
+
+    <p class="body push reveal">
+      The corpus behind it &mdash; 52,243 pairs &mdash; is bit-reproducible:
+      regenerate it from its seed and you get identical bytes, twice over.
+      Its hash is bound into a ledger signed by a witness key held on a
+      separate machine, anchored to entropy pulse
+      <a href="/entropy">2641877</a>. You do not have to take the corpus on
+      faith either.
+    </p>
+
+    <div class="counter reveal">
+      <h3>What that does not say</h3>
+      <p>
+        The same model generalizes <strong>0/10</strong> to function names it
+        never saw. At this size it memorizes the shape of a header and
+        retrieves a body; it does not compose one from the comment. The
+        benchmark number is real. So is this. Publishing the first without
+        the second would be marketing, and the gap needs scale or a
+        differently-shaped corpus &mdash; not another round of tuning.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">The expensive lesson</span>
+    <h2 class="reveal">The month the method lied to us.</h2>
+    <p class="lead reveal">
+      In July we ran a self-improvement loop for about a week. A local model
+      proposed changes, a deterministic executor applied them, every
+      generation was scored on a held-out reward and signed into a
+      tamper-evident chain. It reported a clean climb across roughly eleven
+      signed generations. Every step of it was reproducible. Every step of it
+      was attested.
+    </p>
+
+    <div class="counter reveal">
+      <h3>It was noise</h3>
+      <p>
+        Re-scoring the identical lineage on a held-out sample five times
+        wider flattened the entire curve. The &ldquo;improved&rdquo; frontier
+        scored <span class="flat">exactly</span> what the base it started
+        from scored &mdash; <span class="flat">672/1920</span> against
+        <span class="flat">672/1920</span>.
+      </p>
+      <p>
+        The apparatus was sound and the conclusion was worthless. The
+        held-out reward was itself a tiny sample, and a deterministic
+        optimizer maximizing a small reward will fit <em>that sample</em>
+        &mdash; reward hacking one layer beneath the defense we had built
+        against reward hacking.
+      </p>
+      <p>
+        <strong>Attestation of a computation is not validation of its
+        metric.</strong> A signed chain proves the numbers were produced the
+        way we said they were. Whether the numbers mean anything is a
+        different question, and the signature is silent on it. Every reported
+        gain here is now re-measured on a disjoint, much wider sample before
+        it is believed &mdash; especially the flattering ones.
+      </p>
+    </div>
+
+    <p class="gloss push reveal">
+      this is on the website, and in the repo's README, for the same reason:
+      a project that says &ldquo;check me&rdquo; has no business hiding the
+      time it fooled itself
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal">Check it</span>
+    <h2 class="reveal">The referee is downloadable.</h2>
+    <p class="lead reveal">
+      Everything above rests on one binary being reproducible. That claim is
+      the easiest on this site to falsify: fetch the release, fetch its
+      attestation, and check the signature yourself. If the bytes we publish
+      ever stop matching the record a separate machine signed, this is where
+      it shows.
+    </p>
+
+    <pre class="recipe reveal"><code>curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh
+curl -sf https://ledatic.org/releases/v5.3.0/rail_native -o /tmp/rn
+curl -sf https://ledatic.org/releases/v5.3.0/rail_native.attestation.json -o /tmp/rn.att.json
+/tmp/v.sh /tmp/rn /tmp/rn.att.json
+<span class="ok"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span></code></pre>
+
+    <p class="body push reveal">
+      The build behind that binary is attested too &mdash; the test suite
+      bracketed by two beacon pulses, and a self-host record showing the
+      compiler rebuilt itself to a fixed point that matches the committed
+      seed byte for byte.
+    </p>
+
+    <div class="cta-row push reveal">
+      <button class="prove" aria-expanded="false"
+              data-manifest="/releases/v5.3.0/rail_native.attestation.json"
+              data-name="rail_native &middot; current release"><span class="prove-val">Prove the release</span><span class="affix" aria-hidden="true">⌁</span></button>
+      <a class="btn btn-secondary" href="rail.html">See the language &rarr;</a>
+      <a class="btn btn-ghost" href="https://github.com/zemo-g/rail" rel="noopener">Read the source &rarr;</a>
+    </div>
+    <div class="tray" role="log" aria-live="polite" hidden></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="oracle.html">The oracle</a></li>
+          <li><a href="receipts.html">Receipts</a></li>
+          <li><a href="data.html">Data</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="aliens.html">Aliens archive</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="physicify.html">physicify</a></li>
+          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version" value="v5.3.0">v5.3.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio" value="187">187/187</data> &middot; <data class="fig" data-src="repo:rail_native" value="908360">0.9 MB</data> &middot; <span data-selfcheck>self-check not run</span></span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+<script type="module">
+const SAVE =
+  (navigator.connection && navigator.connection.saveData === true) ||
+  (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-data: reduce)').matches);
+
+function whenProof(cb) {
+  if (window.LedaticProof) { cb(window.LedaticProof); return; }
+  window.addEventListener('ledatic:proof',
+    (e) => cb(e.detail || window.LedaticProof), { once: true });
+}
+
+whenProof((P) => {
+  if (SAVE) return;
+  const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+  if (strip) P.mountSelfCheck(strip);
+});
+</script>
+</body>
+</html>
