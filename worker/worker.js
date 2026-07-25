@@ -2159,10 +2159,16 @@ async function handleSite(request, env, url) {
   const badgeMatch = pathname.match(/^\/attest\/badge\/(builds|selfhost)\.json$/);
   if (badgeMatch && method === "GET") {
     const kind = badgeMatch[1];
+    // R2 is retired, so pointer + record now come from the Rail origin, which
+    // reads them out of the pristine origin/master checkout. R2 is still tried
+    // first so a re-enabled bucket transparently wins again.
     const fetchJson = async (path) => {
       const obj = await env.REPORTS_R2.get(`attest${path}`);
-      if (!obj) return null;
-      try { return JSON.parse(await obj.text()); } catch { return null; }
+      if (obj) {
+        try { return JSON.parse(await obj.text()); } catch { return null; }
+      }
+      const kv = await env.LEDATIC_KV.get(`attest${path}`, "json");
+      return kv || null;
     };
     const ptr = await fetchJson(`/${kind}/latest/index.json`);
     let label, message, color = "lightgrey";
@@ -2204,10 +2210,16 @@ async function handleSite(request, env, url) {
   // surface.  Wired 2026-06-09: the PAOS audit found /attest/latest fell
   // through to the homepage.
   if (pathname === "/attest/latest" && method === "GET") {
+    // R2 is retired, so pointer + record now come from the Rail origin, which
+    // reads them out of the pristine origin/master checkout. R2 is still tried
+    // first so a re-enabled bucket transparently wins again.
     const fetchJson = async (path) => {
       const obj = await env.REPORTS_R2.get(`attest${path}`);
-      if (!obj) return null;
-      try { return JSON.parse(await obj.text()); } catch { return null; }
+      if (obj) {
+        try { return JSON.parse(await obj.text()); } catch { return null; }
+      }
+      const kv = await env.LEDATIC_KV.get(`attest${path}`, "json");
+      return kv || null;
     };
     const out = { kind: "ledatic.attest.latest", version: 1 };
     for (const k of ["builds", "selfhost"]) {
@@ -2314,10 +2326,13 @@ async function handleSite(request, env, url) {
       // else, so /rail's ledger buttons have been pressing dead links. The
       // release attestations live on the Mini (~/projects/rail/releases/) and
       // the Rail origin now serves them; fall through to it for reads.
-      if (!obj && kind === "releases" && isJson) {
-        const r = await fetch(`https://beacon.ledatic.org/releases/${ident}/${file}`).catch(() => null);
-        if (r && r.ok) {
-          return new Response(await r.text(), {
+      if (!obj && isJson) {
+        // Static attestation records live in KV. They were never served at all
+        // before today (R2 held them, and the ledger pressed dead links); the
+        // Rail origin can't host them because its read_file leaks on ENOENT.
+        const kv = await env.LEDATIC_KV.get(`attest/${kind}/${ident}/${file}`);
+        if (kv) {
+          return new Response(kv, {
             headers: sec({
               "content-type": "application/json",
               "cache-control": "public, max-age=3600",
