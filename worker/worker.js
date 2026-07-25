@@ -1927,6 +1927,20 @@ async function handleSite(request, env, url) {
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
+      // R2 is retired, and this route's PUT has 500'd on every tick since —
+      // so /entropy's prove button was offering proof of a frame with nothing
+      // behind it. The publisher now writes the signed attestation to
+      // Mini-local state every ~32 s and the Rail origin serves it.
+      const fr = await fetch("https://beacon.ledatic.org/frame/latest.attestation.json").catch(() => null);
+      if (fr && fr.ok) {
+        return new Response(await fr.text(), {
+          headers: sec({
+            "content-type": "application/json",
+            "cache-control": "no-store",
+            "access-control-allow-origin": "*",
+          }),
+        });
+      }
       const obj = await env.REPORTS_R2.get(r2Key);
       if (!obj) return new Response('{"error":"no frame attestation yet"}', {
         status: 503,

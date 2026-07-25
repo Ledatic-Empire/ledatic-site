@@ -177,10 +177,18 @@
         re-signed since.
       </p>
       <p class="age"><time-pulse data-pulse="396703" data-mode="age">age unknown until the beacon answers</time-pulse></p>
-      <button class="prove" aria-expanded="false"
-              data-manifest="/entropy/frame/ot256/latest.attestation.json"
-              data-artifact="/entropy/frame/ot256/current"
-              data-name="ot256 frame">verify the last attested frame <span class="affix" aria-hidden="true">&#8907;</span></button>
+      <p class="body">
+        There is no verify button here any more, and that is the honest
+        outcome rather than a tidy one. This run's attestations were only ever
+        kept in a hosted object store, which we shut off on 2026-07-24 when the
+        bill stopped being worth paying. The signatures were real and the
+        records are gone &mdash; we did not keep a second copy, so nobody can
+        check this particular frame now, including us. A page that offers proof
+        it cannot produce is worse than a page that admits the gap.
+        <a href="/entropy">The live beacon</a> is the same Orszag&ndash;Tang
+        system on a 128&sup2; grid, re-signed every ~32 s, and its attestation
+        does verify &mdash; that is where to point a checker.
+      </p>
     </div>
 
     <div class="methodology">
@@ -218,15 +226,21 @@
  accessed=<span data-sys="now">&hellip;</span>"
       </div>
       <p style="margin-top: 1rem;">
-        Reproduce-the-frame instruction:
+        What you can still check &mdash; the <em>live</em> Orszag&ndash;Tang
+        beacon's signed record, re-issued every ~32 s:
       </p>
       <div class="citation">
-curl -sf https://ledatic.org/entropy/frame/ot256/current -o frame.bin<br>
-curl -sf https://ledatic.org/entropy/frame/ot256/latest.attestation.json -o frame.att.json<br>
-curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh<br>
-/tmp/v.sh frame.bin frame.att.json<br>
-<span class="lab"># &rarr; ok&nbsp;&nbsp;artifact=frame.bin&nbsp;&nbsp;pulse_id=&hellip;&nbsp;&nbsp;pk_fp=cac5f21a70564aeb</span>
+curl -sf https://ledatic.org/entropy/frame/latest.attestation.json<br>
+<span class="lab"># &rarr; digest + pulse_id + Ed25519 sig, pk_fp=cac5f21a70564aeb</span>
       </div>
+      <p class="body" style="margin-top: 1rem;">
+        That record signs the solver state, whose bytes we hold but do not
+        publish &mdash; it carries <code>bytes_published: false</code> and says
+        so in its own body, rather than naming a URL it cannot honour. So the
+        signature is checkable and the re-hash is not. Stating which half you
+        get is the whole discipline; an attestation that points at bytes it
+        doesn't match would be worse than one that admits the limit.
+      </p>
     </div>
 
     <div class="methodology">
