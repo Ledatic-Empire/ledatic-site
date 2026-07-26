@@ -1921,9 +1921,12 @@ async function handleSite(request, env, url) {
       }
       try { JSON.parse(body); }
       catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      // KV, not R2 (2026-07-26). This PUT had returned 500 on every publisher
+      // tick since the pivot — ~2,700 failures a day. The read path is served
+      // from the Rail origin, so this is now a redundant second copy; the
+      // point of fixing it is that a permanently-500 log line hides the next
+      // real failure behind noise.
+      await env.LEDATIC_KV.put(r2Key, body);
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
@@ -2305,18 +2308,19 @@ async function handleSite(request, env, url) {
         }
         try { JSON.parse(body); }
         catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-        await env.REPORTS_R2.put(r2Key, body, {
-          httpMetadata: { contentType: "application/json" },
-        });
+        // 2026-07-26: writes land in KV, matching where reads come from. This
+        // PUT went to R2 and had been returning 500 on every daily attest run
+        // since the free-tier pivot — the records were produced correctly and
+        // simply had nowhere to go, which is how the badges went stale.
+        await env.LEDATIC_KV.put(r2Key, body);
       } else {
-        // Binary upload — cap at 16 MB to keep the surface honest.
+        // Binary upload — cap at 16 MB to keep the surface honest, and well
+        // under KV's 25 MB per-value ceiling.
         const body = await request.arrayBuffer();
         if (!body.byteLength || body.byteLength > 16 * 1024 * 1024) {
           return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
         }
-        await env.REPORTS_R2.put(r2Key, body, {
-          httpMetadata: { contentType: "application/octet-stream" },
-        });
+        await env.LEDATIC_KV.put(r2Key, body);
       }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
