@@ -959,9 +959,20 @@ async function handleSite(request, env, url) {
   // AIS snapshot + latest attestation). Same R2 objects /greatlakes serves
   // behind auth; exposed here unauthenticated because the demo is public now.
   if (pathname === "/portcall/fleet.json" && method === "GET") {
-    const obj = await env.REPORTS_R2.get("greatlakes/data/vessels/index.json");
-    const body = obj ? await obj.arrayBuffer() : '{"vessels":[]}';
-    return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }) });
+    // 2026-07-27: proxy the Mini origin, same as /portcall/pulse.json above.
+    // R2 is disabled at the account level (error 10042, billing), so the
+    // publisher's PUTs all 500'd — and the old `obj ? ... : {"vessels":[]}`
+    // fallback turned that storage failure into a 200 OK EMPTY FLEET. The demo
+    // rendered "no ships in the Great Lakes" for days and nothing alarmed,
+    // because an empty map is indistinguishable from a quiet one.
+    // FAIL LOUD instead: 503 when the origin is unreachable. A visibly broken
+    // feed is recoverable; a plausible wrong one is not.
+    const r = await fetch("https://beacon.ledatic.org/portcall/fleet.json").catch(() => null);
+    if (!r || !r.ok) {
+      return new Response('{"error":"fleet origin unavailable"}', { status: 503,
+        headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
+    }
+    return new Response(await r.text(), { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
   }
   if (pathname === "/portcall/attestation.json" && method === "GET") {
     const obj = await env.REPORTS_R2.get("greatlakes/ais/latest.attestation.json");
@@ -1884,9 +1895,12 @@ async function handleSite(request, env, url) {
       }
       try { JSON.parse(body); }
       catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      // KV, not R2 (2026-07-26). This PUT had returned 500 on every publisher
+      // tick since the pivot — ~2,700 failures a day. The read path is served
+      // from the Rail origin, so this is now a redundant second copy; the
+      // point of fixing it is that a permanently-500 log line hides the next
+      // real failure behind noise.
+      await env.LEDATIC_KV.put(r2Key, body);
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
@@ -1921,12 +1935,9 @@ async function handleSite(request, env, url) {
       }
       try { JSON.parse(body); }
       catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-      // KV, not R2 (2026-07-26). This PUT had returned 500 on every publisher
-      // tick since the pivot — ~2,700 failures a day. The read path is served
-      // from the Rail origin, so this is now a redundant second copy; the
-      // point of fixing it is that a permanently-500 log line hides the next
-      // real failure behind noise.
-      await env.LEDATIC_KV.put(r2Key, body);
+      await env.REPORTS_R2.put(r2Key, body, {
+        httpMetadata: { contentType: "application/json" },
+      });
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
