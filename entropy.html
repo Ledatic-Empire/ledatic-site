@@ -144,6 +144,7 @@
     <div class="navmore">
       <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
       <div class="navmore-menu" role="menu">
+        <a href="/oracle" role="menuitem">The oracle</a>
         <a href="/verify" role="menuitem">Verify</a>
         <a href="/entropy" role="menuitem">Entropy beacon</a>
         <a href="/life" role="menuitem">Life</a>
@@ -286,9 +287,11 @@
       Each frame also ships a signed record:
       <button class="prove" aria-expanded="false"
               data-manifest="/entropy/frame/latest.attestation.json"
-              data-artifact="/entropy/frame/current"
               data-name="entropy frame &middot; signed attestation"><span class="prove-val">frame attestation</span><span class="affix" aria-hidden="true">⌁</span></button>
-      &mdash; press it and the proof runs here, in your tab.
+      &mdash; press it and the proof runs here, in your tab. It checks the
+      witness signature over the frame's digest; the solver-state bytes
+      themselves aren't published, so the tray will say so rather than
+      pretend it re-hashed them.
     </p>
   </div>
 </section>

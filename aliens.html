@@ -347,6 +347,7 @@ a.pill.drift:hover { color: var(--st-fail); }
     <div class="navmore">
       <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
       <div class="navmore-menu" role="menu">
+        <a href="/oracle" role="menuitem">The oracle</a>
         <a href="/verify" role="menuitem">Verify</a>
         <a href="/entropy" role="menuitem">Entropy beacon</a>
         <a href="/life" role="menuitem">Life</a>
@@ -469,14 +470,26 @@ a.pill.drift:hover { color: var(--st-fail); }
     <div class="honesty">
       <h3>How we keep this honest</h3>
       <p>
-        Every file shown here is a byte-for-byte copy of what
+        Every record in this archive is a byte-for-byte copy of what
         <code>war.gov</code> published. As bytes flowed to disk we
         computed their SHA-256 in pure Rail and bound each digest to a
         live entropy beacon pulse, signed by an independent fleet0
         Ed25519 witness. The <em>prove</em> button on every record
-        replays that check here in your browser: it re-hashes our copy
-        where the file fits the in-browser cap, and verifies the
-        signature against the pinned public key either way.
+        replays that check here in your browser, verifying the signature
+        against the pinned public key.
+      </p>
+      <p>
+        We hold the mirrored bytes; we no longer republish the documents
+        themselves. That is a cost decision, stated plainly: the archive
+        runs to about ten gigabytes with a single half-gigabyte file in
+        the tail, and we are not spending that to re-host what a
+        government already hosts. What you can still do is the part that
+        matters &mdash; every digest, pulse and signature above is live,
+        so anyone holding a copy of one of these files can check it
+        against an attestation we published in May and cannot alter now.
+        Thumbnails are served, and each one was byte-checked against its
+        own attested digest before we put it up; the handful that no
+        longer match theirs are withheld rather than quietly reshot.
       </p>
       <p>
         The recurring comparison against the war.gov source is currently
@@ -1019,7 +1032,7 @@ function recordCardHtml(r, opts) {
   } else {
     leftCol = `<div class="thumb">${
       thumbSrc
-        ? `<img src="${escapeHtml(thumbSrc)}" alt="thumbnail" loading="lazy">`
+        ? `<img src="${escapeHtml(thumbSrc)}" alt="thumbnail" loading="lazy" data-thumb data-agency="${escapeHtml((r.agency || "FILE").slice(0, 8))}" data-ft="${escapeHtml((r.file_type || "PDF").toUpperCase())}">`
         : `<div class="placeholder">${escapeHtml((r.agency || "FILE").slice(0, 8))}<br>${escapeHtml((r.file_type || "PDF").toUpperCase())}</div>`
     }</div>`;
   }
@@ -1816,6 +1829,19 @@ whenProofMod((P) => {
   const strip = document.querySelector('.foot-bottom [data-selfcheck]');
   if (strip) P.mountSelfCheck(strip);
 });
+
+// A thumbnail we can't serve at its attested digest is withheld, not faked —
+// so its <img> 404s. Swap in the same placeholder a record with no thumbnail
+// gets, rather than showing a broken-image glyph. Capture phase: `error`
+// does not bubble. (2026-07-25 — see the honesty note in this page's copy.)
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || !img.hasAttribute('data-thumb')) return;
+  const ph = document.createElement('div');
+  ph.className = 'placeholder';
+  ph.innerHTML = `${img.dataset.agency || 'FILE'}<br>${img.dataset.ft || 'PDF'}`;
+  img.replaceWith(ph);
+}, true);
 </script>
 </body>
 </html>

@@ -185,6 +185,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     <div class="navmore">
       <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
       <div class="navmore-menu" role="menu">
+        <a href="/oracle" role="menuitem">The oracle</a>
         <a href="/verify" role="menuitem">Verify</a>
         <a href="/entropy" role="menuitem">Entropy beacon</a>
         <a href="/life" role="menuitem">Life</a>
@@ -293,9 +294,17 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       read end to end. No npm. No Python. No runtime.
     </p>
     <p class="gloss reveal">the compiler you run is the compiler you read</p>
+    <p class="lead push reveal">
+      Being readable is the prerequisite, not the point. A compiler small
+      enough to audit and reproducible enough to trust can act as a
+      <strong>referee</strong> &mdash; which is what machine-written code has
+      never had. A model's claim that its output is correct can't be checked
+      by anyone. A compile can be re-run by everyone.
+    </p>
     <div class="cta-row push reveal">
-      <a class="btn btn-primary" href="rail.html">See the language</a>
-      <a class="btn btn-secondary" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source on GitHub</a>
+      <a class="btn btn-primary" href="oracle.html">How we train against it</a>
+      <a class="btn btn-secondary" href="rail.html">See the language</a>
+      <a class="btn btn-ghost" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source on GitHub</a>
     </div>
   </div>
 </section>
@@ -329,10 +338,10 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <h3>Aliens</h3>
         <p>Byte-for-byte mirror of the Dept. of War PURSUE UAP archive. Every file Ed25519-signed against the beacon, browser-verifiable per record.</p>
       </a>
-      <a class="card reveal" href="provenance.html">
-        <span class="eyebrow">Monolith</span>
-        <h3>Provenance</h3>
-        <p>Where this goes next. A signed lineage for every AI-touched artifact &mdash; what was written, when, by whom, anchored to physics nobody owns.</p>
+      <a class="card reveal" href="oracle.html">
+        <span class="eyebrow">Machine</span>
+        <h3>The oracle</h3>
+        <p>What the compiler is <em>for</em>. A model's claim that its code is correct can't be checked; a compile can. We train against the checker &mdash; and publish the month that method lied to us.</p>
       </a>
     </div>
 
@@ -351,7 +360,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 
     <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
+        <div class="value"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></div>
         <div class="label">Current Rail</div>
       </div>
       <div class="stat reveal">
@@ -372,9 +381,10 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       </div>
     </div>
     <p class="gloss push reveal">
-      the release figure above is a working prove button &mdash; press it and
-      your browser fetches the tagged binary, hashes it, and checks the
-      witness signature itself
+      every figure above is injected at deploy time from a generated registry
+      &mdash; none of them is typed by hand. per-release attestations are not
+      published yet; the proof you <em>can</em> press today is the signed
+      deploy manifest at the top of this page.
     </p>
   </div>
 </section>

@@ -83,6 +83,26 @@ honesty_gate() {
   }
 }
 
+# ── Gate 2b: citations — every proof affordance must resolve ────────────
+# The honesty gate proves our NUMBERS come from the substrate. This proves
+# our PROOFS are takeable: prove-button manifests, figure provenance URLs,
+# and published curl recipes all have to resolve (live, or in this deploy).
+# A dead proof link fails exactly the reader who believed us and tried.
+#
+# Override with DEPLOY_SKIP_CITATION_GATE=1 (same spirit as the physics
+# skip: available, but it defeats the point).
+citation_gate() {
+  [ "${DEPLOY_SKIP_CITATION_GATE:-0}" = "1" ] && {
+    echo "deploy: citation gate SKIPPED via DEPLOY_SKIP_CITATION_GATE=1" >&2
+    return 0
+  }
+  python3 ./tools/citation_gate.py --quiet || {
+    echo "deploy: CITATION GATE FAILED — deploy blocked. Either restore the" >&2
+    echo "        cited artifact, or stop offering the proof." >&2
+    exit 3
+  }
+}
+
 # ── Gate 3: physics — refuse to deploy if the entropy beacon is stale ───
 # This binds every site deploy to a live physical process: deploys can
 # happen only when production physics is producing distinct hashes at
@@ -597,6 +617,7 @@ cd "$(dirname "$0")"
 check_clean_tree
 gen_stats
 honesty_gate
+citation_gate
 gate_on_beacon
 if [ $# -eq 0 ]; then
   gate_on_signing

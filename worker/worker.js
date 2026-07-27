@@ -725,6 +725,14 @@ function timingSafeEqualHex(a, b) {
 // Each data SKU maps to an R2 object under the REPORTS_R2 bucket. A purchase
 // (or admin grant) mints a random, time-limited, download-capped token in KV;
 // GET /data/download/<token> streams the object. No public bucket, no S3 creds.
+// 2026-07-25: automated delivery is OFF while R2 is retired (free-tier pivot).
+// The tarballs are intact on the Mini (~/.ledatic/data-products/, with their
+// .sha256 sidecars) — they just have no public origin, and streaming a 2.3 GB
+// object through a Free zone is exactly what CF's ToS §2.8 prohibits. So data
+// sales fall through to the existing "delivery by email within 24h" path
+// rather than minting a token that resolves to nothing. Flip to true once
+// /data/download has a real origin behind it.
+const DATA_DELIVERY_ONLINE = false;
 const DATA_DELIVERABLES = {
   pairs: {
     r2_key: "data-deliverables/rail-verified-pairs-v2.tar.gz",
@@ -741,6 +749,10 @@ const DATA_DELIVERABLES = {
 async function mintDownloadToken(env, pack, ref) {
   const meta = DATA_DELIVERABLES[pack];
   if (!meta) return null;
+  // No live origin → no token. A null here makes the claim endpoint report
+  // "delivery by email within 24h", which is true, instead of handing the
+  // buyer a download URL that 404s.
+  if (!DATA_DELIVERY_ONLINE) return null;
   const token = sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
   const now = Math.floor(Date.now() / 1000);
   const grant = {
@@ -947,9 +959,20 @@ async function handleSite(request, env, url) {
   // AIS snapshot + latest attestation). Same R2 objects /greatlakes serves
   // behind auth; exposed here unauthenticated because the demo is public now.
   if (pathname === "/portcall/fleet.json" && method === "GET") {
-    const obj = await env.REPORTS_R2.get("greatlakes/data/vessels/index.json");
-    const body = obj ? await obj.arrayBuffer() : '{"vessels":[]}';
-    return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }) });
+    // 2026-07-27: proxy the Mini origin, same as /portcall/pulse.json above.
+    // R2 is disabled at the account level (error 10042, billing), so the
+    // publisher's PUTs all 500'd — and the old `obj ? ... : {"vessels":[]}`
+    // fallback turned that storage failure into a 200 OK EMPTY FLEET. The demo
+    // rendered "no ships in the Great Lakes" for days and nothing alarmed,
+    // because an empty map is indistinguishable from a quiet one.
+    // FAIL LOUD instead: 503 when the origin is unreachable. A visibly broken
+    // feed is recoverable; a plausible wrong one is not.
+    const r = await fetch("https://beacon.ledatic.org/portcall/fleet.json").catch(() => null);
+    if (!r || !r.ok) {
+      return new Response('{"error":"fleet origin unavailable"}', { status: 503,
+        headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
+    }
+    return new Response(await r.text(), { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
   }
   if (pathname === "/portcall/attestation.json" && method === "GET") {
     const obj = await env.REPORTS_R2.get("greatlakes/ais/latest.attestation.json");
@@ -1030,9 +1053,11 @@ async function handleSite(request, env, url) {
     } });
   }
   // Anchor proxy: lets the bundled APK fetch the live beacon pulse cross-origin.
+  // 2026-07-24: proxied to the Mini origin (beacon.ledatic.org, full-cadence
+  // local chain via tunnel) — R2 retired from the pulse path (free-tier pivot).
   if (pathname === "/portcall/pulse.json" && method === "GET") {
-    const obj = await env.REPORTS_R2.get("entropy/pulse.json");
-    const body = obj ? await obj.text() : "{}";
+    const r = await fetch("https://beacon.ledatic.org/pulse").catch(() => null);
+    const body = r && r.ok ? await r.text() : "{}";
     return new Response(body, { headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }) });
   }
   // Vendored Ed25519 (noble) served same-origin so the page needs no CDN.
@@ -1450,15 +1475,14 @@ async function handleSite(request, env, url) {
     return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
   }
   if (pathname === "/entropy/pulse") {
-    // Read from R2 (strongly consistent, no KV 60s edge cache) with
-    // KV fallback during transition.
-    const obj = await env.REPORTS_R2.get("entropy/pulse.json");
-    const pulse = obj ? await obj.text() : await env.LEDATIC_KV.get("entropy:pulse:current");
-    if (!pulse) return new Response('{"error":"no pulse yet"}', {
+    // 2026-07-24: proxy the Mini origin (beacon.ledatic.org via tunnel) —
+    // the full-cadence local chain is the truth; R2 retired (free-tier pivot).
+    const r = await fetch("https://beacon.ledatic.org/pulse").catch(() => null);
+    if (!r || !r.ok) return new Response('{"error":"beacon origin unreachable"}', {
       status: 503,
       headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
     });
-    return new Response(pulse, {
+    return new Response(await r.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
@@ -1472,12 +1496,14 @@ async function handleSite(request, env, url) {
   // Digits-only, so it never shadows /entropy/pulse or /entropy/pulse/log above.
   const pulseByIdMatch = pathname.match(/^\/entropy\/pulse\/(\d+)$/);
   if (pulseByIdMatch && method === "GET") {
-    const obj = await env.REPORTS_R2.get(`entropy/pulse/${pulseByIdMatch[1]}.json`);
-    if (!obj) return new Response('{"error":"no pulse for that id"}', {
+    // 2026-07-24: by-id archive served by the Mini origin (full cadence,
+    // no quota) instead of R2 (free-tier pivot).
+    const r = await fetch(`https://beacon.ledatic.org/pulse/${pulseByIdMatch[1]}`).catch(() => null);
+    if (!r || !r.ok) return new Response('{"error":"no pulse for that id"}', {
       status: 404,
       headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
     });
-    return new Response(await obj.text(), {
+    return new Response(await r.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
@@ -1491,24 +1517,33 @@ async function handleSite(request, env, url) {
   if (witnessMatch) {
     const node = witnessMatch[1];
     if (!WITNESSES.has(node)) return notFound();
-    const r2Key = `witness/${node}/latest.json`;
+    // 2026-07-24 free-tier pivot: R2 -> KV with a write throttle. The Pi
+    // pushes every ~5s; KV free tier allows 1k writes/day, so we accept
+    // every PUT but persist only when the stored record is >180s old
+    // (~480 writes/day). Freshness contract stays inside the healer's
+    // 5-minute staleness alarm.
+    const kvKey = `witness:${node}:latest`;
     if (method === "PUT") {
       if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
         return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
       }
       const body = await request.text();
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      const prev = await env.LEDATIC_KV.get(kvKey, { type: "json" });
+      const nowS = Math.floor(Date.now() / 1000);
+      if (!prev || !prev.witnessed_at || (nowS - prev.witnessed_at) > 180) {
+        try { JSON.parse(body); }
+        catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+        await env.LEDATIC_KV.put(kvKey, body);
+      }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
-      const obj = await env.REPORTS_R2.get(r2Key);
-      if (!obj) return new Response('{"error":"no witness record yet"}', {
+      const rec = await env.LEDATIC_KV.get(kvKey);
+      if (!rec) return new Response('{"error":"no witness record yet"}', {
         status: 503,
         headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
       });
-      return new Response(await obj.text(), {
+      return new Response(rec, {
         headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
       });
     }
@@ -1520,7 +1555,9 @@ async function handleSite(request, env, url) {
   // tampering between writer and reader is detectable.  Cache: no-store
   // (fresh state each request, like the witness endpoint).
   if (pathname === "/fleet/status.json") {
-    const r2Key = "fleet/status.json";
+    // 2026-07-24 free-tier pivot: R2 -> KV, persisted at most every 600s
+    // (~144 writes/day) — snapshot freshness of minutes is fine for /system.
+    const kvKey = "fleet:status:latest";
     if (method === "PUT") {
       if (request.headers.get("x-beacon-token") !== env.BEACON_TOKEN) {
         return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
@@ -1529,20 +1566,32 @@ async function handleSite(request, env, url) {
       if (!body || body.length > 64 * 1024) {
         return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
       }
-      try { JSON.parse(body); }
+      let parsed;
+      try { parsed = JSON.parse(body); }
       catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      const prevRaw = await env.LEDATIC_KV.get(kvKey);
+      let stale = true;
+      if (prevRaw) {
+        try {
+          const prev = JSON.parse(prevRaw);
+          const prevAt = prev.updated_at || prev.ts || 0;
+          const nowS = Math.floor(Date.now() / 1000);
+          stale = !prevAt || (nowS - prevAt) > 600;
+        } catch { stale = true; }
+      }
+      if (stale) {
+        if (!parsed.updated_at && !parsed.ts) parsed.updated_at = Math.floor(Date.now() / 1000);
+        await env.LEDATIC_KV.put(kvKey, JSON.stringify(parsed));
+      }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
-      const obj = await env.REPORTS_R2.get(r2Key);
-      if (!obj) return new Response('{"error":"no fleet snapshot yet"}', {
+      const rec = await env.LEDATIC_KV.get(kvKey);
+      if (!rec) return new Response('{"error":"no fleet snapshot yet"}', {
         status: 503,
         headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
       });
-      return new Response(await obj.text(), {
+      return new Response(rec, {
         headers: sec({
           "content-type": "application/json",
           "cache-control": "no-store",
@@ -1762,7 +1811,14 @@ async function handleSite(request, env, url) {
       return new Response("download limit reached — contact 31zemogyllier@gmail.com", { status: 429, headers: sec({ "content-type": "text/plain" }) });
     }
     const obj = await env.REPORTS_R2.get(grant.r2_key);
-    if (!obj) return notFound();
+    // A token minted before delivery went offline must not read as "your link
+    // is bad" — the purchase is valid, only the automated path is down.
+    if (!obj) return new Response(
+      "Your purchase is valid — automated download is temporarily offline.\n" +
+      "Email 31zemogyllier@gmail.com with your Stripe receipt and we'll send\n" +
+      "the file and its signed manifest directly, same day.\n",
+      { status: 503, headers: sec({ "content-type": "text/plain", "cache-control": "no-store" }) },
+    );
     if (method === "GET") {
       grant.used = (grant.used || 0) + 1;
       await env.LEDATIC_KV.put(`dl:${token}`, JSON.stringify(grant)); // best-effort meter
@@ -1839,9 +1895,12 @@ async function handleSite(request, env, url) {
       }
       try { JSON.parse(body); }
       catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-      await env.REPORTS_R2.put(r2Key, body, {
-        httpMetadata: { contentType: "application/json" },
-      });
+      // KV, not R2 (2026-07-26). This PUT had returned 500 on every publisher
+      // tick since the pivot — ~2,700 failures a day. The read path is served
+      // from the Rail origin, so this is now a redundant second copy; the
+      // point of fixing it is that a permanently-500 log line hides the next
+      // real failure behind noise.
+      await env.LEDATIC_KV.put(r2Key, body);
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
@@ -1882,6 +1941,20 @@ async function handleSite(request, env, url) {
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
+      // R2 is retired, and this route's PUT has 500'd on every tick since —
+      // so /entropy's prove button was offering proof of a frame with nothing
+      // behind it. The publisher now writes the signed attestation to
+      // Mini-local state every ~32 s and the Rail origin serves it.
+      const fr = await fetch("https://beacon.ledatic.org/frame/latest.attestation.json").catch(() => null);
+      if (fr && fr.ok) {
+        return new Response(await fr.text(), {
+          headers: sec({
+            "content-type": "application/json",
+            "cache-control": "no-store",
+            "access-control-allow-origin": "*",
+          }),
+        });
+      }
       const obj = await env.REPORTS_R2.get(r2Key);
       if (!obj) return new Response('{"error":"no frame attestation yet"}', {
         status: 503,
@@ -2100,10 +2173,16 @@ async function handleSite(request, env, url) {
   const badgeMatch = pathname.match(/^\/attest\/badge\/(builds|selfhost)\.json$/);
   if (badgeMatch && method === "GET") {
     const kind = badgeMatch[1];
+    // R2 is retired, so pointer + record now come from the Rail origin, which
+    // reads them out of the pristine origin/master checkout. R2 is still tried
+    // first so a re-enabled bucket transparently wins again.
     const fetchJson = async (path) => {
       const obj = await env.REPORTS_R2.get(`attest${path}`);
-      if (!obj) return null;
-      try { return JSON.parse(await obj.text()); } catch { return null; }
+      if (obj) {
+        try { return JSON.parse(await obj.text()); } catch { return null; }
+      }
+      const kv = await env.LEDATIC_KV.get(`attest${path}`, "json");
+      return kv || null;
     };
     const ptr = await fetchJson(`/${kind}/latest/index.json`);
     let label, message, color = "lightgrey";
@@ -2145,10 +2224,16 @@ async function handleSite(request, env, url) {
   // surface.  Wired 2026-06-09: the PAOS audit found /attest/latest fell
   // through to the homepage.
   if (pathname === "/attest/latest" && method === "GET") {
+    // R2 is retired, so pointer + record now come from the Rail origin, which
+    // reads them out of the pristine origin/master checkout. R2 is still tried
+    // first so a re-enabled bucket transparently wins again.
     const fetchJson = async (path) => {
       const obj = await env.REPORTS_R2.get(`attest${path}`);
-      if (!obj) return null;
-      try { return JSON.parse(await obj.text()); } catch { return null; }
+      if (obj) {
+        try { return JSON.parse(await obj.text()); } catch { return null; }
+      }
+      const kv = await env.LEDATIC_KV.get(`attest${path}`, "json");
+      return kv || null;
     };
     const out = { kind: "ledatic.attest.latest", version: 1 };
     for (const k of ["builds", "selfhost"]) {
@@ -2234,23 +2319,59 @@ async function handleSite(request, env, url) {
         }
         try { JSON.parse(body); }
         catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-        await env.REPORTS_R2.put(r2Key, body, {
-          httpMetadata: { contentType: "application/json" },
-        });
+        // 2026-07-26: writes land in KV, matching where reads come from. This
+        // PUT went to R2 and had been returning 500 on every daily attest run
+        // since the free-tier pivot — the records were produced correctly and
+        // simply had nowhere to go, which is how the badges went stale.
+        await env.LEDATIC_KV.put(r2Key, body);
       } else {
-        // Binary upload — cap at 16 MB to keep the surface honest.
+        // Binary upload — cap at 16 MB to keep the surface honest, and well
+        // under KV's 25 MB per-value ceiling.
         const body = await request.arrayBuffer();
         if (!body.byteLength || body.byteLength > 16 * 1024 * 1024) {
           return new Response("bad body", { status: 400, headers: sec({ "content-type": "text/plain" }) });
         }
-        await env.REPORTS_R2.put(r2Key, body, {
-          httpMetadata: { contentType: "application/octet-stream" },
-        });
+        await env.LEDATIC_KV.put(r2Key, body);
       }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
     if (method === "GET") {
-      const obj = await env.REPORTS_R2.get(r2Key);
+      let obj = await env.REPORTS_R2.get(r2Key);
+      // 2026-07-25: R2 is retired and these were never published anywhere
+      // else, so /rail's ledger buttons have been pressing dead links. The
+      // release attestations live on the Mini (~/projects/rail/releases/) and
+      // the Rail origin now serves them; fall through to it for reads.
+      if (!obj && isJson) {
+        // Static attestation records live in KV. They were never served at all
+        // before today (R2 held them, and the ledger pressed dead links); the
+        // Rail origin can't host them because its read_file leaks on ENOENT.
+        const kv = await env.LEDATIC_KV.get(`attest/${kind}/${ident}/${file}`);
+        if (kv) {
+          return new Response(kv, {
+            headers: sec({
+              "content-type": "application/json",
+              "cache-control": "public, max-age=3600",
+              "access-control-allow-origin": "*",
+            }),
+          });
+        }
+      }
+      // Release binaries come from KV, not the Rail origin: a Mach-O has NUL
+      // bytes, and Rail strings would truncate at the first one — silently
+      // serving short bytes on the one path whose whole job is byte-integrity.
+      // They are ~1 MB, immutable, and written once, so KV is the right shelf.
+      if (!obj && kind === "releases" && isBinary) {
+        const bin = await env.LEDATIC_KV.get(`releases/${ident}/${file}`, "arrayBuffer");
+        if (bin) {
+          return new Response(bin, {
+            headers: sec({
+              "content-type": "application/octet-stream",
+              "cache-control": "public, max-age=31536000, immutable",
+              "access-control-allow-origin": "*",
+            }),
+          });
+        }
+      }
       if (!obj) {
         return new Response(isJson ? '{"error":"not found"}' : "not found", {
           status: 404,
@@ -2340,9 +2461,12 @@ async function handleSite(request, env, url) {
     }
     if (method === "GET") {
       const obj = await env.REPORTS_R2.get(r2Key);
-      if (!obj) return new Response('{"error":"no dda index yet"}', {
-        status: 404, headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
-      });
+      // Engagement closed + paid 2026-05-12; the rollup lived in R2 and is not
+      // coming back. "no index yet" read as pending — 410 says retired, which
+      // is what it is, and lets the endpoint walker assert closure instead of
+      // alarming daily on a route that is correctly dark.
+      if (!obj) return jsonResponse(
+        { error: "gone", message: "This engagement closed 2026-05-12; the brief index has been retired." }, 410);
       return new Response(await obj.text(), {
         headers: sec({
           "content-type": "application/json",
@@ -2545,6 +2669,25 @@ async function handleSite(request, env, url) {
     if (r2key.includes("..") || r2key.length > 512) {
       return notFound();
     }
+    // 2026-07-25: R2 is retired. Thumbnails (162 of them, 37.7 MB, each one
+    // byte-verified against its attested thumbnail_sha256 before publishing)
+    // now live in KV so the archive renders. Document bytes are NOT
+    // republished — 10.5 GB with a 513 MB tail is exactly the shape CF's ToS
+    // §2.8 prohibits on a Free zone, and war.gov 403s us so there is no
+    // upstream to redirect to either. The proof surface does not depend on
+    // them: every record verifies from its inline attestation in the manifest.
+    const kvBytes = await env.LEDATIC_KV.get(r2key, "arrayBuffer");
+    if (kvBytes) {
+      const kext = (r2key.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || "";
+      const kct = MIME[kext] || "application/octet-stream";
+      return new Response(method === "HEAD" ? null : kvBytes, {
+        headers: sec({
+          "content-type": kct,
+          "content-length": String(kvBytes.byteLength),
+          "cache-control": "public, max-age=31536000, immutable",
+        }),
+      });
+    }
     if (method === "HEAD") {
       const obj = await env.REPORTS_R2.head(r2key);
       if (!obj) return notFound();
@@ -2570,11 +2713,18 @@ async function handleSite(request, env, url) {
     });
   }
 
-  // /pursue/manifest.jsonl → R2 (small JSONL, not KV, so we can grow past 25MB).
+  // /pursue/manifest.jsonl → Mini origin (2026-07-25). R2 held a copy; the
+  // master has always been ~/projects/pursue/scrape/pursue.jsonl, now served
+  // by the pure-Rail beacon origin over the tunnel. Same pattern as the pulse
+  // routes above. /aliens needs only this file to verify: each record carries
+  // its inline Ed25519 attestation, checked over the attested digest.
   if (pathname === "/pursue/manifest.jsonl" && method === "GET") {
-    const obj = await env.REPORTS_R2.get("pursue/manifest.jsonl");
-    if (!obj) return notFound();
-    return new Response(obj.body, {
+    const r = await fetch("https://beacon.ledatic.org/pursue/manifest.jsonl").catch(() => null);
+    if (!r || !r.ok) return new Response("manifest origin unreachable", {
+      status: 503,
+      headers: sec({ "content-type": "text/plain", "cache-control": "no-store" }),
+    });
+    return new Response(r.body, {
       headers: sec({
         "content-type": "application/jsonl",
         "cache-control": "public, max-age=300, s-maxage=300",
@@ -2821,6 +2971,29 @@ async function handleSite(request, env, url) {
 
 export default {
   async fetch(request, env) {
+    // 2026-07-24 free-tier pivot: R2 is disabled on the account and the
+    // REPORTS_R2 binding is no longer deployable. This stub keeps all call
+    // sites safe: reads behave as "object not found" (routes take their
+    // existing 404/empty paths), writes throw and surface as the same 500s
+    // those routes already returned while R2 was dead. Live pulse traffic
+    // is served by the Mini origin (beacon.ledatic.org) instead.
+    if (!env.REPORTS_R2) {
+      const r2Dead = () => { throw new Error("R2 disabled (free-tier pivot 2026-07-24)"); };
+      env = Object.assign({}, env, { REPORTS_R2: {
+        get: async () => null,
+        // head() was missing from the original stub, so HEAD /pursue/files/*
+        // threw an uncaught TypeError and surfaced as a 500 instead of the
+        // 404 the route already handles. Reads must degrade, never throw.
+        head: async () => null,
+        put: r2Dead,
+        delete: async () => null,
+        list: async () => ({ objects: [] }),
+        // Admin upload paths: throwing is correct (they must not silently
+        // appear to succeed), but they have to exist to throw.
+        createMultipartUpload: r2Dead,
+        resumeMultipartUpload: r2Dead,
+      } });
+    }
     const url = new URL(request.url);
 
     // HEAD = GET minus body. Route handlers below branch on GET, so HEAD on

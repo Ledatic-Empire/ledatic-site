@@ -145,6 +145,7 @@ pre.recipe .ok { color: var(--ph-600); }
     <div class="navmore">
       <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
       <div class="navmore-menu" role="menu">
+        <a href="/oracle" role="menuitem">The oracle</a>
         <a href="/verify" role="menuitem">Verify</a>
         <a href="/entropy" role="menuitem">Entropy beacon</a>
         <a href="/life" role="menuitem">Life</a>
@@ -212,7 +213,7 @@ pre.recipe .ok { color: var(--ph-600); }
 
     <div class="stat-row push">
       <div class="stat reveal">
-        <div class="value"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; release attestation"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data><span class="affix" aria-hidden="true">⌁</span></button></div>
+        <div class="value"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></div>
         <div class="label">Current release</div>
       </div>
       <div class="stat reveal">
@@ -237,9 +238,10 @@ pre.recipe .ok { color: var(--ph-600); }
       </div>
     </div>
     <p class="gloss push reveal">
-      the release figure is a working prove button &mdash; press it and your
-      browser fetches the tagged binary's attestation and checks the witness
-      signature itself
+      the figures above are injected from a generated registry, never typed.
+      the working prove buttons are in the ledger below &mdash; each release
+      listed there carries a published attestation. newer tags are not yet
+      attested, and we don't render a button we can't honour
     </p>
   </div>
 </section>
@@ -348,6 +350,32 @@ pre.recipe .ok { color: var(--ph-600); }
         <p class="ttl">A typed trust boundary: authenticated vs unauthenticated values.</p>
         <p class="gloss">plain words: data that came from a checked proof and data that didn't now have different types &mdash; the compiler refuses to confuse them</p>
         <p>Float type-inference plus auth/unauth desugaring, merged to master. Sound for arbitrary payloads.</p>
+      </li>
+
+      <li class="reveal" id="v5-3-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.3.0">v5.3.0</data></span>
+          <span class="ldate">2026-07-08</span>
+          <span class="anchor">attested <time-pulse data-pulse="2892871">@ p#2892871</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.3.0/rail_native.attestation.json" data-name="rail_native &middot; v5.3.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Independence checker, and a self-compile three times faster.</p>
+        <p class="gloss">plain words: the compiler now proves which parts of itself depend on which &mdash; and rebuilds itself in a third of the time</p>
+        <p>Allocator freelist buckets cut the self-compile from roughly a minute to under twenty seconds. The independence checker makes the module graph an assertion rather than a convention.</p>
+      </li>
+
+      <li class="reveal" id="v5-2-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.2.0">v5.2.0</data></span>
+          <span class="ldate">2026-06-19</span>
+          <span class="anchor">attested <time-pulse data-pulse="2892864">@ p#2892864</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.2.0/rail_native.attestation.json" data-name="rail_native &middot; v5.2.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Rail stands alone &mdash; no assembler, no linker, no codesign.</p>
+        <p class="gloss">plain words: nothing outside the language is left in the build; it assembles, links and signs its own binary</p>
+        <p>The strongest form of the self-hosting claim: <code>as</code>, <code>ld</code> and <code>codesign</code> all leave the path, and the self-compile becomes bit-reproducible &mdash; the committed seed rebuilds itself byte for byte. A nightly witness re-checks that on a second machine.</p>
       </li>
 
       <li class="reveal" id="v5-1-0">
@@ -498,7 +526,7 @@ pre.recipe .ok { color: var(--ph-600); }
       JavaScript &mdash; the verifier is one curl away:
     </p>
 
-    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the latest tagged release (v5.1.0).</span>
+    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the newest attested release (v5.1.0).</span>
 <span class="c"># Each release has the same shape; pin the tag you trust.</span>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh
 curl -sf https://ledatic.org/releases/v5.1.0/rail_native -o /tmp/rn
