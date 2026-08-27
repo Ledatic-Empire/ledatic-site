@@ -1350,6 +1350,25 @@ async function handleSite(request, env, url) {
       if (!ok) {
         return new Response("bad path", { status: 400, headers: sec({ "content-type": "text/plain" }) });
       }
+      // 2026-08-04: R2 is account-disabled (10042), so the two feeds the live
+      // pipeline still produces come from the Mini origin over the tunnel —
+      // the same pattern as /portcall/fleet.json, fail-loud 503, never an
+      // empty-but-plausible 200. Per-vessel tracks and the parked services'
+      // brief/anomalies stay on the R2 read below and honestly 404 until R2
+      // returns.
+      const originPath = tail === "vessels/index.json" ? "/portcall/fleet.json"
+                       : tail === "calls.json"         ? "/portcall/calls.json"
+                       : null;
+      if (originPath) {
+        const r = await fetch("https://beacon.ledatic.org" + originPath).catch(() => null);
+        if (!r || !r.ok) {
+          return new Response('{"error":"lakes origin unavailable"}', { status: 503,
+            headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }) });
+        }
+        return new Response(await r.text(), {
+          headers: secGreatlakes({ "content-type": "application/json", "cache-control": "no-store" }),
+        });
+      }
       const obj = await env.REPORTS_R2.get("greatlakes/data/" + tail);
       if (!obj) {
         return new Response('{"error":"no data yet"}', {
