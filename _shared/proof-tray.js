@@ -706,6 +706,30 @@ function pageKeyCandidates(path) {
   return out;
 }
 
+// Cloudflare's JavaScript Detections injects a bot-challenge <script> before
+// </body> on every HTML response. It carries a per-request nonce, so the
+// delivered bytes differ on every fetch and can never match any signed hash.
+// On the Free plan this cannot be turned off: JS Detections has no
+// independent switch, and disabling Bot Fight Mode does not release it
+// (a known Cloudflare defect, confirmed still open 2026-08-27).
+//
+// deploy.sh has normalised this away since it first appeared; this check
+// never learned to, so every page alarmed in the browser while the deploy
+// pipeline was perfectly happy. Same strip, same regex, both sides.
+//
+// What this means for the claim, stated plainly: we attest the bytes WE
+// authored, not the bytes the CDN delivers. The injected block is not ours
+// and we cannot suppress it. Everything else on the page is covered.
+const CF_INJECTION_RE = /<script>(?:(?!<\/script>).)*challenge-platform(?:(?!<\/script>).)*<\/script>/;
+
+function stripCfInjection(bytes) {
+  let text;
+  try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+  catch { return bytes; }            // not valid UTF-8: hash it untouched
+  const out = text.replace(CF_INJECTION_RE, '');
+  return out === text ? bytes : new TextEncoder().encode(out);
+}
+
 export async function selfCheck(opts = {}) {
   const manifestUrl = opts.manifestUrl || '/attest/site/latest.json';
   const pagePath = opts.pagePath ?? (hasDOM ? location.pathname : null);
@@ -739,7 +763,7 @@ export async function selfCheck(opts = {}) {
   try {
     const res = await fetchT(pagePath, ARTIFACT_TIMEOUT_MS, { cache: 'no-store' });
     if (!res.ok) return { outcome: 'unknown', reason: `could not re-fetch this page (${res.status})`, proof };
-    pageHash = await sha256Hex(await res.arrayBuffer());
+    pageHash = await sha256Hex(stripCfInjection(new Uint8Array(await res.arrayBuffer())));
   } catch (e) {
     return { outcome: 'unknown', reason: `could not re-fetch this page (${String(e && e.message || e)})`, proof };
   }
