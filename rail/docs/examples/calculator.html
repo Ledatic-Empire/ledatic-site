@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 A tiny tree-walking interpreter for arithmetic expressions. <code>type Expr = | Num x | Add a b | Mul a b | Neg a</code> defines the AST; <code>eval</code> recursively reduces it to an int.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/calculator.rail</code>):
+<strong>Source</strong> (<code>examples/calculator.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- calculator.rail — expression evaluator using algebraic data types
@@ -101,13 +101,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Run:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native run examples/calculator.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 5

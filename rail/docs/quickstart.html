@@ -108,26 +108,28 @@ Ten lines including the comment. Functions are <code>name args = body</code>. <c
 </code></pre>
 <pre><code class="lang-">
 ... (long test log) ...
-133/137 tests passed
+140/140 tests passed
 </code></pre>
 <p>
-The test suite covers parser, codegen, type inference, the runtime allocator, and the standard library. The count fluctuates a little if concurrent sessions race on <code>/tmp/rail_out</code>. 137 is the canonical green count — re-run if you see a lower number.
+The test suite covers parser, codegen, type inference, the runtime allocator, and the standard library. The count fluctuates a little if concurrent sessions race on <code>/tmp/rail_out</code>. 140 is the canonical green count — re-run if you see a lower number.
 </p>
 <h2>5. Self-compile</h2>
 <pre><code class="lang-bash">
 ./rail_native self
 </code></pre>
 <p>
-The compiler compiles itself to <code>/tmp/rail_self</code>. Verify it's byte-identical to the seed:
+The compiler compiles itself to <code>/tmp/rail_self</code>. On a clean checkout the first cycle may differ — the seed's shipped runtime asm doesn't always match what its own source emits. Install gen1 and re-run to confirm convergence at gen2:
 </p>
 <pre><code class="lang-bash">
+cp /tmp/rail_self ./rail_native
+./rail_native self
 cmp rail_native /tmp/rail_self &amp;&amp; echo "byte-identical"
 </code></pre>
 <pre><code class="lang-">
 byte-identical
 </code></pre>
 <p>
-This is the fixed-point property: the compiler's output is its own input. If you change <code>tools/compile.rail</code>, two cycles of self-compile suffice to reach a new fixed point.
+This is the fixed-point property: the compiler's output is its own input. The bootstrap is a 2-cycle limit cycle — gen2 == gen3 == gen4 byte-identically. If <code>cmp</code> still differs after 3 cycles, codegen is non-deterministic and wants investigation. See <code>notes/bootstrap_convergence_audit_2026-05-13.md</code>.
 </p>
 <h2>6. Compile a real example</h2>
 <pre><code class="lang-bash">
@@ -203,7 +205,7 @@ For a local-only smoke equivalent: the LSP server at <code>tools/lsp_server.rail
 ./rail_native test 2&gt;&amp;1 | tail -1
 </code></pre>
 <pre><code class="lang-">
-137/137 tests passed
+140/140 tests passed
 </code></pre>
 <p>
 is the local equivalent of a signed bench: the test suite is reproducible, deterministic, and the seed binary's SHA-256 is checked into <code>rail_safe.sha256</code> for tamper detection.

@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 The same Rail source compiles to ARM64 macOS, ARM64 Linux, x86_64 Linux, WASM, Cortex-M4, and RV32IMC. Here's the smallest WASM target.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/wasm/hello.rail</code>):
+<strong>Source</strong> (<code>examples/wasm/hello.rail</code>):
 </p>
 <pre><code class="lang-rail">
 main =
@@ -60,13 +60,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Build (compile-only — does not execute on host):</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native wasm examples/wasm/hello.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/wasm/hello.rail to WASM...

@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 The naive recursive Fibonacci, compiled to WASM. Demonstrates that recursion and integer arithmetic carry through to the WASM backend identically to native.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/wasm/fib.rail</code>):
+<strong>Source</strong> (<code>examples/wasm/fib.rail</code>):
 </p>
 <pre><code class="lang-rail">
 fib n =
@@ -65,13 +65,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Build:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native wasm examples/wasm/fib.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/wasm/fib.rail to WASM...

@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 Rail's I/O surface is small but functional: <code>write_file path content</code>, <code>read_file path</code>, and <code>shell "cmd"</code> for everything else. This example writes a file, reads it back via shell (to demonstrate piping), and runs a few transforms.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/file_processor.rail</code>):
+<strong>Source</strong> (<code>examples/file_processor.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- file_processor.rail — read, process, and write files
@@ -96,13 +96,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Run:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native run examples/file_processor.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Wrote file.

@@ -28,7 +28,14 @@ md_to_body() {
         split(seg, parts, "\x01")
         s = substr(s, 1, RSTART-1) "<a href=\"" parts[2] "\">" parts[1] "</a>" substr(s, RSTART+RLENGTH)
       }
-      gsub(/\*\*([^*]+)\*\*/, "<strong>\\1</strong>", s)
+      # bold **text** — awk gsub has no capture groups (and BWK awk, which
+      # macOS ships, has no gensub), so "\\1" was emitted literally and every
+      # bold span rendered as <strong>\\1</strong> on the live docs page.
+      # Same match/substr idiom the code-span and link passes above use.
+      while (match(s, /\*\*[^*]+\*\*/)) {
+        b = substr(s, RSTART+2, RLENGTH-4)
+        s = substr(s, 1, RSTART-1) "<strong>" b "</strong>" substr(s, RSTART+RLENGTH)
+      }
       return s
     }
     function flush_para() { if (in_para) { print "</p>"; in_para=0 } }
@@ -149,10 +156,14 @@ done
 
 # Index page: rewrite index.html to point to .html siblings, and link to all examples.
 # index.md is already written with .md links; we need to swap .md → .html in the index.
-sed -i.bak 's|\.md)|\.html)|g; s|\.md"|\.html"|g' "$OUT/index.html" && rm -f "$OUT/index.html.bak"
-sed -i.bak 's|\.md)|\.html)|g; s|\.md"|\.html"|g' "$OUT/quickstart.html" && rm -f "$OUT/quickstart.html.bak"
-sed -i.bak 's|\.md)|\.html)|g; s|\.md"|\.html"|g' "$OUT/backends.html" && rm -f "$OUT/backends.html.bak"
-sed -i.bak 's|\.md)|\.html)|g; s|\.md"|\.html"|g' "$OUT/stdlib.html" && rm -f "$OUT/stdlib.html.bak"
+# Only RELATIVE .md links become .html siblings. The previous blanket sed
+# rewrote every ".md" in the file, which silently corrupted absolute links
+# too: the docs thesis link to CLAUDE.md on GitHub was being served as
+# .../blob/master/CLAUDE.html, a 404. The negative lookahead leaves any
+# scheme-qualified URL alone.
+for f in index quickstart backends stdlib; do
+  perl -pi -e 's{href="(?!\w+://)([^"]*)\.md"}{href="$1.html"}g' "$OUT/$f.html"
+done
 
 # Examples index
 {

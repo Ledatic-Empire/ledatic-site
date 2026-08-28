@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 Apollo2 (the MCU inside a Garmin Instinct gen-1) is a Cortex-M4. This Rail program drives a GPIO pin through Ambiq's PADKEY/CFGA/WTSA/WTCA register sequence using a SysTick interrupt for timing. Real microcontroller code, no C, no libc.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/apollo2_blink.rail</code>):
+<strong>Source excerpt</strong> (<code>examples/apollo2_blink.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- examples/apollo2_blink.rail
@@ -77,13 +77,13 @@ SYSTICK_CTRL = 0xE000E010
 The full program is 107 lines and configures: PADKEY unlock, output mode for <code>BLINK_PIN</code>, output enable, then a SysTick-driven main loop that toggles the pin via <code>GPIO_WTSA</code>/<code>GPIO_WTCA</code>.
 </p>
 <p>
-<strong>\1</strong>
+<strong>Build:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native cortexm examples/apollo2_blink.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/apollo2_blink.rail -&gt; Cortex-M4 (Thumb-2)...
