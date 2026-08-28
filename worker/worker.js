@@ -1469,15 +1469,22 @@ async function handleSite(request, env, url) {
     await env.REPORTS_R2.put("entropy/pulse.json", body, {
       httpMetadata: { contentType: "application/json" },
     });
-    // Also append to the rolling log so visitors can walk the chain in one
-    // request. Cap at last 50 to bound KV size. Best-effort — log failures
-    // don't block the primary write.
-    try {
-      const log = await env.LEDATIC_KV.get("entropy:pulse:log", { type: "json" }) || [];
-      log.push(JSON.parse(body));
-      if (log.length > 50) log.splice(0, log.length - 50);
-      await env.LEDATIC_KV.put("entropy:pulse:log", JSON.stringify(log));
-    } catch (e) { /* swallow — primary write already succeeded */ }
+    // The rolling log used to be appended here, one KV WRITE per mirrored
+    // pulse. Nothing has read that key since 2026-08-28, when
+    // /entropy/pulse/log was repointed at the Mini origin, which serves the
+    // same 50 records from the archive and cannot go stale.
+    //
+    // Left in place it was not merely dead, it was expensive. The beacon
+    // mirrors every 180th pulse, so this cost ~480 KV writes a day against
+    // a 1,000/day free-tier cap already committed to the fleet0 witness
+    // (~480) and /fleet/status.json (~144). The budget was over quota
+    // before a single deploy ran. When it tipped over, KV writes started
+    // failing with error 10048, the witness PUT threw inside this Worker,
+    // Cloudflare served 1101, and the self-healer tripped its breaker on a
+    // witness that had gone silent while the Pi was healthy and signing.
+    //
+    // A write nobody reads is not free. Removing it returns the standing
+    // budget to roughly 624 a day.
     // Persist this pulse under a by-id key so a verifier can confirm a
     // receipt's cited pulse_id -> value_hex on the public chain. This is what
     // lights up the SDK's already-built `verify --check-beacon` membership
@@ -1564,7 +1571,24 @@ async function handleSite(request, env, url) {
       if (!prev || !prev.witnessed_at || (nowS - prev.witnessed_at) > 180) {
         try { JSON.parse(body); }
         catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
-        await env.LEDATIC_KV.put(kvKey, body);
+        // Say WHY the write failed instead of throwing.
+        //
+        // On 2026-08-28 the KV free-tier daily write cap was exhausted and
+        // this put() threw. An uncaught throw in a Worker is served as
+        // Cloudflare error 1101, which is indistinguishable from a code
+        // bug: the Pi saw HTTP 500, the healer saw a silent witness, and
+        // the actual cause (quota) was only found by writing to KV by hand
+        // from the API and reading error 10048. A failure that cannot name
+        // itself costs more than the outage.
+        try {
+          await env.LEDATIC_KV.put(kvKey, body);
+        } catch (e) {
+          return new Response(JSON.stringify({
+            error: "witness record not persisted",
+            reason: String(e && e.message || e).slice(0, 200),
+            hint: "KV free tier allows 1000 writes/day and resets at 00:00 UTC",
+          }), { status: 503, headers: sec({ "content-type": "application/json" }) });
+        }
       }
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
