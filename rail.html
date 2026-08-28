@@ -531,11 +531,11 @@ pre.recipe .ok { color: var(--ph-600); }
       JavaScript &mdash; the verifier is one curl away:
     </p>
 
-    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the newest attested release (v5.1.0).</span>
+    <pre class="recipe reveal"><code><span class="c"># Pull the verifier and the newest attested release (v5.3.0).</span>
 <span class="c"># Each release has the same shape; pin the tag you trust.</span>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh
-curl -sf https://ledatic.org/releases/v5.1.0/rail_native -o /tmp/rn
-curl -sf https://ledatic.org/releases/v5.1.0/rail_native.attestation.json -o /tmp/rn.att.json
+curl -sf https://ledatic.org/releases/v5.3.0/rail_native -o /tmp/rn
+curl -sf https://ledatic.org/releases/v5.3.0/rail_native.attestation.json -o /tmp/rn.att.json
 /tmp/v.sh /tmp/rn /tmp/rn.att.json
 <span class="ok"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span></code></pre>
 
