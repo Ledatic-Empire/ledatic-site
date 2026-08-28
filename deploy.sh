@@ -293,6 +293,20 @@ upload() {
   rm -f "$meta"
   if ! echo "$out" | grep -q '"success":true'; then
     echo "  FAILED: $out" >&2
+    # set -e aborts the run here, which is correct: better to stop than to
+    # sign a manifest describing files that never uploaded. But an abort
+    # mid-upload leaves the site PARTIALLY updated, the byte-diff never
+    # runs, and the old manifest no longer describes what is live. Say so,
+    # because "FAILED: {json}" followed by silence does not.
+    if echo "$out" | grep -q '10048\|free usage limit'; then
+      echo "  CAUSE: Cloudflare KV daily write limit. It resets at 00:00 UTC." >&2
+      echo "         Reads are unaffected; only writes are refused." >&2
+    fi
+    echo "  PARTIAL DEPLOY: $WRITTEN key(s) were written before this failure," >&2
+    echo "  and the signed manifest was NOT updated, so the live site and the" >&2
+    echo "  manifest now disagree on those keys and their pages will fail their" >&2
+    echo "  own self-check. Re-run ./deploy.sh once writes are available; it" >&2
+    echo "  skips unchanged keys, so the re-run converges cheaply." >&2
     return 1
   fi
   # Best-effort cache purge. Silently skips if token lacks Zone:Cache:Purge.
