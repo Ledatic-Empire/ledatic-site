@@ -615,6 +615,22 @@ deploy_all() {
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
   done
+  # Rail docs (/rail/docs/*), built from ~/projects/rail/docs/site by
+  # tools/build_rail_docs.sh.
+  #
+  # These were never in deploy_all. The build script wrote them into the
+  # repo and nothing carried them to the site, so /rail/docs served whatever
+  # a hand-run push last left there. On 2026-08-28 that meant a fix for 75
+  # bold spans rendering as literal "\1" across 25 pages was committed,
+  # verified locally, and still broken in public: the repo and the live site
+  # disagreed and no gate compared them, because the byte-diff only checks
+  # keys deploy_all actually uploads. An unuploaded directory is invisible
+  # to a manifest built from uploads.
+  for f in rail/docs/*.html rail/docs/examples/*.html; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
 }
 
 # ── Main ────────────────────────────────────────────────────────────────
