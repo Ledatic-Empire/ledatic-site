@@ -1098,3 +1098,56 @@ h2.operator-title .accent { color: var(--ph-600); }
     outline: 1px solid var(--line);
   }
 }
+
+/* ============================================================
+   NARROW SCREENS
+   Added 2026-08-28 from measurements, not guesses: headless Chrome
+   at a 390px viewport reported the homepage laying out 435px wide
+   and 23 elements past the right edge. Because body sets
+   overflow-x: hidden, none of that scrolled — it was silently
+   amputated, which on a site made of hashes is the worst failure
+   mode available. Each rule below cites what it was measured to fix.
+   ============================================================ */
+
+/* Recipe blocks ran up to 1066px wide inside a clipped container, so
+   the command a reader is told to run had its tail cut off with no
+   scrollbar and no indication it was incomplete. Scroll INSIDE the
+   block instead: the command stays one line, stays selectable and
+   copyable, and the page itself never widens. */
+pre {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* A 64-character hash is data, not prose. Let it break rather than
+   push the whole page wider than the screen. break-word only breaks
+   when a token would otherwise overflow, so ordinary text is
+   untouched. */
+p, li, dd, figcaption, blockquote, .gloss, .note, .label {
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 480px) {
+  /* Nav measured 42px too wide: Rail / Receipts / Data / TIOS plus the
+     Explore control did not fit at 390px, so the last item sat off
+     screen. Tighten the rhythm rather than hide links — the comment
+     above is right that the storefront must not vanish on phones. */
+  .navlinks { gap: 0.6rem; }
+  .navlinks a,
+  .navmore-btn { font-size: 0.64rem; letter-spacing: 0.05em; }
+
+  /* The bar carried 64px of side padding, leaving 326px of a 390px
+     screen for the brand plus five controls. Reclaim half of it. */
+  nav.topnav { padding-left: 1rem; padding-right: 1rem; }
+
+  /* "Ledatic /" is one mark. Without this the accent slash wrapped onto
+     a line of its own once the links fit, which reads as a broken
+     header rather than a logo. */
+  .logo { white-space: nowrap; }
+
+  /* At this width a long token inside a grid or flex child can still
+     force the track wider than the screen; anywhere also constrains
+     min-content sizing, which break-word alone does not. */
+  p, li, dd, figcaption, blockquote, .gloss, .note, .label,
+  code, .mono, data.fig { overflow-wrap: anywhere; }
+}
