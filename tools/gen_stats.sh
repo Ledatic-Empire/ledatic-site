@@ -188,6 +188,38 @@ out = {
 }
 
 path = os.environ["OUT"]
+
+# Keep the pulse anchor STICKY while the numbers themselves are unchanged.
+#
+# pulse_id is read live from the beacon on every run, and inject_figures
+# stamps it into every <data class="fig"> as data-pulse. That made the
+# generated HTML different on every deploy even when not one figure had
+# changed value. Since the signed manifest records a sha over those exact
+# bytes, and Cloudflare KV is only eventually consistent, any two deploys
+# close together leave edge replicas serving version N while the manifest
+# describes N+1. Pages then render their own inverse-video ALARM, and
+# because data-pulse keeps the same digit width the byte count never
+# moves, so nothing that compares sizes notices.
+#
+# The pulse is meant to anchor WHEN THESE NUMBERS WERE TRUE, not when the
+# deploy script last ran. Re-anchoring an unchanged figure claimed a
+# freshness the value did not have. Deploys are now idempotent: same
+# substrate, same bytes, and a re-deploy cannot desynchronise the site
+# from its own manifest.
+try:
+    with open(path) as f:
+        prev = json.load(f)
+except Exception:
+    prev = None
+
+if prev is not None:
+    volatile = ("generated_at", "pulse_id")
+    same = all(prev.get(k) == out.get(k) for k in out if k not in volatile)
+    if same and prev.get("pulse_id"):
+        out["pulse_id"] = prev["pulse_id"]
+        out["generated_at"] = prev.get("generated_at", out["generated_at"])
+        print(f"gen_stats: figures unchanged — keeping pulse anchor p#{out['pulse_id']}")
+
 with open(path, "w") as f:
     json.dump(out, f, indent=2, ensure_ascii=False)
     f.write("\n")
