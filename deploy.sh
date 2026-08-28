@@ -647,6 +647,35 @@ if [ $# -eq 0 ]; then
   verify_manifest_bytes
   verify_deploy_all
 else
+  # A single-file deploy cannot re-sign: publish_signed_manifest needs the
+  # staged sha of EVERY key, and only the named files were staged. For most
+  # assets that is merely stale. For an HTML page carrying <data class="fig">
+  # it is worse than stale: inject_figures stamps a LIVE beacon pulse into
+  # every figure, so the page is re-stamped on each stage and can never again
+  # match the signed manifest. The page then renders its own inverse-video
+  # ALARM ("THIS PAGE DOES NOT MATCH ITS MANIFEST") for every visitor, and
+  # because data-pulse is always the same digit-width the byte COUNT does not
+  # change, so nothing downstream notices.
+  #
+  # That is exactly how the live site came to alarm on 5 of 7 pages while the
+  # deploy log stayed clean. The old behaviour printed a warning and carried
+  # on; a warning nobody reads is not a gate. Figure-bearing HTML now requires
+  # a full deploy, which re-stages and re-signs atomically.
+  refused=0
+  for arg in "$@"; do
+    case "$arg" in
+      *.html)
+        if grep -q 'class="fig"' "$arg" 2>/dev/null; then
+          echo "deploy: REFUSING $arg — it carries <data class=\"fig\"> figures." >&2
+          echo "        Figures are stamped with a live beacon pulse at stage time, so a" >&2
+          echo "        single-file deploy would leave this page permanently mismatched" >&2
+          echo "        against the signed manifest and alarming in every browser." >&2
+          echo "        Run ./deploy.sh with no arguments to re-stage and re-sign." >&2
+          refused=1
+        fi ;;
+    esac
+  done
+  [ "$refused" -eq 1 ] && exit 1
   for arg in "$@"; do deploy_one "$arg"; done
   echo "deploy: single-file deploy — signed site manifest NOT updated (attest/site/latest.json still describes the last full deploy; run ./deploy.sh with no args to re-sign)."
   verify_finish
