@@ -55,7 +55,7 @@ One Rail compiler, six targets. All driven from the same <code>rail_native</code
 |---|---|---|---|---|
 | macOS ARM64 (Mach-O) | _(default)_ / <code>run</code> | <code>/tmp/rail_out</code> | none (host <code>as</code>+<code>ld</code>) | runs end-to-end |
 | Linux ARM64 (ELF) | <code>linux</code> | <code>/tmp/rail_linux</code> | <code>aarch64-elf-as</code>, <code>aarch64-elf-ld</code> | needs cross-binutils |
-| Linux x86_64 (ELF, source-only) | <code>x86</code> | <code>/tmp/rail_x86.s</code> | remote <code>gcc</code> | emits <code>.s</code>, build on target |
+| Linux x86_64 (ELF, source-only) | <code>x86</code> | <code>/tmp/rail_x86.s</code> | remote <code>gcc</code> (or Docker <code>linux/amd64</code>) | emits <code>.s</code>, 71/79 conformance via Docker harness |
 | WebAssembly | <code>wasm</code> | <code>/tmp/rail_out.wasm</code> | <code>wat2wasm</code> (wabt) | compiles end-to-end |
 | Cortex-M4 (Thumb-2 ELF) | <code>cortexm</code> | <code>/tmp/rail_m4.elf</code> | <code>clang --target=thumbv7em-none-eabi</code> | compiles end-to-end |
 | RISC-V rv32imc (ELF) | <code>riscv32</code> | <code>/tmp/rail_rv32.elf</code> | <code>clang --target=riscv32-unknown-none-elf</code> | compiles end-to-end |
@@ -113,7 +113,10 @@ Compiling examples/hello.rail (244 chars)...
   Try: scp /tmp/rail_x86.s &lt;user&gt;@&lt;host&gt;:~ &amp;&amp; ssh &lt;user&gt;@&lt;host&gt; 'gcc -o rail_x86 rail_x86.s &amp;&amp; ./rail_x86'
 </code></pre>
 <p>
-Rail emits the GAS assembly directly; assemble on the target with <code>gcc -o prog /tmp/rail_x86.s</code>. This is intentional — the x86_64 backend was bootstrapped for the Razer WSL test fleet rather than for cross-tools-on-mac.
+Rail emits the GAS assembly directly; assemble on the target with <code>gcc -o prog /tmp/rail_x86.s</code>. This is intentional — the x86_64 backend was bootstrapped for the Razer WSL test fleet rather than for cross-tools-on-mac. The x86 runtime asm lives at <code>tools/x86_rt.s</code>.
+</p>
+<p>
+<strong>Conformance:</strong> <code>bash tools/test/x86_conformance.sh</code> (requires Docker + <code>linux/amd64</code> image, e.g., Colima/Rosetta) currently passes <strong>71/79</strong> representative tests covering ints, strings, lists, ADTs, closures, floats, FFI, TCO, and arena ops. The 8 remaining failures are 3 ELF-prefix ffi-libc tests and 5 missing str-runtime symbols, all classified in <code>~/.claude/projects/-Users-user/memory/x86_backend_status.md</code>.
 </p>
 <h2>WebAssembly</h2>
 <pre><code class="lang-bash">
@@ -129,7 +132,7 @@ Compiling examples/wasm/hello.rail to WASM...
 Requires <code>wat2wasm</code> from the WebAssembly Binary Toolkit (<code>brew install wabt</code>). The output is <code>/tmp/rail_out.wasm</code> — drop into any WASM runtime that provides the <code>env.print</code> import. The live playground at https://ledatic.org embeds exactly this output.
 </p>
 <p>
-Known WASM-backend limits (see CLAUDE.html): no <code>filter</code>/<code>map</code>/<code>fold</code> as WASM builtins, 1 MB linear memory. Closures, ADTs, pattern matching, and string ops all work.
+Known WASM-backend limits (see CLAUDE.md): no <code>filter</code>/<code>map</code>/<code>fold</code> as WASM builtins, 1 MB linear memory. Closures, ADTs, pattern matching, and string ops all work.
 </p>
 <h2>Cortex-M4 (Thumb-2)</h2>
 <pre><code class="lang-bash">

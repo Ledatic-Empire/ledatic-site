@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 The hello-world of microcontroller programming: write four bytes (<code>H</code>, <code>i</code>, <code>!</code>, <code>\n</code>) to a UART data register. Runs in <code>qemu-system-arm -M mps2-an386</code>.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/m4_uart_hello.rail</code>):
+<strong>Source</strong> (<code>examples/m4_uart_hello.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- examples/m4_uart_hello.rail
@@ -82,13 +82,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Build:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native cortexm examples/m4_uart_hello.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output (compile only):</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/m4_uart_hello.rail -&gt; Cortex-M4 (Thumb-2)...

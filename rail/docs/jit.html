@@ -141,9 +141,9 @@ A direct-call trampoline (<code>tools/jit_call.c</code>, ~20 lines of C) is chec
 </p>
 <h2>Limitations (honest)</h2>
 <ul>
-<li><strong>\1</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/zemo-g/rail/blob/main/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
-<li><strong>\1</strong> No x86 JIT yet. The encoders, the loader, and the trampoline are all macOS-ARM64-specific.</li>
-<li><strong>\1</strong> No ADTs, no effect handlers, no full pattern matching. List-pattern <code>match</code> is supported. The covered subset is what the bench grader's "lower-hit" set runs JIT-fast; the rest falls back to the regular compiler path.</li>
+<li><strong>List execution blocked.</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/zemo-g/rail/blob/main/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
+<li><strong>ARM64 only.</strong> No x86 JIT yet. The encoders, the loader, and the trampoline are all macOS-ARM64-specific.</li>
+<li><strong>Subset of the language.</strong> No ADTs, no effect handlers, no full pattern matching. List-pattern <code>match</code> is supported. The covered subset is what the bench grader's "lower-hit" set runs JIT-fast; the rest falls back to the regular compiler path.</li>
 </ul>
 <p>
 The 2.06× real-corpus wall-clock speedup in <code>jit/grade.rail</code> over the regular compile path is on the covered subset; full coverage would change the multiplier.

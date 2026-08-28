@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 Same Rail compiler, different backend: <code>./rail_native cortexm</code> produces a Thumb-2 ELF for ARMv7E-M (Cortex-M3/M4/M7). This program computes <code>fib(0..10)</code> and prints each result to the memory-mapped UART at <code>0x40004000</code>.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/m4_fib_print.rail</code>):
+<strong>Source</strong> (<code>examples/m4_fib_print.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- examples/m4_fib_print.rail
@@ -89,13 +89,13 @@ main =
   print_fib_loop 0 10
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Build (compile-only — produces a flashable ELF):</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native cortexm examples/m4_fib_print.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output (from the compile driver):</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/m4_fib_print.rail -&gt; Cortex-M4 (Thumb-2)...

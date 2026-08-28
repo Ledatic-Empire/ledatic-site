@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 Two functions that would blow the stack in any non-TCO interpreter. <code>count_down</code> recurses 1,000,000 deep; <code>sum_acc</code> does the same with an accumulator. Rail compiles these to tight loops with a <code>subs</code> and a <code>b.gt</code> — no stack growth.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/tco_test.rail</code>):
+<strong>Source</strong> (<code>examples/tco_test.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- Tail call optimization test
@@ -71,13 +71,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Run:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native run examples/tco_test.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 0

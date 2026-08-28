@@ -50,7 +50,11 @@
   padding: var(--sp-3);
   line-height: 0;
 }
-#board {
+/* #home-board was written with a 640px width attribute and never given
+   the responsive treatment #board got, so on a 390px screen it pushed
+   the page 310px wide and the right third of the world was cut off.
+   Measured 2026-08-28. */
+#board, #home-board {
   width: 100%;
   height: auto;
   display: block;

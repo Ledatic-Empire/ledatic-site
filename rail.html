@@ -49,6 +49,11 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 
 /* stats row — six figures, one rhythm */
 .stat-row { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, 1fr); }
+    /* stat-row: single column on phones. Two columns were unconditional,
+       and the display-size numerals inside cannot shrink below ~157px, so
+       the row demanded 434px on a 390px screen and the second card was
+       clipped. Measured 2026-08-28. */
+    @media (max-width: 480px) { .stat-row { grid-template-columns: 1fr; } }
 @media (min-width: 720px)  { .stat-row { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1100px) { .stat-row { grid-template-columns: repeat(6, 1fr); } }
 .stat .value .prove { font: inherit; color: inherit; }

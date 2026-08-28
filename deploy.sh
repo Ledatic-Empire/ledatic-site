@@ -48,6 +48,7 @@ fi
 # done, so the byte-diff retry can re-upload identical content.
 STAGE_DIR=$(mktemp -d)
 MANIFEST_TSV="$STAGE_DIR/.manifest.tsv"   # key<TAB>sha256<TAB>bytes
+SKIPPED=0; WRITTEN=0                       # KV write accounting (free tier: 1k/day)
 : > "$MANIFEST_TSV"
 trap 'rm -rf "$STAGE_DIR"' EXIT
 
@@ -91,6 +92,20 @@ honesty_gate() {
 #
 # Override with DEPLOY_SKIP_CITATION_GATE=1 (same spirit as the physics
 # skip: available, but it defeats the point).
+# ── Gate 2c: the public ledger matches the release history ─────────────
+# /changelog and CHANGELOG.md were both hand-maintained and had drifted in
+# both directions: the page was missing six releases including the two most
+# recent, while listing five the changelog never documented. Nothing
+# compared them, on a site whose argument is that you can check its claims.
+changelog_gate() {
+  python3 ./tools/changelog_gate.py --quiet || {
+    echo "deploy: CHANGELOG GATE FAILED - deploy blocked. Add the release to" >&2
+    echo "        /changelog, or document it in CHANGELOG.md, whichever is" >&2
+    echo "        actually missing." >&2
+    exit 3
+  }
+}
+
 citation_gate() {
   [ "${DEPLOY_SKIP_CITATION_GATE:-0}" = "1" ] && {
     echo "deploy: citation gate SKIPPED via DEPLOY_SKIP_CITATION_GATE=1" >&2
@@ -203,10 +218,68 @@ page_url() {
   esac
 }
 
+# ── Only write keys whose bytes actually changed ────────────────────────
+#
+# Every deploy used to rewrite all ~85 KV keys whether or not a byte moved.
+# Cloudflare's free tier allows 1,000 KV writes a day, and the standing
+# budget already spends most of it: the fleet0 witness persists roughly 480
+# a day and /fleet/status.json another 144. Four site deploys on 2026-08-28
+# spent ~340 more and exhausted the quota, at which point every KV write
+# started failing with error 10048. That did not look like a quota problem
+# from the outside: the witness PUT throws inside the Worker, Cloudflare
+# serves 1101, and the self-healer's circuit breaker tripped on a witness
+# that had gone silent while the Pi was healthy and signing normally.
+#
+# A deploy that changes one page should cost one write, not eighty-five.
+# The previous signed manifest already records a sha256 for every key, so
+# it is the natural comparison. Skipping is safe because the manifest is
+# built from staged files rather than from uploads, and because step 8
+# byte-diffs the LIVE site against the new manifest afterwards: if a key
+# was skipped but is genuinely missing upstream, that check fails loudly.
+#
+# This only became possible today. Until gen_stats stopped re-anchoring the
+# beacon pulse on every run, identical content produced different bytes
+# each deploy, so nothing would ever have compared equal.
+PREV_SHA_FILE="$STAGE_DIR/.prev_manifest.tsv"
+
+load_prev_manifest() {
+  : > "$PREV_SHA_FILE"
+  curl -s --max-time 15 -H "User-Agent: Mozilla/5.0 Chrome/126" \
+    "https://ledatic.org/attest/site/latest.json" 2>/dev/null \
+    | python3 -c '
+import sys, json
+try:
+    m = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+for e in m.get("files", []):
+    k, h = e.get("key"), e.get("sha256")
+    if k and h:
+        print(f"{k}\t{h}")
+' > "$PREV_SHA_FILE" 2>/dev/null || true
+  local n
+  n=$(wc -l < "$PREV_SHA_FILE" | tr -d " ")
+  echo "deploy: previous manifest has $n keys; unchanged keys will be skipped"
+}
+
+prev_sha() {
+  [ -s "$PREV_SHA_FILE" ] || return 1
+  awk -F'\t' -v k="$1" '$1 == k { print $2; found=1; exit } END { exit !found }' "$PREV_SHA_FILE"
+}
+
 upload() {
   local file="$1" key="$2"
   local ct
   ct=$(mime_of "$key")
+  # Skip the write when the bytes are identical to what is already live.
+  local now_sha old_sha
+  now_sha=$(shasum -a 256 "$file" | cut -d" " -f1)
+  if old_sha=$(prev_sha "$key" 2>/dev/null) && [ "$old_sha" = "$now_sha" ]; then
+    echo "= $key  (unchanged, no KV write)"
+    SKIPPED=$((SKIPPED + 1))
+    return 0
+  fi
+  WRITTEN=$((WRITTEN + 1))
   local meta
   meta=$(mktemp)
   printf '{"ct":"%s"}' "$ct" > "$meta"
@@ -423,6 +496,11 @@ import re, sys
 b = sys.stdin.buffer.read()
 b = re.sub(rb"<script>(?:(?!</script>).)*challenge-platform(?:(?!</script>).)*</script>",
            b"", b, count=1, flags=re.S)
+# Cloudflare Web Analytics appends a beacon <script> too. It is served to
+# browsers but not to curl, which is why it hid from this gate for weeks
+# while making every browser self-check fail.
+b = re.sub(rb"\n?<script[^>]*data-cf-beacon[^>]*>\s*</script>",
+           b"", b, count=1, flags=re.S)
 sys.stdout.buffer.write(b)
 '
 }
@@ -610,6 +688,22 @@ deploy_all() {
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
   done
+  # Rail docs (/rail/docs/*), built from ~/projects/rail/docs/site by
+  # tools/build_rail_docs.sh.
+  #
+  # These were never in deploy_all. The build script wrote them into the
+  # repo and nothing carried them to the site, so /rail/docs served whatever
+  # a hand-run push last left there. On 2026-08-28 that meant a fix for 75
+  # bold spans rendering as literal "\1" across 25 pages was committed,
+  # verified locally, and still broken in public: the repo and the live site
+  # disagreed and no gate compared them, because the byte-diff only checks
+  # keys deploy_all actually uploads. An unuploaded directory is invisible
+  # to a manifest built from uploads.
+  for f in rail/docs/*.html rail/docs/examples/*.html; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
 }
 
 # ── Main ────────────────────────────────────────────────────────────────
@@ -617,15 +711,47 @@ cd "$(dirname "$0")"
 check_clean_tree
 gen_stats
 honesty_gate
+changelog_gate
 citation_gate
 gate_on_beacon
+load_prev_manifest
 if [ $# -eq 0 ]; then
   gate_on_signing
   deploy_all
   publish_signed_manifest
   verify_manifest_bytes
   verify_deploy_all
+  echo "deploy: KV writes this run: $WRITTEN written, $SKIPPED skipped as unchanged"
 else
+  # A single-file deploy cannot re-sign: publish_signed_manifest needs the
+  # staged sha of EVERY key, and only the named files were staged. For most
+  # assets that is merely stale. For an HTML page carrying <data class="fig">
+  # it is worse than stale: inject_figures stamps a LIVE beacon pulse into
+  # every figure, so the page is re-stamped on each stage and can never again
+  # match the signed manifest. The page then renders its own inverse-video
+  # ALARM ("THIS PAGE DOES NOT MATCH ITS MANIFEST") for every visitor, and
+  # because data-pulse is always the same digit-width the byte COUNT does not
+  # change, so nothing downstream notices.
+  #
+  # That is exactly how the live site came to alarm on 5 of 7 pages while the
+  # deploy log stayed clean. The old behaviour printed a warning and carried
+  # on; a warning nobody reads is not a gate. Figure-bearing HTML now requires
+  # a full deploy, which re-stages and re-signs atomically.
+  refused=0
+  for arg in "$@"; do
+    case "$arg" in
+      *.html)
+        if grep -q 'class="fig"' "$arg" 2>/dev/null; then
+          echo "deploy: REFUSING $arg — it carries <data class=\"fig\"> figures." >&2
+          echo "        Figures are stamped with a live beacon pulse at stage time, so a" >&2
+          echo "        single-file deploy would leave this page permanently mismatched" >&2
+          echo "        against the signed manifest and alarming in every browser." >&2
+          echo "        Run ./deploy.sh with no arguments to re-stage and re-sign." >&2
+          refused=1
+        fi ;;
+    esac
+  done
+  [ "$refused" -eq 1 ] && exit 1
   for arg in "$@"; do deploy_one "$arg"; done
   echo "deploy: single-file deploy — signed site manifest NOT updated (attest/site/latest.json still describes the last full deploy; run ./deploy.sh with no args to re-sign)."
   verify_finish

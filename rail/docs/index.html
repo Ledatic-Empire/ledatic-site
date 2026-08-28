@@ -48,7 +48,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 <main>
 <h1>Rail</h1>
 <p>
-Rail is a self-hosted ARM64 language with five backends (macOS ARM64, Linux ARM64, Linux x86_64, WebAssembly, Cortex-M4, RISC-V rv32imc), an LLM training substrate, and a verifiable provenance layer. The compiler is 6,679 lines of Rail compiling itself byte-identically; the runtime is ARM64 assembly embedded in the compiler. Zero C dependencies. One binary.
+Rail is a self-hosted ARM64 language with six backends (macOS ARM64, Linux ARM64, Linux x86_64, WebAssembly, Cortex-M4, RISC-V rv32imc), an LLM training substrate, and a verifiable provenance layer. The compiler is ~9,262 lines of Rail compiling itself byte-identically at gen2; the runtime is ARM64 assembly embedded in the compiler. Zero C dependencies. One binary.
 </p>
 <h2>Quickstart</h2>
 <pre><code class="lang-bash">
@@ -68,18 +68,19 @@ hello, rail
 42
 </code></pre>
 <p>
-The seed binary (<code>rail_native</code>, ~1 MB ARM64) is checked into the repo and self-compiles byte-identically. No build step before "hello, world".
+The seed binary (<code>rail_native</code>, ~0.9 MB ARM64) is checked into the repo and self-compiles to a byte-identical fixed point at gen2 (the first cycle may differ; gen2 == gen3 always). No build step before "hello, world".
 </p>
 <p>
 For Apple Silicon you're done. Other targets need cross-toolchains — see <a href="backends.html">backends.md</a>.
 </p>
 <h2>What's here</h2>
 <ul>
-<li><strong>\1</strong> — ten steps from <code>git clone</code> to a signed bench result. Real commands, real outputs.</li>
-<li><strong>\1</strong> — auto-generated reference for every top-level function in <code>stdlib/*.rail</code> (80 files, 1,706 functions). Regenerate with <code>./rail_native run tools/docs/gen_stdlib_ref.rail</code>.</li>
-<li><strong>\1</strong> — one-page-per-backend with the literal command line you'd type.</li>
-<li><strong>\1</strong> — 22 runnable programs with source, command, and real captured output. Start with <a href="examples/hello.html">hello</a>, <a href="examples/pattern_matching.html">pattern_matching</a>, <a href="examples/calculator.html">calculator</a>.</li>
-<li><strong>\1</strong> — what's deferred for v0 and why.</li>
+<li><strong><a href="quickstart.html">quickstart.md</a></strong> — ten steps from <code>git clone</code> to a signed bench result. Real commands, real outputs.</li>
+<li><strong><a href="stdlib.html">stdlib.md</a></strong> — auto-generated reference for every top-level function in <code>stdlib/*.rail</code> (102 modules, 2,261 functions). Regenerate with <code>./rail_native run tools/docs/gen_stdlib_ref.rail</code>.</li>
+<li><strong><a href="backends.html">backends.md</a></strong> — one-page-per-backend with the literal command line you'd type.</li>
+<li><strong><a href="jit.html">jit.md</a></strong> — a self-hosted JIT in pure Rail. ARM64 emit + <code>mmap</code>-executable, called via a <code>pthread_create</code> trampoline. ~6,600 LoC across 20 files.</li>
+<li><strong><a href="examples/">examples/</a></strong> — 22 runnable programs with source, command, and real captured output. Start with <a href="examples/hello.html">hello</a>, <a href="examples/pattern_matching.html">pattern_matching</a>, <a href="examples/calculator.html">calculator</a>.</li>
+<li><strong><a href="https://github.com/zemo-g/rail/blob/master/docs/site/TODO.md">TODO.md</a></strong> — what's deferred for v0 and why.</li>
 </ul>
 <h2>Language at a glance</h2>
 <pre><code class="lang-rail">
@@ -100,7 +101,7 @@ main =
 <p>
 Functions are <code>name args = body</code>. <code>main</code> is the entry point and returns an int. ADTs use <code>type T = | Ctor args | ...</code>. Pattern matching uses <code>match</code> (no <code>with</code>). Tail calls are compiled to loops with no stack growth.
 </p>
-<h2>Five backends, one compiler</h2>
+<h2>Six backends, one compiler</h2>
 <pre><code class="lang-bash">
 ./rail_native run file.rail        # macOS ARM64 (native execute)
 ./rail_native linux file.rail      # Linux ARM64 (cross)
@@ -114,7 +115,7 @@ The same source compiles to all of them. See <a href="backends.html">backends.md
 </p>
 <h2>Why it exists</h2>
 <p>
-The thesis is in <a href="../../CLAUDE.html">CLAUDE.md</a>: the compiler is the source of truth. The HTTPS client, the training loop, the documentation generator you're reading — all are compiled by the same binary you cloned. If it compiles, it runs.
+The thesis is in <a href="https://github.com/zemo-g/rail/blob/master/CLAUDE.md">CLAUDE.md</a>: the compiler is the source of truth. The HTTPS client, the training loop, the documentation generator you're reading — all are compiled by the same binary you cloned. If it compiles, it runs.
 </p>
 <p>
 The closer-term motivation for *this* documentation: open-source LLMs are bad at Rail because there's no Rail corpus to read. These pages, together with the auto-generated stdlib reference, are the substrate fix.

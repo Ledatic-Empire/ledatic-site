@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 Rail ships cooperative fibers (<code>spawn</code>) and bounded channels (<code>channel</code>, <code>send</code>, <code>recv</code>). Two workers send to one channel; a counter fiber sends 1..5 in sequence.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/concurrency.rail</code>):
+<strong>Source</strong> (<code>examples/concurrency.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- concurrency.rail — fibers and channels
@@ -90,13 +90,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Run:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native run examples/concurrency.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 hello from fiber 1

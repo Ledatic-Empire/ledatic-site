@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 ADTs and <code>match</code> work in the WASM backend just like native. This example defines a <code>Shape</code> ADT and pattern-matches over it to compute area.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/wasm/adt.rail</code>):
+<strong>Source</strong> (<code>examples/wasm/adt.rail</code>):
 </p>
 <pre><code class="lang-rail">
 type Shape =
@@ -69,13 +69,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Build:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native wasm examples/wasm/adt.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/wasm/adt.rail to WASM...

@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 Closures work in the WASM backend, including capturing locals from the enclosing scope. The runtime allocates a closure object on the WASM linear memory; the GC reclaims it when unreferenced.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/wasm/closure.rail</code>):
+<strong>Source</strong> (<code>examples/wasm/closure.rail</code>):
 </p>
 <pre><code class="lang-rail">
 apply f x = f x
@@ -66,13 +66,13 @@ main =
   0
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Build:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native wasm examples/wasm/closure.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/wasm/closure.rail to WASM...

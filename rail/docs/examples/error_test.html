@@ -51,7 +51,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 This program is *supposed* to fail — it references an undefined variable <code>y</code>. The point is to see how Rail surfaces the error.
 </p>
 <p>
-<strong>\1</strong> (<code>examples/error_test.rail</code>):
+<strong>Source</strong> (<code>examples/error_test.rail</code>):
 </p>
 <pre><code class="lang-rail">
 -- Error test: demonstrates line:col in error messages
@@ -65,13 +65,13 @@ main =
   bad_func 42
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Run:</strong>
 </p>
 <pre><code class="lang-bash">
 ./rail_native run examples/error_test.rail
 </code></pre>
 <p>
-<strong>\1</strong>
+<strong>Output:</strong>
 </p>
 <pre><code class="lang-">
 Compiling examples/error_test.rail (206 chars)...
