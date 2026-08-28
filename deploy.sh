@@ -423,6 +423,11 @@ import re, sys
 b = sys.stdin.buffer.read()
 b = re.sub(rb"<script>(?:(?!</script>).)*challenge-platform(?:(?!</script>).)*</script>",
            b"", b, count=1, flags=re.S)
+# Cloudflare Web Analytics appends a beacon <script> too. It is served to
+# browsers but not to curl, which is why it hid from this gate for weeks
+# while making every browser self-check fail.
+b = re.sub(rb"\n?<script[^>]*data-cf-beacon[^>]*>\s*</script>",
+           b"", b, count=1, flags=re.S)
 sys.stdout.buffer.write(b)
 '
 }

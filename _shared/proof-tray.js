@@ -720,13 +720,16 @@ function pageKeyCandidates(path) {
 // What this means for the claim, stated plainly: we attest the bytes WE
 // authored, not the bytes the CDN delivers. The injected block is not ours
 // and we cannot suppress it. Everything else on the page is covered.
-const CF_INJECTION_RE = /<script>(?:(?!<\/script>).)*challenge-platform(?:(?!<\/script>).)*<\/script>/;
+const CF_INJECTION_RE = /<script>(?:(?!<\/script>).)*challenge-platform(?:(?!<\/script>).)*<\/script>/s;
+// Cloudflare Web Analytics appends a second script. Browsers get it,
+// curl does not, which is exactly why it evaded the deploy gate.
+const CF_BEACON_RE = /\n?<script[^>]*data-cf-beacon[^>]*>\s*<\/script>/s;
 
 function stripCfInjection(bytes) {
   let text;
   try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
   catch { return bytes; }            // not valid UTF-8: hash it untouched
-  const out = text.replace(CF_INJECTION_RE, '');
+  const out = text.replace(CF_INJECTION_RE, '').replace(CF_BEACON_RE, '');
   return out === text ? bytes : new TextEncoder().encode(out);
 }
 
