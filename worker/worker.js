@@ -1506,8 +1506,20 @@ async function handleSite(request, env, url) {
     });
   }
   if (pathname === "/entropy/pulse/log") {
-    const log = await env.LEDATIC_KV.get("entropy:pulse:log");
-    return new Response(log || "[]", {
+    // 2026-08-28: proxy the Mini origin, same as /entropy/pulse above.
+    // This route was the last consumer of KV key "entropy:pulse:log", and
+    // that key stopped being written on 2026-07-21 when the free-tier pivot
+    // moved the chain to the origin but only repointed /pulse and /pulse/<id>.
+    // The result was a feed frozen 2.25M pulses in the past under a header
+    // clock that showed live, on the page whose entire argument is that you
+    // can check the chain yourself. Reading from the archive means the feed
+    // cannot go stale unless the chain itself does.
+    const r = await fetch("https://beacon.ledatic.org/pulse/log").catch(() => null);
+    if (!r || !r.ok) return new Response('{"error":"beacon origin unreachable"}', {
+      status: 503,
+      headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+    });
+    return new Response(await r.text(), {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
