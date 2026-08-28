@@ -91,6 +91,20 @@ honesty_gate() {
 #
 # Override with DEPLOY_SKIP_CITATION_GATE=1 (same spirit as the physics
 # skip: available, but it defeats the point).
+# ── Gate 2c: the public ledger matches the release history ─────────────
+# /changelog and CHANGELOG.md were both hand-maintained and had drifted in
+# both directions: the page was missing six releases including the two most
+# recent, while listing five the changelog never documented. Nothing
+# compared them, on a site whose argument is that you can check its claims.
+changelog_gate() {
+  python3 ./tools/changelog_gate.py --quiet || {
+    echo "deploy: CHANGELOG GATE FAILED - deploy blocked. Add the release to" >&2
+    echo "        /changelog, or document it in CHANGELOG.md, whichever is" >&2
+    echo "        actually missing." >&2
+    exit 3
+  }
+}
+
 citation_gate() {
   [ "${DEPLOY_SKIP_CITATION_GATE:-0}" = "1" ] && {
     echo "deploy: citation gate SKIPPED via DEPLOY_SKIP_CITATION_GATE=1" >&2
@@ -638,6 +652,7 @@ cd "$(dirname "$0")"
 check_clean_tree
 gen_stats
 honesty_gate
+changelog_gate
 citation_gate
 gate_on_beacon
 if [ $# -eq 0 ]; then
