@@ -249,8 +249,8 @@
       <div class="verify-recipe">
 <span class="c"># Pull the verifier and a release attestation, then verify locally.</span><br>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/verify.sh &amp;&amp; chmod +x /tmp/verify.sh<br>
-curl -sf https://ledatic.org/releases/v5.2.0/rail_native -o /tmp/rail_native<br>
-curl -sf https://ledatic.org/releases/v5.2.0/rail_native.attestation.json -o /tmp/rn.att.json<br>
+curl -sf https://ledatic.org/releases/<data class="fig" data-src="repo:version">v5.3.0</data>/rail_native -o /tmp/rail_native<br>
+curl -sf https://ledatic.org/releases/<data class="fig" data-src="repo:version">v5.3.0</data>/rail_native.attestation.json -o /tmp/rn.att.json<br>
 /tmp/verify.sh /tmp/rail_native /tmp/rn.att.json<br>
 <span class="c"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span>
       </div>

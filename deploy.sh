@@ -9,6 +9,7 @@
 # Pipeline (full deploy):
 #   1. clean-tree check      git status -s must be empty (DEPLOY_ALLOW_DIRTY=1 overrides)
 #   2. stats generation      tools/gen_stats.sh → _shared/stats.json (substrate-derived)
+#   2b. verifier gate        attest/verify.sh must be rail origin/master's, byte for byte
 #   3. honesty gate          tools/honesty_gate.sh — nonzero exit BLOCKS the deploy
 #   4. physics gate          the entropy beacon must be advancing
 #   5. stage                 final bytes per file: Figure injection (HTML) + ?v= stamps
@@ -61,7 +62,10 @@ check_clean_tree() {
     return 0
   fi
   local dirty
-  dirty=$(git status -s | grep -vE '^\?\? _shared/stats\.json$' || true)
+  # sitemap.xml is rewritten by the 06:00 regeneration (lastmod dates), so it
+  # is dirty on any day the daily deploy runs. Like stats.json it is a
+  # generated artifact, not half-merged work; commit it when convenient.
+  dirty=$(git status -s | grep -vE '^(\?\? _shared/stats\.json| M sitemap\.xml)$' || true)
   if [ -n "$dirty" ]; then
     echo "deploy: working tree not clean — refusing to deploy:" >&2
     echo "$dirty" >&2
@@ -73,6 +77,35 @@ check_clean_tree() {
 # ── Gate 1: substrate stats (no human types these numbers) ──────────────
 gen_stats() {
   ./tools/gen_stats.sh || { echo "deploy: stats generation failed" >&2; exit 3; }
+}
+
+# ── Gate 1b: the public verifier is the one rail master ships ───────────
+# /attest/verify.sh is what a stranger runs to check us, and it lives in the
+# rail repo; this repo carries a copy so the site is self-contained. Nothing
+# compared the two: master fixed the verifier on 2026-09-06 (#63, bind the
+# file to the signature) and the site served the June copy for nine days
+# while the attest walker rang about it every morning. Byte-equal or no
+# deploy, and the witness key beside it must be the key the witness signs
+# with. The copy command is printed so the fix is one paste.
+verifier_gate() {
+  local repo="${RAIL_REPO:-$HOME/projects/rail}" ref="${RAIL_REF:-origin/master}"
+  local want have
+  git -C "$repo" fetch --quiet origin master 2>/dev/null \
+    || echo "deploy: rail fetch failed; comparing against the last-fetched $ref" >&2
+  want=$(git -C "$repo" show "$ref:tools/attest/verify.sh" | shasum -a 256 | cut -d' ' -f1) || {
+    echo "deploy: cannot read $ref:tools/attest/verify.sh from $repo" >&2; exit 3; }
+  have=$(shasum -a 256 attest/verify.sh | cut -d' ' -f1)
+  if [ "$want" != "$have" ]; then
+    echo "deploy: VERIFIER GATE FAILED: attest/verify.sh (${have:0:12}) is not $ref's (${want:0:12})." >&2
+    echo "        git -C $repo show $ref:tools/attest/verify.sh > attest/verify.sh && git commit -m 'attest: verify.sh from rail master' attest/verify.sh" >&2
+    exit 3
+  fi
+  local pub="$HOME/.ledatic/witness/fleet0.pub.pem"
+  if [ -f "$pub" ] && ! cmp -s "$pub" attest/fleet0.pub.pem; then
+    echo "deploy: VERIFIER GATE FAILED: attest/fleet0.pub.pem is not the witness key at $pub" >&2
+    exit 3
+  fi
+  echo "deploy: verifier gate ok: attest/verify.sh is $ref's (${want:0:12})"
 }
 
 # ── Gate 2: honesty CI gate — nonzero exit blocks the deploy ────────────
@@ -241,6 +274,7 @@ page_url() {
 # beacon pulse on every run, identical content produced different bytes
 # each deploy, so nothing would ever have compared equal.
 PREV_SHA_FILE="$STAGE_DIR/.prev_manifest.tsv"
+PREV_N=""
 
 load_prev_manifest() {
   : > "$PREV_SHA_FILE"
@@ -259,7 +293,10 @@ for e in m.get("files", []):
 ' > "$PREV_SHA_FILE" 2>/dev/null || true
   local n
   n=$(wc -l < "$PREV_SHA_FILE" | tr -d " ")
-  echo "deploy: previous manifest has $n keys; unchanged keys will be skipped"
+  PREV_N=$(curl -s --max-time 15 -H "User-Agent: Mozilla/5.0 Chrome/126" \
+    "https://ledatic.org/attest/site/latest.json" 2>/dev/null \
+    | python3 -c 'import sys,json; print(int(json.load(sys.stdin)["n"]))' 2>/dev/null || true)
+  echo "deploy: previous manifest #${PREV_N:-?} has $n keys; unchanged keys will be skipped"
 }
 
 prev_sha() {
@@ -689,6 +726,16 @@ deploy_all() {
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
   done
+  # The public verifier and the witness key (/attest/verify.sh and
+  # /attest/fleet0.pub.pem). Never in deploy_all until 2026-09-15: the live
+  # verify.sh was a hand push from June that outlived a September fix on
+  # master. verifier_gate has already proven these are master's and the
+  # witness's; the byte-diff below proves the edge serves them.
+  for f in attest/verify.sh attest/fleet0.pub.pem; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
   # SDK client downloads (/receipts quickstart step 1). Fetched via curl -o,
   # so the worker's text/html fallback MIME for .py is tolerable for now.
   for f in sdk/*.py; do
@@ -724,6 +771,7 @@ deploy_all() {
 cd "$(dirname "$0")"
 check_clean_tree
 gen_stats
+verifier_gate
 honesty_gate
 changelog_gate
 citation_gate
@@ -732,7 +780,17 @@ load_prev_manifest
 if [ $# -eq 0 ]; then
   gate_on_signing
   deploy_all
-  publish_signed_manifest
+  if [ "$WRITTEN" -eq 0 ] && [ -n "$PREV_N" ]; then
+    # Nothing moved, so the live manifest already describes every staged
+    # byte. Minting a new sequence number for identical content would claim
+    # a freshness the site does not have (the reason gen_stats keeps its
+    # pulse anchor sticky), and the daily run would grow the ledger by one
+    # identical entry a day. The byte-diff below still walks every key.
+    MANIFEST_N="$PREV_N"
+    echo "deploy: nothing changed since manifest #$PREV_N; it stands (no new manifest)"
+  else
+    publish_signed_manifest
+  fi
   verify_manifest_bytes
   verify_deploy_all
   echo "deploy: KV writes this run: $WRITTEN written, $SKIPPED skipped as unchanged"
