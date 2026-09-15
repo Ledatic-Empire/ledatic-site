@@ -386,6 +386,71 @@
   </div>
 </section>
 
+<!-- Added 2026-08-28. The 2026-07-26 estate re-audit found this beacon
+     replaying 60% of its values. It is far better now, but not clean, and
+     the page said nothing either way. A page that asks people to check it
+     has to publish the check that comes back least flattering. -->
+<section>
+  <div class="wrap">
+    <h2 class="reveal">What these numbers are not.</h2>
+
+    <p class="body reveal">
+      This is a chain, and the chain holds: every pulse names its
+      predecessor, the links verify, and the one-line check above is the
+      whole proof. What the chain does not give you is unpredictability,
+      and it is worth being exact about that rather than letting the word
+      &ldquo;entropy&rdquo; do work it has not earned.
+    </p>
+
+    <p class="body reveal">
+      Each value is the SHA-256 of one simulation frame. Identical frames
+      therefore produce identical values, and the plasma does revisit
+      states. Measured on 2026-08-28 across 162,082 consecutive archived
+      pulses: <strong>96.96% of values were unique</strong>, 233 distinct
+      values recurred, and <strong>3.04% of pulses repeated a value that
+      had already been published</strong>. The repeats are not scattered.
+      The median gap between two occurrences of the same value is
+      <strong>5,196 pulses</strong>, and 86% of gaps fall between 5,000 and
+      5,500, which at roughly one pulse per second is a period of about
+      <strong>87 minutes</strong>.
+    </p>
+
+    <p class="body reveal">
+      So an observer who records a few hours of this feed can expect to see
+      some values again. That rules the beacon out as a source of
+      unpredictable randomness, and we would rather say so here than have
+      you discover it. It does not affect the two things the chain is
+      actually used for: the links still detect tampering, and release
+      attestations bind through <code>pulse_id</code>, which is unique and
+      strictly increasing whatever the value does.
+    </p>
+
+    <p class="body reveal">
+      We have measured this but not fully explained it. A recurring set of
+      only 233 states, each appearing about twenty times, is consistent
+      with the simulation passing near a periodic orbit, and also with a
+      frame occasionally being re-hashed rather than re-rendered. Until we
+      can tell those apart we are not going to claim which it is.
+    </p>
+
+    <div class="card reveal" style="margin-top: 2rem;">
+      <span class="eyebrow">Shell</span>
+      <h3>Check the repetition yourself</h3>
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; font-size: 0.85rem; line-height: 1.6;"><code>for i in $(seq 1 300); do curl -s https://ledatic.org/entropy/pulse | \
+  python3 -c "import sys,json;print(json.load(sys.stdin)['value_hex'])"; sleep 1; \
+done | sort | uniq -d</code></pre>
+      <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--tx-lo);">
+        Five minutes of sampling is usually too short to catch a repeat at
+        an 87-minute period. The honest way to see it is the archive: pull a
+        few thousand consecutive pulses from
+        <code>/entropy/pulse/&lt;id&gt;</code> and count duplicate
+        <code>value_hex</code>. That is exactly how the figures above were
+        produced.
+      </p>
+    </div>
+  </div>
+</section>
+
 <footer class="site-foot">
   <div class="wrap">
     <div class="foot-grid">

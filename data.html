@@ -151,7 +151,7 @@ pre.snippet .c { opacity: .55; }
         <ul>
           <li><strong>52,243</strong> comment&rarr;program pairs; <strong>every program compiles</strong> — verified by running the compiler on each one at generation time, and re-verified end-to-end (all 52,243) before this page went live</li>
           <li>Bit-reproducible: generator + seed 1234 + oracle &rArr; byte-identical file (sha256 <code>1a6941af&hellip;</code> — see the signed ledger)</li>
-          <li>This exact file trained a from-scratch 138M model to <strong>16/16 compile@1 and 16/16 function-correctness</strong> on its frozen benchmark — the run's hash-chained ledger binds corpus&rarr;weights and ships in the box</li>
+          <li>This exact file trained a from-scratch 138M model to <strong>16/16 compile@1 and 11/16 function-correctness</strong> on its frozen benchmark — the run's hash-chained ledger binds corpus&rarr;weights and ships in the box</li>
           <li>Synthetic + oracle-verified: zero scraped code, zero license ambiguity</li>
         </ul>
         <a class="btn btn-primary buy" data-product="pairs" href="#">Buy &mdash; $199</a>
@@ -172,7 +172,7 @@ pre.snippet .c { opacity: .55; }
           <li><strong>25,541 documents / ~1.54B tokens</strong>, Merkle root <code>92e9af57&hellip;</code>, Pi-witness-signed at public pulse 2516402</li>
           <li>Per-document provenance leaf: source, id, strand, provenance basis, year — 8,643 docs bright-line pre-1929 PD, 12,077 source-cleared (Gutenberg), 4,821 oracle-verified code (ours)</li>
           <li>Deduplicated (MinHash/LSH), provenance-gated, five independent verification checks pass — including a Merkle-root recompute by a second implementation</li>
-          <li>We state the provenance split exactly &mdash; we will never sell this as &ldquo;fully public-domain&rdquo; because 58% is source-cleared rather than date-verified. That honesty is the product working as intended.</li>
+          <li>We state the provenance split exactly &mdash; we will never sell this as &ldquo;fully public-domain&rdquo; because only 34% is bright-line pre-1929: 47% is source-cleared and 19% is our own oracle-verified code. That honesty is the product working as intended.</li>
         </ul>
         <a class="btn btn-secondary buy" data-product="corpus" href="#">Buy &mdash; $499</a>
         <p class="freebies">free first: <a href="mailto:31zemogyllier@gmail.com?subject=Attested%20Text%20Corpus%20v2%20—%20manifest%20request">request the full manifest + signed root</a></p>

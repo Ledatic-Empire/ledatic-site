@@ -3061,7 +3061,31 @@ export default {
       request = new Request(request.url, { method: "GET", headers: request.headers });
     }
 
+    // Turn a KV write-quota failure into an answer that says so.
+    //
+    // Cloudflare's free tier allows 1,000 KV writes a day. When it runs out
+    // every put() throws, and an uncaught throw in a Worker is served as
+    // error 1101, which is indistinguishable from a code bug. On 2026-08-28
+    // that cost hours: the fleet0 witness went silent, the self-healer
+    // tripped its breaker, and the Pi was investigated at length while
+    // healthy and signing normally. The witness PUT was given its own
+    // handler that day; every other write path in this file still threw
+    // bare, which the rail PR #59 author noted for the builds path.
+    //
+    // Doing it here covers all of them at once. Deliberately narrow: ONLY
+    // quota errors are converted. Anything else rethrows and keeps its
+    // existing behaviour, because a handler that swallows every exception
+    // would hide the real bugs this is meant to make legible.
+    const isQuota = (e) => /exceeded the daily|limit exceeded|free usage limit|\b10048\b/i
+      .test(String((e && e.message) || e));
+    const quotaResponse = (e) => new Response(JSON.stringify({
+      error: "write not persisted",
+      reason: String((e && e.message) || e).slice(0, 200),
+      hint: "Cloudflare KV free tier allows 1000 writes/day and resets at 00:00 UTC. Reads are unaffected.",
+    }), { status: 503, headers: sec({ "content-type": "application/json" }) });
+
     let resp;
+    try {
     if (url.hostname.startsWith("reports.") || url.hostname.startsWith("reports-")) {
       if (url.pathname === "/api/update" && request.method === "POST") {
         resp = await handleAPI(request, env);
@@ -3078,6 +3102,10 @@ export default {
       }
     } else {
       resp = await handleSite(request, env, url);
+    }
+    } catch (e) {
+      if (isQuota(e)) return quotaResponse(e);
+      throw e;
     }
 
     if (isHead) {

@@ -208,8 +208,11 @@
       Every deploy of ledatic.org leaves a signed manifest.
     </p>
     <p class="hero-desc fade-up">
-      A deploy manifest lists the SHA-256 of every file served, is anchored to
-      a beacon pulse, and is Ed25519-signed with a dedicated deploy key. This
+      A deploy manifest lists the SHA-256 of every page deployed, is anchored to
+      a beacon pulse, and is Ed25519-signed with a dedicated deploy key. The
+      verifier and the pinned public keys sit outside the manifest on purpose:
+      they are published out-of-band, because a record that vouched for its own
+      checker would be circular. This
       page replays the ledger: each entry proves itself in your browser, and
       any two deploys can be diffed &mdash; what changed, what appeared, what
       disappeared &mdash; with the proofs intact.

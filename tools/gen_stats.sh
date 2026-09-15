@@ -31,6 +31,14 @@ SITE_ORIGIN="https://ledatic.org"
 
 [ -d "$RAIL_REPO/.git" ] || { echo "gen_stats: no rail repo at $RAIL_REPO" >&2; exit 1; }
 
+# Refresh the master-tracking ref so "$RAIL_REF" means today's master, not the
+# last time someone fetched in this clone (the version and module counts read
+# from it; the test count comes from the live attested record either way).
+# Ref-only: the checked-out branch and working tree are untouched. Offline,
+# the last fetch stands and says so.
+git -C "$RAIL_REPO" fetch --quiet origin master 2>/dev/null \
+  || echo "gen_stats: fetch failed; using the last-fetched $RAIL_REF" >&2
+
 # ── Repo-derived stats (read-only against the rail repo) ────────────────
 BIN_BYTES=$(git -C "$RAIL_REPO" cat-file -s "$(git -C "$RAIL_REPO" rev-parse "$RAIL_REF:rail_native")")
 TAG_COUNT=$(git -C "$RAIL_REPO" tag | wc -l | tr -d ' ')
