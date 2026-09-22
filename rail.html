@@ -357,6 +357,19 @@ pre.recipe .ok { color: var(--ph-600); }
         <p>Float type-inference plus auth/unauth desugaring, merged to master. Sound for arbitrary payloads.</p>
       </li>
 
+      <li class="reveal" id="v5-4-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.4.0">v5.4.0</data></span>
+          <span class="ldate">2026-09-22</span>
+          <span class="anchor">attested <time-pulse data-pulse="7309035">@ p#7309035</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.4.0/rail_native.attestation.json" data-name="rail_native &middot; v5.4.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">Hardening, and the beacon replays from one integer.</p>
+        <p class="gloss">seven miscompiles closed with the programs that exposed them; the entropy beacon replays any epoch from one logged number</p>
+        <p>Allocator freelist buckets cut the self-compile from roughly a minute to under twenty seconds. The independence checker makes the module graph an assertion rather than a convention.</p>
+      </li>
+
       <li class="reveal" id="v5-3-0">
         <span class="mark chain-link" aria-hidden="true"></span>
         <div class="erow">
@@ -534,8 +547,8 @@ pre.recipe .ok { color: var(--ph-600); }
     <pre class="recipe reveal"><code><span class="c"># Pull the verifier and a release.</span>
 <span class="c"># Each release has the same shape; pin the tag you trust.</span>
 curl -sf https://ledatic.org/attest/verify.sh -o /tmp/v.sh &amp;&amp; chmod +x /tmp/v.sh
-curl -sf https://ledatic.org/releases/v5.3.0/rail_native -o /tmp/rn
-curl -sf https://ledatic.org/releases/v5.3.0/rail_native.attestation.json -o /tmp/rn.att.json
+curl -sf https://ledatic.org/releases/v5.4.0/rail_native -o /tmp/rn
+curl -sf https://ledatic.org/releases/v5.4.0/rail_native.attestation.json -o /tmp/rn.att.json
 /tmp/v.sh /tmp/rn /tmp/rn.att.json
 <span class="ok"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span></code></pre>
 
