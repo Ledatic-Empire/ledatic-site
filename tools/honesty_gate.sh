@@ -90,12 +90,25 @@ PYEOF
 # year's number is exactly the lie this gate exists to catch. The trailing
 # guard ([^%0-9]|$) skips SVG/CSS percentages like width="140%".
 P_VERSION="${REG_VERSION}"
-P_TESTS="\b(${REG_TESTS}|141|140)\b([^%0-9]|$)"
+# A decimal fraction is never a test count: the leading guard skips 0.240
+# (a colour stop on entropy.html blocked the deploy the day the suite hit 240).
+P_TESTS="(^|[^.0-9])\b(${REG_TESTS}|141|140)\b([^%0-9]|$)"
 P_BYTES="\b(${REG_BYTES})\b"
 P_MB="\b1\.[0-9] ?MB\b"
 P_MODULES="(>[[:space:]]*${REG_MODULES}[[:space:]]*<|\b${REG_MODULES}\b[^0-9A-Za-z]{0,4}[Ss]tdlib|\b${REG_MODULES}\b[^0-9A-Za-z]{0,4}[Mm]odule|[Ss]tdlib[^0-9]{0,16}\b${REG_MODULES}\b|[Mm]odule[s]?[^0-9]{0,16}\b${REG_MODULES}\b)"
 P_TAGS="(>[[:space:]]*${REG_TAGS}[[:space:]]*<|\b${REG_TAGS} ?tag(s|ged)?\b|tag(s|ged)?[^0-9]{0,12}\b${REG_TAGS}\b|[Ff]orty[- ]five)"
 P_CADENCE="(~ ?2 ?s\b|every two seconds|every ~?2 ?seconds|2 ?s cadence)"
+
+# Self-check: the test-count pattern must still see a count and must not see
+# a decimal. Exit 2 (broken gate) rather than scan with a pattern that lies.
+tests_selfcheck() { # $1 = 0 (must match) or 1 (must not), $2 = sample line
+  local got=1
+  printf '%s\n' "$2" | grep -qE "$P_TESTS" && got=0
+  [ "$got" = "$1" ] || { echo "honesty_gate: test-count pattern selfcheck failed on: $2" >&2; exit 2; }
+}
+tests_selfcheck 0 "${REG_TESTS}/${REG_TESTS} tests"
+tests_selfcheck 0 "all ${REG_TESTS} tests pass"
+tests_selfcheck 1 "const c = [[0.018, 0.${REG_TESTS}, 1.${REG_TESTS}]];"
 
 R1_PATTERNS=("$P_VERSION" "$P_TESTS" "$P_BYTES" "$P_MB" "$P_MODULES" "$P_TAGS" "$P_CADENCE")
 
