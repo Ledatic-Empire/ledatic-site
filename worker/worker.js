@@ -910,11 +910,23 @@ async function handleSite(request, env, url) {
   // will eventually drop the old surface from their index and pin the new
   // one in its place.
   if (url.hostname === "api.ledatic.org") {
-    return Response.redirect("https://ledatic.org/work", 301);
+    return Response.redirect("https://ledatic.org/", 301);
   }
 
   const pathname = url.pathname;
   const method = request.method;
+
+  // Retired pages (2026-10-06 cleanup): the aitwoz-era /work pitch, the DDA-era
+  // /intel brief surface and /dda closing page, and the paused /playground. Each
+  // 301s to the surface that replaced it so old links and search results land
+  // somewhere true. The KV keys were deleted the same day.
+  const RETIRED = {
+    "/work": "/", "/intel": "/case-campaign-intel", "/dda": "/case-campaign-intel", "/playground": "/rail",
+  };
+  const retiredKey = pathname.replace(/\.html$/, "").replace(/\/$/, "") || pathname;
+  if (Object.prototype.hasOwnProperty.call(RETIRED, retiredKey)) {
+    return Response.redirect("https://ledatic.org" + RETIRED[retiredKey], 301);
+  }
 
   // NOTE: /data/devlog.json + /data/snapshot.json read routes were retired
   // 2026-06-10 — zero consumers in any site page or generator. The underlying
