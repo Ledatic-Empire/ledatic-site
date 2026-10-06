@@ -217,6 +217,29 @@ nav.topnav.scrolled {
   padding: 0.5rem 0.6rem;
 }
 .navmore-menu a:hover { color: var(--tx-hi); background: color-mix(in srgb, var(--tx-hi) 8%, transparent); }
+/* Three groups (Verify, Build, Read): one column on a phone, three side by side
+   from tablet up. Group headings read as console log lines like the eyebrows. */
+.navmore-group { display: grid; align-content: start; }
+.navmore-h {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--tx-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.6rem 0.2rem;
+  white-space: nowrap;
+}
+.navmore-group + .navmore-group .navmore-h { padding-top: 0.9rem; }
+@media (min-width: 768px) {
+  .navmore-menu { grid-template-columns: repeat(3, max-content); column-gap: 1.25rem; padding: 0.6rem 0.8rem 0.8rem; }
+  .navmore-group + .navmore-group .navmore-h { padding-top: 0.55rem; }
+}
+/* Below 420px the primary links sit tight against the logo slash. */
+@media (max-width: 419px) {
+  nav.topnav { padding: 1.1rem 1rem; }
+  .logo { margin-right: 0.6rem; }
+  .navlinks { gap: 0.8rem; }
+}
 
 .nav-cta {
   display: none;

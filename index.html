@@ -83,6 +83,20 @@ pulse-clock.hero-clock {
   line-height: 1.15;
   letter-spacing: 0;
 }
+/* The pulse number never breaks across lines, and the reduced-motion state
+   word ("live") is a small label beside it, not a second word at display size.
+   Measured 2026-10-06 with reduce-motion on: the word pushed the number onto
+   two lines and sat alone on the first. */
+pulse-clock.hero-clock { flex-wrap: wrap; }
+pulse-clock.hero-clock .pc-num { white-space: nowrap; }
+pulse-clock.hero-clock .pc-word {
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-lo);
+}
 /* No state override needed: this base rule's specificity (0,1,1) already
    beats the shared [data-state] rules (0,1,0) for box-shadow/border, while
    color still inherits the earned state hue from site.css. */
@@ -186,21 +200,30 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     <a href="/rail">Rail</a>
     <a href="/receipts">Receipts</a>
     <a href="/data">Data</a>
-    <a href="/tios">TIOS</a>
     <div class="navmore">
       <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
       <div class="navmore-menu" role="menu">
-        <a href="/oracle" role="menuitem">The oracle</a>
-        <a href="/verify" role="menuitem">Verify</a>
-        <a href="/entropy" role="menuitem">Entropy beacon</a>
-        <a href="/life" role="menuitem">Life</a>
-        <a href="/system" role="menuitem">System</a>
-        <a href="/changelog" role="menuitem">Changelog</a>
-        <a href="/physicify" role="menuitem">Physicify</a>
-        <a href="/plasma" role="menuitem">Plasma</a>
-        <a href="/aliens" role="menuitem">Aliens</a>
-        <a href="/work" role="menuitem">Work</a>
-        <a href="/manifesto" role="menuitem">Manifesto</a>
+        <div class="navmore-group" role="group" aria-label="Verify">
+          <span class="navmore-h">// Verify</span>
+          <a href="/verify" role="menuitem">Verify an artifact</a>
+          <a href="/entropy" role="menuitem">Entropy beacon</a>
+          <a href="/system" role="menuitem">System</a>
+          <a href="/aliens" role="menuitem">Aliens archive</a>
+          <a href="/replay" role="menuitem">Replay</a>
+        </div>
+        <div class="navmore-group" role="group" aria-label="Build">
+          <span class="navmore-h">// Build</span>
+          <a href="/oracle" role="menuitem">The oracle</a>
+          <a href="/plasma" role="menuitem">Plasma</a>
+          <a href="/changelog" role="menuitem">Changelog</a>
+          <a href="/tios" role="menuitem">TIOS</a>
+        </div>
+        <div class="navmore-group" role="group" aria-label="Read">
+          <span class="navmore-h">// Read</span>
+          <a href="/manifesto" role="menuitem">Manifesto</a>
+          <a href="/physicify" role="menuitem">physicify</a>
+          <a href="/life" role="menuitem">Life</a>
+        </div>
       </div>
     </div>
   </div>
