@@ -8,3 +8,4 @@ node_modules/
 cf_ids.env
 __pycache__/
 _shared/stats.json
+.venv/

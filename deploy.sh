@@ -151,6 +151,25 @@ citation_gate() {
   }
 }
 
+# ── Gate 2c: motion — the page's motion obeys its own grammar ────────────
+# docs/plans/2026-10-06-animated-site.md §4. The deploy-time cut is the home
+# page at 1440 (reveals visible with and without JS, no infinite animation
+# outside the fireflies, nothing running under reduce-motion, no extra request
+# under reduce-data, no authored live state, no console error, payload within
+# budget); each wave's PR runs the full gate. Needs .venv with Playwright; a
+# gate that cannot run blocks the deploy rather than reporting what it did
+# not measure. DEPLOY_SKIP_MOTION_GATE=1 skips it and says so.
+motion_gate() {
+  if [ "${DEPLOY_SKIP_MOTION_GATE:-0}" = "1" ]; then
+    echo "deploy: motion gate SKIPPED via DEPLOY_SKIP_MOTION_GATE=1" >&2
+    return 0
+  fi
+  ./tools/motion_gate.sh || {
+    echo "deploy: MOTION GATE FAILED (exit $?) — deploy blocked. tools/motion_gate.sh --full for the whole picture." >&2
+    exit 3
+  }
+}
+
 # ── Gate 3: physics — refuse to deploy if the entropy beacon is stale ───
 # This binds every site deploy to a live physical process: deploys can
 # happen only when production physics is producing distinct hashes at
@@ -775,6 +794,7 @@ verifier_gate
 honesty_gate
 changelog_gate
 citation_gate
+motion_gate
 gate_on_beacon
 load_prev_manifest
 if [ $# -eq 0 ]; then
