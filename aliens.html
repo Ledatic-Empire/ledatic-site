@@ -351,7 +351,6 @@ a.pill.drift:hover { color: var(--st-fail); }
           <a href="/verify" role="menuitem">Verify an artifact</a>
           <a href="/entropy" role="menuitem">Entropy beacon</a>
           <a href="/system" role="menuitem">System</a>
-          <a href="/aliens" role="menuitem">Aliens archive</a>
           <a href="/replay" role="menuitem">Replay</a>
         </div>
         <div class="navmore-group" role="group" aria-label="Build">
@@ -395,6 +394,12 @@ a.pill.drift:hover { color: var(--st-fail); }
       we mirrored it. Press <em>prove</em> on any record to replay that
       check in your own browser.
     </p>
+    <div class="placard-paused" role="note" style="margin:1rem 0 1.25rem; max-width:64ch">
+      <strong>Snapshot, not a current mirror.</strong> These 219 records were mirrored in May 2026
+      (release dates 5/8/26 to 5/22/26) and signed between pulse 741&#8239;341 and pulse
+      1&#8239;273&#8239;795. The source has not been re-checked since, so what you can prove here is
+      that these bytes are the bytes we mirrored then, not that the archive still looks like this.
+    </div>
     <div class="archive-meta">
       <span class="chip" id="mirror-state" data-state="unknown" aria-live="polite" title="mirror status — an archive is a recording, never live">unknown</span>
       <span class="chip" id="watch-state" data-state="unknown" aria-live="polite" title="recurring source re-check status">unknown</span>
@@ -542,7 +547,6 @@ a.pill.drift:hover { color: var(--st-fail); }
         <h4>Build</h4>
         <ul>
           <li><a href="rail.html">Rail</a></li>
-          <li><a href="aliens.html">Aliens</a></li>
           <li><a href="changelog.html">Changelog</a></li>
         </ul>
       </div>
