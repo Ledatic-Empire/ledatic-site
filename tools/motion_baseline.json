@@ -1,0 +1,21 @@
+{
+ "shared_bytes": 176348,
+ "files": [
+  "_shared/tokens.css",
+  "_shared/site.css",
+  "_shared/proof.css",
+  "_shared/site.js",
+  "_shared/pulse-clock.js",
+  "_shared/field.js",
+  "_shared/proof-tray.js",
+  "_shared/shaders/field.frag"
+ ],
+ "longtask_worst_ms": {
+  "home": 60,
+  "rail": 0,
+  "verify": 0,
+  "entropy": 0
+ },
+ "recorded": "2026-10-06",
+ "base": "https://ledatic.org"
+}

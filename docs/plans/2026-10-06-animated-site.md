@@ -116,7 +116,7 @@ at most 12 KB over today's total. No new font, no new shader for A or B.
 
 | Wave | What | Done when |
 |---|---|---|
-| W0 | The motion gate, run against today's site; baseline screenshots at both widths | gate green on the current site, screenshots in `docs/plans/shots/` |
+| W0 | The motion gate, run against today's site; baseline screenshots at both widths | **Done 2026-10-06:** `tools/motion_gate.py` (77 checks, all green on the live site), `tools/motion_gate.sh` (quick cut in `deploy.sh` as gate 2c), baseline `tools/motion_baseline.json` (176,348 bytes shared; home carries a 60 ms receipt task at 4x CPU from the hero field, recorded), shots in `docs/plans/shots/2026-10-06-w0/` |
 | W1 | Track A on home (A1 to A5), the sentinel, the freeze | gate green; the stranger test below passes |
 | W2 | B1, the hero's second act | gate green; a failed step shown red in a sabotaged local run |
 | W3 | B2 and B3 (cards, verify page) | gate green; the triad's red lands at HASH on screen |
