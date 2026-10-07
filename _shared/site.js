@@ -615,9 +615,51 @@
     document.body.appendChild(layer);
   }
 
+  // Track A sentinel (docs/plans/2026-10-06-animated-site.md §2): html[data-beacon] is
+  // unknown until a real receipt, live on each receipt, stale when the bus says so; and
+  // html[data-pulse-tick] is on for 600 ms per receipt, which every one-shot keyframe in
+  // site.css keys on. One subscriber, no timer of its own, nothing free-running. An
+  // IntersectionObserver marks cards and tiles .in-view so off-screen ones cost nothing.
+  function initBeaconTick() {
+    var html = document.documentElement;
+    if (!html.dataset.beacon) html.dataset.beacon = 'unknown';
+    var tickTimer = null;
+    function tick() {
+      clearTimeout(tickTimer);
+      html.removeAttribute('data-pulse-tick');
+      void html.offsetWidth;                       // restart the one-shots
+      html.setAttribute('data-pulse-tick', '');
+      tickTimer = setTimeout(function () { html.removeAttribute('data-pulse-tick'); }, 650);
+    }
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { en.target.classList.toggle('in-view', en.isIntersecting); });
+      }, { rootMargin: '0px 0px -5% 0px' });
+      document.querySelectorAll('.card, .hp-card, .stat').forEach(function (el) { io.observe(el); });
+    } else {
+      document.querySelectorAll('.card, .hp-card, .stat').forEach(function (el) { el.classList.add('in-view'); });
+    }
+    loadPulseBus().then(function () {
+      var bus = window.pulseBus;
+      if (!bus || typeof bus.subscribe !== 'function') return;   // no bus: unknown stays, nothing moves
+      bus.subscribe(function () {
+        html.dataset.beacon = 'live';
+        if (!document.hidden) tick();
+      });
+      if (typeof bus.onStale === 'function') {
+        bus.onStale(function () {
+          html.dataset.beacon = 'stale';
+          clearTimeout(tickTimer);
+          html.removeAttribute('data-pulse-tick');
+        });
+      }
+    });
+  }
+
   function init() {
     initNav();
     initNavMore();
+    initBeaconTick();
     initFireflies();
     initScrollProgress();
     initLiveData();

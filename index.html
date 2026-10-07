@@ -173,6 +173,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 .home-products { display: grid; gap: var(--sp-4); grid-template-columns: 1fr; margin-top: var(--sp-6); }
 @media (min-width: 760px) { .home-products { grid-template-columns: 1fr 1fr; } }
 .hp-card {
+  position: relative;                 /* the LED (Track A, A3) sits in its corner */
   display: flex; flex-direction: column; gap: var(--sp-2);
   border: 1px solid var(--line); padding: var(--sp-6);
   text-decoration: none; color: inherit;
@@ -282,7 +283,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 <main>
 
 <section class="section" id="products">
-  <div class="wrap">
+  <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Now live</span>
     <h2 class="reveal">Buy proof &mdash; and data you can prove.</h2>
@@ -309,7 +310,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 </section>
 
 <section class="section">
-  <div class="wrap">
+  <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Substrate</span>
     <h2 class="reveal">One language under everything you just verified.</h2>
@@ -337,7 +338,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 </section>
 
 <section class="section">
-  <div class="wrap">
+  <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">From the doorstep to the monolith</span>
     <h2 class="reveal">Same primitive. Every scale.</h2>
@@ -380,7 +381,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 </section>
 
 <section class="section">
-  <div class="wrap">
+  <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Shipping cadence</span>
     <h2 class="reveal"><data class="fig" data-src="repo:tags" data-fmt="count" value="47" data-pulse="2941323">47</data> tagged releases and counting.</h2>
@@ -417,7 +418,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 </section>
 
 <section class="section">
-  <div class="wrap">
+  <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">2040, backwards</span>
     <h2 class="reveal">No one can retro-fabricate a heartbeat.</h2>
