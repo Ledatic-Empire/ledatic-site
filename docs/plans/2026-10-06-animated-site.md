@@ -117,7 +117,7 @@ at most 12 KB over today's total. No new font, no new shader for A or B.
 | Wave | What | Done when |
 |---|---|---|
 | W0 | The motion gate, run against today's site; baseline screenshots at both widths | **Done 2026-10-06:** `tools/motion_gate.py` (77 checks, all green on the live site), `tools/motion_gate.sh` (quick cut in `deploy.sh` as gate 2c), baseline `tools/motion_baseline.json` (176,348 bytes shared; home carries a 60 ms receipt task at 4x CPU from the hero field, recorded), shots in `docs/plans/shots/2026-10-06-w0/` |
-| W1 | Track A on home (A1 to A5), the sentinel, the freeze | gate green; the stranger test below passes |
+| W1 | Track A on home (A1 to A5), the sentinel, the freeze | **Built and live 2026-10-06** (PR #41, deploy manifest #92): sentinel in `site.js`, per-section spine with the traveling pulse, glyph flash, tile charge, card LEDs, the freeze, h2 width move; gate 20/20 local, full live run in `docs/plans/shots/2026-10-06-w1/`; +7.2 KB. **Open:** the stranger test (Reilly's, twenty seconds, one person who has not seen it). |
 | W2 | B1, the hero's second act | gate green; a failed step shown red in a sabotaged local run |
 | W3 | B2 and B3 (cards, verify page) | gate green; the triad's red lands at HASH on screen |
 | W4 | A1, A2, A4 on the other pages; B4 on replay and changelog | gate green on every page |
