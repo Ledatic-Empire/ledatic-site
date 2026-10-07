@@ -510,11 +510,55 @@ footer.site-foot h4::before {
 
 /* stat cards — numeric rows. Data is square (--r-0). */
 .stat {
+  position: relative;
   background: var(--ink-2);
   box-shadow: var(--e1);
   border-radius: var(--r-0);
   padding: 1.5rem;
 }
+/* A2: the tile charges to --e2 on a receipt and decays on the phosphor curve. The
+   glow lives on a pseudo-element and only its opacity moves (compositor only); the
+   figure itself never changes, it is deploy-time truth. Gated to tiles in view. */
+.stat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--ph-600), 0 0 18px oklch(0.79 0.27 142 / 0.22);
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-pulse-tick] .stat.in-view::after { animation: tile-charge 600ms var(--ease) 1; }
+@keyframes tile-charge {
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* A3: the hardware-panel LED, top-left of every card, breathes once per receipt
+   while the card is in view. Dim phosphor at rest; ash when the beacon is stale. */
+.card::before, .hp-card::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ph-500);
+  box-shadow: 0 0 6px oklch(0.79 0.27 142 / 0.7);
+  opacity: 0.32;
+  pointer-events: none;
+}
+html[data-pulse-tick] .card.in-view::before,
+html[data-pulse-tick] .hp-card.in-view::before { animation: led-breathe 600ms var(--ease) 1; }
+@keyframes led-breathe {
+  0%   { opacity: 0.32; }
+  15%  { opacity: 1; }
+  100% { opacity: 0.32; }
+}
+html[data-beacon="stale"] .card::before,
+html[data-beacon="stale"] .hp-card::before { background: var(--st-stale); opacity: 0.5; }
 .stat .value {
   font-family: var(--font-display);
   font-size: var(--t-3);
@@ -750,6 +794,52 @@ body::after {
   transform-origin: top;
 }
 
+/* ── TRACK A: the pulse is the choreographer (docs/plans/2026-10-06-animated-site.md §2).
+   One sentinel in site.js sets html[data-beacon] (unknown, live, stale) and flips
+   html[data-pulse-tick] on for 600 ms per REAL receipt from the pulse bus. Every rule
+   below is a one-shot keyframe keyed to that attribute: nothing here free-runs, and
+   when the beacon goes quiet (stale) the page visibly stops breathing. Without JS the
+   base render is the complete, still site. ─────────────────────────────────────── */
+
+/* A1: a short bright segment travels the spine once per receipt. */
+.chain-spine::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 3px;
+  height: 14%;
+  background: linear-gradient(to bottom, transparent, var(--ph-500) 50%, transparent);
+  box-shadow: 0 0 10px oklch(0.79 0.27 142 / 0.6);
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+html[data-pulse-tick] .chain-spine::after { animation: spine-pulse 600ms linear 1; }
+@keyframes spine-pulse {
+  0%   { opacity: 0;   transform: translateY(-100%); }
+  10%  { opacity: 1; }
+  70%  { opacity: 0.8; }
+  100% { opacity: 0;   transform: translateY(720%); }
+}
+/* On the home page the spine is per section: it hangs from the section glyph, in the
+   gutter 1.1rem left of the text so the copy never touches the line. */
+.section .wrap.chain-spine { --spine-x: calc(var(--sp-6) - 1.1rem); }
+@media (min-width: 1024px) { .section .wrap.chain-spine { --spine-x: calc(2.5rem - 1.1rem); } }
+.section .wrap.chain-spine::before { left: var(--spine-x); top: 1.6rem; }
+.section .wrap.chain-spine::after  { left: calc(var(--spine-x) - 1px); top: 1.6rem; }
+.section .wrap.chain-spine > .chain-link { margin-left: calc(-1.1rem - 0.32em); }
+
+/* A4: the freeze. Stale beacon: the spine goes to ash and dashes, the glyphs lose
+   their green, the LEDs go ash. Nothing animates; the age is the only live thing. */
+html[data-beacon="stale"] .chain-spine::before {
+  background: repeating-linear-gradient(to bottom, var(--st-stale) 0 4px, transparent 4px 9px);
+}
+html[data-beacon="stale"] .chain-link,
+html[data-beacon="stale"] .chain-link::after { color: var(--st-stale); }
+html[data-beacon="stale"] .chain-spine::after { animation: none; opacity: 0; }
+
 /* Section boundary glyph: hollow ◇ base, solid ◆ fills over it. */
 .chain-link {
   position: relative;
@@ -766,6 +856,13 @@ body::after {
   top: 0;
   color: var(--ph-600);
   opacity: 1;                  /* pre-filled without timeline support */
+}
+/* A1: the glyph flashes to brand phosphor as the pulse passes, then relaxes. */
+html[data-pulse-tick] .chain-link::after { animation: link-pulse 600ms var(--ease) 1; }
+@keyframes link-pulse {
+  0%   { color: var(--ph-600); text-shadow: none; }
+  18%  { color: var(--ph-500); text-shadow: 0 0 10px oklch(0.79 0.27 142 / 0.55); }
+  100% { color: var(--ph-600); text-shadow: none; }
 }
 
 /* Reveals: visible by default — the zero-JS, zero-support render is
@@ -800,12 +897,28 @@ body::after {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
 }
+/* A5: section headings arrive the way the hero title does, 'wdth' 100 → 87.5. */
+@keyframes h2-wdth {
+  from { font-variation-settings: 'wdth' 100; }
+  to   { font-variation-settings: 'wdth' 87.5; }
+}
 
 @supports (animation-timeline: view()) {
   .reveal {
     animation: reveal-in linear both;
     animation-timeline: view();
     animation-range: entry 0% entry 55%;
+  }
+  .section h2.reveal {
+    animation-name: reveal-in, h2-wdth;
+    animation-timeline: view(), view();
+    animation-range: entry 0% entry 55%;
+  }
+  /* A per-section spine draws as its own section enters, not with the whole page. */
+  .section .wrap.chain-spine::before {
+    animation: spine-draw linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
   }
   .chain-spine::before {
     animation: spine-draw linear both;
@@ -1092,6 +1205,13 @@ h2.operator-title .accent { color: var(--ph-600); }
 
   .reveal, .fade-up { opacity: 1; transform: none; }
   .chain-spine::before { transform: none; }     /* fully drawn */
+  /* Track A: the pulse still sets the state (colour + glyph), nothing moves. */
+  html[data-pulse-tick] .chain-spine::after,
+  html[data-pulse-tick] .chain-link::after,
+  html[data-pulse-tick] .stat.in-view::after,
+  html[data-pulse-tick] .card.in-view::before,
+  html[data-pulse-tick] .hp-card.in-view::before { animation: none !important; }
+  .chain-spine::after { opacity: 0; }
   .chain-link::after { opacity: 1; }            /* pre-filled  */
   #scroll-progress { display: none; }           /* motion-only affordance */
   [data-state="live"][data-verified] { box-shadow: var(--e3); } /* earned, static */
