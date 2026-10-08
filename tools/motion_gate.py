@@ -234,7 +234,7 @@ def run(base, out_dir, pages, write_baseline, cpu_throttle, quick=False):
                 raw = fetch(url).read().decode("utf-8", "replace")
             except (urllib.error.URLError, OSError, ValueError) as e:
                 check(False, f"{slug}: fetch", str(e)); continue
-            body = re.sub(r"<script.*?</script>", "", raw, flags=re.DOTALL)
+            body = re.sub(r"<(script|style).*?</\1>", "", raw, flags=re.DOTALL)   # CSS selectors are not authored state
             check(not re.search(r'data-state="(live|replay|paused|stale|fail)"', body), f"{slug}: R5 authored HTML carries no state but unknown")
             check("data-verified" not in body, f"{slug}: R5 authored HTML carries no data-verified")
 
