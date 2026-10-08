@@ -118,7 +118,7 @@ at most 12 KB over today's total. No new font, no new shader for A or B.
 |---|---|---|
 | W0 | The motion gate, run against today's site; baseline screenshots at both widths | **Done 2026-10-06:** `tools/motion_gate.py` (77 checks, all green on the live site), `tools/motion_gate.sh` (quick cut in `deploy.sh` as gate 2c), baseline `tools/motion_baseline.json` (176,348 bytes shared; home carries a 60 ms receipt task at 4x CPU from the hero field, recorded), shots in `docs/plans/shots/2026-10-06-w0/` |
 | W1 | Track A on home (A1 to A5), the sentinel, the freeze | **Built and live 2026-10-06** (PR #41, deploy manifest #92): sentinel in `site.js`, per-section spine with the traveling pulse, glyph flash, tile charge, card LEDs, the freeze, h2 width move; gate 20/20 local, full live run in `docs/plans/shots/2026-10-06-w1/`; +7.2 KB. **Open:** the stranger test (Reilly's, twenty seconds, one person who has not seen it). |
-| W2 | B1, the hero's second act | gate green; a failed step shown red in a sabotaged local run |
+| W2 | B1, the hero's second act | **Built and live 2026-10-07** (PR #43, deploy manifest #94): the tray fires `ledatic:proofstep` and `ledatic:proofdone`; a `[data-proof-act]` strip under the hero clock resolves from them at the proof's pace; HASH rolls and settles onto the real digest; ok blooms the clock. Gate R10 (truthful resolution) and R11 (a sabotaged manifest goes red at HASH, the rest skip, no bloom) added; full live run 86/86 in `docs/plans/shots/2026-10-07-w2/`; payload +10.8 KB of 12. **Open:** the stranger test. |
 | W3 | B2 and B3 (cards, verify page) | gate green; the triad's red lands at HASH on screen |
 | W4 | A1, A2, A4 on the other pages; B4 on replay and changelog | gate green on every page |
 | W5 | Decide Track C for heroes only, or close it | a one-line decision in this file |
@@ -142,6 +142,9 @@ wave passes. If the answer is "it looks cool", the wave fails and is cut back un
 
 - The LED corner chrome: the README describes it; the 2040 rebuild dropped it. Confirm it comes back for
   A3 or A3 uses the card border instead.
-- Hex roll in B1: text animation is not compositor-only; if the trace shows jank at 4x throttle, roll
-  eight groups instead of sixteen digits.
+- Hex roll in B1: traced at 4x CPU on 2026-10-07, the roll is not the cost (21 long tasks with it removed
+  against 22 with it). The pre-existing 1.6 s `--e3` box-shadow bloom on the tray is the paint-heavy piece
+  (14 against 22 with it removed). W5 candidate: move the grammar's bloom onto a pseudo-element whose
+  opacity animates, as A2 does for the tiles. Long-task count during the proof rose, the worst stayed at
+  61 ms against the 70 ms budget.
 - The em-dash pass across public copy is a separate, copy-only PR and is not part of this plan.
