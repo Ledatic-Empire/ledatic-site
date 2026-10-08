@@ -86,28 +86,33 @@ button.prove {
   padding: var(--sp-3) var(--sp-4);
   margin: var(--sp-2) 0 var(--sp-4);
   position: relative;
-  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 80px;
   max-width: 72ch;
-  transition: box-shadow 1.6s var(--ease);   /* bloom decays through this  */
 }
 .tray[hidden] { display: none; }
+/* W5: the bloom is a pseudo-element; only its opacity moves. */
+.tray::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--e3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.6s var(--ease);
+}
 
-/* Outcome glow — JS-set only (token law). ok earns interactive
-   elevation; the verified bloom (e3→e2) rides .bloom below. */
+/* Outcome glow, JS-set only (token law). */
 .tray[data-outcome="ok"]   { box-shadow: var(--e2); }
 .tray[data-outcome="fail"] { box-shadow: inset 0 0 0 1px var(--st-fail); }
 
-/* Verified bloom (§3.3): JS adds .bloom on OK, removes next frame;
-   the 1.6s base transition carries the decay back to --e2. */
-.tray.bloom {
-  box-shadow: var(--e3);
-  transition: box-shadow 80ms var(--ease);
-}
+.tray.bloom::after { opacity: 1; transition-duration: 80ms; }
 
 /* Prove press (§3.3): 120ms scanline sweep, top→bottom, once. */
 @keyframes tray-sweep {
   from { top: 0;    opacity: 1; }
-  to   { top: 100%; opacity: 0; }
+  to   { top: calc(100% - 1px); opacity: 0; }
 }
 .tray.sweep::before {
   content: "";
@@ -298,8 +303,7 @@ button.prove {
 /* ── prefers-reduced-motion: full first-class mode (§3.4) ─────── */
 @media (prefers-reduced-motion: reduce) {
   .tray.sweep::before { animation: none; content: none; }
-  .tray, .tray.bloom { transition: none; }
-  .tray.bloom { box-shadow: var(--e2); }            /* earned, static */
+  .tray::after, .tray.bloom::after { transition: none; opacity: 0; }   /* earned glow stays static --e2 */
   .tray-step .tick { stroke-dashoffset: 0; transition: none; }
   .copy-btn, .copy-echo, .prove .affix,
   .prove > data, .prove .prove-val { transition: none; }
@@ -338,5 +342,5 @@ button.prove {
 .pchip[data-outcome="ok"]::before { content: "●"; }
 .pchip[data-outcome="fail"] { color: var(--st-fail); border-color: var(--st-fail); }
 .pchip[data-outcome="fail"]::before { content: "✗"; }
-.pchip.bloom { animation: verified-bloom 1.6s var(--ease) 1; }
-@media (prefers-reduced-motion: reduce) { .pchip.bloom { animation: none; } }
+.pchip.bloom::after { animation: verified-bloom 1.6s var(--ease) 1; }
+@media (prefers-reduced-motion: reduce) { .pchip.bloom::after { animation: none; } }

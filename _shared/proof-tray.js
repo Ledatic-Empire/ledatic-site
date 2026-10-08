@@ -994,8 +994,9 @@ async function openTray(btn, tray) {
   tray.dataset.outcome = r.outcome;
   rememberOutcome(btn, manifestUrl, r.outcome);
   if (r.outcome === 'ok' && !prm.matches) {
-    tray.classList.add('bloom');                      // charge to --e3 …
-    requestAnimationFrame(() => requestAnimationFrame(() => tray.classList.remove('bloom'))); // … decay 1.6s
+    tray.classList.add('bloom');                      // charge to --e3 over 80 ms …
+    void tray.offsetWidth;                            // (flushed, so the charge really starts)
+    setTimeout(() => tray.classList.remove('bloom'), 90);   // … then decay over 1.6 s
   }
   return r;
 }

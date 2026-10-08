@@ -627,6 +627,7 @@ footer.site-foot .foot-bottom {
    - Chips should carry aria-live="polite"; feeds role="log".
    ============================================================ */
 [data-state] {
+  position: relative;
   display: inline-flex;
   align-items: baseline;
   gap: 0.5em;
@@ -684,14 +685,22 @@ footer.site-foot .foot-bottom {
   animation: st-breathe 600ms var(--ease) 1;
 }
 
-/* Verified bloom (§3.3): charge to --e3, decay back to --e2 over 1.6s.
-   data-verified is set only by JS on a passed client-side proof. */
+/* Verified bloom (§3.3), 1.6 s; data-verified is JS-set only. */
 @keyframes verified-bloom {
-  0%   { box-shadow: var(--e2); }
-  12%  { box-shadow: var(--e3); }
-  100% { box-shadow: var(--e2); }
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  100% { opacity: 0; }
 }
-[data-state="live"][data-verified] {
+[data-state]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--e3);
+  opacity: 0;
+  pointer-events: none;
+}
+[data-state="live"][data-verified]::after {
   animation: verified-bloom 1.6s var(--ease) 1;
 }
 
@@ -1191,7 +1200,7 @@ h2.operator-title .accent { color: var(--ph-600); }
   .chain-link::after,
   #scroll-progress,
   [data-state="live"].breathe::before,
-  [data-state="live"][data-verified] {
+  [data-state="live"][data-verified]::after {
     animation: none !important;
   }
 
