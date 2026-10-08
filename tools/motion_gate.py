@@ -23,6 +23,10 @@ Checks (each a PASS/FAIL line; any FAIL is exit 1):
       hero clock (data-verified, JS-set)
   R11 sabotage (full mode, home): with the deploy manifest's files_digest flipped in flight,
       the strip goes red at HASH and KEY, SIG, CHAIN skip; nothing green
+  R12 the verify page's triad (full mode): pressing the three sample buttons resolves their
+      strips: /01 and /02 ok, /03 red at SIG (a flipped signature character) with CHAIN skipped
+  R13 card chips (B2, home): after an ok proof, every [data-proof-chip] in view resolves to ok
+      with the anchor pulse
 
 Usage:
   tools/motion_gate.py --base https://ledatic.org --out docs/plans/shots/<tag>
@@ -161,10 +165,15 @@ JS_BUS_WAIT = """(windowMs) => new Promise(res => {
   setTimeout(() => { try { unsub && unsub(); } catch (e) {} mo.disconnect(); res(out); }, windowMs);
 })"""
 
-JS_ACT = """() => { const el = document.querySelector('[data-proof-act]'); if (!el) return null;
-  const cells = [...el.querySelectorAll('.pa-cell')].map(c => [c.dataset.id, c.dataset.status || 'none', (c.querySelector('i') || {}).textContent || '']);
+JS_ACT = """() => { const els = [...document.querySelectorAll('[data-proof-act]')]; if (!els.length) return null;
   const clock = document.querySelector('pulse-clock.hero-clock');
-  return { outcome: el.dataset.outcome || null, cells, verified: !!(clock && clock.hasAttribute('data-verified')), clockState: clock ? clock.dataset.state : null }; }"""
+  const strips = els.map(el => ({ id: el.dataset.proofAct, outcome: el.dataset.outcome || null,
+    cells: [...el.querySelectorAll('.pa-cell')].map(c => [c.dataset.id, c.dataset.status || 'none', (c.querySelector('i') || {}).textContent || '']) }));
+  const live = strips.filter(s => s.outcome || s.cells.some(c => c[1] !== 'none'));
+  return { strips, live, outcome: live.length === 1 ? live[0].outcome : null, cells: live.length === 1 ? live[0].cells : [],
+           verified: !!(clock && clock.hasAttribute('data-verified')), clockState: clock ? clock.dataset.state : null }; }"""
+
+JS_CHIPS = """() => [...document.querySelectorAll('[data-proof-chip]')].map(c => [c.dataset.outcome || 'none', c.textContent.trim()])"""
 
 JS_LONGTASKS = """(windowMs) => new Promise(res => {
   const tasks = []; let po;
@@ -250,15 +259,25 @@ def run(base, out_dir, pages, write_baseline, cpu_throttle, quick=False):
                 request_sets[tag] = set(reqs)
                 act = pg.evaluate(JS_ACT)
                 if act is not None:
-                    # the auto-proof fires 1.2 s after arrival; give the real steps up to 8 s
+                    # the auto-proof fires 1.2 s after arrival; give the real steps up to 8 s. A strip whose
+                    # button was never pressed stays idle (dots) and claims nothing: that passes.
                     deadline = time.time() + 8
-                    while time.time() < deadline and (not act["outcome"] or any(st == "run" for _, st, _ in act["cells"])):
+                    while time.time() < deadline and act["live"] and any(not s_["outcome"] or any(c[1] == "run" for c in s_["cells"]) for s_ in act["live"]):
                         settle(pg, 400); act = pg.evaluate(JS_ACT)
-                    running = [i for i, st, _ in act["cells"] if st == "run"]
-                    check(not running and act["outcome"] in ("ok", "fail", "unverified"), f"{tag}: R10 second act resolved at the proof's pace", f"outcome={act['outcome']} cells={act['cells']}")
-                    if act["outcome"] == "ok":
-                        check(all(st in ("ok", "info") for _, st, _ in act["cells"]), f"{tag}: R10 every cell earned its state", str(act["cells"]))
+                    if not act["live"]:
+                        check(True, f"{tag}: R10 second act idle (no proof ran), claims nothing")
+                    for s_ in act["live"]:
+                        running = [c[0] for c in s_["cells"] if c[1] == "run"]
+                        check(not running and s_["outcome"] in ("ok", "fail", "unverified"), f"{tag}: R10 strip {s_['id']} resolved at the proof's pace", f"outcome={s_['outcome']} cells={s_['cells']}")
+                        if s_["outcome"] == "ok":
+                            check(all(c[1] in ("ok", "info") for c in s_["cells"]), f"{tag}: R10 strip {s_['id']} every cell earned its state", str(s_["cells"]))
+                    if any(s_["outcome"] == "ok" for s_ in act["live"]) and path == "/":
                         check(act["verified"] or act["clockState"] != "live", f"{tag}: R10 ok proof blooms the live hero clock", f"verified={act['verified']} clock={act['clockState']}")
+                        # R13: the card chips, once scrolled into view, play from the held result
+                        scroll_through(pg, int(h * 0.8), lambda y: None)
+                        settle(pg, 1400)
+                        chips = pg.evaluate(JS_CHIPS)
+                        check(chips and all(o == "ok" and "p#" in t for o, t in chips), f"{tag}: R13 every card chip verified from the held result", str(chips[:3]))
                 ctx.close()
 
                 # ---------------- JS off: R1
@@ -302,13 +321,32 @@ def run(base, out_dir, pages, write_baseline, cpu_throttle, quick=False):
                 deadline = time.time() + 8
                 while act is not None and time.time() < deadline and (not act["outcome"] or any(st == "run" for _, st, _ in act["cells"])):
                     settle(pg, 400); act = pg.evaluate(JS_ACT)
-                if act is None:
-                    check(True, f"{slug}: R11 no second act on this page, sabotage skipped")
+                if act is None or not act["live"]:
+                    check(act is None, f"{slug}: R11 second act present but the sabotaged proof never ran")
                 else:
                     st = {i: s_ for i, s_, _ in act["cells"]}
                     check(act["outcome"] == "fail" and st.get("HASH") == "fail", f"{slug}: R11 sabotaged manifest goes red at HASH", f"outcome={act['outcome']} cells={act['cells']}")
                     check(all(st.get(k) == "skip" for k in ("KEY", "SIG", "CHAIN")), f"{slug}: R11 KEY, SIG, CHAIN skip after the failure", str(act["cells"]))
                     check(not act["verified"], f"{slug}: R11 no bloom on a failed proof")
+                ctx.close()
+
+            # ---------------- R12 the verify page's triad (full mode): press all three
+            if not quick and path == "/verify":
+                ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+                pg = ctx.new_page(); pg.goto(url, wait_until="load", timeout=60000); settle(pg, 1500)
+                for bid in ("prove-s1", "prove-s2", "prove-fail"):
+                    pg.evaluate(f"document.getElementById('{bid}').scrollIntoView()"); settle(pg, 300)
+                    pg.click(f"#{bid}"); settle(pg, 600)
+                deadline = time.time() + 20
+                act = pg.evaluate(JS_ACT)
+                while time.time() < deadline and any(not s_["outcome"] or any(c[1] == "run" for c in s_["cells"]) for s_ in act["strips"] if s_["id"] != "run-byo"):
+                    settle(pg, 500); act = pg.evaluate(JS_ACT)
+                by = {s_["id"]: s_ for s_ in act["strips"]}
+                for bid in ("prove-s1", "prove-s2"):
+                    s_ = by.get(bid, {"outcome": None, "cells": []})
+                    check(s_["outcome"] == "ok" and all(c[1] in ("ok", "info") for c in s_["cells"]), f"{slug}: R12 triad {bid} verifies green", f"outcome={s_['outcome']} cells={s_['cells']}")
+                f_ = by.get("prove-fail", {"outcome": None, "cells": []}); fst = {c[0]: c[1] for c in f_["cells"]}
+                check(f_["outcome"] == "fail" and fst.get("SIG") == "fail" and fst.get("CHAIN") == "skip", f"{slug}: R12 the sabotaged copy goes red at SIG, CHAIN skipped", f"outcome={f_['outcome']} cells={f_['cells']}")
                 ctx.close()
 
             # ---------------- R6 + R8 on the desktop width, with CPU throttling

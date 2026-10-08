@@ -332,3 +332,11 @@ button.prove {
 .pa-cell[data-status="fail"] b, .pa-cell[data-status="fail"] i { color: var(--st-fail); }   /* THE red */
 .pa-cell[data-status="info"] i { color: var(--tx-lo); }
 .proof-act[data-outcome="ok"] { color: var(--tx-lo); }
+/* ── B2 chips: outcome is JS-set; ◌ until then ── */
+.pchip { margin-top: 0.9rem; align-self: flex-start; white-space: nowrap; font-size: 0.72rem; }
+.pchip[data-outcome="ok"] { color: var(--ph-500); border-color: var(--ph-700); box-shadow: var(--e2); }
+.pchip[data-outcome="ok"]::before { content: "●"; }
+.pchip[data-outcome="fail"] { color: var(--st-fail); border-color: var(--st-fail); }
+.pchip[data-outcome="fail"]::before { content: "✗"; }
+.pchip.bloom { animation: verified-bloom 1.6s var(--ease) 1; }
+@media (prefers-reduced-motion: reduce) { .pchip.bloom { animation: none; } }

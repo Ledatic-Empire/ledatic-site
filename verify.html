@@ -127,6 +127,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 .triad .card [data-state] { font-size: 0.75rem; }
 .triad .tray { margin-top: var(--sp-3); }
 .triad .prove-row { margin-top: var(--sp-3); }
+.triad .proof-act, .loader .proof-act { margin: 0.4rem 0 0.2rem; }
 .card.panel-replay { padding: 1.75rem; }
 .card.panel-replay > * { position: relative; z-index: 1; }
 
@@ -276,6 +277,9 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
             <button class="btn btn-ghost" id="clear-byo" type="button" disabled>clear</button>
           </div>
         </div>
+      <div class="proof-act" data-proof-act="run-byo" aria-label="the proof, step by step">
+        <span class="pa-cell" data-id="FETCH"><b>fetch</b><i>·</i></span><span class="pa-cell" data-id="HASH"><b>hash</b><i>·</i></span><span class="pa-cell" data-id="KEY"><b>key</b><i>·</i></span><span class="pa-cell" data-id="SIG"><b>sig</b><i>·</i></span><span class="pa-cell" data-id="CHAIN"><b>chain</b><i>·</i></span>
+      </div>
         <textarea id="paste-in" rows="4" placeholder="…or paste attestation JSON here" aria-label="paste attestation JSON" disabled></textarea>
       </div>
       <dl class="slots">
@@ -303,8 +307,11 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <span class="eyebrow">/01 &middot; expect green</span>
         <h3>The current release</h3>
         <p>The genuine record for the latest Rail compiler binary, signed by the artifact witness when it shipped. The bytes are fetched, re-hashed, and the signature checked — here, by you.</p>
-        <p class="prove-row"><button class="prove" aria-expanded="false" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; v5.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
-        <div class="tray" hidden></div>
+        <p class="prove-row"><button class="prove" id="prove-s1" aria-expanded="false" aria-controls="tray-s1" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; v5.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <div class="proof-act" data-proof-act="prove-s1" aria-label="the proof, step by step">
+          <span class="pa-cell" data-id="FETCH"><b>fetch</b><i>·</i></span><span class="pa-cell" data-id="HASH"><b>hash</b><i>·</i></span><span class="pa-cell" data-id="KEY"><b>key</b><i>·</i></span><span class="pa-cell" data-id="SIG"><b>sig</b><i>·</i></span><span class="pa-cell" data-id="CHAIN"><b>chain</b><i>·</i></span>
+        </div>
+        <div class="tray" id="tray-s1" hidden></div>
       </div>
 
       <div class="card panel-replay">
@@ -312,8 +319,11 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <h3>A record from the archive</h3>
         <p><span data-state="unknown" id="chip-v3">recorded 2026-04-28</span></p>
         <p>An attestation signed against beacon pulse p#360,389 still verifies today — that is the point. Age changes nothing about the math; the chain anchor tells you exactly how old it is.</p>
-        <p class="prove-row"><button class="prove" aria-expanded="false" data-manifest="/releases/v3.0.0/rail_native.attestation.json" data-name="rail_native &middot; v3.0.0 (archive)"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
-        <div class="tray" hidden></div>
+        <p class="prove-row"><button class="prove" id="prove-s2" aria-expanded="false" aria-controls="tray-s2" data-manifest="/releases/v3.0.0/rail_native.attestation.json" data-name="rail_native &middot; v3.0.0 (archive)"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <div class="proof-act" data-proof-act="prove-s2" aria-label="the proof, step by step">
+          <span class="pa-cell" data-id="FETCH"><b>fetch</b><i>·</i></span><span class="pa-cell" data-id="HASH"><b>hash</b><i>·</i></span><span class="pa-cell" data-id="KEY"><b>key</b><i>·</i></span><span class="pa-cell" data-id="SIG"><b>sig</b><i>·</i></span><span class="pa-cell" data-id="CHAIN"><b>chain</b><i>·</i></span>
+        </div>
+        <div class="tray" id="tray-s2" hidden></div>
       </div>
 
       <div class="card">
@@ -321,7 +331,10 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <h3>The sabotaged copy</h3>
         <p><span data-state="unknown" id="chip-fail">not yet run</span></p>
         <p>A copy of /01&rsquo;s record embedded in this page with one character of the witness signature changed. The bytes hash clean — and the signature collapses. Failure, in a sandbox, on purpose.</p>
-        <p class="prove-row"><button class="prove" id="prove-fail" aria-expanded="false" data-name="rail_native &middot; sabotaged copy" disabled><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <p class="prove-row"><button class="prove" id="prove-fail" aria-expanded="false" aria-controls="tray-fail" data-name="rail_native &middot; sabotaged copy" disabled><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <div class="proof-act" data-proof-act="prove-fail" aria-label="the proof, step by step">
+          <span class="pa-cell" data-id="FETCH"><b>fetch</b><i>·</i></span><span class="pa-cell" data-id="HASH"><b>hash</b><i>·</i></span><span class="pa-cell" data-id="KEY"><b>key</b><i>·</i></span><span class="pa-cell" data-id="SIG"><b>sig</b><i>·</i></span><span class="pa-cell" data-id="CHAIN"><b>chain</b><i>·</i></span>
+        </div>
         <div class="tray" id="tray-fail" hidden></div>
       </div>
     </div>
@@ -752,11 +765,13 @@ function initLoader(P) {
     }
     const subject = (held.manifest.artifact || held.manifest.frame || {});
     trayTitle(tray, subject.name || held.manifestName);
+    const fire = (type, detail) => tray.dispatchEvent(new CustomEvent(type, { bubbles: true, detail }));
     const r = await P.verifyManifestObject(held.manifest, {
       artifactBytes: held.bytes || undefined,
       manifestStep: { id: 'FETCH', label: `manifest (${held.manifestName} · supplied by you)`, status: 'info', res: 'not fetched' },
-      onStep: (s) => stepRow(tray, rows, s),
+      onStep: (s) => { stepRow(tray, rows, s); fire('ledatic:proofstep', { step: s, btn: runBtn }); },
     });
+    fire('ledatic:proofdone', { result: r, btn: runBtn });
     verdictBlock(P, tray, r);
   }
 
@@ -984,11 +999,13 @@ function initFailSample(P) {
     trayTitle(tray, btn.dataset.name.replace('&middot;', '·'));
     let m;
     try { m = JSON.parse(src.textContent); } catch { return; }
+    const fire = (type, detail) => tray.dispatchEvent(new CustomEvent(type, { bubbles: true, detail }));
     const r = await P.verifyManifestObject(m, {
       artifactUrl: '/releases/v5.1.0/rail_native',
       manifestStep: { id: 'FETCH', label: 'manifest (sandbox copy · embedded in this page)', status: 'info', res: 'not fetched' },
-      onStep: (s) => stepRow(tray, rows, s),
+      onStep: (s) => { stepRow(tray, rows, s); fire('ledatic:proofstep', { step: s, btn }); },
     });
+    fire('ledatic:proofdone', { result: r, btn });
     verdictBlock(P, tray, r);
     if (r.outcome === 'ok' || r.outcome === 'fail') btn.dataset.proved = r.outcome;
     const chip = $('#chip-fail');

@@ -1080,13 +1080,9 @@ function bindProve(btn) {
   else bindTray(btn);
 }
 
-/* ── the second act (B1, docs/plans/2026-10-06-animated-site.md §3) ──────────
-   A compact strip of the five real steps, fed only by the tray's own events
-   for the button it names (data-proof-act="<button id>"). Each cell resolves
-   when its step does, at the proof's timing, never faster: HASH rolls hex
-   until the real digest lands and then settles left to right; a failed step
-   is the one red; the rest skip. Authored HTML carries dim names and '·',
-   claiming nothing; without JS that is all it ever shows. */
+/* ── the second act (B1): a strip of the five real steps, fed only by the tray's own
+   events for the button it names (data-proof-act="<button id>"); HASH rolls hex until
+   the real digest lands; a failed step is the one red; authored text claims nothing. */
 const HEX = '0123456789abcdef';
 function mountAct(el) {
   if (el._ledaticAct) return;
@@ -1137,11 +1133,45 @@ function mountAct(el) {
   tray.addEventListener('ledatic:proofdone', onDone);
 }
 
+/* ── B2: a card chip that plays a 600 ms hash → sig → verified micro-sequence from the
+   result the page already holds (no fetch), the first time the card enters view. */
+const chipResults = new Map();
+function mountChip(el) {
+  if (el._ledaticChip) return;
+  el._ledaticChip = true;
+  const id = el.dataset.proofChip;
+  let played = false, seen = false;
+  const play = () => {
+    const r = chipResults.get(id);
+    if (played || !seen || !r) return;
+    played = true;
+    const done = () => {
+      el.dataset.outcome = r.outcome;
+      el.textContent = r.outcome === 'ok' ? `verified @ p#${fmtPulse(r.pulse)}`
+        : r.outcome === 'fail' ? `failed at ${r.failedAt || '?'}` : 'unverifiable';
+      if (r.outcome === 'ok' && !prm.matches) el.classList.add('bloom');
+    };
+    if (r.outcome !== 'ok' || prm.matches) return done();
+    el.textContent = `hash ${String(r.sha256 || '').slice(0, 8) || '✓'}`;
+    setTimeout(() => { el.textContent = 'sig ✓'; setTimeout(done, 220); }, 220);
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { seen = true; io.disconnect(); play(); } }, { threshold: 0.4 });
+    io.observe(el);
+  } else { seen = true; }
+  document.addEventListener('ledatic:proofdone', (e) => {
+    if (!e.detail.btn || e.detail.btn.id !== id) return;
+    chipResults.set(id, e.detail.result);
+    play();
+  });
+}
+
 /* ── init / public surface ───────────────────────────────────── */
 export function scan(root) {
   const r = root || document;
   r.querySelectorAll('button.prove[data-manifest]').forEach(bindProve);
   r.querySelectorAll('[data-proof-act]').forEach(mountAct);
+  r.querySelectorAll('[data-proof-chip]').forEach(mountChip);
   r.querySelectorAll('[data-sentinel]').forEach((el) => {
     const s = sentinel(el);
     if (el.dataset.sentinel === 'pulse') wirePulseSentinel(s);
