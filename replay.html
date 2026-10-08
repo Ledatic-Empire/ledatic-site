@@ -59,12 +59,14 @@
 /* ── deploy ledger rows ── */
 .deploys { list-style: none; margin: 0; padding: 0; }
 .deploys > li {
+  position: relative;
   display: flex; flex-wrap: wrap; align-items: baseline;
   gap: var(--sp-2) var(--sp-4);
-  padding: var(--sp-3) 0;
+  padding: var(--sp-3) 0 var(--sp-3) 1.75rem;
   border-bottom: 1px solid var(--line);
   font-family: var(--font-body); font-size: var(--t-data); color: var(--tx-lo);
 }
+.deploys .mark { position: absolute; left: -0.42em; top: calc(var(--sp-3) + 0.1rem); font-size: 0.8rem; background: var(--ink-0); padding: 2px 0; }
 .deploys .dn {
   font-family: var(--font-display); font-weight: 600;
   color: var(--ph-600); min-width: 4.5rem;
@@ -248,7 +250,7 @@
       <span id="ledger-count"></span>
     </div>
 
-    <ul class="deploys" id="deploys" hidden></ul>
+    <ul class="deploys chain-spine" id="deploys" hidden></ul>
     <button class="ledger-more" id="ledger-more" type="button" hidden>show earlier deploys</button>
 
     <div class="empty-state" id="ledger-empty">
@@ -396,7 +398,8 @@ function rowHtml(m) {
     : `<span class="anchor">no pulse anchor</span>`;
   const ct = (m.files || []).length;
   const dg = String(m.files_digest || '').slice(0, 16);
-  return `<li>
+  return `<li class="reveal">
+    <span class="mark chain-link" aria-hidden="true"></span>
     <span class="dn">#${esc(m.n)}</span>
     ${anchor}
     <span class="files-ct">${ct} file${ct === 1 ? '' : 's'}</span>

@@ -1080,9 +1080,8 @@ function bindProve(btn) {
   else bindTray(btn);
 }
 
-/* ── the second act (B1): a strip of the five real steps, fed only by the tray's own
-   events for the button it names (data-proof-act="<button id>"); HASH rolls hex until
-   the real digest lands; a failed step is the one red; authored text claims nothing. */
+/* ── B1: a strip of the five real steps, fed only by the tray's events for the button
+   it names (data-proof-act="<button id>"); HASH rolls until the real digest lands. */
 const HEX = '0123456789abcdef';
 function mountAct(el) {
   if (el._ledaticAct) return;
@@ -1133,8 +1132,7 @@ function mountAct(el) {
   tray.addEventListener('ledatic:proofdone', onDone);
 }
 
-/* ── B2: a card chip that plays a 600 ms hash → sig → verified micro-sequence from the
-   result the page already holds (no fetch), the first time the card enters view. */
+/* ── B2: a card chip plays hash → sig → verified from the held result when first in view. */
 const chipResults = new Map();
 function mountChip(el) {
   if (el._ledaticChip) return;

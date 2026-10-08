@@ -311,7 +311,7 @@ button.prove {
   .proof-pop { border-color: var(--tx-lo); }
 }
 
-/* ── the second act (B1): five cells, one line, the proof at its own pace ── */
+/* ── B1 strip: five cells, the proof at its own pace ── */
 .proof-act {
   display: flex;
   flex-wrap: wrap;
@@ -325,14 +325,14 @@ button.prove {
 }
 .pa-cell { display: inline-flex; align-items: baseline; gap: 0.45em; white-space: nowrap; }
 .pa-cell b { font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.68rem; color: var(--tx-dim); }
-.pa-cell i { font-style: normal; color: var(--tx-dim); font-variant-numeric: tabular-nums; display: inline-block; contain: content; }   /* a rolling digit never reflows the hero */
+.pa-cell i { font-style: normal; color: var(--tx-dim); font-variant-numeric: tabular-nums; display: inline-block; contain: content; }
 .pa-cell[data-status="run"]  i { color: var(--tx-lo); }
 .pa-cell[data-status="ok"]   i { color: var(--ph-500); }           /* earned */
 .pa-cell[data-status="ok"]   b { color: var(--tx-lo); }
 .pa-cell[data-status="fail"] b, .pa-cell[data-status="fail"] i { color: var(--st-fail); }   /* THE red */
 .pa-cell[data-status="info"] i { color: var(--tx-lo); }
 .proof-act[data-outcome="ok"] { color: var(--tx-lo); }
-/* ── B2 chips: outcome is JS-set; ◌ until then ── */
+/* ── B2 chips: outcome JS-set ── */
 .pchip { margin-top: 0.9rem; align-self: flex-start; white-space: nowrap; font-size: 0.72rem; }
 .pchip[data-outcome="ok"] { color: var(--ph-500); border-color: var(--ph-700); box-shadow: var(--e2); }
 .pchip[data-outcome="ok"]::before { content: "●"; }
