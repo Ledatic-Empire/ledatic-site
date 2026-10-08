@@ -984,10 +984,12 @@ async function openTray(btn, tray) {
   tray.appendChild(title);
 
   const rows = new Map();
+  const fire = (type, detail) => tray.dispatchEvent(new CustomEvent(type, { bubbles: true, detail }));
   const r = await runProof(manifestUrl, {
     artifactUrl: btn.dataset.artifact || undefined,
-    onStep: (s) => renderStep(tray, rows, s),
+    onStep: (s) => { renderStep(tray, rows, s); fire('ledatic:proofstep', { step: s, btn, manifestUrl }); },
   });
+  fire('ledatic:proofdone', { result: r, btn, manifestUrl });
   renderVerdict(tray, r);
   tray.dataset.outcome = r.outcome;
   rememberOutcome(btn, manifestUrl, r.outcome);
@@ -1078,10 +1080,68 @@ function bindProve(btn) {
   else bindTray(btn);
 }
 
+/* ── the second act (B1, docs/plans/2026-10-06-animated-site.md §3) ──────────
+   A compact strip of the five real steps, fed only by the tray's own events
+   for the button it names (data-proof-act="<button id>"). Each cell resolves
+   when its step does, at the proof's timing, never faster: HASH rolls hex
+   until the real digest lands and then settles left to right; a failed step
+   is the one red; the rest skip. Authored HTML carries dim names and '·',
+   claiming nothing; without JS that is all it ever shows. */
+const HEX = '0123456789abcdef';
+function mountAct(el) {
+  if (el._ledaticAct) return;
+  el._ledaticAct = true;
+  const btn = document.getElementById(el.dataset.proofAct);
+  if (!btn) return;
+  const cell = (id) => el.querySelector(`.pa-cell[data-id="${id}"]`);
+  const val = (id) => { const c = cell(id); return c && c.querySelector('i'); };
+  const timers = new Map();
+  const stop = (id) => { clearInterval(timers.get(id)); timers.delete(id); };
+  const roll = (id, finalText) => {               // scramble, then settle left to right
+    const v = val(id); if (!v) return;
+    stop(id);
+    const len = Math.min((finalText || '').length || 19, 19);
+    let fixed = finalText ? 0 : -1, n = 0;
+    timers.set(id, setInterval(() => {
+      let out = '';
+      for (let i = 0; i < len; i++) out += (fixed >= 0 && i < fixed) ? finalText[i] : HEX[(Math.random() * 16) | 0];
+      v.textContent = out;
+      if (fixed >= 0) fixed += 2;
+      if ((fixed >= 0 && fixed >= len) || ++n > 160) { stop(id); if (finalText) v.textContent = finalText; }
+    }, 40));
+  };
+  const onStep = (e) => {
+    if (e.detail.btn !== btn) return;
+    const st = e.detail.step, c = cell(st.id), v = val(st.id);
+    if (!c || !v) return;
+    c.dataset.status = st.status;
+    const text = String(st.res || '').split(' · ')[0].split(' (')[0].slice(0, 19);   // the figure, not its gloss
+    if (st.status === 'run') { if (st.id === 'HASH' && !prm.matches) roll('HASH'); else v.textContent = '…'; return; }
+    if (st.status === 'ok') {
+      if (st.id === 'HASH' && !prm.matches && timers.has('HASH')) roll('HASH', text || '✓');
+      else v.textContent = text || '✓';
+      return;
+    }
+    stop(st.id);
+    v.textContent = st.status === 'fail' ? '✗' : st.status === 'skip' ? '–' : (text || '–');
+  };
+  const onDone = (e) => {
+    if (e.detail.btn !== btn) return;
+    const r = e.detail.result;
+    el.dataset.outcome = r.outcome;
+    const clock = document.querySelector(el.dataset.proofClock || 'pulse-clock.hero-clock');
+    if (r.outcome === 'ok' && clock && clock.dataset.state === 'live') clock.setAttribute('data-verified', '');
+  };
+  const tray = document.getElementById(btn.getAttribute('aria-controls') || '') || document;
+  tray.addEventListener('ledatic:proofstep', onStep);
+  tray.addEventListener('ledatic:proofdone', onDone);
+}
+
 /* ── init / public surface ───────────────────────────────────── */
 export function scan(root) {
   const r = root || document;
   r.querySelectorAll('button.prove[data-manifest]').forEach(bindProve);
+  r.querySelectorAll('[data-proof-act]').forEach(mountAct);
   r.querySelectorAll('[data-sentinel]').forEach((el) => {
     const s = sentinel(el);
     if (el.dataset.sentinel === 'pulse') wirePulseSentinel(s);

@@ -516,9 +516,7 @@ footer.site-foot h4::before {
   border-radius: var(--r-0);
   padding: 1.5rem;
 }
-/* A2: the tile charges to --e2 on a receipt and decays on the phosphor curve. The
-   glow lives on a pseudo-element and only its opacity moves (compositor only); the
-   figure itself never changes, it is deploy-time truth. Gated to tiles in view. */
+/* A2: the tile charges on a receipt and decays; only a pseudo-element's opacity moves. */
 .stat::after {
   content: "";
   position: absolute;
@@ -535,8 +533,7 @@ html[data-pulse-tick] .stat.in-view::after { animation: tile-charge 600ms var(--
   100% { opacity: 0; }
 }
 
-/* A3: the hardware-panel LED, top-left of every card, breathes once per receipt
-   while the card is in view. Dim phosphor at rest; ash when the beacon is stale. */
+/* A3: the card LED, top-left, breathes once per receipt while in view. */
 .card::before, .hp-card::before {
   content: "";
   position: absolute;
@@ -794,12 +791,8 @@ body::after {
   transform-origin: top;
 }
 
-/* ── TRACK A: the pulse is the choreographer (docs/plans/2026-10-06-animated-site.md §2).
-   One sentinel in site.js sets html[data-beacon] (unknown, live, stale) and flips
-   html[data-pulse-tick] on for 600 ms per REAL receipt from the pulse bus. Every rule
-   below is a one-shot keyframe keyed to that attribute: nothing here free-runs, and
-   when the beacon goes quiet (stale) the page visibly stops breathing. Without JS the
-   base render is the complete, still site. ─────────────────────────────────────── */
+/* ── TRACK A (plan §2): site.js sets html[data-beacon] and flips html[data-pulse-tick]
+   for 600 ms per REAL receipt; every rule below is a one-shot keyed to it. ───────── */
 
 /* A1: a short bright segment travels the spine once per receipt. */
 .chain-spine::after {
@@ -831,8 +824,7 @@ html[data-pulse-tick] .chain-spine::after { animation: spine-pulse 600ms linear 
 .section .wrap.chain-spine::after  { left: calc(var(--spine-x) - 1px); top: 1.6rem; }
 .section .wrap.chain-spine > .chain-link { margin-left: calc(-1.1rem - 0.32em); }
 
-/* A4: the freeze. Stale beacon: the spine goes to ash and dashes, the glyphs lose
-   their green, the LEDs go ash. Nothing animates; the age is the only live thing. */
+/* A4: the freeze. Stale beacon: dashed ash spine, ash glyphs and LEDs, nothing moves. */
 html[data-beacon="stale"] .chain-spine::before {
   background: repeating-linear-gradient(to bottom, var(--st-stale) 0 4px, transparent 4px 9px);
 }

@@ -18,6 +18,11 @@ Checks (each a PASS/FAIL line; any FAIL is exit 1):
   R8  under 4x CPU throttling, no long task over 50 ms while receipts arrive
   R9  shared CSS+JS bytes within 12 KB of the recorded baseline (tools/motion_baseline.json;
       --write-baseline records today's)
+  R10 the second act (B1): where a page carries [data-proof-act], every cell resolves within
+      the window (no 'run' left), the strip carries an outcome, and an ok outcome blooms the
+      hero clock (data-verified, JS-set)
+  R11 sabotage (full mode, home): with the deploy manifest's files_digest flipped in flight,
+      the strip goes red at HASH and KEY, SIG, CHAIN skip; nothing green
 
 Usage:
   tools/motion_gate.py --base https://ledatic.org --out docs/plans/shots/<tag>
@@ -156,12 +161,30 @@ JS_BUS_WAIT = """(windowMs) => new Promise(res => {
   setTimeout(() => { try { unsub && unsub(); } catch (e) {} mo.disconnect(); res(out); }, windowMs);
 })"""
 
+JS_ACT = """() => { const el = document.querySelector('[data-proof-act]'); if (!el) return null;
+  const cells = [...el.querySelectorAll('.pa-cell')].map(c => [c.dataset.id, c.dataset.status || 'none', (c.querySelector('i') || {}).textContent || '']);
+  const clock = document.querySelector('pulse-clock.hero-clock');
+  return { outcome: el.dataset.outcome || null, cells, verified: !!(clock && clock.hasAttribute('data-verified')), clockState: clock ? clock.dataset.state : null }; }"""
+
 JS_LONGTASKS = """(windowMs) => new Promise(res => {
   const tasks = []; let po;
   const load = []; try { performance.getEntriesByType('longtask').forEach(e => load.push(Math.round(e.duration))); } catch (e) {}
   try { po = new PerformanceObserver(l => l.getEntries().forEach(e => tasks.push(Math.round(e.duration)))); po.observe({ type: 'longtask', buffered: false }); } catch (e) { return res({ supported: false, tasks: [], load }); }
   setTimeout(() => { po.disconnect(); res({ supported: true, tasks, load }); }, windowMs);
 })"""
+
+
+def tamper_manifest(route):
+    """R11: serve the live deploy manifest with one hex digit of files_digest flipped."""
+    try:
+        m = json.loads(fetch(LIVE + "/attest/site/latest.json").read().decode("utf-8"))
+        d = m.get("files_digest") or ""
+        if d:
+            m["files_digest"] = ("0" if d[0] != "0" else "1") + d[1:]
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(m))
+    except (urllib.error.URLError, OSError, ValueError, KeyError) as e:
+        route.abort()
+        print(f"motion_gate: sabotage route could not fetch the manifest: {e}")
 
 
 def settle(pg, ms=500):
@@ -225,6 +248,17 @@ def run(base, out_dir, pages, write_baseline, cpu_throttle, quick=False):
                 check(not inf, f"{tag}: R2 no infinite animation outside .fireflies", "; ".join(inf[:3]))
                 check(not errors, f"{tag}: R7 no console errors", "; ".join(errors[:2])[:160])
                 request_sets[tag] = set(reqs)
+                act = pg.evaluate(JS_ACT)
+                if act is not None:
+                    # the auto-proof fires 1.2 s after arrival; give the real steps up to 8 s
+                    deadline = time.time() + 8
+                    while time.time() < deadline and (not act["outcome"] or any(st == "run" for _, st, _ in act["cells"])):
+                        settle(pg, 400); act = pg.evaluate(JS_ACT)
+                    running = [i for i, st, _ in act["cells"] if st == "run"]
+                    check(not running and act["outcome"] in ("ok", "fail", "unverified"), f"{tag}: R10 second act resolved at the proof's pace", f"outcome={act['outcome']} cells={act['cells']}")
+                    if act["outcome"] == "ok":
+                        check(all(st in ("ok", "info") for _, st, _ in act["cells"]), f"{tag}: R10 every cell earned its state", str(act["cells"]))
+                        check(act["verified"] or act["clockState"] != "live", f"{tag}: R10 ok proof blooms the live hero clock", f"verified={act['verified']} clock={act['clockState']}")
                 ctx.close()
 
                 # ---------------- JS off: R1
@@ -256,6 +290,25 @@ def run(base, out_dir, pages, write_baseline, cpu_throttle, quick=False):
                 pg.goto(url, wait_until="load", timeout=60000); settle(pg, 1500)
                 extra = sorted(u for u in rd - request_sets[tag] if not u.endswith("/entropy/pulse"))
                 check(not extra, f"{tag}: R4 reduce-data requests are a subset of the default set", "; ".join(e.split('/')[-1] for e in extra[:3]))
+                ctx.close()
+
+            # ---------------- R11 sabotage: flip the manifest's files_digest in flight (full mode, home)
+            if not quick and path == "/":
+                ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+                pg = ctx.new_page()
+                pg.route("**/attest/site/latest.json", tamper_manifest)
+                pg.goto(url, wait_until="load", timeout=60000); settle(pg, 1500)
+                act = pg.evaluate(JS_ACT)
+                deadline = time.time() + 8
+                while act is not None and time.time() < deadline and (not act["outcome"] or any(st == "run" for _, st, _ in act["cells"])):
+                    settle(pg, 400); act = pg.evaluate(JS_ACT)
+                if act is None:
+                    check(True, f"{slug}: R11 no second act on this page, sabotage skipped")
+                else:
+                    st = {i: s_ for i, s_, _ in act["cells"]}
+                    check(act["outcome"] == "fail" and st.get("HASH") == "fail", f"{slug}: R11 sabotaged manifest goes red at HASH", f"outcome={act['outcome']} cells={act['cells']}")
+                    check(all(st.get(k) == "skip" for k in ("KEY", "SIG", "CHAIN")), f"{slug}: R11 KEY, SIG, CHAIN skip after the failure", str(act["cells"]))
+                    check(not act["verified"], f"{slug}: R11 no bloom on a failed proof")
                 ctx.close()
 
             # ---------------- R6 + R8 on the desktop width, with CPU throttling
