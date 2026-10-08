@@ -791,10 +791,9 @@ body::after {
   transform-origin: top;
 }
 
-/* ── TRACK A (plan §2): site.js sets html[data-beacon] and flips html[data-pulse-tick]
-   for 600 ms per REAL receipt; every rule below is a one-shot keyed to it. ───────── */
+/* ── TRACK A (plan §2): one-shots keyed to html[data-pulse-tick], set per REAL receipt. */
 
-/* A1: a short bright segment travels the spine once per receipt. */
+/* A1: a bright segment travels the spine once per receipt. */
 .chain-spine::after {
   content: "";
   position: absolute;
@@ -816,8 +815,7 @@ html[data-pulse-tick] .chain-spine::after { animation: spine-pulse 600ms linear 
   70%  { opacity: 0.8; }
   100% { opacity: 0;   transform: translateY(720%); }
 }
-/* On the home page the spine is per section: it hangs from the section glyph, in the
-   gutter 1.1rem left of the text so the copy never touches the line. */
+/* Home: a spine per section, in the gutter 1.1rem left of the copy. */
 .section .wrap.chain-spine { --spine-x: calc(var(--sp-6) - 1.1rem); }
 @media (min-width: 1024px) { .section .wrap.chain-spine { --spine-x: calc(2.5rem - 1.1rem); } }
 .section .wrap.chain-spine::before { left: var(--spine-x); top: 1.6rem; }
@@ -849,7 +847,7 @@ html[data-beacon="stale"] .chain-spine::after { animation: none; opacity: 0; }
   color: var(--ph-600);
   opacity: 1;                  /* pre-filled without timeline support */
 }
-/* A1: the glyph flashes to brand phosphor as the pulse passes, then relaxes. */
+/* A1: the glyph flashes as the pulse passes. */
 html[data-pulse-tick] .chain-link::after { animation: link-pulse 600ms var(--ease) 1; }
 @keyframes link-pulse {
   0%   { color: var(--ph-600); text-shadow: none; }
@@ -889,7 +887,7 @@ html[data-pulse-tick] .chain-link::after { animation: link-pulse 600ms var(--eas
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
 }
-/* A5: section headings arrive the way the hero title does, 'wdth' 100 → 87.5. */
+/* A5: section headings arrive like the hero title. */
 @keyframes h2-wdth {
   from { font-variation-settings: 'wdth' 100; }
   to   { font-variation-settings: 'wdth' 87.5; }
@@ -906,7 +904,6 @@ html[data-pulse-tick] .chain-link::after { animation: link-pulse 600ms var(--eas
     animation-timeline: view(), view();
     animation-range: entry 0% entry 55%;
   }
-  /* A per-section spine draws as its own section enters, not with the whole page. */
   .section .wrap.chain-spine::before {
     animation: spine-draw linear both;
     animation-timeline: view();
@@ -1197,7 +1194,7 @@ h2.operator-title .accent { color: var(--ph-600); }
 
   .reveal, .fade-up { opacity: 1; transform: none; }
   .chain-spine::before { transform: none; }     /* fully drawn */
-  /* Track A: the pulse still sets the state (colour + glyph), nothing moves. */
+  /* Track A: state still reads; nothing moves. */
   html[data-pulse-tick] .chain-spine::after,
   html[data-pulse-tick] .chain-link::after,
   html[data-pulse-tick] .stat.in-view::after,
