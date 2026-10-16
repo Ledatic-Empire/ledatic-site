@@ -175,7 +175,7 @@ HTML
   for md in "$SRC"/examples/*.md; do
     name=$(basename "$md" .md)
     title=$(head -1 "$md" | sed 's/^# *//')
-    echo "  <li><a href=\"examples/${name}.html\">${title}</a> — <code>${name}</code></li>"
+    echo "  <li><a href=\"${name}.html\">${title}</a> — <code>${name}</code></li>"
   done
   echo "</ul>"
 } > /tmp/examples_index_body.html

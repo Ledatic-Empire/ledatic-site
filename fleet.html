@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Four independent nodes — three on a Thunderbolt star, one at the edge — answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
+<meta name="description" content="Three independent nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/fleet">
 <meta property="og:title" content="Fleet — Ledatic">
-<meta property="og:description" content="Four independent nodes — three on a Thunderbolt star, one at the edge — answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
+<meta property="og:description" content="Three independent nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fleet — Ledatic">
-<meta name="twitter:description" content="Four independent nodes — three on a Thunderbolt star, one at the edge — answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
+<meta name="twitter:description" content="Three independent nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <link rel="canonical" href="https://ledatic.org/fleet">
@@ -144,10 +144,10 @@
   <div class="wrap wrap-narrow fade-up">
     <span class="eyebrow">Infrastructure</span>
     <h1 class="hero-title">Fleet</h1>
-    <p class="lead">Four surfaces. One witnessed snapshot.</p>
+    <p class="lead">Three surfaces. One witnessed snapshot.</p>
     <p class="body">
-      Four nodes answer one HTTP control plane &mdash; three on a Thunderbolt
-      star, one at the edge. This page never reaches them. It reads the one
+      Three nodes answer one HTTP control plane: two on a Thunderbolt link,
+      one at the edge. This page never reaches them. It reads the one
       snapshot the fleet publishes, co-signed by an independent witness at a
       pulse, and tells you exactly how old that record is. A chip only earns
       a state after this page has read a fresh snapshot; what can&rsquo;t be
@@ -215,22 +215,15 @@
         <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
       </div>
       <div class="node-card">
-        <span class="role">Reasoning</span>
-        <h3>Node 02</h3>
-        <p class="specs">Apple silicon &middot; workstation class</p>
-        <p>Large-model reasoning. Dedicated Thunderbolt link to the hub, measured at 9.16 Gb/s.</p>
-        <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
-      </div>
-      <div class="node-card">
         <span class="role">Orchestrator</span>
-        <h3>Node 03</h3>
+        <h3>Node 02</h3>
         <p class="specs">Apple silicon &middot; laptop class</p>
-        <p>Spoke on the Thunderbolt star. Hits the fleet HTTP surface over the mesh.</p>
+        <p>The other end of the Thunderbolt link. Hits the fleet HTTP surface over the mesh.</p>
         <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
       </div>
       <div class="node-card">
         <span class="role">Control plane</span>
-        <h3>Node 04</h3>
+        <h3>Node 03</h3>
         <p class="specs">ARM64 Linux &middot; SBC class</p>
         <p>Edge observatory. Fleet control-plane node. Reachable over the private mesh.</p>
         <span data-state="unknown" data-sentinel data-fresh-pulses="90" data-node-chip>checking&hellip;</span>
@@ -276,8 +269,8 @@
     <h2>One HTTP surface.</h2>
     <p class="body">
       Every node answers the same small HTTP surface: report health, run a
-      whitelisted command, queue an async job &mdash; pure Rail on three of
-      the four. No tmux. No ssh fan-out. Shared state is file-based, so a
+      whitelisted command, queue an async job &mdash; pure Rail on both
+      Macs. No tmux. No ssh fan-out. Shared state is file-based, so a
       binary swap is a drop-in upgrade.
     </p>
     <p class="body" style="margin-top: 1rem;">
