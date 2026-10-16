@@ -183,7 +183,7 @@ pre.snippet .c { opacity: .55; }
           <li>We state the provenance split exactly &mdash; we will never sell this as &ldquo;fully public-domain&rdquo; because only 34% is bright-line pre-1929: 47% is source-cleared and 19% is our own oracle-verified code. That honesty is the product working as intended.</li>
         </ul>
         <a class="btn btn-secondary buy" data-product="corpus" href="#">Buy &mdash; $499</a>
-        <p class="freebies">free first: <a href="mailto:31zemogyllier@gmail.com?subject=Attested%20Text%20Corpus%20v2%20—%20manifest%20request">request the full manifest + signed root</a></p>
+        <p class="freebies">free first: <a href="mailto:hello@ledatic.org?subject=Attested%20Text%20Corpus%20v2%20—%20manifest%20request">request the full manifest + signed root</a></p>
         <p class="freebies"><a href="/data/attested-text-corpus-v2">Full provenance &amp; FAQ &rarr;</a></p>
       </div>
     </div>
@@ -191,7 +191,7 @@ pre.snippet .c { opacity: .55; }
     <p class="gloss reveal">
       need a custom shape &mdash; a bigger oracle-verified code corpus, a
       different language, your own substrate attested end-to-end?
-      <a href="mailto:31zemogyllier@gmail.com?subject=Custom%20attested%20dataset">email us</a>.
+      <a href="mailto:hello@ledatic.org?subject=Custom%20attested%20dataset">email us</a>.
       models trained on these datasets are yours, commercially, no royalty.
     </p>
   </div>
@@ -236,7 +236,7 @@ curl -O https://ledatic.org/data/rail-verified-pairs-v2.ledger.sig.json
 curl https://ledatic.org/entropy/pulse/2641877   <span class="c"># the pulse, live, hash-chained</span>
 
 <span class="c"># 3 — after purchase: re-verify all 52,243 programs against the public</span>
-<span class="c">#     Rail compiler (github.com/zemo-g/rail) with the included verify_pairs.py</span>
+<span class="c">#     Rail compiler (github.com/Ledatic-Empire/rail) with the included verify_pairs.py</span>
 python3 verify_pairs.py pairs_v6.jsonl attested_ledger.jsonl</code></pre>
 
     <div class="chainrow reveal">
@@ -288,7 +288,7 @@ python3 verify_pairs.py pairs_v6.jsonl attested_ledger.jsonl</code></pre>
         <h4>Read</h4>
         <ul>
           <li><a href="manifesto.html">Manifesto</a></li>
-          <li><a href="https://github.com/zemo-g/rail" rel="noopener">Source</a></li>
+          <li><a href="https://github.com/Ledatic-Empire/rail" rel="noopener">Source</a></li>
           <li><a href="/llms.txt">llms.txt</a></li>
         </ul>
       </div>
@@ -309,7 +309,7 @@ const PAYMENT_LINKS = {
   pairs:  "https://buy.stripe.com/6oU28j5cBbsDaoC3lN0Fi03",
   corpus: "https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04",
 };
-const ORDER_EMAIL = "31zemogyllier@gmail.com";
+const ORDER_EMAIL = "hello@ledatic.org";
 const NAMES = { pairs: "Rail Verified-Pairs Corpus v2 ($199)", corpus: "Attested Text Corpus v2 ($499)" };
 
 document.querySelectorAll("a.buy").forEach((a) => {

@@ -2,11 +2,11 @@
 
 > Ledatic builds the verifiable layer — from the doorstep to the monolith. A self-hosting compiler in Rail, a live MHD plasma beacon, a Pi-hosted Ed25519 witness chain, and a Rail-native verifier you can run yourself. Every release, every fleet snapshot, every client deliverable is bound to a live physics process and signed by a key Ledatic does not control alone.
 
-LEDATIC is the engineering practice of Reilly Gomez, in Detroit, MI. The thesis: the post-AI internet needs an independent third-party trust layer for compute, and the same primitive scales from one artifact at your doorstep to every record in a government archive.
+LEDATIC is a software company in Detroit, MI. It makes Fieldcraft, a front-desk tool for service businesses: staff get answers drawn from the business's own approved documents, and a person reviews every draft. Its research arm builds the verifiable layer below. The thesis: the post-AI internet needs an independent third-party trust layer for compute, and the same primitive scales from one artifact at your doorstep to every record in a government archive.
 
 ## The working surfaces
 
-1. **[Rail](https://ledatic.org/rail)** — the substrate. A self-hosting compiler with no C in its runtime: it assembles, links and code-signs its own binary, and rebuilds itself to a byte-identical fixed point that matches the committed seed. Pure-Rail TLS 1.3 (verified live against real public APIs) plus JIT-emitted Metal GPU kernels. Six backends: native ARM64, Linux ARM64, Linux x86_64, WASM, Cortex-M4, RISC-V. BSL 1.1 on GitHub at `zemo-g/rail`. Current version, test count, module count and seed size are published as machine-readable JSON at [/_shared/stats.json](https://ledatic.org/_shared/stats.json); the live attested build and self-host records are at [/attest/latest](https://ledatic.org/attest/latest).
+1. **[Rail](https://ledatic.org/rail)** — the substrate. A self-hosting compiler with no C in its runtime: it assembles, links and code-signs its own binary, and rebuilds itself to a byte-identical fixed point that matches the committed seed. Pure-Rail TLS 1.3 (verified live against real public APIs) plus JIT-emitted Metal GPU kernels. Six backends: native ARM64, Linux ARM64, Linux x86_64, WASM, Cortex-M4, RISC-V. BSL 1.1 on GitHub at `Ledatic-Empire/rail`. Current version, test count, module count and seed size are published as machine-readable JSON at [/_shared/stats.json](https://ledatic.org/_shared/stats.json); the live attested build and self-host records are at [/attest/latest](https://ledatic.org/attest/latest).
 
 2. **[Entropy](https://ledatic.org/entropy)** — the beacon. A live 2D ideal-MHD Orszag-Tang simulation on a 128x128 grid hashes its state every ~2 seconds into a public chain you can walk in one shell line. Conservation to machine precision. The plasma viewer is embedded on the page so you can see the bytes that just got SHA-256'd into the row above.
 
@@ -33,7 +33,7 @@ Every public Ledatic surface — every release binary, every test pass, every fl
 
 ## Work
 
-The recent campaign-intelligence engagement closed 2026-05-12 after 30 days. Notes and the cryptographic floor underneath at [/case-campaign-intel](https://ledatic.org/case-campaign-intel). For new engagements, write Reilly directly.
+The recent campaign-intelligence engagement closed 2026-05-12 after 30 days. Notes and the cryptographic floor underneath at [/case-campaign-intel](https://ledatic.org/case-campaign-intel). For new engagements, write hello@ledatic.org.
 
 ## Manifesto
 
@@ -41,6 +41,6 @@ The recent campaign-intelligence engagement closed 2026-05-12 after 30 days. Not
 
 ## Contact
 
-- Email: z3m0g@icloud.com
-- GitHub: https://github.com/zemo-g/rail
+- Email: hello@ledatic.org
+- GitHub: https://github.com/Ledatic-Empire/rail
 - Location: Detroit, MI

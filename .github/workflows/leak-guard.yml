@@ -9,9 +9,11 @@ name: Leak guard
 # of its required clauses are stripped (night/worker had deleted the TB-IP/port
 # clauses).
 #
-# Intentionally-public identifiers are NOT matched: the business contact
-# z3m0g@icloud.com, the public name "Reilly Gomez", and the witness node
-# "fleet0" (its pubkey/fingerprint are published; only its tailnet IP is recon).
+# The owner's name, personal addresses, usernames, home paths and chat IDs are
+# matched by the identity step below, from the LEAK_IDENTITY_PATTERNS secret
+# (this public file used to spell them out). The company contact
+# hello@ledatic.org and the witness node "fleet0" are not matched (fleet0's
+# pubkey/fingerprint are published; only its tailnet IP is recon).
 #
 # To intentionally include one of these strings (e.g. a note describing the
 # scrub), put `leak-guard-allow` on the same line and the matcher skips it.
@@ -41,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          patterns='100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}|10\.4[23]\.[0-9]{1,3}\.[0-9]{1,3}|:(808[0-9]|910[15]|5590|844[345])\b|/Users/(ledaticempire|user|reillygomez)|/home/zemog|reillygomez[0-9]*@|zemog@|ledaticempire@|user@100|namespace_id"?[[:space:]]*:?[[:space:]]*"?[0-9a-f]{32}|CF_(ACCOUNT|ZONE|KV_NS|TOKEN)[[:space:]]*=[[:space:]]*"?[0-9a-f]{32}|^ACC=[0-9a-f]{32}|\bbrockbro2\b|D0ATHQ1BQD7|\bZEMOG\b|\bAIGP\b|MAVSDK'
+          patterns='100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}|10\.4[23]\.[0-9]{1,3}\.[0-9]{1,3}|:(808[0-9]|910[15]|5590|844[345])\b|/Users/user|user@100|namespace_id"?[[:space:]]*:?[[:space:]]*"?[0-9a-f]{32}|CF_(ACCOUNT|ZONE|KV_NS|TOKEN)[[:space:]]*=[[:space:]]*"?[0-9a-f]{32}|^ACC=[0-9a-f]{32}|\bZEMOG\b|\bAIGP\b|MAVSDK'
           # -I skip binaries. Exclude: the guard itself; training/ (frozen
           # run logs/attestations); worker_backups/ (snapshots of live Worker).
           hits=$(git grep -InE "$patterns" -- \
@@ -55,3 +57,17 @@ jobs:
             exit 1
           fi
           echo "leak guard: clean"
+      - name: Identity scan (patterns in the LEAK_IDENTITY_PATTERNS secret)
+        shell: bash
+        env:
+          IDENTITY_PATTERNS: ${{ secrets.LEAK_IDENTITY_PATTERNS }}
+        run: |
+          # Hits print as file:line only. A fork PR gets no secrets, so the scan is skipped there.
+          if [ -z "$IDENTITY_PATTERNS" ]; then echo "::warning::identity patterns unavailable (fork PR?); scan skipped"; exit 0; fi
+          hits=$(git grep -InEi "$IDENTITY_PATTERNS" -- ':(exclude)training/' ':(exclude)worker_backups/' | grep -v 'leak-guard-allow' | cut -d: -f1,2 || true)
+          if [ -n "$hits" ]; then
+            echo "::error::owner identity string in the public tree (file:line only)"
+            echo "$hits"
+            exit 1
+          fi
+          echo "identity scan: clean"

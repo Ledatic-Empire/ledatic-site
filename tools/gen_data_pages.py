@@ -82,7 +82,7 @@ CATALOG = [
             ("What am I actually buying if the texts are public?", "The assembly and the proof: 21k books resolved, cleaned, deduplicated and provenance-gated to 25,541 documents, plus a signed, independently re-verifiable provenance chain. Raw public archives cannot answer “prove where each document came from.” This can."),
             ("How do I verify it?", "The signed manifest, the Merkle scheme, and a verifier ship in the package. A second, independent root recompute is provided in Rail. The witness signature is anchored to public entropy pulse 2516402, which you can fetch live."),
             ("What license do I get?", "A single-organization commercial license: train and ship models freely, including commercially. You may not redistribute the corpus itself. See LICENSE.md."),
-            ("Can I get the full manifest before buying?", "Yes — email 31zemogyllier@gmail.com for the full document manifest and signed root."),
+            ("Can I get the full manifest before buying?", "Yes — email hello@ledatic.org for the full document manifest and signed root."),
         ],
     },
 ]
@@ -140,7 +140,7 @@ def page_html(d):
                     f'<a href="{d["ledger"]}">signed ledger</a></p>')
     else:
         free_row = ('<p class="free reveal">Free before you buy: '
-                    '<a href="mailto:31zemogyllier@gmail.com?subject=Attested%20Text%20Corpus%20v2%20manifest">request the full manifest + signed root</a></p>')
+                    '<a href="mailto:hello@ledatic.org?subject=Attested%20Text%20Corpus%20v2%20manifest">request the full manifest + signed root</a></p>')
 
     highlights = "\n".join(f"        <li>{h}</li>" for h in d["highlights"])
     faq_html = "\n".join(

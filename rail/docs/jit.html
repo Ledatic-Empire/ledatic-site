@@ -43,7 +43,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
     <a href="/plasma.html">Plasma</a>
     <a href="/fleet.html">Fleet</a>
   </div>
-  <a class="nav-cta" href="https://github.com/zemo-g/rail" target="_blank" rel="noopener">Source</a>
+  <a class="nav-cta" href="https://github.com/Ledatic-Empire/rail" target="_blank" rel="noopener">Source</a>
 </nav>
 <main>
 <h1>JIT</h1>
@@ -94,7 +94,7 @@ Each line is a Rail program lowered to IR, emitted as ARM64 bytes, <code>mmap</c
 | Builtins: <code>not</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>read_file</code> | shipped |
 </p>
 <p>
-Per-stage history is in <a href="https://github.com/zemo-g/rail/blob/main/jit/CHANGELOG.md"><code>jit/CHANGELOG.md</code></a>.
+Per-stage history is in <a href="https://github.com/Ledatic-Empire/rail/blob/main/jit/CHANGELOG.md"><code>jit/CHANGELOG.md</code></a>.
 </p>
 <h2>Verify the floor</h2>
 <pre><code class="lang-bash">
@@ -130,7 +130,7 @@ All six are exit-0 + last-line <code>PASS</code>/<code>OK</code>-shaped on macOS
 | <code>jit/parity_check.rail</code> | Differential check: interpreter result vs JIT result |
 </p>
 <p>
-The IR contract (opcode table, <code>op_call</code> packed-arg encoding, block layout) is documented in <a href="https://github.com/zemo-g/rail/blob/main/jit/README.md"><code>jit/README.md</code></a>.
+The IR contract (opcode table, <code>op_call</code> packed-arg encoding, block layout) is documented in <a href="https://github.com/Ledatic-Empire/rail/blob/main/jit/README.md"><code>jit/README.md</code></a>.
 </p>
 <h2>The trampoline trick</h2>
 <p>
@@ -141,7 +141,7 @@ A direct-call trampoline (<code>tools/jit_call.c</code>, ~20 lines of C) is chec
 </p>
 <h2>Limitations (honest)</h2>
 <ul>
-<li><strong>List execution blocked.</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/zemo-g/rail/blob/main/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
+<li><strong>List execution blocked.</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/Ledatic-Empire/rail/blob/main/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
 <li><strong>ARM64 only.</strong> No x86 JIT yet. The encoders, the loader, and the trampoline are all macOS-ARM64-specific.</li>
 <li><strong>Subset of the language.</strong> No ADTs, no effect handlers, no full pattern matching. List-pattern <code>match</code> is supported. The covered subset is what the bench grader's "lower-hit" set runs JIT-fast; the rest falls back to the regular compiler path.</li>
 </ul>
@@ -162,7 +162,7 @@ That's the substrate-honesty argument compressed to three files.
 </p>
 </main>
 <div class="docfooter">
-  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/zemo-g/rail">GitHub</a>
+  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
 </div>
 </body>
 </html>

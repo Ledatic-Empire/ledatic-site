@@ -66,7 +66,7 @@ LAKES_FLEET_TOKEN_VAL=$(cat ~/.ledatic/lakes_fleet_token)
 # (that's the CALLER's key). Was live-only until 2026-06-09; a deploy without
 # this line wipes it.
 SDK_WITNESS_KEY_VAL=$(cat ~/.ledatic/sdk_witness/key.hex)
-# Stripe autopilot webhook secret (feat/stripe-autopilot). Empty until Reilly
+# Stripe autopilot webhook secret (feat/stripe-autopilot). Empty until the owner
 # creates the Stripe webhook endpoint and saves its whsec_… here — the worker
 # route answers 503 unconfigured while empty, so deploys stay safe pre-Stripe.
 STRIPE_WEBHOOK_SECRET_VAL=$(cat ~/.ledatic/stripe/webhook_secret 2>/dev/null || echo "")

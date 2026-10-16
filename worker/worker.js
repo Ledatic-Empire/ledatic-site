@@ -1843,7 +1843,7 @@ async function handleSite(request, env, url) {
     if (sale.claim_until && Math.floor(Date.now() / 1000) > sale.claim_until) {
       return jsonResponse({
         kind: sale.kind, pack: sale.pack, expired: true,
-        note: "This confirmation link has expired for security. If you saved your key or download, keep using it — otherwise email 31zemogyllier@gmail.com with your Stripe receipt and we'll re-send it.",
+        note: "This confirmation link has expired for security. If you saved your key or download, keep using it — otherwise email hello@ledatic.org with your Stripe receipt and we'll re-send it.",
       }, 200);
     }
     if (sale.kind === "receipts") {
@@ -1872,17 +1872,17 @@ async function handleSite(request, env, url) {
     const grant = JSON.parse(raw);
     const now = Math.floor(Date.now() / 1000);
     if (grant.expires_at && now > grant.expires_at) {
-      return new Response("download link expired — contact 31zemogyllier@gmail.com", { status: 410, headers: sec({ "content-type": "text/plain" }) });
+      return new Response("download link expired — contact hello@ledatic.org", { status: 410, headers: sec({ "content-type": "text/plain" }) });
     }
     if ((grant.used || 0) >= (grant.max || 25)) {
-      return new Response("download limit reached — contact 31zemogyllier@gmail.com", { status: 429, headers: sec({ "content-type": "text/plain" }) });
+      return new Response("download limit reached — contact hello@ledatic.org", { status: 429, headers: sec({ "content-type": "text/plain" }) });
     }
     const obj = await env.REPORTS_R2.get(grant.r2_key);
     // A token minted before delivery went offline must not read as "your link
     // is bad" — the purchase is valid, only the automated path is down.
     if (!obj) return new Response(
       "Your purchase is valid — automated download is temporarily offline.\n" +
-      "Email 31zemogyllier@gmail.com with your Stripe receipt and we'll send\n" +
+      "Email hello@ledatic.org with your Stripe receipt and we'll send\n" +
       "the file and its signed manifest directly, same day.\n",
       { status: 503, headers: sec({ "content-type": "text/plain", "cache-control": "no-store" }) },
     );
@@ -2502,7 +2502,7 @@ async function handleSite(request, env, url) {
   }
 
   // DDA brief attestation surface — pulse + sig + sha256 only, NEVER
-  // brief bytes.  The moat is "Reilly holds the briefs; the world can
+  // brief bytes.  The moat is "Ledatic holds the briefs; the world can
   // prove they existed at a given moment under a given model."
   // Allowed shapes (file regex below enforces structurally):
   //   /dda/index.json                                          (top-level rollup)
