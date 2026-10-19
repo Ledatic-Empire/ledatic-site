@@ -773,6 +773,55 @@ async function sdkWitnessSign(seedHex, msg) {
   return sdkBytesToHex(new Uint8Array(sig));
 }
 
+// ─── fleet0 witness receipts: verified before they are stored (2026-10-18) ───
+// PUT /witness/fleet0/latest used to persist anything that carried the shared
+// token, and /entropy re-checked the signature only in each visitor's browser.
+// Now the Worker checks it first and refuses a receipt that does not verify,
+// so a bad signer is turned away at the door instead of served to strangers.
+// The witness signs the exact bytes `${pulse_id}|${value_hex}|${witnessed_at}`
+// (it does not sign prev_hex). Key: attest/fleet0.pub.pem in this repo, the
+// file served at /attest/fleet0.pub.pem, base64 DER SPKI below; its fingerprint
+// (first 16 hex of SHA-256 of the DER) is cac5f21a70564aeb, re-derived at
+// first use so a mangled constant fails loud instead of rejecting every PUT.
+const FLEET0_SPKI_B64 = "MCowBQYDK2VwAyEABYCyN+fTbPuRA0BKpSmWhzW+auY1IXiOo99C4cmXBQI=";
+const FLEET0_PK_FP = "cac5f21a70564aeb";
+let fleet0KeyPromise = null;
+function fleet0VerifyKey() {
+  if (!fleet0KeyPromise) {
+    fleet0KeyPromise = (async () => {
+      const der = Uint8Array.from(atob(FLEET0_SPKI_B64), (c) => c.charCodeAt(0));
+      const fp = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", der))).slice(0, 16);
+      if (fp !== FLEET0_PK_FP) throw new Error(`embedded fleet0 key has fingerprint ${fp}, expected ${FLEET0_PK_FP}`);
+      return crypto.subtle.importKey("spki", der, { name: "Ed25519" }, false, ["verify"]);
+    })();
+    fleet0KeyPromise.catch(() => { fleet0KeyPromise = null; });   // retry next request
+  }
+  return fleet0KeyPromise;
+}
+// null when the receipt verifies, else the reason it does not. Throws only
+// when the key itself cannot be loaded (the caller answers 503, not 400).
+async function fleet0ReceiptProblem(rec) {
+  if (!rec || typeof rec !== "object") return "receipt is not a JSON object";
+  const { pulse_id, value_hex, witnessed_at, sig } = rec;
+  if (pulse_id === undefined || value_hex === undefined || witnessed_at === undefined) {
+    return "receipt lacks pulse_id, value_hex or witnessed_at";
+  }
+  if (typeof sig !== "string" || !sig) return "receipt has no sig";
+  let sigBytes;
+  try { sigBytes = Uint8Array.from(atob(sig), (c) => c.charCodeAt(0)); }
+  catch { return "sig is not base64"; }
+  if (sigBytes.length !== 64) return `sig is ${sigBytes.length} bytes, an Ed25519 signature is 64`;
+  const key = await fleet0VerifyKey();
+  let ok = false;
+  try {
+    ok = await crypto.subtle.verify({ name: "Ed25519" }, key, sigBytes,
+      new TextEncoder().encode(`${pulse_id}|${value_hex}|${witnessed_at}`));
+  } catch { ok = false; }
+  if (ok) return null;
+  const named = rec.pk_fp && rec.pk_fp !== FLEET0_PK_FP ? ` (the receipt names pk_fp ${String(rec.pk_fp).slice(0, 32)})` : "";
+  return `Ed25519 signature over pulse_id|value_hex|witnessed_at does not verify against the fleet0 key ${FLEET0_PK_FP}${named}`;
+}
+
 async function handleAPI(request, env) {
   if (!env.API_BEARER || request.headers.get("Authorization") !== `Bearer ${env.API_BEARER}`) {
     return new Response("Unauthorized", { status: 401, headers: sec({ "content-type": "text/plain" }) });
@@ -1542,6 +1591,24 @@ async function handleSite(request, env, url) {
       headers: sec({ "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }),
     });
   }
+  if (pathname === "/entropy/v2/key" && method === "GET") {
+    // 2026-10-18, pulse format 2 (spec: /entropy/spec): the operator's Ed25519
+    // public key as PEM, proxied from the origin like /entropy/pulse. Every
+    // format 2 pulse is signed with it; key_id is the first 16 hex of SHA-256
+    // of its DER SubjectPublicKeyInfo. Fail loud: a verifier that cannot get
+    // the key must see a 503, and anything that is not a PEM public key (an
+    // origin error page answered 200, say) is refused rather than cached as
+    // the key for five minutes.
+    const r = await fetch("https://beacon.ledatic.org/key").catch(() => null);
+    const pem = r && r.ok ? await r.text().catch(() => "") : "";
+    if (!pem.startsWith("-----BEGIN PUBLIC KEY-----")) return new Response('{"error":"beacon origin unreachable or served no public key"}', {
+      status: 503,
+      headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+    });
+    return new Response(pem, {
+      headers: sec({ "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300", "access-control-allow-origin": "*" }),
+    });
+  }
   // Pulse-by-id (free, public): the membership oracle for `verify --check-beacon`.
   // Digits-only, so it never shadows /entropy/pulse or /entropy/pulse/log above.
   const pulseByIdMatch = pathname.match(/^\/entropy\/pulse\/(\d+)$/);
@@ -1578,11 +1645,28 @@ async function handleSite(request, env, url) {
         return new Response("forbidden", { status: 403, headers: sec({ "content-type": "text/plain" }) });
       }
       const body = await request.text();
+      // Every PUT is parsed and its signature checked, throttled or not, so
+      // a witness that starts signing badly is refused on its next push, not
+      // on the next persisted one. WITNESSES holds only fleet0; a second
+      // witness needs its own key here before it is added to that set.
+      let rec;
+      try { rec = JSON.parse(body); }
+      catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
+      let problem;
+      try { problem = await fleet0ReceiptProblem(rec); }
+      catch (e) {
+        return new Response(JSON.stringify({
+          error: "witness record not checked",
+          reason: `the fleet0 verification key could not be loaded: ${String(e && e.message || e).slice(0, 200)}`,
+        }), { status: 503, headers: sec({ "content-type": "application/json" }) });
+      }
+      if (problem) {
+        return new Response(JSON.stringify({ error: "witness record rejected", reason: problem }),
+          { status: 400, headers: sec({ "content-type": "application/json" }) });
+      }
       const prev = await env.LEDATIC_KV.get(kvKey, { type: "json" });
       const nowS = Math.floor(Date.now() / 1000);
       if (!prev || !prev.witnessed_at || (nowS - prev.witnessed_at) > 180) {
-        try { JSON.parse(body); }
-        catch { return new Response("not json", { status: 400, headers: sec({ "content-type": "text/plain" }) }); }
         // Say WHY the write failed instead of throwing.
         //
         // On 2026-08-28 the KV free-tier daily write cap was exhausted and
