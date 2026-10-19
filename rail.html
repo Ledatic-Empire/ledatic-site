@@ -367,6 +367,19 @@ pre.recipe .ok { color: var(--ph-600); }
         <p>Float type-inference plus auth/unauth desugaring, merged to master. Sound for arbitrary payloads.</p>
       </li>
 
+      <li class="reveal" id="v5-5-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.5.0">v5.5.0</data></span>
+          <span class="ldate">2026-10-19</span>
+          <span class="anchor">attested <time-pulse data-pulse="9085087">@ p#9085087</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.5.0/rail_native.attestation.json" data-name="rail_native &middot; v5.5.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">The compiler type-checks, and the collector under stress.</p>
+        <p class="gloss">plain words: the memory arena grows instead of spilling outside the collector's view, and every push now runs the collector under stress</p>
+        <p>The arena reserves its address space up front and grows in place, so no object lands where the collector cannot see it. <code>RAIL_GC_STRESS=N</code> collects on every Nth allocation and poisons freed blocks, and CI runs it on every push. <code>show</code> prints tuples, constructed values and bools, and constructors can be passed as functions.</p>
+      </li>
+
       <li class="reveal" id="v5-4-0">
         <span class="mark chain-link" aria-hidden="true"></span>
         <div class="erow">
