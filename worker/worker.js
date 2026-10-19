@@ -215,6 +215,24 @@ const PG_RL_RATE   = 10;           // requests per window
 const PG_RL_WINDOW_MS = 60 * 1000; // 60 s
 const PG_RL_TTL    = 70;           // KV TTL seconds (must be > window/1000)
 
+// /api/tios/match budget. KV writes measured 640 to 930 a day over
+// 2026-10-12..18 against the 1,000 cap, so TIOS gets a hard daily ceiling,
+// and the per-IP throttle costs no write (in-isolate memory, best-effort).
+const TIOS_DAILY_CAP = 25;   // KV writes (= recorded matches) per UTC day
+const TIOS_RECENT = 200;     // records kept in tios/war_agg for the harvest
+const TIOS_IP_PER_MIN = 2;   // posts per IP per minute, per isolate
+// Native builds of c4997bb (2026-07-15), hosted as GitHub Release assets.
+const TIOS_DIST_BASE = "https://github.com/Ledatic-Empire/tios-releases/releases/download/v-c4997bb";
+const TIOS_DIST_FILES = new Set(["tios_macos.zip", "tios_windows.zip", "tios_linux.zip"]);
+const _tiosHits = new Map();
+function tiosIsolateAllow(ip) {
+  const minute = Math.floor(Date.now() / 60000);
+  const h = _tiosHits.get(ip);
+  if (!h || h.m !== minute) { _tiosHits.set(ip, { m: minute, n: 1 }); return true; }
+  if (_tiosHits.size > 5000) _tiosHits.clear();
+  return ++h.n <= TIOS_IP_PER_MIN;
+}
+
 async function playgroundRateLimit(ip, env) {
   // Defensive: missing env binding (e.g. local wrangler dev without KV) =>
   // fail open with a clear console mark so the metrics path can detect.
@@ -2357,15 +2375,16 @@ async function handleSite(request, env, url) {
     return new Response("bad multipart endpoint", { status: 404, headers: sec({ "content-type": "text/plain" }) });
   }
 
-  // ─── /tios telemetry — every public match feeds the AI harness ─────────
+  // ─── /tios telemetry: every public match folds into the communal front ──
   // POST /api/tios/match: anonymous match record (doctrine/outcome/metrics,
-  // no identity — disclosed on /tios). Validated + size-capped, stored one
-  // R2 object per record (append-safe, unlike KV last-writer-wins).
+  // no identity, disclosed on /tios). Validated and size-capped. R2 is gone
+  // (2026-07-24), so the record lives in KV: ONE write per match, the fold
+  // into tios/war_agg, which also keeps the last TIOS_RECENT records as the
+  // harvestable corpus. The per-IP throttle is in-isolate memory (no KV
+  // write); the daily cap is what protects the shared 1,000-write budget.
   if (pathname === "/api/tios/match" && method === "POST") {
-    // Rate-limited like the playground: the communal front is unauthenticated
-    // by design, but one IP doesn't get to BE the war (audit, security lens).
     const tip = request.headers.get("cf-connecting-ip") || "unknown";
-    if (!(await playgroundRateLimit("tios:" + tip, env))) {
+    if (!tiosIsolateAllow(tip)) {
       return new Response("slow down, commander", { status: 429, headers: sec({}) });
     }
     const raw = await request.text();
@@ -2376,24 +2395,31 @@ async function handleSite(request, env, url) {
         || typeof rec.duration_s !== "number") {
       return new Response("bad record", { status: 400, headers: sec({}) });
     }
-    const key = `tios/matches/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
-    await env.REPORTS_R2.put(key, raw, { httpMetadata: { contentType: "application/json" } });
-    // COMMUNAL FRONT: fold the record into the shared war aggregate. KV
-    // last-writer-wins means a concurrent post can lose one tick — tolerable
-    // for a scoreboard, same tradeoff as the playground rate limiter.
-    try {
-      const agg = await env.LEDATIC_KV.get("tios/war_agg", { type: "json" }) || {
-        total: 0, held: 0, lost: 0, web: 0, native: 0, real: 0, doctrines: {}, updated: 0 };
-      agg.total += 1;
-      if (rec.proctor_win) agg.lost += 1; else agg.held += 1;
-      if (rec.src === "web") agg.web += 1; else agg.native += 1;
-      if (rec.map === "THRESHOLD") agg.real += 1;
-      if (typeof rec.doctrine === "string" && rec.doctrine.length < 24) {
-        agg.doctrines[rec.doctrine] = (agg.doctrines[rec.doctrine] || 0) + 1;
-      }
-      agg.updated = Date.now();
-      await env.LEDATIC_KV.put("tios/war_agg", JSON.stringify(agg));
-    } catch (e) { console.warn("tios war_agg fold failed", e); }
+    // A doctrine is a name like BESIEGER: /tios/war shows them, so nothing
+    // that could be markup is ever stored.
+    if (!/^[A-Z][A-Z_]{1,22}$/.test(rec.doctrine)) {
+      return new Response("bad doctrine", { status: 400, headers: sec({}) });
+    }
+    // KV last-writer-wins: a concurrent post can lose one tick. Tolerable
+    // for a scoreboard. A quota throw reaches the top-level 503 handler.
+    const agg = await env.LEDATIC_KV.get("tios/war_agg", { type: "json" }) || {
+      total: 0, held: 0, lost: 0, web: 0, native: 0, real: 0, doctrines: {}, updated: 0 };
+    const day = new Date().toISOString().slice(0, 10);
+    if (agg.day !== day) { agg.day = day; agg.day_n = 0; }
+    if (agg.day_n >= TIOS_DAILY_CAP) {
+      return new Response("the front is full for today", { status: 429, headers: sec({}) });
+    }
+    agg.day_n += 1;
+    agg.total += 1;
+    if (rec.proctor_win) agg.lost += 1; else agg.held += 1;
+    if (rec.src === "web") agg.web += 1; else agg.native += 1;
+    if (rec.map === "THRESHOLD") agg.real += 1;
+    if (rec.doctrine.length < 24) {
+      agg.doctrines[rec.doctrine] = (agg.doctrines[rec.doctrine] || 0) + 1;
+    }
+    agg.updated = Date.now();
+    agg.recent = [...(agg.recent || []), { t: agg.updated, ...rec }].slice(-TIOS_RECENT);
+    await env.LEDATIC_KV.put("tios/war_agg", JSON.stringify(agg));
     return new Response(null, { status: 204, headers: sec({}) });
   }
   // GET /api/tios/war: the communal front, public. Every commander moves the
@@ -2402,6 +2428,7 @@ async function handleSite(request, env, url) {
   if (pathname === "/api/tios/war" && method === "GET") {
     const agg = await env.LEDATIC_KV.get("tios/war_agg", { type: "json" }) || {
       total: 0, held: 0, lost: 0, web: 0, native: 0, real: 0, doctrines: {}, updated: 0 };
+    delete agg.recent; delete agg.day; delete agg.day_n;
     const swing = agg.total ? (agg.held - agg.lost) / Math.max(agg.total, 20) : 0;
     agg.front = Math.max(8, Math.min(92, Math.round(50 + swing * 42)));
     return new Response(JSON.stringify(agg), {
@@ -2409,19 +2436,15 @@ async function handleSite(request, env, url) {
         "cache-control": "public, max-age=60" }),
     });
   }
-  // GET /api/tios/matches: harvest the corpus (bearer-protected, JSONL).
+  // GET /api/tios/matches: harvest the corpus (bearer-protected, JSONL):
+  // the last TIOS_RECENT records kept inside tios/war_agg.
   if (pathname === "/api/tios/matches" && method === "GET") {
     const auth = request.headers.get("authorization") || "";
     if (auth !== `Bearer ${env.API_BEARER}`) {
       return new Response("unauthorized", { status: 401, headers: sec({}) });
     }
-    const limit = Math.min(parseInt(url.searchParams.get("limit") || "500", 10), 1000);
-    const listed = await env.REPORTS_R2.list({ prefix: "tios/matches/", limit });
-    const lines = [];
-    for (const obj of listed.objects) {
-      const o = await env.REPORTS_R2.get(obj.key);
-      if (o) lines.push(await o.text());
-    }
+    const agg = await env.LEDATIC_KV.get("tios/war_agg", { type: "json" }) || {};
+    const lines = (agg.recent || []).map((r) => JSON.stringify(r));
     return new Response(lines.join("\n") + "\n", {
       headers: sec({ "content-type": "application/jsonl" }),
     });
@@ -2435,22 +2458,13 @@ async function handleSite(request, env, url) {
   // worker-src blob: (emscripten pthreads). The 37 MB engine wasm exceeds
   // KV's 25 MB value cap, so it's stored gzipped (~11 MB) and served
   // pre-encoded with encodeBody:"manual".
-  // /tios/dist/<file>: native build downloads. R2, not KV — the zips run
-  // 85-116MB against KV's 25MB value cap. Same read-only pattern as
-  // /pursue/files; uploads happen via the R2 API from our end.
+  // /tios/dist/<file>: native build downloads. The zips (85-122 MB) exceed
+  // KV's 25 MB value cap and R2 is retired, so they are GitHub Release
+  // assets; this route 302s to them so the /tios links never change.
   if (pathname.startsWith("/tios/dist/") && method === "GET") {
-    const key = pathname.slice(1);
-    if (key.includes("..") || key.length > 128) return notFound();
-    const obj = await env.REPORTS_R2.get(key);
-    if (!obj) return notFound();
-    return new Response(obj.body, {
-      headers: sec({
-        "content-type": "application/zip",
-        "content-length": String(obj.size),
-        "content-disposition": `attachment; filename="${key.split("/").pop()}"`,
-        "cache-control": "public, max-age=3600",
-      }),
-    });
+    const file = pathname.slice("/tios/dist/".length);
+    if (!TIOS_DIST_FILES.has(file)) return notFound();
+    return Response.redirect(`${TIOS_DIST_BASE}/${file}`, 302);
   }
   if (pathname === "/tios/play" || pathname === "/tios/play/") {
     const ver = await env.LEDATIC_KV.get("tios/current");

@@ -37,7 +37,7 @@
 #
 # Scope: R1 to R5 read *.html at repo root and in entropy/ plus _shared
 # CSS/JS and shaders. R6 to R9 read every text file deploy.sh uploads: those,
-# plus data/, rail/docs/, sdk/, entropy/*.py, attest/verify.sh, stats.json,
+# plus data/, rail/docs/, tios/, sdk/, entropy/*.py, attest/verify.sh, stats.json,
 # llms.txt, robots.txt and sitemap.xml. worker/ and tools/ are server and
 # operator side, not scanned.
 #
@@ -57,7 +57,7 @@ HTML_FILES=$(ls ./*.html ./entropy/*.html 2>/dev/null)
 # Every text file deploy.sh uploads (keep in step with deploy_all there).
 PUBLIC_TEXT=$(ls ./*.html ./entropy/*.html ./entropy/*.py ./_shared/*.css ./_shared/*.js \
   ./_shared/stats.json ./_shared/shaders/*.frag ./data/*.html ./data/*.json ./data/*.jsonl \
-  ./rail/docs/*.html ./rail/docs/examples/*.html ./sdk/*.py ./attest/verify.sh \
+  ./rail/docs/*.html ./rail/docs/examples/*.html ./tios/*.html ./sdk/*.py ./attest/verify.sh \
   ./llms.txt ./robots.txt ./sitemap.xml 2>/dev/null)
 ASSET_FILES=$(ls ./_shared/*.css ./_shared/*.js ./_shared/shaders/*.frag 2>/dev/null)
 [ -n "$HTML_FILES" ] || { echo "honesty_gate: no HTML files found" >&2; exit 2; }

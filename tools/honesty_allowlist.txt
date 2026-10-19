@@ -41,3 +41,4 @@ entropy.html|only 233 states, each appearing
 # ── A price is not a stat [keep]: the Operator plan costs $250; the Rail test
 #    count reached 250 on 2026-10-06 and the gate began reading the price as it.
 receipts.html|<span class="price">\$250</span>
+tios.html|rgba\(

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="TIOS: a browser-playable FPS/RTS hybrid where two AIs learn: the Proctor studies how you play, and the Adjutant is an AI you raise. Field manual + play link.">
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/tios">
+<meta property="og:title" content="TIOS · Ledatic">
+<meta property="og:description" content="A hive-war strategy game where two AIs learn: the enemy studies you, and your Adjutant is an AI you raise. Playable in the browser.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TIOS · Ledatic">
+<meta name="twitter:description" content="A hive-war strategy game where two AIs learn: the enemy studies you, and your Adjutant is an AI you raise. Playable in the browser.">
+<!-- og:end -->
+<title>TIOS · Ledatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared/site.css">
+<style>
+  /* TIOS guide: Anthracite accents on the site chrome */
+  .tios-wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+  .tios-hero { padding: 96px 24px 40px; text-align: center; }
+  .tios-hero h1 { font-size: clamp(52px, 10vw, 120px); font-weight: 700; letter-spacing: -0.03em; line-height: 0.95; text-transform: uppercase; margin: 0; }
+  .tios-hero .sub { font-family: "IBM Plex Mono", monospace; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-top: 14px; }
+  .tios-amber { color: #f0a645; }
+  .tios-green { color: #4ebe7d; }
+  .play-btn { display: inline-block; margin-top: 34px; padding: 16px 42px; border: 1px solid #f0a645; color: #f0a645; font-family: "IBM Plex Mono", monospace; font-size: 16px; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; transition: background 0.15s, color 0.15s; }
+  .play-btn:hover { background: #f0a645; color: #0b0d10; }
+  .play-note { font-family: "IBM Plex Mono", monospace; font-size: 12px; opacity: 0.55; margin-top: 12px; }
+  .tios-section { margin-top: 56px; }
+  .tios-section h2 { font-family: "IBM Plex Mono", monospace; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.65; border-bottom: 1px solid rgba(128,140,155,0.25); padding-bottom: 10px; }
+  .tios-section p { line-height: 1.65; opacity: 0.9; }
+  table.controls { width: 100%; border-collapse: collapse; font-family: "IBM Plex Mono", monospace; font-size: 13px; margin-top: 14px; }
+  table.controls td { padding: 8px 10px; border-bottom: 1px solid rgba(128,140,155,0.15); vertical-align: top; }
+  table.controls td.k { white-space: nowrap; color: #f0a645; width: 190px; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 16px; }
+  @media (max-width: 720px) { .duo { grid-template-columns: 1fr; } }
+  .mind { border: 1px solid rgba(128,140,155,0.25); padding: 20px; }
+  .mind h3 { margin: 0 0 8px; font-size: 18px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tip { border-left: 2px solid #f0a645; padding-left: 14px; margin: 12px 0; opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="rail.html">Rail</a>
+    <a href="entropy.html">Entropy</a>
+    <a href="plasma.html">Plasma</a>
+    <a href="tios.html" class="active">TIOS</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="changelog.html">Changelog</a>
+  </div>
+  <a class="nav-cta" href="/tios/play">Play</a>
+</nav>
+
+<div class="tios-hero">
+  <div class="sub">Truth is often stranger &middot; hive-war strategy, playable alpha</div>
+  <h1>TIOS</h1>
+  <p style="max-width: 620px; margin: 22px auto 0; line-height: 1.6; opacity: 0.85;">
+    An FPS/RTS hybrid where <em>two AIs learn</em>. The
+    <span class="tios-green">Proctor</span>, the enemy director, studies how
+    <em>you</em> play and adapts across matches. The
+    <span class="tios-amber">Adjutant</span> is an AI you <em>raise</em>: it
+    watches your orders, learns doctrines, and remembers every lesson.
+    Every match trains both, on your machine. That is the game.
+  </p>
+  <a class="play-btn" href="/tios/play">&#9654; Play in browser</a>
+  <a class="play-btn" href="/tios/war" style="margin-left:14px; border-color:#4ebe7d; color:#4ebe7d;">THE FRONT &middot; communal war</a>
+  <div class="play-note" style="margin-top:26px; opacity:0.85;">
+    The browser build is the training sim. The desktop downloads are the same build (c4997bb, 2026-07-15) with the native renderer:<br>
+    <a href="/tios/dist/tios_macos.zip" style="color:#f0a645;">macOS</a> &middot;
+    <a href="/tios/dist/tios_windows.zip" style="color:#f0a645;">Windows</a> &middot;
+    <a href="/tios/dist/tios_linux.zip" style="color:#f0a645;">Linux</a>
+    <span style="opacity:0.6;">(macOS 122 MB, Windows 99 MB, Linux 90 MB; unsigned indie builds, so on macOS right-click and choose Open the first time)</span>
+  </div>
+  <a class="play-btn" href="/tios/lore" style="margin-left:12px; border-color:#4ebe7d; color:#4ebe7d;">Read the Lore</a>
+  <div class="play-note">Any desktop browser &middot; Chrome/Firefox for mouselook, Safari for drag-to-look &middot; ~12 MB first load, then cached</div>
+</div>
+
+<div class="tios-wrap">
+
+  <div class="tios-section">
+    <h2>01 · The Objective</h2>
+    <p>
+      You are a commander on a dying frontier world. Mine <b>Mag</b> (a decaying,
+      metastable gas) from crystal spires; it powers everything and evaporates
+      while you hoard it. Build your base, raise an army, and <b>silence all three
+      Hive fronts</b>. Lose your reactor and the exam ends. The enemy calls each
+      match an <em>exam</em> because it is grading you: it keeps a rating, remembers
+      your habits, and next match it will open on your weaknesses, by name.
+    </p>
+  </div>
+
+  <div class="tios-section">
+    <h2>02 · Two Modes, One Body</h2>
+    <p>
+      Press <b>Tab</b> (or <b>V</b>) to switch between <b>Soldier</b> (first-person,
+      on the field, your aura buffs nearby troops and your body auto-defends the
+      spot where you leave it) and <b>Command</b> (top-down RTS view: drag-select,
+      order, build). Your commander's body stays in the world in both modes. Where
+      you park it matters; leaving it in the open is a real risk.
+    </p>
+  </div>
+
+  <div class="tios-section">
+    <h2>03 · Controls</h2>
+    <table class="controls">
+      <tr><td class="k">Click (first)</td><td>capture the mouse (Chrome/Firefox lock the pointer; the HUD reminds you)</td></tr>
+      <tr><td class="k">W A S D + Space</td><td>move + jump (Soldier)</td></tr>
+      <tr><td class="k">Click</td><td>shoot (Soldier)</td></tr>
+      <tr><td class="k">Safari: drag to look</td><td>hold and drag to turn, tap to shoot, no pointer lock needed, butter on the trackpad</td></tr>
+      <tr><td class="k">Tab or V</td><td>toggle Soldier / Command view</td></tr>
+      <tr><td class="k">Esc or P</td><td>menu (sensitivity, trackpad mode, volume)</td></tr>
+      <tr><td class="k">Drag / Right-click</td><td>Command: select units / order move &middot; mine &middot; attack &middot; escort</td></tr>
+      <tr><td class="k">1 / 2</td><td>select army / workers</td></tr>
+      <tr><td class="k">H / C</td><td>rally home / rally to commander</td></tr>
+      <tr><td class="k">Q / E</td><td>zoom command camera</td></tr>
+      <tr><td class="k">T</td><td>Adjutant console: type plain-text orders ("escort miners", "attack west")</td></tr>
+      <tr><td class="k">F / G</td><td>commend / correct your Adjutant's last decision (this trains it)</td></tr>
+      <tr><td class="k">Minimap click</td><td>jump the command camera</td></tr>
+    </table>
+    <p class="tip">On a trackpad, open the menu (P) and enable <b>Trackpad mode</b> for smoothed look.</p>
+  </div>
+
+  <div class="tios-section">
+    <h2>04 · The Two Minds</h2>
+    <div class="duo">
+      <div class="mind">
+        <h3 class="tios-green">The Proctor</h3>
+        <p>The hive's director. It measures your comfort, punishes hoarding and
+        turtling, raids what you leave undefended, and launches coordinated
+        assaults from multiple fronts. It keeps a persistent rating of you and
+        remembers your habits between matches, and expect it to say so out loud.</p>
+      </div>
+      <div class="mind">
+        <h3 class="tios-amber">The Adjutant</h3>
+        <p>Your staff officer, and the AI <em>you</em> raise. It earns experience
+        watching you command, unlocks doctrines (escort &rarr; salvage &rarr; defense &rarr;
+        counter-intel), develops a persona from what you praise, and briefs you
+        on the Proctor's patterns. Commend it with <b>F</b>, correct it with <b>G</b>.
+        It forgets nothing.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tios-section">
+    <h2>04.5 · The War (persistent)</h2>
+    <p>
+      Every map is a <b>world</b> on the relay network, and the war never resets.
+      Liberate a world (silence its hives) and it joins your network, paying
+      Mag into every future deployment. But the Proctor counterattacks what you
+      hold, and while you're deployed elsewhere, <b>your Adjutant defends your
+      worlds alone</b>, exactly as well as you've trained it. A green Adjutant
+      over a thin garrison loses your world at 3am; a drilled one holds the rim
+      with nothing to spare. After each match, choose your next deployment from
+      the relay screen: liberate new worlds, or return to reinforce one before
+      it falls. Your empire compounds, and so does the war it attracts.
+    </p>
+  </div>
+
+  <div class="tios-section">
+    <h2>05 · First Match, Honest Advice</h2>
+    <p class="tip">Assign miners to spires immediately (right-click a spire): Mag decays, so spend it.</p>
+    <p class="tip">Sentinels have blind spots; place them to cover each other. The swarm probes gaps.</p>
+    <p class="tip">Never leave your reactor unguarded. The Proctor watches for exactly that moment.</p>
+    <p class="tip">Decrypt the Appendices (build bar) to unlock better units. Bank Mag with HOLD first.</p>
+    <p class="tip">Sitting on a huge army invites a proportionally huge assault. Waiting is not safe.</p>
+  </div>
+
+  <div class="tios-section">
+    <h2>06 · Status &amp; Colophon</h2>
+    <p>
+      TIOS is an <b>alpha</b>, built in Godot 4; the browser build is c4997bb,
+      from 2026-07-15. Plays on every desktop browser: Chrome and Firefox
+      lock the pointer for classic mouselook; Safari (whose pointer lock fights
+      games) automatically uses drag-to-look, which is butter on a trackpad. The
+      native build is richer; the web build is the shareable one. Placeholder art
+      is deliberate: the AI systems are the point.
+      Feedback: <a href="mailto:hello@ledatic.org?subject=TIOS">hello@ledatic.org</a>.
+    </p>
+    <p style="font-family:'IBM Plex Mono',monospace; font-size:12px; opacity:0.6;">
+      Telemetry: each finished match sends one anonymous record (doctrine faced,
+      outcome, duration, playstyle metrics, world name, web/native build type; no identity, no account, no tracking; refusable in the game settings)
+      that moves the communal front at <a href="/tios/war">/tios/war</a> (up to 25
+      matches a day are recorded). The Proctor itself learns from your matches
+      on your machine.
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>

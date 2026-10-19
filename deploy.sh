@@ -770,6 +770,14 @@ deploy_all() {
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"
   done
+  # The TIOS guide's subpages (/tios/war, /tios/lore). Until 2026-10-19 all
+  # three TIOS pages lived only in KV, hand-pushed, so no gate ever read them;
+  # tios.html now rides the top-level loop above.
+  for f in tios/*.html; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
   # SDK client downloads (/receipts quickstart step 1). Fetched via curl -o,
   # so the worker's text/html fallback MIME for .py is tolerable for now.
   for f in sdk/*.py; do
