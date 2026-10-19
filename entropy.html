@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Pulses are independently observed and Ed25519-cosigned by an external witness.">
+<meta name="description" content="A public beacon: one signed pulse every 2 s. Each value commits to the previous pulse, to the digest of a live plasma frame, and to fresh randomness promised one pulse early. Check it in your browser or with one Python script.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/entropy">
 <meta property="og:title" content="Entropy — Ledatic">
-<meta property="og:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Pulses are independently observed and Ed25519-cosigned by an external witness.">
+<meta property="og:description" content="A public beacon: one signed pulse every 2 s. Each value commits to the previous pulse, to the digest of a live plasma frame, and to fresh randomness promised one pulse early. Check it in your browser or with one Python script.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Entropy — Ledatic">
-<meta name="twitter:description" content="A public beacon pulsing every two seconds. Each pulse hashes the live plasma state into a chain you can walk in one shell line. Pulses are independently observed and Ed25519-cosigned by an external witness.">
+<meta name="twitter:description" content="A public beacon: one signed pulse every 2 s. Each value commits to the previous pulse, to the digest of a live plasma frame, and to fresh randomness promised one pulse early. Check it in your browser or with one Python script.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Entropy — Ledatic</title>
@@ -108,8 +108,8 @@
    caption would otherwise overlay a working render — restore the toggle */
 .mhd-empty[hidden] { display: none; }
 
-/* Witness receipt card */
-.witness-card {
+/* Witness receipt card, and the format 2 verifier panel beside it */
+.witness-card, .v2-card {
   background: var(--ink-2);
   box-shadow: var(--e1);
   border-radius: var(--r-0);
@@ -117,18 +117,20 @@
   font-family: var(--font-body);
   font-size: var(--t-data);
 }
-.witness-card dl {
+.witness-card dl, .v2-card dl {
   display: grid;
   grid-template-columns: 9.5rem 1fr;
   column-gap: var(--sp-4);
   row-gap: var(--sp-2);
   margin: var(--sp-4) 0 0;
 }
-.witness-card dt { color: var(--tx-dim); }
-.witness-card dd { margin: 0; overflow-wrap: anywhere; }
+.witness-card dt, .v2-card dt { color: var(--tx-dim); }
+.witness-card dd, .v2-card dd { margin: 0; overflow-wrap: anywhere; }
+.v2-card #v2-fails p { margin: var(--sp-2) 0 0; overflow-wrap: anywhere; }
+.v2-card .btn { margin-left: var(--sp-2); }
 @media (max-width: 560px) {
-  .witness-card dl { grid-template-columns: 1fr; row-gap: 0; }
-  .witness-card dd { margin-bottom: var(--sp-2); }
+  .witness-card dl, .v2-card dl { grid-template-columns: 1fr; row-gap: 0; }
+  .witness-card dd, .v2-card dd { margin-bottom: var(--sp-2); }
 }
 </style>
 </head>
@@ -184,13 +186,14 @@
     <h1 class="hero-title fade-up">Entropy</h1>
     <p class="hero-sub fade-up">
       A public beacon. A new pulse lands
-      <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every ~2 s</data>.
+      <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every 2 s</data>.
     </p>
     <p class="hero-desc fade-up">
-      Each pulse hashes the live plasma state into a chain anyone can
-      walk. Nothing on this page lights up unless a check passed in
-      your browser — and the verifier is one shell line you run
-      yourself.
+      Each pulse is a signed SHA-256 commitment to the pulse before it,
+      to a digest of the live plasma, and to fresh randomness promised
+      one pulse early. Nothing on this page lights up unless a check
+      passed in your browser, and the verifier is one Python script you
+      run yourself.
     </p>
     <div class="cta-row fade-up">
       <a class="btn btn-primary" href="#verify">How to verify</a>
@@ -202,7 +205,7 @@
       <span class="visor-value" data-live="entropy-pulse">&mdash;</span>
     </div>
     <p class="trust fade-up">
-      Emitted by one node &middot; observed and Ed25519-cosigned by an independent witness
+      Emitted and signed by one Ledatic node &middot; observed and Ed25519-signed by a witness machine Ledatic also runs
     </p>
     <p class="gloss fade-up">
       the band behind this text is a pulse-seeded rendering &mdash; decoration, not the beacon. the beacon is the numbers below.
@@ -215,12 +218,15 @@
     <span class="eyebrow reveal">What it is</span>
     <h2 class="reveal">A chain of physics-anchored pulses.</h2>
     <p class="lead reveal">
-      The Ledatic MHD solver advances one step
-      <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every ~2 s</data>.
-      The resulting plasma state is hashed, concatenated with the
-      previous pulse hash, and posted to a public store. Anyone can
-      walk the chain. One node produces it; an independent Ed25519
-      witness observes it and cosigns what it saw.
+      A new pulse lands
+      <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every 2 s</data>,
+      on even UTC seconds. Its value is the SHA-256 of a short canonical
+      message that names the previous pulse&rsquo;s value, the digest of
+      the newest plasma frame, and 32 random bytes the operator committed
+      to one pulse earlier; the operator signs that message with a
+      published Ed25519 key. Anyone can walk the chain. One Ledatic node
+      produces it; a second Ledatic machine, the witness, signs what it
+      sees. The format is written down at <a href="/entropy/spec">/entropy/spec</a>.
     </p>
 
     <div class="grid grid-3 reveal" style="margin-top: 2rem;">
@@ -231,13 +237,13 @@
       </div>
       <div class="card">
         <span class="eyebrow">Step 2</span>
-        <h3>Hash</h3>
-        <p>SHA-256 of the plasma state. Then SHA-256 of <code>prev_hash || state_hash</code>.</p>
+        <h3>Commit</h3>
+        <p>One canonical message names the previous value, the SHA-256 of the newest frame&rsquo;s 393,216 float32 bytes and where that frame sits in its seeded epoch, 32 fresh random bytes, and the SHA-256 of the next pulse&rsquo;s random bytes. The value is the SHA-256 of that message, and the operator&rsquo;s Ed25519 key signs it.</p>
       </div>
       <div class="card">
         <span class="eyebrow">Step 3</span>
         <h3>Publish</h3>
-        <p>Published as a new pulse to a public store at the edge. Visible to the world on this page.</p>
+        <p>Served by the Ledatic origin through a Cloudflare tunnel; the edge passes each pulse request through uncached. Visible to the world on this page.</p>
       </div>
     </div>
   </div>
@@ -246,15 +252,25 @@
 <section class="section" id="source">
   <div class="wrap">
     <span class="eyebrow reveal">The source</span>
-    <h2 class="reveal">See what&rsquo;s being hashed.</h2>
+    <h2 class="reveal">See the plasma a pulse commits to.</h2>
     <p class="body reveal" style="max-width: 52rem;">
       An Orszag-Tang vortex on a 128&sup2; periodic grid. Ideal-MHD,
       Lax-Friedrichs, conservation to machine precision
       (&Delta;m/m &lt; 10<sup>-15</sup>, &Delta;E/E &lt; 10<sup>-15</sup>,
-      &nabla;&middot;B at 10<sup>-15</sup> by construction). The frame
-      below is the same frame that gets SHA-256&rsquo;d into the chain.
-      Plasma is chaotic &mdash; small perturbations blow up fast &mdash;
-      which is exactly the property an honest entropy beacon needs.
+      &nabla;&middot;B at 10<sup>-15</sup> by construction). A pulse does
+      not hash a picture. It commits to <code>frame.digest</code>, the
+      SHA-256 of the 393,216 float32 bytes the solver wrote for that
+      frame, and names <code>frame.epoch_seed</code> and
+      <code>frame.epoch_frame</code>, so anyone can replay the epoch from
+      its seed with
+      <a href="https://github.com/Ledatic-Empire/rail/blob/master/tools/plasma/mhd_verify_epoch.rail" rel="noopener"><code>tools/plasma/mhd_verify_epoch.rail</code></a>
+      and compare digests (replaying frame <var>k</var> takes
+      <var>k</var>+1 frames; <a href="/entropy/spec#verify">how</a>).
+      The panel below draws a published frame file for looking at; it is
+      not the bytes a pulse hashes, so do not check a digest against it.
+      The solver is deterministic, which is what makes it replayable: a
+      pulse&rsquo;s unpredictability comes from its precommitted random
+      bytes, not from the plasma.
     </p>
 
     <div class="mhd-viewport reveal" style="margin-top: 2rem;">
@@ -299,7 +315,10 @@
       &mdash; press it and the proof runs here, in your tab. It checks the
       witness signature over the frame's digest; the solver-state bytes
       themselves aren't published, so the tray will say so rather than
-      pretend it re-hashed them.
+      pretend it re-hashed them. That record signs the digest of the
+      solver&rsquo;s 589,888-byte state file, a different byte string
+      from the 393,216 bytes behind a pulse&rsquo;s
+      <code>frame.digest</code>, so the two digests differ by design.
     </p>
   </div>
 </section>
@@ -330,14 +349,18 @@
 <section class="section" id="witness">
   <div class="wrap">
     <span class="eyebrow reveal">Witness</span>
-    <h2 class="reveal">Independently observed.</h2>
+    <h2 class="reveal">Observed by a second machine.</h2>
     <p class="body reveal" style="max-width: 52rem;">
-      A second machine on separate hardware polls the same public
-      chain, checks each link it sees, and signs a receipt &mdash;
-      pulse id, value, and the moment it watched &mdash; with its own
-      Ed25519 key. The latest receipt is republished below, and its
-      signature is re-checked in your browser against a key pinned in
-      this site&rsquo;s source.
+      The witness is a separate machine, and Ledatic runs it too. It
+      polls the public chain and signs what it sees (pulse id, value,
+      and the moment it watched) with its own Ed25519 key. It does not
+      yet check links: it does not sign <code>prev_value_hex</code>, and
+      its receipts carry <code>chain_verified: null</code>. Because one
+      party runs both machines, a receipt shows that a value was public
+      by a given moment, not that anyone outside Ledatic saw it. The
+      latest receipt is republished below; the site&rsquo;s edge refuses
+      any receipt whose signature does not verify, and your browser
+      re-checks it against a key pinned in this site&rsquo;s source.
     </p>
 
     <div class="witness-card reveal" id="witness-card" style="margin-top: 2rem;">
@@ -367,8 +390,51 @@
       it. Each pulse carries the previous pulse&rsquo;s hash in
       <code>prev_value_hex</code>; the chain check is pure arithmetic
       on public JSON. Pin the witness key once, and every receipt
-      after that is checkable too.
+      after that is checkable too. Format 2 pulses also carry a
+      signature and a precommitment; the panel below checks all four
+      in this tab, against the operator key pinned in this site&rsquo;s
+      source.
     </p>
+
+    <div class="v2-card reveal" id="v2-check" style="margin-top: 2rem;">
+      <span id="v2-state" data-state="unknown"></span>
+      <p id="v2-sum" class="check-info" style="margin: 1rem 0 0;">not checked yet: this panel runs in your browser</p>
+      <dl>
+        <dt>Pulses</dt><dd id="v2-pulses">not checked</dd>
+        <dt>Hashes</dt><dd id="v2-hash">not checked</dd>
+        <dt>Signatures</dt><dd id="v2-sig">not checked</dd>
+        <dt>Links</dt><dd id="v2-link">not checked</dd>
+        <dt>Precommitments</dt><dd id="v2-pre">not checked</dd>
+        <dt>Operator key</dt><dd id="v2-key">not checked</dd>
+      </dl>
+      <div id="v2-fails"></div>
+      <p class="gloss" style="margin: 1rem 0 0;">
+        reads <a href="/entropy/pulse/log">/entropy/pulse/log</a> and
+        <a href="/entropy/v2/key">/entropy/v2/key</a>; the four checks are
+        those of <a href="/entropy/verify_v2.py">verify_v2.py</a>, specified at
+        <a href="/entropy/spec">/entropy/spec</a>.
+        <button class="btn btn-ghost" id="v2-rerun" type="button" hidden>Check again</button>
+      </p>
+      <noscript><p class="gloss">With JavaScript off nothing is checked here; the Python verifier below runs the same checks.</p></noscript>
+    </div>
+
+    <div class="card reveal" style="margin-top: 2rem;">
+      <span class="eyebrow">Python</span>
+      <h3>Check hashes, signatures, links and precommitments</h3>
+      <pre class="mono" style="overflow-x: auto; margin-top: 1rem; font-size: 0.85rem; line-height: 1.6;"><code>curl -sO https://ledatic.org/entropy/verify_v2.py
+python3 verify_v2.py --url https://ledatic.org</code></pre>
+      <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--tx-lo);">
+        Fetches the operator key from <code>/entropy/v2/key</code> and the
+        newest 50 pulses, rebuilds each canonical message and checks its
+        SHA-256, its Ed25519 signature, its link to the pulse before, and
+        its precommitment. It needs only stock Python 3.8 or newer: it uses
+        the <code>cryptography</code> package when one is installed and
+        falls back to the RFC 8032 reference arithmetic when not. It prints
+        <code>VERDICT=PASS</code> and exits 0 only when every check held.
+        Compare the key&rsquo;s fingerprint it prints with
+        <code>5780ca472c3db50d</code>, pinned here.
+      </p>
+    </div>
 
     <div class="card reveal" style="margin-top: 2rem;">
       <span class="eyebrow">Shell</span>
@@ -404,15 +470,26 @@
 
     <p class="body reveal">
       This is a chain, and the chain holds: every pulse names its
-      predecessor, the links verify, and the one-line check above is the
-      whole proof. What the chain does not give you is unpredictability,
-      and it is worth being exact about that rather than letting the word
-      &ldquo;entropy&rdquo; do work it has not earned.
+      predecessor, the links verify, and the checks above are the whole
+      proof. What it gives you about unpredictability is narrower than the
+      word &ldquo;entropy&rdquo; suggests, and it is worth being exact
+      about that rather than letting the word do work it has not earned.
+      A format 2 value mixes 32 fresh random bytes committed one pulse
+      early, so nobody outside Ledatic can compute it before it is
+      published. It is not unpredictable to Ledatic: the operator
+      generates those bytes and can see its own next value, it can
+      withhold a pulse, and the witness is run by the same party.
     </p>
 
     <p class="body reveal">
-      Each value is the SHA-256 of one simulation frame. Identical frames
-      therefore produce identical values, and the plasma does revisit
+      Format 2 was built on 2026-10-18 and has signed the live chain
+      since CUTOVER_DATE. The measurements below are of format 1, the
+      pulses before it, and stay here as its record.
+    </p>
+
+    <p class="body reveal">
+      Each format 1 value was the SHA-256 of one simulation frame. Identical frames
+      therefore produced identical values, and the plasma does revisit
       states. Measured on 2026-08-28 across 162,082 consecutive archived
       pulses: <strong>96.96% of values were unique</strong>, 233 distinct
       values recurred, and <strong>3.04% of pulses repeated a value that
@@ -424,9 +501,9 @@
     </p>
 
     <p class="body reveal">
-      So an observer who records a few hours of this feed can expect to see
-      some values again. That rules the beacon out as a source of
-      unpredictable randomness, and we would rather say so here than have
+      So an observer who recorded a few hours of the format 1 feed could
+      expect to see some values again. That ruled format 1 out as a source
+      of unpredictable randomness, and we would rather say so here than have
       you discover it. It does not affect the two things the chain is
       actually used for: the links still detect tampering, and release
       attestations bind through <code>pulse_id</code>, which is unique and
@@ -453,7 +530,8 @@ done | sort | uniq -d</code></pre>
         few thousand consecutive pulses from
         <code>/entropy/pulse/&lt;id&gt;</code> and count duplicate
         <code>value_hex</code>. That is exactly how the figures above were
-        produced.
+        produced. Over format 2 pulses the count should be zero; a repeat
+        there is a failure worth reporting to hello@ledatic.org.
       </p>
     </div>
   </div>
@@ -506,6 +584,7 @@ done | sort | uniq -d</code></pre>
    it. Every lit state below is SET by a check, never authored (§4). */
 import { pulseBus as bus, fmtPulse, groupHex } from './_shared/pulse-clock.js';
 import { PINNED_KEYS, sentinel, mountSelfCheck } from './_shared/proof-tray.js';
+import { BEACON_V2_PIN, loadDer, loadKey, verify as verifyV2, passed } from './_shared/beacon-verify.js';
 
 const $ = (s, r) => (r || document).querySelector(s);
 const enc = new TextEncoder();
@@ -926,7 +1005,7 @@ const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.dige
       out.link.textContent = '✗ the witness observed a chain break';
       out.link.className = 'check-fail';
     } else {
-      out.link.textContent = 'not checkable for this receipt (non-adjacent observation)';
+      out.link.textContent = 'not checked: the witness does not check links yet (chain_verified is null)';
       out.link.className = 'check-info';
     }
 
@@ -961,6 +1040,113 @@ const sha256hex = async (bytes) => hexOf(new Uint8Array(await crypto.subtle.dige
       chip.set('fail', { note: 'witness signature' });
     }
   });
+})();
+
+/* Format 2 verifier: the public log, checked in this tab with the same
+   four checks as verify_v2.py (beacon-verify.js is its port), against the
+   operator key PINNED in that module. /entropy/v2/key is fetched only to
+   show it serves the pinned key. A count lights only for checks that ran
+   and passed; red only for a real failure. */
+(function beaconV2() {
+  const chipEl = $('#v2-state');
+  if (!chipEl) return;
+  const chip = sentinel(chipEl, { freshPulses: 60 });
+  chip.set('unknown');
+  const out = {
+    sum: $('#v2-sum'), pulses: $('#v2-pulses'), hash: $('#v2-hash'), sig: $('#v2-sig'),
+    link: $('#v2-link'), pre: $('#v2-pre'), key: $('#v2-key'), fails: $('#v2-fails'),
+  };
+  const btn = $('#v2-rerun');
+  const say = (el, text, state) => { el.textContent = text; el.className = 'check-' + (state || 'info'); };
+  const plural = (k, one, many) => k + ' ' + (k === 1 ? one : many);
+
+  async function run() {
+    if (btn) btn.hidden = true;
+    say(out.sum, 'checking in this tab…');
+    out.fails.textContent = '';
+    let pinned;
+    try { pinned = await loadDer(b64(BEACON_V2_PIN.spki_b64)); }
+    catch { say(out.sum, 'the pinned key in this page is unreadable: nothing was checked', 'fail'); chip.set('fail', { note: 'pinned key' }); return; }
+
+    let log;
+    try {
+      const r = await fetch('/entropy/pulse/log', { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      log = await r.json();
+      if (!Array.isArray(log) || !log.length) throw new Error('empty log');
+    } catch (e) {
+      say(out.sum, 'could not read /entropy/pulse/log (' + String((e && e.message) || e) + '): nothing was checked');
+      chip.set('paused', { note: 'nothing checked' });
+      if (btn) btn.hidden = false;
+      return;
+    }
+
+    let keyFail = false;
+    try {
+      const r = await fetch(BEACON_V2_PIN.pem_url, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const served = await loadKey(await r.text());
+      if (served.keyId === pinned.keyId) {
+        say(out.key, '✓ ' + groupHex(pinned.keyId) + ': /entropy/v2/key serves the key pinned in this page', 'ok');
+      } else {
+        keyFail = true;
+        say(out.key, '✗ /entropy/v2/key serves ' + groupHex(served.keyId) + ', NOT the pinned ' + groupHex(pinned.keyId), 'fail');
+      }
+    } catch (e) {
+      say(out.key, groupHex(pinned.keyId) + ' pinned in this page; /entropy/v2/key unavailable (' + String((e && e.message) || e) + '), so the pin alone is used');
+    }
+
+    const { n, fails } = await verifyV2(log, pinned.check, pinned.keyId);
+    const ok = passed(n, fails);
+    const bad = {};
+    for (const [kind] of fails) bad[kind] = (bad[kind] || 0) + 1;
+
+    say(out.pulses, n.pulses + ' in the log: ' + n.v2 + ' format 2'
+      + (n.v1 ? ', ' + n.v1 + ' format 1 (chain link only)' : '')
+      + (n.gaps_in_input ? '; ' + plural(n.gaps_in_input, 'gap', 'gaps') + ' in the log, not checkable across' : ''));
+    if (!n.v2) say(out.hash, 'no format 2 pulses in this log');
+    else if (bad.hash) say(out.hash, '✗ ' + bad.hash + ' of ' + n.v2 + ' do NOT recompute to value_hex', 'fail');
+    else say(out.hash, '✓ ' + ok.hashes + ' of ' + n.v2 + ' canonical messages hash to value_hex', 'ok');
+    if (!n.v2) say(out.sig, 'no format 2 pulses in this log');
+    else if (!pinned.check) say(out.sig, 'this browser cannot check Ed25519: ' + n.sig_unchecked + ' signatures shown, not checked');
+    else if (bad.signature) say(out.sig, '✗ ' + bad.signature + ' of ' + n.v2 + ' do NOT verify against the pinned key', 'fail');
+    else say(out.sig, '✓ ' + ok.signatures + ' of ' + n.v2 + ' Ed25519 signatures verify against the pinned key', 'ok');
+    if (!n.links) say(out.link, 'no adjacent pulses to check');
+    else if (bad.link) say(out.link, '✗ ' + bad.link + ' of ' + n.links + ' prev_value_hex links are broken', 'fail');
+    else say(out.link, '✓ ' + ok.links + ' of ' + n.links + ' prev_value_hex links match', 'ok');
+    const unc = n.uncommitted ? '; ' + plural(n.uncommitted, 'pulse', 'pulses') + ' marked UNCOMMITTED (status value 16), not checked' : '';
+    if (!n.precommits) say(out.pre, 'none to check' + unc);
+    else if (bad.precommit) say(out.pre, '✗ ' + bad.precommit + ' of ' + n.precommits + ' local_random values do NOT match the previous precommit_hex' + unc, 'fail');
+    else say(out.pre, '✓ ' + ok.precommits + ' of ' + n.precommits + ' local_random values match the previous precommit_hex' + unc, 'ok');
+
+    for (const kind of Object.keys(bad)) {
+      const first = fails.find((f) => f[0] === kind);
+      const p = document.createElement('p');
+      p.className = 'check-fail';
+      p.textContent = '✗ ' + kind + ': ' + plural(bad[kind], 'pulse', 'pulses') + ', first #' + fmtPulse(first[1]) + ': ' + first[2];
+      out.fails.appendChild(p);
+    }
+
+    const parts = [ok.hashes + ' hashes'];
+    if (pinned.check) parts.push(ok.signatures + ' signatures');
+    parts.push(ok.links + ' links', ok.precommits + ' precommitments');
+    const newest = log.reduce((m, r) => (Number(r.pulse_id) > m ? Number(r.pulse_id) : m), 0);
+    if (fails.length || keyFail) {
+      say(out.sum, n.pulses + ' pulses: ' + plural(fails.length + (keyFail ? 1 : 0), 'check', 'checks') + ' FAILED in your browser; '
+        + parts.join(', ') + ' verified', 'fail');
+      chip.set('fail', { note: keyFail ? 'operator key' : fails[0][0] });
+    } else {
+      say(out.sum, n.pulses + ' pulses: ' + parts.join(', ') + ' verified in your browser'
+        + (n.v1 ? '; ' + n.v1 + ' format 1, chain link only' : '')
+        + (pinned.check ? '' : '; this browser cannot check Ed25519'), n.v2 && pinned.check ? 'ok' : 'info');
+      chip.feed(newest);
+      if (n.v2 && pinned.check) chip.verified();         /* the bloom is earned */
+    }
+    if (btn) btn.hidden = false;
+  }
+
+  if (btn) btn.addEventListener('click', run);
+  run();
 })();
 
 /* ── Footer self-check vs the signed deploy manifest (§5.4) ── */
