@@ -23,6 +23,7 @@
         "maxAmountRequired": "199000000",
         "payTo": "0x0129b9e66C449b4c7027F07A7b8811BBf6fb3301",
         "attestation": "ed25519",
+        "status": "not serving yet (the endpoint returns 404); buy by email",
         "content_sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
         "witness_pulse": 2641877,
         "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff"
@@ -48,6 +49,7 @@
         "maxAmountRequired": "499000000",
         "payTo": "0x0129b9e66C449b4c7027F07A7b8811BBf6fb3301",
         "attestation": "ed25519",
+        "status": "not serving yet (the endpoint returns 404); buy by email",
         "content_sha256": "92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63",
         "witness_pulse": 2516402
       }
@@ -57,5 +59,5 @@
     "human": "stripe \u2014 see each dataset's buy_url",
     "agent": "x402 \u2014 see each dataset's x402.endpoint (per-request USDC, response is Ed25519-signed and verifiable against download_sha256 / content_sha256)"
   },
-  "agents_note": "Machine buyers: GET this catalog, pick a dataset, pay its x402.endpoint (HTTP 402 -> stablecoin), receive the file + an Ed25519 attestation header. Verify the download against download_sha256 and the content against content_sha256. No account, no API key."
+  "agents_note": "Machine buyers: the x402 endpoints are not serving yet and return 404. To buy, email hello@ledatic.org with the dataset name; delivery is by email within 24 h. Each dataset page shows how to verify the free sample first."
 }

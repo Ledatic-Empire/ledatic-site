@@ -76,7 +76,7 @@ html_wrap() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} — Rail Docs</title>
+<title>${title} · Rail Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -169,7 +169,7 @@ done
 {
   cat <<HTML
 <h1>Rail Examples</h1>
-<p>Twenty-two runnable programs, each verified end-to-end. Pick one and read the source — that is the fastest way to learn Rail.</p>
+<p>Twenty-two programs, each with its source and captured output. Pick one and read the source: that is the fastest way to learn Rail.</p>
 <ul>
 HTML
   for md in "$SRC"/examples/*.md; do

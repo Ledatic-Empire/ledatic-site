@@ -24,7 +24,7 @@
    element definitions are guarded.
    ============================================================ */
 
-export const CADENCE_MS = 2000;          // beacon publishes every ~2 s
+export const CADENCE_MS = 2000;          // beacon publishes every 2 s
 const SAVE_DATA_MS = 30000;              // §3.5 — Save-Data is an equal citizen
 const FETCH_TIMEOUT_MS = 3500;           // abort hung requests: silence ≠ success
 const DEFAULT_ENDPOINT = '/entropy/pulse';

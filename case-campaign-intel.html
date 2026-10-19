@@ -7,7 +7,7 @@
 <!-- og:start -->
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ledatic.org/case-campaign-intel">
-<meta property="og:title" content="Notes from a campaign-intelligence POC — Ledatic">
+<meta property="og:title" content="Notes from a campaign-intelligence POC · Ledatic">
 <meta property="og:description" content="A 30-day POC, closed 2026-05-12. Three briefs a week, each attested against a live physics beacon, local inference on our hardware.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
@@ -18,7 +18,7 @@
 <meta name="twitter:description" content="A 30-day POC, closed 2026-05-12. Three briefs a week, each attested against a live beacon, local inference on our hardware.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Notes from a campaign-intelligence POC — Ledatic</title>
+<title>Notes from a campaign-intelligence POC · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/case-campaign-intel">
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
@@ -158,7 +158,7 @@
     <p class="hero-desc">
       An honest write-up of a campaign-intelligence engagement that ran
       April 13 &ndash; May 12, 2026. Apr 13 kickoff, Mon/Wed/Fri briefs,
-      19-page handoff on day 30. Here's the shape, what we shipped, and
+      19-page handoff in the final week. Here's the shape, what we shipped, and
       what we learned doing it.
     </p>
   </div>
@@ -174,7 +174,7 @@
         <div class="row"><span class="lab">Cadence</span><span class="val">Mon &middot; Wed &middot; Fri</span></div>
         <div class="row"><span class="lab">Compute</span><span class="val">Local, on our hardware</span></div>
         <div class="row"><span class="lab">Attestation</span><span class="val ok">every brief signed against pulse_id</span></div>
-        <div class="row"><span class="lab">Handoff</span><span class="val">19-page closing doc on day 30, plus a live Q&amp;A engine over the corpus as leave-behind</span></div>
+        <div class="row"><span class="lab">Handoff</span><span class="val">19-page closing doc in the final week, plus a Q&amp;A engine over the corpus as leave-behind (kept live through 2026-05-13)</span></div>
       </div>
 
       <h2 class="reveal">What we did</h2>
@@ -215,15 +215,16 @@
 
       <h2 class="reveal">How it actually ran</h2>
       <p class="reveal">
-        The pipeline lived on hardware we own. There were no public endpoints
-        reachable from the open internet; everything stayed on a private fabric.
+        The pipeline lived on hardware we own and had no public endpoints. The
+        one internet-facing piece was the leave-behind Q&amp;A portal, token-gated
+        behind our site.
         Briefs were delivered to a private channel. The client's source
         material never crossed our wire to a third-party model.
       </p>
       <p class="reveal">
         Every brief was bound to a <code>pulse_id</code> from our live plasma
         physics beacon at the moment of delivery, signed by an Ed25519 key
-        held on independent witness hardware at our edge. Months from now
+        held on separate witness hardware at our edge. Months from now
         the client can re-derive the digest, fetch the
         <a href="/attest/fleet0.pub.pem">witness public key</a>, and
         verify the signature with the same one-liner we publish on every

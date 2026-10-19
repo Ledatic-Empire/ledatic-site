@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. under a megabyte that does the whole job.">
+<meta name="description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm, and a seed binary of about a megabyte that does most of the job.">
 <link rel="canonical" href="https://ledatic.org/manifesto">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/manifesto">
-<meta property="og:title" content="Manifesto — Ledatic">
-<meta property="og:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. under a megabyte that does the whole job.">
+<meta property="og:title" content="Manifesto · Ledatic">
+<meta property="og:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm, and a seed binary of about a megabyte that does most of the job.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Manifesto — Ledatic">
-<meta name="twitter:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm. No invisible runtime. under a megabyte that does the whole job.">
+<meta name="twitter:title" content="Manifesto · Ledatic">
+<meta name="twitter:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm, and a seed binary of about a megabyte that does most of the job.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Manifesto — Ledatic</title>
+<title>Manifesto · Ledatic</title>
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="stylesheet" href="_shared/tokens.css">
@@ -120,11 +120,11 @@
       </p>
 
       <p class="body reveal">
-        The second is harder to defend. It says that everything else in
-        this stack &mdash; the TLS handshake, the plasma sim, the site you're
-        reading &mdash; is answerable to physics. Not to npm, not to
-        dependencies you can't audit, not to a runtime that might change
-        under you. When a primitive runs, it runs on transistors you can
+        The second is harder to defend. It says that most of this stack
+        (the TLS handshake, the plasma sim, the compiler that builds them)
+        is answerable to physics. Not to npm, not to dependencies you can't
+        audit. Where we still lean on someone else's runtime, we say so:
+        a Cloudflare Worker serves this page, and Python signs the pulses. When a primitive runs, it runs on transistors you can
         point at. The distance between the source and the silicon is
         short and legible.
       </p>
@@ -141,9 +141,9 @@
       <p class="body reveal">
         What's left, in our case, is: a <data class="fig" data-src="repo:rail_native" data-fmt="mb" value="908360" data-pulse="2941323">0.9 MB</data> binary that speaks
         TLS 1.3, verifies X.509 chains, runs a 2D magnetohydrodynamics
-        simulation, trains a small transformer, and generates this
-        webpage. Written in a language that compiles itself. Zero C
-        dependencies. Zero invisible runtime.
+        simulation, trains a small transformer, and serves the beacon's
+        pulses. Written in a language that compiles itself, and linking
+        nothing beyond the system library.
       </p>
 
       <p class="body reveal">
@@ -158,9 +158,11 @@
       <span class="chain-link" aria-hidden="true"></span>
       <p class="body reveal">
         And that ownership buys something rented stacks can't: a
-        tamper-evident seal on what the machine produces. An independent
-        witness signs it, anchored to a public physics process nobody
-        controls. Change one byte and the seal breaks. We did this for a
+        tamper-evident seal on what the machine produces. A witness on
+        separate hardware signs it, anchored to a public, hash-chained
+        physics beacon. Today that witness is a Raspberry Pi we run;
+        witnesses we don't run are the planned fix. Change one byte and
+        the seal breaks. We did this for a
         real AI model's output &mdash; ran it in our own language, exact
         to the bit, and signed the result so anyone could check it from
         raw bytes, with no shared code.
@@ -169,8 +171,9 @@
       <p class="body reveal">
         We don't claim the answer is always right. We claim something
         narrower and harder to beat: an undetected lie would cost a
-        conspiracy. To fake a sealed output without getting caught, you'd
-        have to corrupt independent witnesses at the same moment.
+        conspiracy. Today, faking a sealed output means forging records
+        that one witness, run by us, already signed. Outside witnesses are
+        what will make it cost a conspiracy.
       </p>
 
       <hr>
@@ -179,9 +182,9 @@
       <p class="body reveal">
         Here is the long bet, counted backwards from 2040. The entropy
         beacon signs a pulse <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every 2 s</data>, each one chained
-        to the last. Kept unbroken, that is roughly 220 million pulses
-        by 2040 &mdash; a record no one can retro-fabricate, because every
-        link commits to the one before it. You cannot buy a backlog of
+        to the last. Kept going, that is roughly 220 million pulses
+        by 2040, and since pulse format 2 every link commits to the one
+        before it, so rewriting one pulse rewrites every pulse after it. You cannot buy a backlog of
         time. It has to start somewhere, and it started here.
       </p>
 

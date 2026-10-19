@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point — every claim cites the public endpoint it reads, and the proofs run in your browser.">
+<meta name="description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point: every claim cites the public endpoint it reads, and the proofs run in your browser.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/system">
-<meta property="og:title" content="System — Ledatic">
-<meta property="og:description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point — every claim cites the public endpoint it reads, and the proofs run in your browser.">
+<meta property="og:title" content="System · Ledatic">
+<meta property="og:description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point: every claim cites the public endpoint it reads, and the proofs run in your browser.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="System — Ledatic">
-<meta name="twitter:description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point — every claim cites the public endpoint it reads, and the proofs run in your browser.">
+<meta name="twitter:title" content="System · Ledatic">
+<meta name="twitter:description" content="Mission control. Beacon pulse, witness chain head, signed fleet snapshot, last attested build and self-host fixed point: every claim cites the public endpoint it reads, and the proofs run in your browser.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <link rel="canonical" href="https://ledatic.org/system">
-<title>System &mdash; Ledatic</title>
+<title>System · Ledatic</title>
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="stylesheet" href="_shared/tokens.css">
@@ -140,7 +140,8 @@
     <h1 class="hero-title">System</h1>
     <p class="lead">Bound to physical time.</p>
     <p class="body">
-      Nothing on this page is a deploy snapshot. Each panel cites the public
+      Nothing in these panels is a deploy snapshot (only the footer's figures
+      are stamped at deploy). Each panel cites the public
       endpoint it reads, ages are denominated in pulses of the entropy beacon
       (wall clock is the italic translation), and a chip only says a surface
       is alive after this page has actually confirmed it. If a surface cannot
@@ -184,7 +185,7 @@
         <div class="k">pk_fp</div>          <div class="v dim"><code data-kv="witness.pkfp">&hellip;</code></div>
         <div class="k">witnessed</div>      <div class="v dim" data-kv="witness.ts">&hellip;</div>
       </div>
-      <p class="prove-row gloss">An independent edge node co-signs the beacon chain as it grows. The fields above are its own latest record, shown raw.</p>
+      <p class="prove-row gloss">A witness on separate hardware (a Raspberry Pi that Ledatic runs) signs <code>pulse_id|value_hex|witnessed_at</code> for each pulse it sees; it does not check the links yet. The fields above are its own latest record, shown raw.</p>
       <div class="links">
         <a href="/witness/fleet0/latest">/witness/fleet0/latest</a>
         <span class="sep">&middot;</span>

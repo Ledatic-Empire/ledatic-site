@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>m4_uart_hello — "Hi!" over UART on Cortex-M4 — Rail Docs</title>
+<title>m4_uart_hello — "Hi!" over UART on Cortex-M4 · Rail Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -98,7 +98,7 @@ Compiling examples/m4_uart_hello.rail -&gt; Cortex-M4 (Thumb-2)...
   ld: OK -&gt; /tmp/rail_m4.elf
 </code></pre>
 <p>
-The <code>1084 chars</code> of assembly are the entire program — a startup vector, the four MMIO writes, and an infinite-loop epilogue. Run in qemu with <code>tools/garmin/m4_qemu.sh</code> to see <code>Hi!</code> on the serial console.
+The <code>1084 chars</code> of assembly are the entire program: a startup vector, the four MMIO writes, and an infinite-loop epilogue. Run it in qemu with <code>qemu-system-arm -M mps2-an386 -nographic -kernel /tmp/rail_m4.elf</code> (see backends.md) to see <code>Hi!</code> on the serial console.
 </p>
 </main>
 <div class="docfooter">

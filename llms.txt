@@ -10,7 +10,7 @@ LEDATIC is a software company in Detroit, MI. It makes Fieldcraft, a front-desk 
 
 2. **[Entropy](https://ledatic.org/entropy)**: the beacon. One signed pulse every 2 s (pulse format 2, specified at [/entropy/spec](https://ledatic.org/entropy/spec)). Each value is the SHA-256 of a canonical message naming the previous value, the SHA-256 of a frame of a live 2D ideal-MHD Orszag-Tang simulation on a 128x128 grid (replayable from its seed), and 32 fresh random bytes committed one pulse earlier; the operator signs it with Ed25519. Unpredictable to outsiders until published, not to Ledatic, which generates the randomness. Check it in the browser on the page or with [/entropy/verify_v2.py](https://ledatic.org/entropy/verify_v2.py). The plasma viewer on the page draws a published frame file for looking at; it is not the bytes a pulse hashes.
 
-3. **[Verify](https://ledatic.org/verify)**: the demo. Drop any artifact and its signed record; the browser re-hashes the bytes and checks the Ed25519 signature against a pinned witness key (`pk_fp cac5f21a70564aeb`, a separate machine that Ledatic runs) and the beacon pulse it was anchored to. A sample triad includes one deliberately sabotaged record that fails on purpose. The whole verifier chain (beacon + witness + browser-side Ed25519) is original. The earlier PURSUE UAP mirror at [/aliens](https://ledatic.org/aliens) is a dated snapshot (219 records, May 2026), kept as a replay.
+3. **[Verify](https://ledatic.org/verify)**: the demo. Drop any artifact and its signed record; the browser re-hashes the bytes and checks the Ed25519 signature against a pinned witness key (`pk_fp cac5f21a70564aeb`, a separate machine that Ledatic runs) and the beacon pulse it was anchored to. A sample triad includes one deliberately sabotaged record that fails on purpose. The beacon, the witness and the in-browser checks are Ledatic's own code; the Ed25519 math in the browser is the browser's own WebCrypto. The earlier PURSUE UAP mirror at [/aliens](https://ledatic.org/aliens) is a dated snapshot (219 records, May 2026), kept as a replay.
 
 4. **[System](https://ledatic.org/system)** — mission control. Five live panels — beacon, witness, fleet, build, self-host. Every cell is a current value fetched from a signed JSON artifact at page load. If any of it's stale, this page shows it.
 
@@ -26,10 +26,10 @@ Where the verifiable layer extends next: hardware-rooted, human-bound, time-anch
 
 ## Attestation primitive
 
-Release binaries, test passes, fleet snapshots and client deliverables are signed against a live entropy pulse by a Pi-hosted Ed25519 witness key (`pk_fp = cac5f21a70564aeb`); every beacon pulse is signed by the beacon key and commits to the digest of a plasma frame. Anyone can check any of these signatures, on any future date, with the published keys. Ledatic runs the witness as well as the beacon, so a check proves what was signed and when, not that anyone outside Ledatic saw it. The verifier itself is 143 lines of Rail.
+Release binaries, test passes, fleet snapshots and client deliverables are signed against a live entropy pulse by a Pi-hosted Ed25519 witness key (`pk_fp = cac5f21a70564aeb`); every beacon pulse is signed by the beacon key and commits to the digest of a plasma frame. Anyone can check any of these signatures, on any future date, with the published keys. Ledatic runs the witness as well as the beacon, so a check proves what was signed and when, not that anyone outside Ledatic saw it. The offline verifier is `attest/verify.sh` (bash, python3 and OpenSSL 3); `tools/attest/verify.rail` is its Rail counterpart.
 
 - [Verifier source](https://ledatic.org/attest/verify.sh) + [public key](https://ledatic.org/attest/fleet0.pub.pem) — published on every release
-- [Changelog](https://ledatic.org/changelog) — every tagged release, each with an attestation badge
+- [Changelog](https://ledatic.org/changelog) — every tagged release; all but v0.6.0 carry an attestation badge
 
 ## Work
 

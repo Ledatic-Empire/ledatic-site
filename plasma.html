@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Live 2D ideal MHD — an Orszag-Tang vortex on a periodic grid, running in Rail. The solver drives the public entropy beacon; mass and energy drift are read live from signed frame headers and verifiable in your browser.">
+<meta name="description" content="Live 2D ideal MHD: an Orszag-Tang vortex on a periodic grid, running in Rail. The solver drives the public entropy beacon, and each pulse names the exact frame it hashed and the seed that replays it.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/plasma">
-<meta property="og:title" content="Plasma — Ledatic">
-<meta property="og:description" content="Live 2D ideal MHD — an Orszag-Tang vortex on a periodic grid, running in Rail. The solver drives the public entropy beacon; mass and energy drift are read live from signed frame headers and verifiable in your browser.">
+<meta property="og:title" content="Plasma · Ledatic">
+<meta property="og:description" content="Live 2D ideal MHD: an Orszag-Tang vortex on a periodic grid, running in Rail. The solver drives the public entropy beacon, and each pulse names the exact frame it hashed and the seed that replays it.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Plasma — Ledatic">
-<meta name="twitter:description" content="Live 2D ideal MHD — an Orszag-Tang vortex on a periodic grid, running in Rail. Conservation is read live from signed frame headers, verifiable in your browser.">
+<meta name="twitter:title" content="Plasma · Ledatic">
+<meta name="twitter:description" content="Live 2D ideal MHD: an Orszag-Tang vortex on a periodic grid, running in Rail. Each beacon pulse names the frame it hashed and the seed that replays it.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Plasma — Ledatic</title>
+<title>Plasma · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/plasma">
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
@@ -98,9 +98,9 @@
     <p class="hero-desc fade-up">
       A 128&times;128 ideal-MHD solver, running continuously.
       Orszag-Tang initial conditions on a 2&pi; periodic domain.
-      It drives the public entropy beacon &mdash; and its conservation
-      numbers are not asserted in copy, they are read off the signed
-      frame header below, where you can check the signature yourself.
+      It drives the public entropy beacon: every pulse names the frame it
+      hashed and the seed that frame replays from, so the physics behind a
+      pulse can be recomputed by anyone with the solver.
     </p>
     <div class="cta-row fade-up">
       <a class="btn btn-primary" href="#field">Watch the field &darr;</a>
@@ -111,7 +111,7 @@
       <span class="visor-value">128 <span class="dim">&times;</span> 128</span>
     </div>
     <p class="trust fade-up">
-      Lax-Friedrichs &middot; &Delta;m/m and &Delta;E/E measured from signed frame headers
+      Lax-Friedrichs &middot; &Delta;m/m and &Delta;E/E read from the frame header the solver writes
     </p>
   </div>
 </section>
@@ -156,7 +156,7 @@
       The canonical 2D MHD test. Smooth initial conditions evolve into
       turbulent small-scale structure with sharp shock fronts.
       Mass and energy drift are measured against their step-zero anchors
-      every step and shipped in each frame's header &mdash; the readouts on the
+      every 40 steps and written into each frame's header; the readouts on the
       viewport are parsed from those bytes in your browser, never typed by us.
     </p>
 
@@ -189,15 +189,14 @@
       </div>
     </div>
     <p class="body reveal" style="margin-top: 1rem; font-size: 0.8rem; color: var(--tx-dim);">
-      Density (&rho;) sampled from <code>/entropy/frame/current</code> &mdash; the solver grid,
-      min-max normalized and color-mapped in your GPU. A new keyframe lands about
-      <data class="fig" value="2" data-src="beacon:cadence" data-fmt="words" data-pulse="2941323">every 2 s</data>;
-      the display cross-dissolves between keyframes &mdash; a video fade, not fabricated physics.
-      Exactly what is signed: an independent witness publishes an Ed25519 signature over the
-      SHA-256 of the latest frame at <code>/entropy/frame/latest.attestation.json</code>, refreshed
-      about twice a minute. The &#8961; buttons re-fetch the frame, re-derive its hash in your
-      browser, and check that signature &mdash; if the frame has rotated past the signed one,
-      the proof says so instead of pretending.
+      Density (&rho;) sampled from <code>/entropy/frame/current</code>: the solver grid, served
+      straight from the beacon origin, min-max normalized and color-mapped in your GPU. A new
+      frame lands about once a second, and the display cross-dissolves between frames: a video
+      fade, not fabricated physics. What is signed: the Pi witness signs the SHA-256 of the
+      solver's full 589,904-byte state file at <code>/entropy/frame/latest.attestation.json</code>,
+      about twice a minute. Those bytes are not published, so the &#8961; buttons check the
+      signature over that digest, not the picture. The frame you see is the first 393,264 bytes
+      of the same file, and every beacon pulse commits to its six planes.
     </p>
   </div>
 </section>
@@ -209,8 +208,11 @@
     <p class="body reveal">
       Plasma is chaotic. Small perturbations blow up fast. That makes
       it a good random-source &mdash; the output of a correctly-running
-      MHD step is unpredictable even to us, which is the property we
-      need for an honest entropy beacon. And it's beautiful to look at.
+      MHD step is hard to predict without running the solver. It is not
+      unpredictable to us: the solver is deterministic, and any frame replays
+      bit for bit from its seed. The beacon's unpredictability comes from 32
+      fresh random bytes per pulse, committed one pulse ahead. And it's
+      beautiful to look at.
     </p>
     <p class="body reveal">
       There's a serious version of this argument involving fusion

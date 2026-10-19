@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JIT — Rail Docs</title>
+<title>JIT · Rail Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 <main>
 <h1>JIT</h1>
 <p>
-Rail ships its own JIT compiler, written in Rail, in <code>jit/</code>. It lowers a small bytecode IR to ARM64 machine code, <code>mmap</code>s the bytes executable, and calls them via a foreign-call trampoline. About 6,600 lines across 20 source files. No C extensions, no LLVM, no external dependency beyond <code>libSystem</code> (for <code>mprotect</code> and <code>pthread_create</code>).
+Rail ships its own JIT compiler, written in Rail, in <code>jit/</code>. It lowers a small bytecode IR to ARM64 machine code, <code>mmap</code>s the bytes executable, and calls them via a foreign-call trampoline. About 7,400 lines across 32 source files. No LLVM. One 43-line C trampoline (<code>tools/jit_call.c</code>) is built on first use and weak-linked; everything else is Rail plus <code>libSystem</code> (for <code>mprotect</code> and <code>pthread_create</code>).
 </p>
 <h2>Why it's here</h2>
 <p>
@@ -94,7 +94,7 @@ Each line is a Rail program lowered to IR, emitted as ARM64 bytes, <code>mmap</c
 | Builtins: <code>not</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>read_file</code> | shipped |
 </p>
 <p>
-Per-stage history is in <a href="https://github.com/Ledatic-Empire/rail/blob/main/jit/CHANGELOG.md"><code>jit/CHANGELOG.md</code></a>.
+Per-stage history is in <a href="https://github.com/Ledatic-Empire/rail/blob/master/jit/CHANGELOG.md"><code>jit/CHANGELOG.md</code></a>.
 </p>
 <h2>Verify the floor</h2>
 <pre><code class="lang-bash">
@@ -130,18 +130,18 @@ All six are exit-0 + last-line <code>PASS</code>/<code>OK</code>-shaped on macOS
 | <code>jit/parity_check.rail</code> | Differential check: interpreter result vs JIT result |
 </p>
 <p>
-The IR contract (opcode table, <code>op_call</code> packed-arg encoding, block layout) is documented in <a href="https://github.com/Ledatic-Empire/rail/blob/main/jit/README.md"><code>jit/README.md</code></a>.
+The IR contract (opcode table, <code>op_call</code> packed-arg encoding, block layout) is documented in <a href="https://github.com/Ledatic-Empire/rail/blob/master/jit/README.md"><code>jit/README.md</code></a>.
 </p>
 <h2>The trampoline trick</h2>
 <p>
 Calling JIT-emitted code from a host language usually needs either inline assembly or a C shim. Rail does it through <code>pthread_create</code>: the executable page address is passed as the thread start-routine, the argument is passed as the user data pointer, and the result comes back via <code>pthread_join</code>'s join-value. No <code>compile.rail</code> edits, no extra dylib link. <code>jit/loader.rail</code> is ~50 lines.
 </p>
 <p>
-A direct-call trampoline (<code>tools/jit_call.c</code>, ~20 lines of C) is checked in as an option but unused on the default path; the pthread approach avoids the cross-language link entirely.
+A direct-call trampoline (<code>tools/jit_call.c</code>, 43 lines of C) is built on first use and weak-linked into programs that JIT; the <code>pthread_create</code> route is the fallback when it is absent.
 </p>
 <h2>Limitations (honest)</h2>
 <ul>
-<li><strong>List execution blocked.</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/Ledatic-Empire/rail/blob/main/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
+<li><strong>List execution blocked.</strong> Cons cells lower and emit; bumping the heap fails because Rail's foreign-pointer ABI returns opaque handles, not real addresses. The lowering machinery is shipped behind the blocker. Three unblock paths are sketched in <a href="https://github.com/Ledatic-Empire/rail/blob/master/jit/NEXT_STAGES.md"><code>jit/NEXT_STAGES.md</code></a>.</li>
 <li><strong>ARM64 only.</strong> No x86 JIT yet. The encoders, the loader, and the trampoline are all macOS-ARM64-specific.</li>
 <li><strong>Subset of the language.</strong> No ADTs, no effect handlers, no full pattern matching. List-pattern <code>match</code> is supported. The covered subset is what the bench grader's "lower-hit" set runs JIT-fast; the rest falls back to the regular compiler path.</li>
 </ul>

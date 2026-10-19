@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Backends — Rail Docs</title>
+<title>Backends · Rail Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -169,12 +169,12 @@ Compiling /tmp/test_riscv.rail -&gt; RISC-V (rv32imc)...
 Requires <code>clang</code> with <code>riscv32-unknown-none-elf</code> target. The minimal <code>main = 42</code> program boots in <code>qemu-system-riscv32 -M virt -bios none -kernel /tmp/rail_rv32.elf</code> and exits 42 via the SiFive test register.
 </p>
 <p>
-The rv32 backend is v0 — literals only. See <a href="https://ledatic.org/memory/riscv32_backend_v0"><code>memory:riscv32_backend_v0</code></a> for the supported subset.
+The rv32 backend is v0: literals only.
 </p>
 <hr>
 <h2>Adding a backend</h2>
 <p>
-Look at <code>tools/compile.rail</code> around line 6605: the <code>cmd</code> dispatch table. Each backend is roughly:
+Look at <code>tools/compile.rail</code> around line 9630 (<code>main</code>): the <code>cmd</code> dispatch table. Each backend is roughly:
 </p>
 <p>
 1. A new "emit" pass that walks the AST.

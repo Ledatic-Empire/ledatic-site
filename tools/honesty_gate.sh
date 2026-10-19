@@ -24,10 +24,22 @@
 #       HTML and llms.txt in every spelling (tags dropped, entities decoded,
 #       line wraps collapsed, case folded), plus the cadence figure's source.
 #   R7  An unfilled CUTOVER_DATE placeholder on a public surface.
+#   R8  Trust the system does not have (2026-10-19 site review): the ideas,
+#       not one spelling. An "independent" witness, key or node (Ledatic runs
+#       every signer), "nobody controls", "no trust in us", "not ours alone",
+#       "cannot be backdated" (a pulse proves not-before only), "unpredictable
+#       even to us", a heartbeat "no one can rewind", a "143-line" verifier,
+#       "zero C dependencies" and "no FFI" (SHIMS.md lists the C boundary),
+#       "all of it Rail" and "no Python" (Python signs the pulses), and the
+#       AI answer product that was parked. Matched as R6 matches.
+#   R9  Em-dash ratchet: the house style forbids them. The count across every
+#       public text file may only go down from tools/emdash_baseline.txt.
 #
-# Scope: every file deploy.sh uploads: *.html at repo root and in entropy/,
-# _shared CSS/JS, shaders; R6 and R7 also read llms.txt. worker/ and tools/
-# are server/operator side, not scanned.
+# Scope: R1 to R5 read *.html at repo root and in entropy/ plus _shared
+# CSS/JS and shaders. R6 to R9 read every text file deploy.sh uploads: those,
+# plus data/, rail/docs/, sdk/, entropy/*.py, attest/verify.sh, stats.json,
+# llms.txt, robots.txt and sitemap.xml. worker/ and tools/ are server and
+# operator side, not scanned.
 #
 # Usage: tools/honesty_gate.sh        (from anywhere; cds to repo root)
 # Exit:  0 clean · 1 violations · 2 missing prerequisites
@@ -42,6 +54,11 @@ ALLOWLIST="tools/honesty_allowlist.txt"
 [ -f "$ALLOWLIST" ] || { echo "honesty_gate: $ALLOWLIST missing" >&2; exit 2; }
 
 HTML_FILES=$(ls ./*.html ./entropy/*.html 2>/dev/null)
+# Every text file deploy.sh uploads (keep in step with deploy_all there).
+PUBLIC_TEXT=$(ls ./*.html ./entropy/*.html ./entropy/*.py ./_shared/*.css ./_shared/*.js \
+  ./_shared/stats.json ./_shared/shaders/*.frag ./data/*.html ./data/*.json ./data/*.jsonl \
+  ./rail/docs/*.html ./rail/docs/examples/*.html ./sdk/*.py ./attest/verify.sh \
+  ./llms.txt ./robots.txt ./sitemap.xml 2>/dev/null)
 ASSET_FILES=$(ls ./_shared/*.css ./_shared/*.js ./_shared/shaders/*.frag 2>/dev/null)
 [ -n "$HTML_FILES" ] || { echo "honesty_gate: no HTML files found" >&2; exit 2; }
 
@@ -239,7 +256,7 @@ done
 #    phrase is matched as a reader sees it: tags dropped, entities decoded,
 #    curly quotes, tildes and hyphens folded, line wraps collapsed, case
 #    ignored, so it cannot come back in a spelling the gate never checked.
-R6_OUT=$(python3 - "$STATS" $HTML_FILES llms.txt <<'PYEOF'
+R6_OUT=$(python3 - "$STATS" $PUBLIC_TEXT <<'PYEOF'
 import html, json, re, sys
 PHRASES = [
     "SHA-256 of the plasma state",                 # format 2 hashes a canonical message
@@ -254,6 +271,28 @@ PHRASES = [
     "does not control alone",                      # Ledatic runs every signer
     "no Ledatic trust required",                   # ditto
 ]
+# R8: the ideas, as patterns over the folded text (lowercase, one space).
+TRUST = [
+    (r"\bindependent(ly)?[ -](physical |edge )?(witness|witnesses|key|keys|node|machine|hardware|signer)\b",
+     "the witness is a Pi that Ledatic runs"),
+    (r"\bindependent fleet0\b", "fleet0 is a Pi that Ledatic runs"),
+    (r"\bindependently (observed|witnessed|co-?signed)\b", "Ledatic runs every signer"),
+    (r"\bseparately controlled\b", "Ledatic controls the witness"),
+    (r"\b(nobody|no one|no-one) controls\b", "Ledatic runs every signer"),
+    (r"\bno trust in us\b", "anchored receipts trust our Worker key"),
+    (r"\bnot ours alone\b", "only Ledatic holds the witness key"),
+    (r"\bshares? no infrastructure\b", "same operator, same tailnet"),
+    (r"\b(cannot|can't|can ?not) be backdated\b", "a pulse proves not-before only"),
+    (r"\bunpredictable even to us\b", "the solver is deterministic"),
+    (r"\b(nobody|no one) can (rewind|fabricate|retro-?fabricate)\b|\bretro-?fabricat", "the operator holds every key"),
+    (r"\b143[- ]line|\b143 lines of rail\b", "verify.rail is 204 lines; the button runs proof-tray.js"),
+    (r"\b(zero|no) c (dependenc|deps\b|extension)|\bno ffi\b", "SHIMS.md lists the C boundary"),
+    (r"\ball of it rail\b|\bno python\b", "Python signs the pulses; a Worker serves the site"),
+    (r"\bper-release attestations are not published\b", "47 of 48 tags serve an attestation"),
+    (r"\bevery answer ships a proof\b|\bai you can check\b", "no AI answer product is live (parked 2026-09-05)"),
+]
+TRUST = [(re.compile(p), why) for p, why in TRUST]
+
 FOLD = {"‘": "'", "’": "'", "ʼ": "'", "“": '"', "”": '"',
         "∼": "~", "˜": "~", "～": "~", "‐": "-", "‑": "-"}
 TOKEN = re.compile(r"<[^>]*>|&#?\w+;|\s+|.", re.S)
@@ -299,17 +338,24 @@ for path in files:
             at = text.find(want)
             while at >= 0:
                 snip = " ".join(src[lines[at] - 1].split())[:90]
-                print(f"{path.lstrip('./')}:{lines[at]}\t'{phrase}' in: {snip}")
+                print(f"R6\t{path.lstrip('./')}:{lines[at]}\t'{phrase}' in: {snip}")
                 at = text.find(want, at + 1)
+        for rx, why in TRUST:
+            for m in rx.finditer(text):
+                snip = " ".join(src[lines[m.start()] - 1].split())[:90]
+                print(f"R8\t{path.lstrip('./')}:{lines[m.start()]}\t'{m.group(0)}' ({why}) in: {snip}")
 cad = json.load(open(stats_path))["stats"].get("beacon:cadence", {})
 for name, val in [("display", cad.get("display", ""))] + sorted((cad.get("formats") or {}).items()):
     if "~" in str(val):
-        print(f"{stats_path}:beacon:cadence.{name}\trenders '{val}'; the cadence is exactly 2 s (tools/gen_stats.sh)")
+        print(f"R6\t{stats_path}:beacon:cadence.{name}\trenders '{val}'; the cadence is exactly 2 s (tools/gen_stats.sh)")
 PYEOF
 )
 if [ -n "$R6_OUT" ]; then
-  while IFS=$'\t' read -r loc what; do
-    violate "R6 retired beacon claim" "$loc" "$what"
+  while IFS=$'\t' read -r rule loc what; do
+    case "$rule" in
+      R6) violate "R6 retired beacon claim" "$loc" "$what" ;;
+      *)  violate "R8 trust the system does not have" "$loc" "$what" ;;
+    esac
   done <<< "$R6_OUT"
 fi
 
@@ -324,6 +370,25 @@ for f in $HTML_FILES llms.txt; do
     violate "R7 unfilled CUTOVER_DATE placeholder" "$rel:${hit%%:*}" "$(printf '%s' "${hit#*:}" | sed -E 's/^[[:space:]]+//' | cut -c1-110)"
   done < <(grep -n 'CUTOVER_DATE' "$f" || true)
 done
+
+# ── R9: em-dash ratchet ──────────────────────────────────────────────────
+#    Every spelling a reader sees as an em-dash. The count may fall; it may
+#    never rise above the committed baseline. When it falls, lower the
+#    baseline in the same commit so the ratchet holds the gain.
+EMDASH_BASELINE_FILE="tools/emdash_baseline.txt"
+[ -f "$EMDASH_BASELINE_FILE" ] || { echo "honesty_gate: $EMDASH_BASELINE_FILE missing" >&2; exit 2; }
+EMDASH_BASELINE=$(tr -dc '0-9' < "$EMDASH_BASELINE_FILE")
+EMDASH_NOW=$(python3 - $PUBLIC_TEXT <<'PYEOF'
+import re, sys
+rx = re.compile("\u2014|&mdash;|&#8212;|&#x0*2014;", re.I)
+print(sum(len(rx.findall(open(p, encoding="utf-8", errors="replace").read())) for p in sys.argv[1:]))
+PYEOF
+)
+if [ "$EMDASH_NOW" -gt "$EMDASH_BASELINE" ]; then
+  violate "R9 em-dash ratchet" "public text" "$EMDASH_NOW em-dashes, baseline $EMDASH_BASELINE: new ones were added (use a colon, comma, period or parentheses)"
+elif [ "$EMDASH_NOW" -lt "$EMDASH_BASELINE" ]; then
+  echo "honesty_gate: em-dashes down to $EMDASH_NOW from $EMDASH_BASELINE; lower $EMDASH_BASELINE_FILE to $EMDASH_NOW" >&2
+fi
 
 # ── Verdict ──────────────────────────────────────────────────────────────
 if [ "$VIOLATIONS" -gt 0 ]; then

@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Provenance-attested training datasets. Every record's origin is hashed, Merkle-rooted, Ed25519-signed against a public entropy beacon, and independently re-verifiable — check the chain before you buy.">
+<meta name="description" content="Provenance-attested training datasets. Every record's origin is hashed, Merkle-rooted, Ed25519-signed against a public entropy beacon, and independently re-verifiable: check the chain before you buy.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/data">
-<meta property="og:title" content="Data — Ledatic">
+<meta property="og:title" content="Data · Ledatic">
 <meta property="og:description" content="Provenance-attested training datasets. Every record's origin is hashed, Merkle-rooted, Ed25519-signed against a public entropy beacon, and independently re-verifiable.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Data — Ledatic">
-<meta name="twitter:description" content="Provenance-attested training datasets — check the chain before you buy.">
+<meta name="twitter:title" content="Data · Ledatic">
+<meta name="twitter:description" content="Provenance-attested training datasets: check the chain before you buy.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Data — Ledatic</title>
+<title>Data · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/data">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -155,10 +155,10 @@ pre.snippet .c { opacity: .55; }
         <span class="tag">Code &mdash; oracle-verified</span>
         <span class="name">Rail Verified-Pairs Corpus v2</span>
         <span class="price">$199</span>
-        <span class="per">single-organization license &middot; delivered same day</span>
+        <span class="per">single-organization license &middot; delivered by email within 24 h</span>
         <ul>
           <li><strong>52,243</strong> comment&rarr;program pairs; <strong>every program compiles</strong> — verified by running the compiler on each one at generation time, and re-verified end-to-end (all 52,243) before this page went live</li>
-          <li>Bit-reproducible: generator + seed 1234 + oracle &rArr; byte-identical file (sha256 <code>1a6941af&hellip;</code> — see the signed ledger)</li>
+          <li>Bit-reproducible: generator + seed 1234 + oracle &rArr; byte-identical file (sha256 <code>1a6941af&hellip;</code>, bound at record 0 of the signed ledger that ships with the data)</li>
           <li>This exact file trained a from-scratch 138M model to <strong>16/16 compile@1 and 11/16 function-correctness</strong> on its frozen benchmark — the run's hash-chained ledger binds corpus&rarr;weights and ships in the box</li>
           <li>Synthetic + oracle-verified: zero scraped code, zero license ambiguity</li>
         </ul>
@@ -175,7 +175,7 @@ pre.snippet .c { opacity: .55; }
         <span class="tag">Text &mdash; provenance-gated</span>
         <span class="name">Attested Text Corpus v2</span>
         <span class="price">$499</span>
-        <span class="per">single-organization license &middot; delivered by email, same day</span>
+        <span class="per">single-organization license &middot; delivered by email within 24 h</span>
         <ul>
           <li><strong>25,541 documents / ~1.54B tokens</strong>, Merkle root <code>92e9af57&hellip;</code>, Pi-witness-signed at public pulse 2516402</li>
           <li>Per-document provenance leaf: source, id, strand, provenance basis, year — 8,643 docs bright-line pre-1929 PD, 12,077 source-cleared (Gutenberg), 4,821 oracle-verified code (ours)</li>
@@ -254,7 +254,7 @@ python3 verify_pairs.py pairs_v6.jsonl attested_ledger.jsonl</code></pre>
       <li><strong>It proves</strong> exactly which bytes you're getting, where each record came from by our stated basis, that the code compiles under a public compiler, and that none of it was swapped after signing.</li>
       <li><strong>It does not prove</strong> the data will make your model good. The included ledger shows what it did for ours (a 138M from-scratch model: 16/16 compile@1 on its frozen bench); your mileage is an empirical question &mdash; which is why the sample is free.</li>
       <li><strong>Provenance basis is per-record and explicit.</strong> "pre-1929" is a bright legal line; "source-cleared" means the source declares it public-domain and we did not independently date-verify; "operated-substrate" means we generated and machine-verified it. We report the split; we don't blur it.</li>
-      <li><strong>If we disappear</strong>, verification still works: the Merkle scheme is documented in the manifest, the signatures are standard Ed25519, and the entropy pulse chain is archived by anyone who ever mirrored it.</li>
+      <li><strong>If we disappear</strong>, verification still works: the Merkle scheme is documented in the manifest, the signatures are standard Ed25519, and anyone can mirror the entropy pulse chain as it is published.</li>
     </ul>
   </div>
 </section>
@@ -321,7 +321,7 @@ document.querySelectorAll("a.buy").forEach((a) => {
   } else {
     const subj = encodeURIComponent(`Data order — ${NAMES[p]}`);
     const body = encodeURIComponent(
-      `I'd like to buy: ${NAMES[p]}\n\nOrganization:\nDelivery email:\n\n(We reply same day with payment details; delivery follows payment.)`
+      `I'd like to buy: ${NAMES[p]}\n\nOrganization:\nDelivery email:\n\n(We reply within a day with payment details; delivery follows payment.)`
     );
     a.href = `mailto:${ORDER_EMAIL}?subject=${subj}&body=${body}`;
   }

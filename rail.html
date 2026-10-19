@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Rail is a self-hosting compiler with zero C dependencies — one small seed binary, six backends, JIT-emitted GPU kernels. Every tagged release is signed against a live entropy beacon and verifiable in your browser.">
+<meta name="description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, six backends, JIT-emitted GPU kernels. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/rail">
-<meta property="og:title" content="Rail — Ledatic">
-<meta property="og:description" content="Rail is a self-hosting compiler with zero C dependencies — one small seed binary, six backends, JIT-emitted GPU kernels. Every tagged release is signed against a live entropy beacon and verifiable in your browser.">
+<meta property="og:title" content="Rail · Ledatic">
+<meta property="og:description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, six backends, JIT-emitted GPU kernels. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Rail — Ledatic">
-<meta name="twitter:description" content="Rail is a self-hosting compiler with zero C dependencies — one small seed binary, six backends, JIT-emitted GPU kernels. Every tagged release is signed against a live entropy beacon and verifiable in your browser.">
+<meta name="twitter:title" content="Rail · Ledatic">
+<meta name="twitter:description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, six backends, JIT-emitted GPU kernels. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Rail — Ledatic</title>
+<title>Rail · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/rail">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -189,13 +189,13 @@ pre.recipe .ok { color: var(--ph-600); }
     <span class="eyebrow fade-up">Language &mdash; <data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></span>
     <h1 class="hero-title fade-up">Rail</h1>
     <p class="hero-sub fade-up">
-      A self-hosting compiler. Zero C dependencies.
+      A self-hosting compiler. Its seed binary links only libSystem.
     </p>
     <p class="hero-desc fade-up">
       Rail compiles itself to a <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> ARM64 binary. Six backends: native
       ARM64, Linux ARM64, Linux x86_64, WASM (early), Cortex-M4, RISC-V &mdash; and it
-      JIT-emits its own Metal GPU kernels. One language for the whole stack
-      &mdash; compiler, TLS, plasma sim, site generator, training loop.
+      JIT-emits its own Metal GPU kernels. One language for most of the stack:
+      compiler, TLS, plasma sim, beacon origin, training loop.
     </p>
     <div class="cta-row fade-up">
       <a class="btn btn-primary" href="/rail/docs/">Read the docs</a>
@@ -253,8 +253,8 @@ pre.recipe .ok { color: var(--ph-600); }
     <p class="gloss push reveal">
       the figures above are injected from a generated registry, never typed.
       the working prove buttons are in the ledger below &mdash; each release
-      listed there carries a published attestation. newer tags are not yet
-      attested, and we don't render a button we can't honour
+      listed there carries a published attestation, and we don't render a
+      button we can't honour
     </p>
   </div>
 </section>
@@ -266,7 +266,9 @@ pre.recipe .ok { color: var(--ph-600); }
     <h2 class="reveal">What ships in the box.</h2>
     <p class="lead reveal">
       Every module below is Rail source, compiled by Rail, running on the
-      same <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> binary. No FFI shims. No package manager.
+      same <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> binary. No package manager. Where a module
+      crosses into C (SQLite through <code>foreign</code>; Metal and the JIT
+      through a small ObjC and C boundary), <code>SHIMS.md</code> lists it.
     </p>
 
     <div class="grid grid-2 grid-3 push">
@@ -350,7 +352,7 @@ pre.recipe .ok { color: var(--ph-600); }
         </div>
         <p class="ttl">A character language model trained with every step signed.</p>
         <p class="gloss">plain words: the training run itself is on the chain &mdash; forge a gradient and verification fails</p>
-        <p>Per-step Ed25519 ledger over the full forward/backward pass; a foreign verifier replays and confirms the run. Public branch, headed for a tag.</p>
+        <p>Per-step Ed25519 ledger over the full forward/backward pass; a foreign verifier replays and confirms the run. Public branch, not yet tagged.</p>
       </li>
 
       <li class="reveal">
@@ -375,7 +377,7 @@ pre.recipe .ok { color: var(--ph-600); }
         </div>
         <p class="ttl">Hardening, and the beacon replays from one integer.</p>
         <p class="gloss">seven miscompiles closed with the programs that exposed them; the entropy beacon replays any epoch from one logged number</p>
-        <p>Allocator freelist buckets cut the self-compile from roughly a minute to under twenty seconds. The independence checker makes the module graph an assertion rather than a convention.</p>
+        <p><code>\r</code> becomes a string escape. Seven miscompiles that passed a green suite are fixed, each with its program as a suite test. <code>bytes_to_str</code> turns linear, so HTTPS responses past 64 KB stop costing gigabytes. <code>tools/plasma/mhd_verify_epoch.rail</code> replays any beacon epoch from its seed.</p>
       </li>
 
       <li class="reveal" id="v5-3-0">
@@ -401,7 +403,7 @@ pre.recipe .ok { color: var(--ph-600); }
         </div>
         <p class="ttl">Rail stands alone &mdash; no assembler, no linker, no codesign.</p>
         <p class="gloss">plain words: nothing outside the language is left in the build; it assembles, links and signs its own binary</p>
-        <p>The strongest form of the self-hosting claim: <code>as</code>, <code>ld</code> and <code>codesign</code> all leave the path, and the self-compile becomes bit-reproducible &mdash; the committed seed rebuilds itself byte for byte. A nightly witness re-checks that on a second machine.</p>
+        <p>The strongest form of the self-hosting claim: <code>as</code>, <code>ld</code> and <code>codesign</code> all leave the path, and the self-compile becomes bit-reproducible: the committed seed rebuilds itself byte for byte. A daily run re-checks it against current master and publishes the record at <code>/selfhost/&lt;commit&gt;</code>.</p>
       </li>
 
       <li class="reveal" id="v5-1-0">
@@ -499,7 +501,7 @@ pre.recipe .ok { color: var(--ph-600); }
           <button class="prove" aria-expanded="false" data-manifest="/releases/v3.10.0/rail_native.attestation.json" data-name="rail_native &middot; v3.10.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
         </div>
         <p class="ttl">Rail-native witness signer + Linux backend complete.</p>
-        <p>The attestation pipeline is Rail end-to-end including the independent witness's HTTP signer.</p>
+        <p>The attestation pipeline is Rail end to end, including the HTTP signer on the Pi witness.</p>
       </li>
 
       <li class="reveal" id="v3-9-0">
@@ -523,7 +525,7 @@ pre.recipe .ok { color: var(--ph-600); }
           <button class="prove" aria-expanded="false" data-manifest="/releases/v3.8.0/rail_native.attestation.json" data-name="rail_native &middot; v3.8.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
         </div>
         <p class="ttl">Releases physicified.</p>
-        <p class="gloss">plain words: from this release on, every tag is signed against the public heartbeat the moment it ships</p>
+        <p class="gloss">plain words: from this release on, tags are signed against the public heartbeat when they ship (v4.0.0 and v4.1.0 were signed two days late)</p>
         <p>Every tagged release, test pass, and self-compile fixed point binds to a live beacon pulse and a witness signature. The chain epoch.</p>
       </li>
 
@@ -544,7 +546,7 @@ pre.recipe .ok { color: var(--ph-600); }
       <strong>In your browser:</strong> press any <span aria-hidden="true">⌁</span> verify
       button in the ledger above. The page fetches the release attestation,
       checks the Ed25519 witness signature against the pinned public key,
-      confirms the beacon pulse it was anchored to, and shows you every step
+      checks that the pulse it was anchored to is not in the future, and shows you every step
       of the receipt. Nothing to install.
     </p>
     <p class="body reveal">

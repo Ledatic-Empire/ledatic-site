@@ -7,18 +7,18 @@
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/receipts">
-<meta property="og:title" content="Receipts — Ledatic">
+<meta property="og:title" content="Receipts · Ledatic">
 <meta property="og:description" content="Signed, beacon-anchored receipts for anything your software produces. Free to sign and verify offline; one credit buys a witness counter-signature that makes the receipt backdate-proof.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Receipts — Ledatic">
-<meta name="twitter:description" content="Signed, beacon-anchored receipts for anything your software produces. Verify offline with standard Ed25519 — no account, no trust in us required.">
+<meta name="twitter:title" content="Receipts · Ledatic">
+<meta name="twitter:description" content="Signed, beacon-anchored receipts for anything your software produces. Verify offline with standard Ed25519, no account needed: a bare receipt checks against your own key, not ours.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Receipts — Ledatic</title>
+<title>Receipts · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/receipts">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -140,9 +140,9 @@ pre.snippet .c { opacity: .55; }
       Ledatic runs a live attestation instrument. This is how you get in.
     </p>
     <p class="hero-desc fade-up">
-      A physics beacon and an independent witness, running around the clock,
-      that turn any file into proof no one has to trust you for &mdash;
-      existence, integrity, and time, verifiable offline by anyone with
+      A physics beacon and a witness key held in our Cloudflare Worker,
+      running around the clock, that turn any file into a receipt for its
+      existence, integrity and time, verifiable offline by anyone with
       standard Ed25519. Access is how you put your own work through it. Not
       credits. Not a plan. A key to the instrument.
     </p>
@@ -187,9 +187,10 @@ pre.snippet .c { opacity: .55; }
         <span class="tag">Anchored &mdash; 1 credit</span>
         <h3>+ Ledatic witness counter-signature</h3>
         <p>
-          Our witness key counter-signs the same binding: <em>&ldquo;we observed
-          digest D at pulse N at server time T.&rdquo;</em> We set the time,
-          so an anchored receipt cannot be backdated &mdash; even by you.
+          Our witness key counter-signs the same binding: <em>&ldquo;we saw
+          digest D at server time T, citing pulse N.&rdquo;</em> We set the time,
+          so you cannot backdate an anchored receipt. The pulse is the one you
+          cite; the witness does not check it.
         </p>
         <ul>
           <li>Backdate-proof and non-repudiable</li>
@@ -253,8 +254,9 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
     <h2 class="reveal">Choose how far in you want to be.</h2>
     <p class="gloss reveal">
       access is a key to the instrument. verification and bare signing stay
-      free forever &mdash; you only spend when the witness counter-signs. no
-      subscription, no seat, no sales call. the $5 door is always open.
+      free forever; you only spend when the witness counter-signs. no
+      subscription, no seat, no sales call. credits expire 12 months after
+      purchase. the $5 door is always open.
     </p>
 
     <div class="plans">
@@ -303,7 +305,7 @@ python3 ledatic_receipts.py sign model_output.json receipt.json --anchor
     <h2 class="reveal">What a receipt proves &mdash; and what it doesn't.</h2>
     <ul class="limits reveal">
       <li><strong>A bare receipt proves</strong> the exact bytes, the cited pulse, and the signer's key. It binds &ldquo;not before&rdquo; the pulse; the <em>created_at</em> time is the signer's own claim.</li>
-      <li><strong>An anchored receipt additionally proves</strong> the binding was presented to our witness at a server-set time &mdash; it cannot be backdated, by anyone, including the signer and including us.</li>
+      <li><strong>An anchored receipt additionally proves</strong> the binding was presented to our witness at a server-set time &mdash; the signer cannot backdate it. We set that time, so this part rests on trusting our Worker's clock and code.</li>
       <li><strong>No receipt proves</strong> the content is true, good, or yours. It proves existence, integrity, and time. That's the honest boundary and it is exactly what disputes usually turn on.</li>
       <li><strong>If we disappear</strong>, every receipt still verifies: the format is frozen plain JSON, the crypto is standard Ed25519, and the client is a single readable Python file you already downloaded.</li>
       <li><strong>Rotation:</strong> the witness pubkey is pinned in the verifier (<code>45ad2e2d&hellip;</code>). If we ever rotate it, old receipts verify against the old pin &mdash; published, dated, chained.</li>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rail stdlib reference — Rail Docs</title>
+<title>Rail stdlib reference · Rail Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -145,6 +145,20 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>asn1_ext_fail _</code></h3>
 <h3><code>asn1_oid_san _</code></h3>
 <blockquote>subjectAltName OID = 2.5.29.17 = 55 1d 11</blockquote>
+<h3><code>asn1_oid_basic_constraints _</code></h3>
+<blockquote>basicConstraints OID = 2.5.29.19 = 55 1d 13</blockquote>
+<h3><code>asn1_is_ca cert cert_len</code></h3>
+<blockquote>── CA check (RFC 5280 basicConstraints) ─────────────────────────────</blockquote>
+<blockquote>Returns 1 iff the cert asserts basicConstraints with cA=TRUE, else 0.</blockquote>
+<blockquote>Per RFC 5280 4.2.1.9, cA is DEFAULT FALSE, so an absent extension, an</blockquote>
+<blockquote>empty BasicConstraints SEQUENCE, or an explicit BOOLEAN FALSE all mean</blockquote>
+<blockquote>"not a CA". A cert that is not a CA MUST NOT be trusted to sign other</blockquote>
+<blockquote>certificates — enforcing this on every issuer is what blocks the</blockquote>
+<blockquote>classic "any leaf becomes an intermediate" MITM.</blockquote>
+<blockquote>BasicConstraints := SEQUENCE { cA BOOLEAN DEFAULT FALSE,</blockquote>
+<blockquote>pathLenConstraint INTEGER OPTIONAL }</blockquote>
+<blockquote>extnValue is an OCTET STRING wrapping that DER SEQUENCE; asn1_find_extension</blockquote>
+<blockquote>returns the OCTET STRING contents, i.e. the SEQUENCE TLV itself.</blockquote>
 <h3><code>asn1_find_validity cert cert_len</code></h3>
 <h3><code>asn1_val_parse cert cert_len off</code></h3>
 <h3><code>asn1_val_fail _</code></h3>
@@ -172,13 +186,20 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>asn1_name_eq_at a a_off b b_off i n</code></h3>
 <h2><code>stdlib/autograd.rail</code></h2>
 <h3><code>ag_tape_new _</code></h3>
-<blockquote>ag_tape_new: create an empty tape</blockquote>
+<blockquote>ag_tape_new: create an empty tape. Slot 0 = count (0); entries start at slot 1.</blockquote>
+<h3><code>ag_tape_len tape</code></h3>
+<blockquote>ag_tape_len: number of entries on the tape (O(1)).</blockquote>
 <h3><code>ag_tape_push tape entry</code></h3>
-<blockquote>ag_tape_push: append an entry, return (new_tape, index_of_new_entry)</blockquote>
-<blockquote>Index = length of tape before push (0-based).</blockquote>
+<blockquote>ag_tape_push: store entry at slot count+1, growing (doubling) if full.</blockquote>
+<blockquote>Returns (tape, index); index = entry count before push (0-based), matching</blockquote>
+<blockquote>the old list semantics so every tracked_* caller is unchanged.</blockquote>
+<h3><code>ag_tape_grow tape</code></h3>
+<blockquote>ag_tape_grow: allocate a 2x array and copy slots 0..count across.</blockquote>
+<h3><code>ag_tape_copy src dst k</code></h3>
+<blockquote>ag_tape_copy: copy slots k..0 from src to dst (tail-recursive -> loop).</blockquote>
 <h3><code>ag_tape_get tape i</code></h3>
-<blockquote>ag_tape_get: retrieve entry at index i</blockquote>
-<h3><code>ag_tape_get_acc tape i cur</code></h3>
+<blockquote>ag_tape_get: retrieve entry at 0-based index i (O(1)). Slot 0 is the count,</blockquote>
+<blockquote>so entry i lives at slot i+1.</blockquote>
 <h3><code>ag_param t</code></h3>
 <blockquote>ag_param: wrap a Tensor as a tracked leaf parameter (no backward, tape_idx = -1).</blockquote>
 <blockquote>Leaves are the starting points of the graph. Their gradients are what we want.</blockquote>
@@ -546,7 +567,11 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>cc_verify_against_root store cur cur_len ridx</code></h3>
 <h3><code>cc_try_inter store certs lens count i cur cur_len</code></h3>
 <blockquote>Step 3: neither SPKI match nor issuer match — try the next cert in</blockquote>
-<blockquote>the server-supplied chain.</blockquote>
+<blockquote>the server-supplied chain. The next cert is being used as an issuing</blockquote>
+<blockquote>CA, so it MUST carry basicConstraints cA=TRUE (RFC 5280 6.1.4). Without</blockquote>
+<blockquote>this check any end-entity cert (e.g. an attacker's ordinary DV cert)</blockquote>
+<blockquote>that itself chains to a trusted root could sign a forged leaf and have</blockquote>
+<blockquote>the walk accept it — a universal MITM. Reject non-CA issuers up front.</blockquote>
 <h2><code>stdlib/cert_p384.rail</code></h2>
 <h3><code>cv_extract_p384_pubkey cert cert_len</code></h3>
 <h3><code>cvp384_check_alg cert fields</code></h3>
@@ -916,13 +941,27 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>unload_lib handle</code></h3>
 <blockquote>Unload library</blockquote>
 <h2><code>stdlib/dns.rail</code></h2>
-<h3><code>dns_default_server _</code></h3>
-<blockquote>Read /etc/resolv.conf, find first "nameserver X.Y.Z.W" line.</blockquote>
+<h3><code>dns_servers _</code></h3>
+<blockquote>Read /etc/resolv.conf and collect EVERY IPv4 nameserver, in order,</blockquote>
+<blockquote>with 1.1.1.1 appended as a last resort.</blockquote>
+<blockquote></blockquote>
+<blockquote>Using only the first nameserver was a single point of failure. On</blockquote>
+<blockquote>2026-08-28 Tailscale's MagicDNS sat at the top of resolv.conf,</blockquote>
+<blockquote>accepted our query, and never answered it (sent=29, got=-1), while</blockquote>
+<blockquote>the very next server answered normally. A resolver that accepts and</blockquote>
+<blockquote>drops is indistinguishable from having no network at all, so every</blockquote>
+<blockquote>Rail HTTPS consumer went dark at once, attestation signing included.</blockquote>
 <h3><code>split_lines s</code></h3>
 <blockquote>Split a string on newlines.</blockquote>
-<h3><code>dns_scan_lines lines</code></h3>
+<h3><code>dns_collect_ns lines</code></h3>
+<h3><code>dns_prepend_ns ip rest</code></h3>
+<blockquote>Unusable entries are dropped rather than replaced with a default:</blockquote>
+<blockquote>the fallback belongs at the end of the list exactly once, not</blockquote>
+<blockquote>substituted in the middle where it would mask the real ordering.</blockquote>
 <h3><code>dns_is_nameserver line</code></h3>
 <h3><code>dns_extract_ns line</code></h3>
+<h3><code>dns_default_server _</code></h3>
+<blockquote>First usable resolver, for callers that only want one.</blockquote>
 <h3><code>dns_encode_name host</code></h3>
 <blockquote>Encode a hostname as DNS labels: "api.anthropic.com" → [3]api[9]anthropic[3]com[0]</blockquote>
 <h3><code>dns_labels_total_len labels acc</code></h3>
@@ -951,9 +990,13 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>Argument is <code>struct timeval { time_t tv_sec; suseconds_t tv_usec; }</code></blockquote>
 <blockquote>which is 16 bytes on 64-bit darwin (8 + 8).</blockquote>
 <h3><code>dns_resolve_a host</code></h3>
-<h3><code>dns_resolve_a_try host attempt</code></h3>
-<blockquote>Up to 3 attempts at 2-second timeout each.  Total worst-case 6 s.</blockquote>
-<h3><code>dns_resolve_a_once host</code></h3>
+<h3><code>dns_try_pass host servers pass</code></h3>
+<blockquote>Two passes over the whole server list at a 2-second timeout each.  A</blockquote>
+<blockquote>transient drop still gets a retry, but a resolver that never answers</blockquote>
+<blockquote>now costs one timeout instead of three, and never starves the servers</blockquote>
+<blockquote>listed behind it.</blockquote>
+<h3><code>dns_try_each host servers</code></h3>
+<h3><code>dns_resolve_a_once host server</code></h3>
 <h3><code>dns_send_udp fd buf len ip port</code></h3>
 <h3><code>dns_recv_udp fd bufsize</code></h3>
 <h2><code>stdlib/ecdsa_p256.rail</code></h2>
@@ -1600,7 +1643,9 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>recv_all_loop fd buf acc</code></h3>
 <h3><code>bytes_to_str buf off n acc</code></h3>
 <blockquote>Copy bytes [start .. start+n) out of <code>buf</code> into a Rail string.</blockquote>
-<blockquote>Uses char_from_int + join. O(N) work, O(N²) alloc; fine for responses up to ~64KB.</blockquote>
+<blockquote>Collects the characters into a list (head-first) and joins once, so the</blockquote>
+<blockquote>work and allocation are O(N) instead of the old O(N²) accumulator copy.</blockquote>
+<h3><code>bytes_to_str_chars buf off n cs</code></h3>
 <h3><code>parse_response raw</code></h3>
 <blockquote>---- response parsing ----</blockquote>
 <blockquote>Find the status from "HTTP/1.1 200 OK", crlf, "..." and the body after ", crlf, "", crlf, ".</blockquote>
@@ -1856,7 +1901,52 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>ijit_run (mirrors jit_run_*), and so a future arg-packing change stays</blockquote>
 <blockquote>local to this module.</blockquote>
 <h3><code>ibuf_upload arr n</code></h3>
+<h3><code>ibuf_update wid arr n</code></h3>
+<blockquote>overwrite a resident weight buffer IN PLACE (training loop: no leak). returns 0 ok.</blockquote>
 <h3><code>ijit_run_wx kid wid x o sizeX sizeO nthreads</code></h3>
+<h2><code>stdlib/infer_kv.rail</code></h2>
+<h3><code>kv_matmul_cpu a b</code></h3>
+<blockquote>Force-CPU matmul, same shape as lm_infer_cpu's wrapper: bypasses the</blockquote>
+<blockquote>gpu_available gate so this module is deterministic regardless of</blockquote>
+<blockquote>dylib/.no_gpu state.</blockquote>
+<h3><code>kv_cache_build n_blocks max_seq d i acc</code></h3>
+<blockquote>Fresh cache list for n_blocks layers, positions up to max_seq, width d.</blockquote>
+<h3><code>kv_cache_new n_blocks max_seq d</code></h3>
+<h3><code>kv_row_store src dst pos d j</code></h3>
+<blockquote>Copy one 1-row tensor's data into cache row <code>pos</code>.</blockquote>
+<h3><code>kv_score_dot qd ck base d kk acc</code></h3>
+<blockquote>score(j) = (q . K[j]) * scale -- dot ascending over d, one scalar</blockquote>
+<blockquote>accumulator, then a single scale multiply: matches matmul_k(q, K^T)</blockquote>
+<blockquote>followed by tensor_scale, bit for bit.</blockquote>
+<h3><code>kv_scores_loop qd ck sd pos d scale j</code></h3>
+<h3><code>kv_ctx_dot pd cv pos d c j acc</code></h3>
+<blockquote>ctx[c] = sum_j probs[j] * V[j][c], j ascending -- matmul_k order for</blockquote>
+<blockquote>attn @ V restricted to the causal window.</blockquote>
+<h3><code>kv_ctx_loop pd cv ctxd pos d c</code></h3>
+<h3><code>kv_attention_step qd ck cv pos d scale</code></h3>
+<blockquote>One attention step: q row (already RoPE'd) against cache rows 0..pos.</blockquote>
+<blockquote>Returns the context row as a float_arr of width d. softmax_row is the</blockquote>
+<blockquote>stdlib CPU softmax -- same max-subtract, same order.</blockquote>
+<h3><code>kv_add_cpu a b</code></h3>
+<blockquote>Force-CPU elementwise add (tensor_add would GPU-dispatch through f32</blockquote>
+<blockquote>when the dylib is present -- a silent precision change; add_loop is</blockquote>
+<blockquote>tensor.rail's own CPU fallback).</blockquote>
+<h3><code>kv_had_loop ad bd cd n i</code></h3>
+<blockquote>Elementwise product of two 1-row tensors (SwiGLU gate * up).</blockquote>
+<h3><code>kv_hadamard a b</code></h3>
+<h3><code>kv_block_step x_row w_block ck cv pos d</code></h3>
+<blockquote>One block, one new position. x_row is [1,d]; ck/cv are this block's</blockquote>
+<blockquote>cache arrays; pos is the new token's absolute position. Mirrors</blockquote>
+<blockquote>lm_infer_cpu.rail infer_block_fwd stage for stage; RoPE reuses</blockquote>
+<blockquote>rope_row_pairs directly with the explicit position.</blockquote>
+<h3><code>kv_unwrap t</code></h3>
+<h3><code>kv_blocks_step_loop x blocks caches pos d i n</code></h3>
+<h3><code>kv_forward_step x_row w_e we_t blocks caches gf pos d</code></h3>
+<blockquote>Full incremental forward for ONE token: one-hot row -> embed -> blocks</blockquote>
+<blockquote>(caches updated at <code>pos</code>) -> final RMSNorm -> logits -> probs row.</blockquote>
+<blockquote>we_t is tensor_transpose w_e, computed once by the caller. Returns the</blockquote>
+<blockquote>[1,V] probs tensor for the next-token decision. CPU softmax forced</blockquote>
+<blockquote>(softmax_row), matching the reference path's documented .no_gpu config.</blockquote>
 <h2><code>stdlib/jit.rail</code></h2>
 <h3><code>jit_compile_rmsnorm_qkv _</code></h3>
 <blockquote>Compile the fused rmsnorm+QKV kernel.  Source is emitted by jit_emit.</blockquote>
@@ -2176,9 +2266,18 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>dump_matches ms</code></h3>
 <h2><code>stdlib/jit_node.rail</code></h2>
 <h3><code>jit_tape_new _</code></h3>
+<blockquote>Array-backed op-DAG tape: slot 0 holds the node count, slots 1..count hold</blockquote>
+<blockquote>JitNodes. Push is O(1) amortized (doubling) and get is O(1); the old list</blockquote>
+<blockquote>form did <code>length</code> + <code>append</code> per push (O(n^2) build) and an O(i) walk per get.</blockquote>
+<h3><code>jit_tape_len tape</code></h3>
+<blockquote>jit_tape_len: number of nodes on the tape (O(1)).</blockquote>
 <h3><code>jit_tape_push tape node</code></h3>
+<blockquote>jit_tape_push: store node at slot count+1 (growing if full), return [tape, idx].</blockquote>
+<h3><code>jit_tape_grow tape</code></h3>
+<h3><code>jit_tape_copy src dst k</code></h3>
 <h3><code>jit_tape_get tape i</code></h3>
-<h3><code>jit_tape_get_acc tape i cur</code></h3>
+<blockquote>jit_tape_get: O(1) random access; slot 0 is the count, node i lives at slot i+1.</blockquote>
+<blockquote>Out-of-range (i<0 or i>=count) returns the "missing" sentinel, as before.</blockquote>
 <h3><code>jit_nth n xs</code></h3>
 <blockquote>Same as stdlib/tensor.rail's list_nth.  Named jit_nth so consumers of</blockquote>
 <blockquote>jit_node can avoid importing tensor.rail (which would re-introduce a</blockquote>
@@ -2574,6 +2673,21 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>mk_init_cell state i</code></h3>
 <h3><code>mk_init_loop state i</code></h3>
 <h3><code>mk_init_state</code></h3>
+<h3><code>mk_phase_of_seed raw</code></h3>
+<blockquote>Seed (a raw u32 from /dev/urandom) to a phase in [0, 2*pi).</blockquote>
+<blockquote>Reduced mod 1e6 first so the multiply stays exact in a 63-bit tagged</blockquote>
+<blockquote>int, and so the integer is recoverable from the printed phase.</blockquote>
+<h3><code>mk_perturb_cell state ph i</code></h3>
+<blockquote>A small phase-shifted velocity kick, with energy adjusted so PRESSURE</blockquote>
+<blockquote>IS UNCHANGED. Adding momentum without touching energy would silently</blockquote>
+<blockquote>lower the thermal pressure every cycle and eventually drive it</blockquote>
+<blockquote>negative, turning a fixed beacon into a crashing one. The thermal term</blockquote>
+<blockquote>is therefore recomputed from the pre-kick pressure:</blockquote>
+<blockquote>e = p/(gamma-1) + ke + me,  with gamma-1 = 2/3 as mk_init_cell builds it.</blockquote>
+<h3><code>mk_perturb_loop state ph i</code></h3>
+<h3><code>mk_perturb_seed state raw</code></h3>
+<blockquote>Perturb a state in place from a raw seed. This is the whole epoch</blockquote>
+<blockquote>entry point: mk_init_loop then mk_perturb_seed reproduces any epoch.</blockquote>
 <h3><code>mk_pressure state x y</code></h3>
 <h3><code>mk_x_flux state x y fa</code></h3>
 <h3><code>mk_y_flux state x y fa</code></h3>
@@ -2637,6 +2751,19 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>mk_total_mass state</code></h3>
 <h3><code>mk_total_energy state</code></h3>
 <h3><code>mk_divb_cell state i</code></h3>
+<blockquote>Returns |div B| at cell i.</blockquote>
+<blockquote></blockquote>
+<blockquote>The trailing <code>+ 0.0</code> is load-bearing, not decoration. Without it the</blockquote>
+<blockquote>compiler does not mark this function float-returning, and a CALLER doing</blockquote>
+<blockquote>arithmetic on the result gets a tagged int where it expects a double:</blockquote>
+<blockquote></blockquote>
+<blockquote>let d = mk_divb_cell s 100     -- prints fine via show_float</blockquote>
+<blockquote>d * d                          -- SEGFAULT</blockquote>
+<blockquote></blockquote>
+<blockquote>Comparison happens to survive the confusion, which is why mk_max_div_b</blockquote>
+<blockquote>(which only ever compares) worked for months while the first caller to</blockquote>
+<blockquote>multiply the result crashed instantly. Coercing here fixes it once for</blockquote>
+<blockquote>every caller instead of making each one remember.</blockquote>
 <h3><code>mk_divb_check state i acc</code></h3>
 <h3><code>mk_divb_loop state i acc</code></h3>
 <h3><code>mk_max_div_b state</code></h3>
@@ -2652,6 +2779,44 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>Caller provides <code>out</code> (a float_arr_new mk_prim_buffer_size 0.0) once at</blockquote>
 <blockquote>daemon start and reuses it across frames.</blockquote>
 <h3><code>mk_print_diag step state m0 e0 dt t</code></h3>
+<h3><code>mk_pidx x y</code></h3>
+<blockquote>psi lives on its own plane, indexed like a single field of the state.</blockquote>
+<h3><code>mk_pget psi x y</code></h3>
+<h3><code>mk_pput psi x y v</code></h3>
+<h3><code>mk_psi_new _</code></h3>
+<h3><code>mk_divb_signed state x y</code></h3>
+<blockquote>Signed div B, centered, same stencil mk_divb_cell measures with.</blockquote>
+<h3><code>mk_glm_psi_loop state psi ch2 dt damp i</code></h3>
+<blockquote>Pass 1: psi <- (psi - dt*c_h^2*div B) damped. Reads B only, writes psi only.</blockquote>
+<h3><code>mk_glm_b_loop state psi dt i</code></h3>
+<blockquote>Pass 2: B <- B - dt*grad(psi), using the UPDATED psi. Reads psi only,</blockquote>
+<blockquote>writes B only, so the two passes never race on the same array.</blockquote>
+<h3><code>mk_glm_clean state psi dt ch cr</code></h3>
+<blockquote>One cleaning substep applied in place to <code>state</code>.</blockquote>
+<blockquote>ch  : divergence-wave speed, take the step's max signal speed</blockquote>
+<blockquote>cr  : damping length; smaller damps harder</blockquote>
+<h3><code>mk_muscl_glm_step state psi dt cr ch_mult</code></h3>
+<blockquote>MUSCL step with GLM cleaning. <code>psi</code> is caller-owned and persists across</blockquote>
+<blockquote>steps -- that is the point, psi accumulates and transports the error.</blockquote>
+<blockquote></blockquote>
+<blockquote>c_h is the speed the divergence wave travels at, and cleaning is only as</blockquote>
+<blockquote>fast as c_h allows. The symplectic update is stable up to c_h dt = dx, so</blockquote>
+<blockquote>dx/dt is BOTH the physical maximum and the stability limit; Dedner takes</blockquote>
+<blockquote>c_h there. Passing it as a multiple of the signal speed keeps the caller</blockquote>
+<blockquote>honest about how close to that limit it is running:</blockquote>
+<blockquote></blockquote>
+<blockquote>dt = 0.01472621556370216 / smax  (mk_compute_dt_muscl)</blockquote>
+<blockquote>dx = 0.04908738521234052</blockquote>
+<blockquote>=> dx/dt = 3.333 smax, so ch_mult = 3.333 sits exactly on the limit.</blockquote>
+<blockquote></blockquote>
+<blockquote>Measured, 100 Orszag-Tang steps, max|div B| against plain MUSCL's 0.174:</blockquote>
+<blockquote>ch_mult 1.0, cr 0.5   -> 0.0334  (5.2x)</blockquote>
+<blockquote>ch_mult 2.0, cr 0.5   -> 0.0334  (5.2x)</blockquote>
+<blockquote>ch_mult 3.0, cr 0.18  -> 0.0284  (6.1x)   <- best found</blockquote>
+<blockquote>Raising c_h toward the stability limit barely helps, which is itself the</blockquote>
+<blockquote>finding: cleaning reaches a balance against the rate the MUSCL flux</blockquote>
+<blockquote>GENERATES divergence, so the knob that matters is not the transport</blockquote>
+<blockquote>speed. See tools/plasma/GLM_METRIC.md.</blockquote>
 <h2><code>stdlib/mhd_mpd.rail</code></h2>
 <h3><code>mpd_gaussian z z0 sigma</code></h3>
 <blockquote>Smooth (1 - x^2)^2 polynomial bump on |x| <= 1, zero outside.</blockquote>
@@ -3112,14 +3277,19 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>sha256_init _</code></h3>
 <h3><code>sha256_update_arr st arr off n</code></h3>
 <blockquote>Feed <code>n</code> bytes from <code>arr</code> starting at <code>off</code> into the running hash.</blockquote>
-<blockquote>Returns the same state array (mutated in place).</blockquote>
+<blockquote>Returns the same state (its arrays mutated in place).</blockquote>
+<h3><code>sha256_update_st st arr off n</code></h3>
+<h3><code>sha256_update_go st h k_tbl pbuf cnt arr off n</code></h3>
 <h3><code>sha256_stream_full st arr off remaining k_tbl h</code></h3>
+<h3><code>sha_st_pbuf st</code></h3>
+<h3><code>sha_st_cnt st</code></h3>
 <h3><code>sha256_update_str st s</code></h3>
 <blockquote>Convenience: feed a Rail string.  Allocates a temporary byte array;</blockquote>
 <blockquote>not appropriate for huge strings — use sha256_update_arr from a streaming</blockquote>
 <blockquote>producer instead.</blockquote>
 <h3><code>sha256_finalize st</code></h3>
 <blockquote>Pad and produce the 32-byte digest.  After finalize the state is spent.</blockquote>
+<h3><code>sha256_finalize_go h k_tbl pbuf plen total</code></h3>
 <h3><code>sha256_finalize_hex st</code></h3>
 <h2><code>stdlib/sha512.rail</code></h2>
 <h3><code>s5_and32 a b</code></h3>
@@ -3263,6 +3433,11 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>full request as a Rail string. Caps at 64KB.</blockquote>
 <h3><code>tcp_crlf_crlf _</code></h3>
 <h3><code>recv_headers_loop fd buf acc</code></h3>
+<h3><code>recv_body_loop fd buf acc needed</code></h3>
+<h3><code>content_length_of s</code></h3>
+<blockquote>Content-Length value from a raw header blob, 0 if absent. parse_int</blockquote>
+<blockquote>stops at the first non-digit and returns 0 on a leading space, so the</blockquote>
+<blockquote>slice is de-spaced first.</blockquote>
 <h3><code>send_all_tcp fd s</code></h3>
 <blockquote>Send a full response string, looping on partial sends.</blockquote>
 <h3><code>send_all_tcp_loop fd s off total</code></h3>

@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Drop an artifact and its signed record — your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side. Includes a deliberately corrupted sample so you can watch failure before you trust success.">
+<meta name="description" content="Drop an artifact and its signed record: your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side. Includes a deliberately corrupted sample so you can watch failure before you trust success.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/verify">
-<meta property="og:title" content="Verify — Ledatic">
-<meta property="og:description" content="Drop an artifact and its signed record — your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side. Includes a deliberately corrupted sample so you can watch failure before you trust success.">
+<meta property="og:title" content="Verify · Ledatic">
+<meta property="og:description" content="Drop an artifact and its signed record: your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side. Includes a deliberately corrupted sample so you can watch failure before you trust success.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Verify — Ledatic">
-<meta name="twitter:description" content="Drop an artifact and its signed record — your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side.">
+<meta name="twitter:title" content="Verify · Ledatic">
+<meta name="twitter:description" content="Drop an artifact and its signed record: your browser re-hashes the bytes and checks the Ed25519 signature itself. Nothing uploads, nothing executes server-side.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Verify — Ledatic</title>
+<title>Verify · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/verify">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -287,9 +287,9 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <div><dt>artifact</dt><dd id="slot-artifact">none held — a signature can still be checked over its attested digest</dd></div>
       </dl>
       <div class="tray" id="tray-byo" role="log" aria-live="polite" hidden></div>
-      <p class="fine">Attestation records on this site end in <code>.attestation.json</code> — <a href="/releases/v5.1.0/rail_native.attestation.json">here is a real one</a> to inspect. Provenance-report manifests verify here too.</p>
+      <p class="fine">Attestation records on this site end in <code>.attestation.json</code> — <a href="/releases/v5.4.0/rail_native.attestation.json">here is a real one</a> to inspect. Provenance-report manifests verify here too.</p>
       <noscript>
-        <p class="nojs">These checks run in <em>your</em> browser — with JavaScript off there is no machine on this page to run them, and this loader stays honestly inert. Offline fallback: <code>attest/verify.sh</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">public site repo</a> reproduces every check with openssl. Report manifests are plain JSON at <code>/provenance/manifest/&lt;report_id&gt;</code>.</p>
+        <p class="nojs">These checks run in <em>your</em> browser — with JavaScript off there is no machine on this page to run them, and this loader stays honestly inert. Offline fallback: <code>attest/verify.sh</code> in the <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">public site repo</a> reproduces the artifact checks with OpenSSL 3 (stock macOS LibreSSL fails it). Report manifests are plain JSON at <code>/provenance/manifest/&lt;report_id&gt;</code>.</p>
       </noscript>
     </div>
   </div>
@@ -307,7 +307,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <span class="eyebrow">/01 &middot; expect green</span>
         <h3>The current release</h3>
         <p>The genuine record for the latest Rail compiler binary, signed by the artifact witness when it shipped. The bytes are fetched, re-hashed, and the signature checked — here, by you.</p>
-        <p class="prove-row"><button class="prove" id="prove-s1" aria-expanded="false" aria-controls="tray-s1" data-manifest="/releases/v5.1.0/rail_native.attestation.json" data-name="rail_native &middot; v5.1.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
+        <p class="prove-row"><button class="prove" id="prove-s1" aria-expanded="false" aria-controls="tray-s1" data-manifest="/releases/v5.4.0/rail_native.attestation.json" data-name="rail_native &middot; v5.4.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button></p>
         <div class="proof-act" data-proof-act="prove-s1" aria-label="the proof, step by step">
           <span class="pa-cell" data-id="FETCH"><b>fetch</b><i>·</i></span><span class="pa-cell" data-id="HASH"><b>hash</b><i>·</i></span><span class="pa-cell" data-id="KEY"><b>key</b><i>·</i></span><span class="pa-cell" data-id="SIG"><b>sig</b><i>·</i></span><span class="pa-cell" data-id="CHAIN"><b>chain</b><i>·</i></span>
         </div>
@@ -359,7 +359,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <p>The module at <a href="/_shared/proof-tray.js"><code>/_shared/proof-tray.js</code></a> decides what to fetch and what counts as a pass. Press the button to re-fetch its served bytes and compare them against the site&rsquo;s signed deploy record — the same self-check every page footer runs.</p>
         <p><button class="btn btn-secondary" id="run-vtv" type="button" disabled>check the module</button></p>
         <div class="tray" id="vtv-out" role="log" aria-live="polite" hidden></div>
-        <p class="fine">Until the first signed deploy record is published at <code>/attest/site/latest.json</code>, this check reports honestly unknown — it will not show green on faith. Source is public in the <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">site repo</a>.</p>
+        <p class="fine">If the signed deploy record at <code>/attest/site/latest.json</code> cannot be read, this check reports unknown; it will not show green on faith. Source is public in the <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">site repo</a>.</p>
       </div>
     </div>
   </div>
@@ -387,7 +387,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       </div>
       <div class="keyrow">
         <span class="kname">report witnesses</span>
-        <span class="krole">provenance reports name their witnesses; this page pins raw verifying keys for <code>fleet0</code>, <code>studio</code> and <code>mini</code> in its source</span>
+        <span class="krole">provenance reports name their witnesses; this page pins raw verifying keys for <code>fleet0</code> and <code>mini</code>, and for <code>studio</code> only up to 2026-10-13, when that machine was sold; every one of them is a Ledatic machine</span>
       </div>
     </div>
 
@@ -495,6 +495,9 @@ const REPORT_KEYS = {
   studio: 'ltEzzr2LSBuVpsZ+eENt4z6JigMRDz2y96fz3ymZC18=',
   mini:   'OHbTtDz3ivtia19IYac+/bHdTcqf1wWA7AyFoVig0/w=',
 };
+/* A key retires with its machine. The studio was sold on 2026-10-13, so a
+   signature it carries from that day on proves nothing. */
+const KEY_RETIRED = { studio: Date.UTC(2026, 9, 13) / 1000 };
 
 /* ── crypto helpers (report path only; artifact path uses D's engine) ── */
 const te = new TextEncoder();
@@ -925,7 +928,10 @@ async function runReportChecks(P, man, tray, rows) {
     if (w.digest_sha256 === att.inner_digest_sha256) linked++;
     const msg = `attest|v1|${w.digest_sha256}|${w.pulse_id}|${w.value_hex}|${w.witnessed_at}`;
     const pub = REPORT_KEYS[name];
-    const res = pub ? await edVerify(msg, w.sig, pub)
+    const retiredAt = KEY_RETIRED[name];
+    const res = retiredAt !== undefined && Number(w.witnessed_at) >= retiredAt
+      ? { ok: false, why: `the ${name} key retired on 2026-10-13 with its machine; a signature dated after that proves nothing` }
+      : pub ? await edVerify(msg, w.sig, pub)
       : { ok: null, why: `no pinned key for witness '${name}' — cannot verify in this browser; check out-of-band` };
     if (res.ok === true) {
       stats.verified++;
@@ -968,7 +974,7 @@ async function runReportChecks(P, man, tray, rows) {
   /* verdict — consensus semantics */
   if (anyFalse) return reportVerdict(tray, 'fail', 'SIG', 'a witness signature did not verify', man, stats);
   if (stats.verified === stats.total && stats.total >= 2) {
-    stats.gloss = `${stats.total} independent witnesses · consensus`;
+    stats.gloss = `${stats.total} witnesses agree (all run by Ledatic)`;
     return reportVerdict(tray, 'ok', null, '', man, stats);
   }
   if (stats.verified === stats.total && stats.total === 1) {

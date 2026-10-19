@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Everyone else's AI says trust me. Ledatic builds AI you can check — every output ships a proof a stranger can verify, with no trust in us, anchored to a public physics beacon nobody controls. Provable, not promised.">
+<meta name="description" content="Everyone else says trust me. Ledatic ships work you can check: every Rail release, every deploy of this site and every beacon pulse carries a signature a stranger can verify in the browser. Provable, not promised.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/">
-<meta property="og:title" content="Ledatic — the verifiable layer">
-<meta property="og:description" content="Everyone else's AI says trust me. Ledatic builds AI you can check — every output ships a proof a stranger can verify, with no trust in us, anchored to a public physics beacon nobody controls. Provable, not promised.">
+<meta property="og:title" content="Ledatic · the verifiable layer">
+<meta property="og:description" content="Everyone else says trust me. Ledatic ships work you can check: every Rail release, every deploy of this site and every beacon pulse carries a signature a stranger can verify in the browser. Provable, not promised.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ledatic — the verifiable layer">
-<meta name="twitter:description" content="Everyone else's AI says trust me. Ledatic builds AI you can check — every output ships a proof a stranger can verify, with no trust in us, anchored to a public physics beacon nobody controls. Provable, not promised.">
+<meta name="twitter:title" content="Ledatic · the verifiable layer">
+<meta name="twitter:description" content="Everyone else says trust me. Ledatic ships work you can check: every Rail release, every deploy of this site and every beacon pulse carries a signature a stranger can verify in the browser. Provable, not promised.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Ledatic</title>
+<title>Ledatic · work you can check</title>
 <link rel="canonical" href="https://ledatic.org/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -33,7 +33,7 @@
       "name": "Ledatic",
       "url": "https://ledatic.org/",
       "logo": "https://ledatic.org/og.png",
-      "description": "Ledatic builds AI you can check, not just trust — every output carries a proof a stranger can verify, anchored to a public physics beacon nobody controls. A self-hosting Rail stack with zero C dependencies, an independent witness chain, and a Rail-native verifier you can run yourself.",
+      "description": "Ledatic ships work you can check, not just trust: Rail, a self-hosting compiler whose seed binary links only the system library; a signed, hash-chained entropy beacon countersigned by a witness on separate hardware; and signed releases and deploys a stranger can verify in the browser.",
       "address": { "@type": "PostalAddress", "addressLocality": "Detroit", "addressRegion": "MI", "addressCountry": "US" },
       "email": "hello@ledatic.org",
       "sameAs": [ "https://github.com/Ledatic-Empire/rail" ],
@@ -251,7 +251,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       Ledatic<span class="accent"> /</span>
     </h1>
     <p class="hero-sub fade-up">
-      Everyone else&rsquo;s AI says &ldquo;trust me.&rdquo; Ours says &ldquo;check me&rdquo; &mdash; every answer ships a proof you can verify yourself.
+      Everyone else says &ldquo;trust me.&rdquo; We say &ldquo;check me&rdquo;: every release, deploy and pulse here ships a proof you can verify yourself.
     </p>
     <p class="hero-tenets gloss fade-up">
       Verified beats reported &middot; the map is never sold as the territory &middot; an undetected lie costs a conspiracy
@@ -305,7 +305,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       <a class="hp-card reveal" href="/receipts">
         <span class="hp-tag">Receipts &middot; access to the instrument</span>
         <h3>A live attestation instrument &mdash; and the key to put your work through it</h3>
-        <p>A physics beacon and independent witness that turn any file into proof no one has to trust you for. Verification is free forever. Curious? The $5 door is always open.</p>
+        <p>A signed physics beacon and a witness key that turn any file into a receipt anyone can verify offline with standard Ed25519. Verification is free forever. Curious? The $5 door is always open.</p>
         <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
         <span class="hp-go">Look inside &rarr;</span>
       </a>
@@ -324,13 +324,14 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">Substrate</span>
-    <h2 class="reveal">One language under everything you just verified.</h2>
+    <h2 class="reveal">One language under most of what you just verified.</h2>
     <p class="lead reveal">
-      The compiler. The MHD simulation that becomes the beacon. The TLS
-      stack carrying signatures from an independent witness. The 143-line
-      verifier behind the button up top. The site you're reading. All of
-      it Rail. All of it compiles to a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed binary you can
-      read end to end. No npm. No Python. No runtime.
+      The compiler. The MHD simulation that becomes the beacon. The server
+      that publishes each pulse, and the signer on the witness. A TLS 1.3
+      stack. Each of those is Rail, and all of it compiles from a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed
+      binary you can read end to end. The rest, named plainly: the pulse
+      signer is Python, this page is served by a Cloudflare Worker, and the
+      button up top checks signatures with your browser's own WebCrypto.
     </p>
     <p class="gloss reveal">the compiler you run is the compiler you read</p>
     <p class="lead push reveal">
@@ -354,8 +355,9 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     <span class="eyebrow reveal">From the doorstep to the monolith</span>
     <h2 class="reveal">Same primitive. Every scale.</h2>
     <p class="lead reveal">
-      A signature you can re-derive in your browser, anchored to a public
-      physics process nobody controls, witnessed by an independent key.
+      A signature you can re-derive in your browser, anchored to a public,
+      hash-chained physics beacon and countersigned by a witness on separate
+      hardware (a Raspberry Pi that Ledatic runs).
       That primitive runs from one artifact at your doorstep all the way
       out to every deploy of this site, and to every record in a public
       archive. Same chain. Different scope.
@@ -377,7 +379,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       <a class="card reveal" href="replay.html">
         <span class="eyebrow">Archive</span>
         <h3>Replay</h3>
-        <p>Every deploy of this site in one ledger, each pulse-anchored and Ed25519-signed. Diff any two and see what changed; prove either one in your browser.</p>
+        <p>Every full deploy of this site since 2026-06-10 in one ledger, each pulse-anchored and Ed25519-signed. Diff any two and see what changed; prove either one in your browser.</p>
         <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
       </a>
       <a class="card reveal" href="oracle.html">
@@ -420,14 +422,15 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       </div>
       <div class="stat reveal">
         <div class="value">0</div>
-        <div class="label">C deps</div>
+        <div class="label">C deps in the seed binary</div>
       </div>
     </div>
     <p class="gloss push reveal">
-      every figure above is injected at deploy time from a generated registry
-      &mdash; none of them is typed by hand. per-release attestations are not
-      published yet; the proof you <em>can</em> press today is the signed
-      deploy manifest at the top of this page.
+      the first four figures are injected at deploy time from a generated
+      registry, not typed by hand; the last is a fact about the seed binary
+      (<code>otool -L</code> lists only libSystem). all but one tagged release
+      carries a signed attestation on the changelog, and the proof you can
+      press right here is the signed deploy manifest at the top of this page.
     </p>
   </div>
 </section>
@@ -436,11 +439,12 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal">2040, backwards</span>
-    <h2 class="reveal">No one can retro-fabricate a heartbeat.</h2>
+    <h2 class="reveal">Every pulse now commits to the one before it.</h2>
     <p class="lead reveal">
       The beacon ticks every <data class="fig" data-src="beacon:cadence" data-fmt="s" value="2" data-pulse="2941323">2 s</data>. Kept up, that is roughly 220 million
-      unbroken pulses by 2040 &mdash; a hash chain nobody can fabricate after
-      the fact, with every deploy of this site signed into it. It starts here.
+      pulses by 2040. Since pulse format 2 (2026-10-19) each one hashes the
+      one before it, and every deploy of this site is signed against the chain. Rewrite any old pulse and every
+      later one changes, so every copy saved anywhere would disagree.
     </p>
     <p class="gloss reveal">fourteen years from now, this page will be able to prove what it said today</p>
   </div>

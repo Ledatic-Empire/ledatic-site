@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="A ledger of signed site deploys. Every deploy of ledatic.org leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
+<meta name="description" content="A ledger of signed site deploys. Every full deploy of ledatic.org since 2026-06-10 leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/replay">
-<meta property="og:title" content="Replay — Ledatic">
-<meta property="og:description" content="A ledger of signed site deploys. Every deploy of ledatic.org leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
+<meta property="og:title" content="Replay · Ledatic">
+<meta property="og:description" content="A ledger of signed site deploys. Every full deploy of ledatic.org since 2026-06-10 leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Replay — Ledatic">
-<meta name="twitter:description" content="A ledger of signed site deploys. Every deploy of ledatic.org leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
+<meta name="twitter:title" content="Replay · Ledatic">
+<meta name="twitter:description" content="A ledger of signed site deploys. Every full deploy of ledatic.org since 2026-06-10 leaves a pulse-anchored, Ed25519-signed manifest of exactly what was served. Replay the ledger, diff any two deploys, and check the proofs in your browser.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Replay — Ledatic</title>
+<title>Replay · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/replay">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -215,7 +215,7 @@
     <span class="eyebrow fade-up">Replay</span>
     <h1 class="hero-title fade-up">What this site claimed, when.</h1>
     <p class="hero-sub fade-up">
-      Every deploy of ledatic.org leaves a signed manifest.
+      Every full deploy of ledatic.org leaves a signed manifest.
     </p>
     <p class="hero-desc fade-up">
       A deploy manifest lists the SHA-256 of every page deployed, is anchored to
@@ -241,8 +241,8 @@
       and numbered <code>/attest/site/&lt;n&gt;.json</code>. Press
       <span aria-hidden="true">⌁</span> prove on any entry: your browser
       recomputes the file-list digest, checks the pinned deploy key, verifies
-      the Ed25519 signature, and confirms the pulse anchor sits inside the
-      confirmed chain. Nothing is taken on faith from this page.
+      the Ed25519 signature, and checks that the pulse anchor is not in the
+      future. Nothing is taken on faith from this page.
     </p>
 
     <div class="ledger-meta">

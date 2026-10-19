@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists — newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
+<meta name="description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists: newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/changelog">
-<meta property="og:title" content="Changelog — Ledatic">
-<meta property="og:description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists — newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
+<meta property="og:title" content="Changelog · Ledatic">
+<meta property="og:description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists: newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Changelog — Ledatic">
-<meta name="twitter:description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists — newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
+<meta name="twitter:title" content="Changelog · Ledatic">
+<meta name="twitter:description" content="Every tagged Rail release, pulse-anchored and witness-signed where an artifact exists: newest first. Entries that predate the chain are marked honestly. This page doubles as the site's deploy ledger.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Changelog — Ledatic</title>
+<title>Changelog · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/changelog">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -177,7 +177,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     </p>
     <p class="hero-desc fade-up">
       Tagged entries carry a real attestation: the release binary, hashed and
-      Ed25519-signed by an independent witness against a live entropy-beacon
+      Ed25519-signed by our Pi witness against a live entropy-beacon
       pulse. Press <span aria-hidden="true">⌁</span> verify on any entry and
       your browser checks the proof itself. Entries that predate the chain
       say so &mdash; honestly.
@@ -241,7 +241,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
         <div class="erow">
           <span class="lver">v5.2.0</span>
           <span class="ldate">2026-06-19</span>
-          <span class="anchor">attested <time-pulse data-pulse="2892864">@ p#2892864</time-pulse></span>
+          <span class="anchor">backfill-attested <time-pulse data-pulse="2892864">@ p#2892864</time-pulse></span>
           <button class="prove" aria-expanded="false" data-manifest="/releases/v5.2.0/rail_native.attestation.json" data-name="rail_native &middot; v5.2.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
         </div>
         <p class="ttl">Rail stands alone: it assembles, links and code-signs itself.</p>
@@ -380,14 +380,14 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
           <button class="prove" aria-expanded="false" data-manifest="/releases/v3.8.0/rail_native.attestation.json" data-name="rail_native &middot; v3.8.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
         </div>
         <p class="ttl">Releases physicified.</p>
-        <p class="gloss">the chain epoch &mdash; from here forward, every release is signed at the moment it ships</p>
+        <p class="gloss">the chain epoch: from here forward, releases are signed when they ship, with the late ones marked backfill-attested</p>
       </li>
 
       <li class="epoch reveal" aria-label="chain epoch boundary">
         <span class="mark" aria-hidden="true">◇</span>
-        pre-pulse era &mdash; everything below shipped before the chain
-        existed (2026-05-01). Signatures below were added retroactively;
-        each pulse anchor marks the signing moment, not the release.
+        pre-pulse era: everything below shipped before release signing began
+        (2026-05-01). Signatures below were added retroactively; each pulse
+        anchor marks the signing moment, not the release.
       </li>
 
       <li class="reveal" id="v3-7-0">
@@ -424,6 +424,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
           <button class="prove" aria-expanded="false" data-manifest="/releases/v3.6.0/rail_native.attestation.json" data-name="rail_native &middot; v3.6.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">⌁</span></button><div class="tray" hidden></div>
         </div>
         <p class="ttl">Strict HTTPS by default &mdash; chain-walk to trust store.</p>
+        <p>This backfill attestation covers a 922,896-byte build (sha256 ae6e7c7b&hellip;), not the 919,792-byte binary committed at the tag (fd827b60&hellip;). The signature is real; it signs a different build than the tag holds.</p>
       </li>
 
       <li class="reveal" id="v3-5-0">

@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="A model's claim that its code is correct is unfalsifiable. A compiler accepting that code is a fact anyone can reproduce. Ledatic trains models against a compiler you can re-run yourself — every corpus bit-reproducible, every step signed against a public beacon. Including the month it proved us wrong.">
+<meta name="description" content="A model's claim that its code is correct is unfalsifiable. A compiler accepting that code is a fact anyone can reproduce. Ledatic trains models against a compiler you can re-run yourself: every corpus bit-reproducible, every step signed against a public beacon. Including the month it proved us wrong.">
 <link rel="canonical" href="https://ledatic.org/oracle">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/oracle">
-<meta property="og:title" content="The oracle — training AI against a checker you can re-run">
+<meta property="og:title" content="The oracle · training AI against a checker you can re-run">
 <meta property="og:description" content="A model's claim of correctness is unfalsifiable. A compile is not. We train against the compiler, bind every corpus into a signed chain, and publish what it cost us when the method lied.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="The oracle — training AI against a checker you can re-run">
+<meta name="twitter:title" content="The oracle · training AI against a checker you can re-run">
 <meta name="twitter:description" content="A model's claim of correctness is unfalsifiable. A compile is not.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>The Oracle — Ledatic</title>
+<title>The Oracle · Ledatic</title>
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="stylesheet" href="_shared/tokens.css">
@@ -162,7 +162,7 @@ pre.loop .c { color: var(--tx-dim); }
 
     <p class="gloss push reveal">
       the corpus is regenerable from its seed; the ledger is a chain; the
-      witness key is not ours alone
+      witness key lives on separate hardware
     </p>
   </div>
 </section>
@@ -291,10 +291,11 @@ curl -sf https://ledatic.org/releases/v5.4.0/rail_native.attestation.json -o /tm
 <span class="ok"># &rarr; ok  artifact=rail_native  pulse_id=&hellip;  pk_fp=cac5f21a70564aeb</span></code></pre>
 
     <p class="body push reveal">
-      The build behind that binary is attested too &mdash; the test suite
-      bracketed by two beacon pulses, and a self-host record showing the
-      compiler rebuilt itself to a fixed point that matches the committed
-      seed byte for byte.
+      The latest master build is attested too, at <code>/attest/latest</code>:
+      the test suite bracketed by two beacon pulses, and a self-host record
+      showing the compiler rebuilt itself to a fixed point that matches the
+      committed seed byte for byte. The recipe above needs OpenSSL 3; stock
+      macOS LibreSSL exits 1 without a message.
     </p>
 
     <div class="cta-row push reveal">

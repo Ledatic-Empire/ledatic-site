@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Three independent nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
+<meta name="description" content="Three nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/fleet">
-<meta property="og:title" content="Fleet — Ledatic">
-<meta property="og:description" content="Three independent nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
+<meta property="og:title" content="Fleet · Ledatic">
+<meta property="og:description" content="Three nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Fleet — Ledatic">
-<meta name="twitter:description" content="Three independent nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
+<meta name="twitter:title" content="Fleet · Ledatic">
+<meta name="twitter:description" content="Three nodes, two on a Thunderbolt link and one at the edge, answering the same HTTP control plane. No tmux. No ssh fan-out. One surface, shared state.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <link rel="canonical" href="https://ledatic.org/fleet">
-<title>Fleet &mdash; Ledatic</title>
+<title>Fleet · Ledatic</title>
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="stylesheet" href="_shared/tokens.css">
@@ -148,7 +148,7 @@
     <p class="body">
       Three nodes answer one HTTP control plane: two on a Thunderbolt link,
       one at the edge. This page never reaches them. It reads the one
-      snapshot the fleet publishes, co-signed by an independent witness at a
+      snapshot the fleet publishes, signed by the Pi witness at a
       pulse, and tells you exactly how old that record is. A chip only earns
       a state after this page has read a fresh snapshot; what can&rsquo;t be
       checked from the public edge stays hollow.
@@ -178,8 +178,8 @@
         <div class="k">witnessed</div>     <div class="v dim" data-kv="snap.ts">&hellip;</div>
       </div>
       <p class="prove-row gloss">
-        The hub publishes this snapshot; an independent edge node signs its
-        digest against the beacon chain. The cards below render that record
+        The hub publishes this snapshot; the edge node (the Pi witness, which
+        Ledatic also runs) signs its digest against the beacon chain. The cards below render that record
         &mdash; nothing here probes a machine directly.
       </p>
       <p class="prove-row">
@@ -237,23 +237,23 @@
     <span class="eyebrow">Topology</span>
     <h2>Star, not triangle.</h2>
     <p class="body">
-      The hub carries the routing; the reasoning and laptop nodes are spokes.
-      A triangle topology was tried and failed &mdash; L2 loops on the bridge
+      The hub carries the routing; the laptop is the spoke on Thunderbolt, and
+      the Pi sits at the edge on Wi-Fi. A triangle topology was tried and failed: L2 loops on the bridge
       caused ARP to break silently across the fabric. Star-only from then on.
     </p>
 
     <div class="grid grid-2 grid-4" style="margin-top: 2rem;">
       <div class="stat">
-        <div class="value">9.16</div>
-        <div class="label">Gb/s hub &harr; reasoning</div>
+        <div class="value">3</div>
+        <div class="label">nodes: hub, laptop, edge Pi</div>
       </div>
       <div class="stat">
-        <div class="value">0.42</div>
-        <div class="label">ms RTT</div>
+        <div class="value">1</div>
+        <div class="label">Thunderbolt link</div>
       </div>
       <div class="stat">
-        <div class="value">0.33</div>
-        <div class="label">Gb/s hub &harr; laptop</div>
+        <div class="value">0.39</div>
+        <div class="label">ms RTT hub &harr; laptop (2026-10-19)</div>
       </div>
       <div class="stat">
         <div class="value">90 s</div>

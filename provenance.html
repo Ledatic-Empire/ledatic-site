@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Cryptographically verifiable AI reports — signed by an independent physical witness, anchored to a public entropy beacon, verifiable in any modern browser. This page proves itself on load. EU AI Act log-retention ready (Article 26).">
+<meta name="description" content="Cryptographically verifiable AI reports: signed by a witness on separate hardware, anchored to a public entropy beacon, verifiable in any modern browser. This page proves itself on load. EU AI Act log-retention ready (Article 26).">
 <link rel="canonical" href="https://ledatic.org/provenance">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/provenance">
-<meta property="og:title" content="Provenance — Ledatic">
-<meta property="og:description" content="Cryptographically verifiable AI reports — independent physical witness, public entropy beacon, in-browser Ed25519 verification. This page proves itself on load.">
+<meta property="og:title" content="Provenance · Ledatic">
+<meta property="og:description" content="Cryptographically verifiable AI reports: a witness on separate hardware, a public entropy beacon, in-browser Ed25519 verification. This page proves itself on load.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Provenance — Ledatic">
-<meta name="twitter:description" content="Cryptographically verifiable AI reports — independent witness, public beacon, in-browser verification.">
+<meta name="twitter:title" content="Provenance · Ledatic">
+<meta name="twitter:description" content="Cryptographically verifiable AI reports: a separate-hardware witness, a public beacon, in-browser verification.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Provenance — Ledatic</title>
+<title>Provenance · Ledatic</title>
 <link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
 <link rel="stylesheet" href="_shared/tokens.css">
@@ -143,7 +143,8 @@
   <p class="hero-desc fade-up">
     Every Provenance report ships with a signed manifest: input hash, output
     hash, a timestamp anchored to a public entropy beacon, and an Ed25519
-    signature from an independent physical witness. Anyone you hand the report
+    signature from a witness on separate hardware (a Raspberry Pi we run, not
+    the machine that ran the model). Anyone you hand the report
     to verifies it in their own browser &mdash; no account, no tooling, no calling us.
     Built for legal, financial, and regulated workflows where
     &ldquo;we ran it through a model&rdquo; needs to survive discovery.
@@ -185,9 +186,9 @@
       <div class="card reveal">
         <span class="eyebrow">/02</span>
         <h3>Witness signs</h3>
-        <p>An independent, separately controlled witness device reads the current
-        public beacon pulse and signs the record against it. The witness shares
-        no infrastructure with the systems producing the reports.</p>
+        <p>A witness on separate hardware, with its own key, reads the current
+        public beacon pulse and signs the record against it. We run the
+        witness too; witnesses we don't run are the planned next step.</p>
       </div>
       <div class="card reveal">
         <span class="eyebrow">/03</span>
@@ -225,8 +226,8 @@
         <span class="eyebrow">/03</span>
         <h3>Internal audit</h3>
         <p>SEC, FCA, internal risk. &ldquo;Prove the AI was used correctly, not
-        after the fact.&rdquo; Signed timestamps from a witness you don't
-        control. The auditor verifies it in their browser; no audit log to
+        after the fact.&rdquo; Signed timestamps from a witness on separate
+        hardware from the model host. The auditor verifies it in their browser; no audit log to
         argue about.</p>
       </div>
       <div class="card reveal">
@@ -271,9 +272,10 @@ the proof runs in any modern browser: <code>crypto.subtle.verify</code>
     <h2 class="reveal">Verify one right now.</h2>
     <p class="body reveal">
       This button verifies a real, rotating attestation: the entropy beacon's
-      latest signed physics frame. Your browser fetches the manifest, re-derives
-      the artifact hash, and checks the witness signature &mdash; if the frame
-      has rotated past the signed one, the proof reports that honestly.
+      latest signed physics frame. Your browser fetches the manifest and checks
+      the witness signature over the frame's digest. The hashed state file is
+      not published, so this proves who signed which digest at which pulse,
+      not the bytes themselves; the proof tray says so when it runs.
     </p>
     <p class="reveal">
       <button class="prove" aria-expanded="false"
@@ -283,7 +285,7 @@ the proof runs in any modern browser: <code>crypto.subtle.verify</code>
     </p>
     <p class="body reveal" style="font-size: 0.8rem; color: var(--tx-dim);">
       No JavaScript? Fetch <code>/entropy/frame/latest.attestation.json</code> and
-      reproduce every check offline with <code>attest/verify.sh</code> from the
+      check its signature with OpenSSL 3; <code>attest/verify.sh</code> from the
       <a href="https://github.com/Ledatic-Empire/ledatic-site" rel="noopener">public site repo</a>.
     </p>
   </div>
@@ -307,9 +309,9 @@ the proof runs in any modern browser: <code>crypto.subtle.verify</code>
       <div class="prov-vs-col us">
         <h3>Ledatic Provenance</h3>
         <ul>
-          <li>Signed by an independent witness &mdash; not the model host</li>
+          <li>Signed on separate hardware, not on the model host</li>
           <li>Public Ed25519 keys, browser-verifiable signatures</li>
-          <li>Witness device separately controlled and inspectable</li>
+          <li>Witness public key pinned here and in the public repo</li>
           <li>Chained to a public entropy beacon you can read yourself</li>
           <li>&ldquo;Trust the cryptography&rdquo;</li>
         </ul>
@@ -325,9 +327,9 @@ the proof runs in any modern browser: <code>crypto.subtle.verify</code>
     <p class="body reveal">
       We shipped this in production. A 30-day commercial engagement ran its
       client deliverables through the witness chain &mdash; signed manifests,
-      public verification pages. Closed 2026-05-12, paid in full. The witness
-      infrastructure has signed the public beacon's observations continuously
-      since April 2026, and the page you are reading is published through the
+      verification pages (since retired). Closed 2026-05-12, paid in full. The
+      witness has signed the public beacon's pulses since 2026-04-20, with
+      gaps (the longest, about 80 hours, in May), and the page you are reading is published through the
       same discipline: a signed deploy manifest, checked against the served
       bytes in your browser.
     </p>
@@ -342,15 +344,17 @@ the proof runs in any modern browser: <code>crypto.subtle.verify</code>
       <dt>How is this different from a model vendor signing my output?</dt>
       <dd>A vendor signs with a key they control, against an audit log they
       maintain. You're trusting them. Here, the signature comes from a witness
-      that is independent of the report generator, verifiable against a public
-      Ed25519 key, chained to a public beacon. Anyone can verify the chain
-      end-to-end without contacting us.</dd>
+      on separate hardware from the report generator, verifiable against a
+      public Ed25519 key, chained to a public beacon. Anyone can verify the
+      chain end to end without contacting us. We run that witness too, so
+      today you are trusting that we did not sign late; outside witnesses are
+      how we plan to remove that.</dd>
 
       <dt>What is the witness?</dt>
-      <dd>A dedicated, separately controlled physical signing device that shares
-      no infrastructure with the systems producing the reports. Independence is
-      the feature: its public keys are published, pinned in this site's verifier,
-      and available out of band from the public repo.</dd>
+      <dd>A dedicated physical signing device (a Raspberry Pi) with its own key,
+      separate from the machines that produce the reports. Ledatic runs it. Its
+      public key is published, pinned in this site's verifier, and available out
+      of band from the public repo.</dd>
 
       <dt>What if the witness is down or compromised?</dt>
       <dd>If the witness is unreachable at sign-time, the report is delivered
@@ -360,10 +364,11 @@ the proof runs in any modern browser: <code>crypto.subtle.verify</code>
       revocation and rotate; affected manifests are flagged on the verify surface.</dd>
 
       <dt>Can you backdate a manifest?</dt>
-      <dd>No. The witness signs over the current pulse_id of the public entropy
-      beacon. Pulses are append-only and publicly readable, and third parties
-      observe the beacon continuously. To backdate, we would have to forge a
-      public chain that other people already hold copies of.</dd>
+      <dd>Not to before its pulse. A manifest signed against pulse N proves the
+      record existed no earlier than that pulse was published, because pulse N's
+      value could not be known before then. It does not prove the record is no
+      later: the witness will sign against an older pulse it is handed, and we
+      run the witness. Outside witnesses that refuse stale pulses are the fix.</dd>
 
       <dt>Does verification need your backend?</dt>
       <dd>The proof itself runs in your browser via WebCrypto &mdash; the only

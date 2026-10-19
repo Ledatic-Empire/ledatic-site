@@ -7,18 +7,18 @@
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/entropy">
-<meta property="og:title" content="Entropy — Ledatic">
+<meta property="og:title" content="Entropy · Ledatic">
 <meta property="og:description" content="A public beacon: one signed pulse every 2 s. Each value commits to the previous pulse, to the digest of a live plasma frame, and to fresh randomness promised one pulse early. Check it in your browser or with one Python script.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Entropy — Ledatic">
+<meta name="twitter:title" content="Entropy · Ledatic">
 <meta name="twitter:description" content="A public beacon: one signed pulse every 2 s. Each value commits to the previous pulse, to the digest of a live plasma frame, and to fresh randomness promised one pulse early. Check it in your browser or with one Python script.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
-<title>Entropy — Ledatic</title>
+<title>Entropy · Ledatic</title>
 <link rel="canonical" href="https://ledatic.org/entropy">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#141414">
@@ -255,8 +255,8 @@
     <h2 class="reveal">See the plasma a pulse commits to.</h2>
     <p class="body reveal" style="max-width: 52rem;">
       An Orszag-Tang vortex on a 128&sup2; periodic grid. Ideal-MHD,
-      Lax-Friedrichs, conservation to machine precision
-      (&Delta;m/m &lt; 10<sup>-15</sup>, &Delta;E/E &lt; 10<sup>-15</sup>,
+      Lax-Friedrichs, conservation near machine precision
+      (&Delta;m/m about 10<sup>-13</sup>, &Delta;E/E &lt; 10<sup>-15</sup>,
       &nabla;&middot;B at 10<sup>-15</sup> by construction). A pulse does
       not hash a picture. It commits to <code>frame.digest</code>, the
       SHA-256 of the 393,216 float32 bytes the solver wrote for that
@@ -316,7 +316,7 @@
       witness signature over the frame's digest; the solver-state bytes
       themselves aren't published, so the tray will say so rather than
       pretend it re-hashed them. That record signs the digest of the
-      solver&rsquo;s 589,888-byte state file, a different byte string
+      solver&rsquo;s 589,904-byte state file, a different byte string
       from the 393,216 bytes behind a pulse&rsquo;s
       <code>frame.digest</code>, so the two digests differ by design.
     </p>

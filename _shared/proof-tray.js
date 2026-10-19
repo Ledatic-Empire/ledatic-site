@@ -72,7 +72,7 @@ const ED = { name: 'Ed25519' };
 const subtle = (globalThis.crypto && globalThis.crypto.subtle) || null;
 const hasDOM = typeof document !== 'undefined';
 const THIN = ' ';                    // narrow no-break space (§2 grouping)
-const DEFAULT_CADENCE_MS = 2000;          // beacon publishes every ~2 s
+const DEFAULT_CADENCE_MS = 2000;          // beacon publishes every 2 s
 const MANIFEST_TIMEOUT_MS = 8000;
 const ARTIFACT_TIMEOUT_MS = 30000;
 const MAX_ARTIFACT_BYTES = 32 * 1024 * 1024;   // honesty cap, not a promise
