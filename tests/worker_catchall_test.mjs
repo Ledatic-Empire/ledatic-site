@@ -37,6 +37,7 @@ const kv = memKV({
   "vessel.html": "<!doctype html><title>vessel</title>",
   "portcall.html": "<!doctype html><title>portcall</title>",
   "portcall-app.html": "<!doctype html><title>app</title>",
+  "portcall-app.manifest": "{\"name\":\"Port Call\"}",
   "tios/current": "abc1234",
   "attest/releases/v5.4.0/compile.rail": "let x = 1 < 2",
   "releases/v5.1.0/rail_native": "\x7fELF-ish",
@@ -63,13 +64,17 @@ function check(name, ok, detail) {
   if (!ok) fails++;
 }
 
-// 1. The write the old code allowed: constant cookie, arbitrary strings.
+// 1. The write the old code allowed (constant cookie, arbitrary strings) is
+//    gone with the Lakes demo, retired 2026-10-19: it answers 410 and writes
+//    nothing. The stored ring is seeded below as if an old write had landed.
+const writesBefore = kv.writes;
 const w = await hit("/portcall/order", {
   method: "POST",
   headers: { cookie: "pc_ok=1", "content-type": "application/json" },
   body: JSON.stringify({ order: PAYLOAD, receipt: { pulse_id: 1 } }),
 });
-check("portcall order accepted (Lakes flow unchanged)", w.status === 200, `status ${w.status}`);
+check("portcall order refused: 410, no write", w.status === 410 && kv.writes === writesBefore, `status ${w.status}, ${kv.writes - writesBefore} writes`);
+await kv.put("portcall_orders", JSON.stringify([{ order: PAYLOAD }]));
 
 // 2. Worker state is never served by the fallthrough.
 for (const p of ["/portcall_orders", "/tios/current"]) {
@@ -80,16 +85,17 @@ for (const p of ["/portcall_orders", "/tios/current"]) {
 }
 
 // 3. The Lakes pages answer only through their gates.
-for (const p of ["/greatlakes.html", "/vessel.html", "/vessel", "/portcall.html", "/portcall-app.html"]) {
+for (const p of ["/greatlakes.html", "/vessel.html", "/vessel", "/portcall.html", "/portcall-app.html", "/portcall-app.manifest"]) {
   const r = await hit(p);
   const body = await r.text();
   check(`${p} not served around the gate`, r.status === 404 && !/<title>(lakes|vessel|portcall|app)</.test(body),
     `status ${r.status} ${body.slice(0, 40)}`);
 }
-const gated = await hit("/greatlakes");
-check("/greatlakes still asks for the password", gated.status === 401, `status ${gated.status}`);
-const opened = await hit("/greatlakes", { headers: { authorization: "Basic " + btoa("demo:test-pass") } });
-check("/greatlakes still opens with it", opened.status === 200 && (await opened.text()).includes("<title>lakes<"), `status ${opened.status}`);
+for (const p of ["/greatlakes", "/greatlakes/data/fleet.json", "/portcall", "/portcall/app", "/portcall/fleet.json"]) {
+  const r = await hit(p, { headers: { authorization: "Basic " + btoa("demo:test-pass"), cookie: "pc_ok=1" } });
+  const body = await r.text();
+  check(`${p} retired: 410, even with the old password and cookie`, r.status === 410 && !body.includes("<title>"), `status ${r.status}`);
+}
 
 // 4. Unknown extensions are text, never HTML.
 const src = await hit("/attest/releases/v5.4.0/compile.rail");
