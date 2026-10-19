@@ -116,6 +116,12 @@ const DENY_EXACT = new Set([
   "assets/index-De4AavCV.js",
   "css/style.css",
   "js/main.js",
+  // Lakes pages: served only by /greatlakes and /portcall behind their gates
+  // (2026-10-19: /greatlakes.html and /vessel answered around the Basic gate).
+  "greatlakes.html",
+  "vessel.html",
+  "portcall.html",
+  "portcall-app.html",
   // NOTE: "playground" and "playground.html" used to be denied here as
   // dead-page orphans from a 2024 site incarnation. v0 playground (2026-05-13)
   // re-uses the slug for the live editor + /api/playground/compile route.
@@ -386,7 +392,9 @@ async function serveFromKV(key, env) {
     ? await env.LEDATIC_KV.get(key, "arrayBuffer")
     : await env.LEDATIC_KV.get(key);
   if (val === null || val === undefined) return null;
-  const mime = MIME[ext] || MIME.html;
+  // An extension we do not know is text, never a page: HTML here would run
+  // any script stored under that key (CSP allows inline script).
+  const mime = MIME[ext] || MIME.txt;
   const cache = LONG_CACHE_EXT.has(ext)
     ? "public, max-age=3600, s-maxage=3600"
     : "public, max-age=300, s-maxage=300";
@@ -1769,11 +1777,12 @@ async function handleSite(request, env, url) {
   // large balance. The balance check below IS the metering, so beta vs paid is
   // a provisioning choice, not a code change.
   if (pathname === "/attest/witness" && method === "POST") {
-    const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
-    if (!(await playgroundRateLimit(ip, env))) return jsonResponse({ error: "rate_limited" }, 429);
-
+    // Key check before the limiter: the limiter writes KV, and an anonymous
+    // reject must not spend the free tier's 1,000 writes a day.
     const apiKey = request.headers.get("x-sdk-key") || "";
     if (!apiKey) return jsonResponse({ error: "unauthorized" }, 401);
+    const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
+    if (!(await playgroundRateLimit(ip, env))) return jsonResponse({ error: "rate_limited" }, 429);
     const acctRaw = await env.LEDATIC_KV.get(`account:${apiKey}`);
     if (!acctRaw) return jsonResponse({ error: "unauthorized" }, 401);
     let acct;
@@ -2695,6 +2704,14 @@ async function handleSite(request, env, url) {
     });
   }
   if (pathname === "/api/playground/compile" && method === "POST") {
+    // No backend bound (retired 2026-10-06): answer before the limiter and
+    // the metrics counter write KV for a request that cannot be served.
+    if (!env.PLAYGROUND_BACKEND) {
+      return new Response(JSON.stringify({ ok: false, error: "playground backend not configured" }), {
+        status: 503,
+        headers: sec({ "content-type": "application/json", "access-control-allow-origin": "*" }),
+      });
+    }
     const ip = request.headers.get("cf-connecting-ip") || "unknown";
     if (!(await playgroundRateLimit(ip, env))) {
       // Best-effort metrics increment; don't fail the response if it throws.
@@ -3096,7 +3113,11 @@ async function handleSite(request, env, url) {
   // Deny internal namespaces + dead orphans
   if (isPrivateKey(key)) return notFound();
 
-  const served = await serveFromKV(key, env);
+  // A key with no extension is route state (portcall_orders, tios/current,
+  // snapshot...), never a page, so it is not served raw. 2026-10-19: an
+  // anonymous POST /portcall/order put script into portcall_orders and this
+  // fallthrough served it back as text/html on the apex.
+  const served = extOf(key) ? await serveFromKV(key, env) : null;
   if (served) return served;
 
   // Extension-less URLs: try <key>.html before falling back.
