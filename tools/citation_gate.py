@@ -82,7 +82,8 @@ def deployable_keys():
                       ("_shared/shaders", (".frag",)),
                       ("data", (".html", ".json", ".jsonl", ".sha256")),
                       ("attest", (".sh", ".pem")),
-                      ("sdk", (".py",))):
+                      ("sdk", (".py",)),
+                      ("entropy", (".html", ".py"))):
         if not os.path.isdir(sub):
             continue
         for f in sorted(os.listdir(sub)):
@@ -115,8 +116,9 @@ def collect():
     """Gather (path, origin-file, rule) for every proof affordance."""
     found = []
     pages = [f for f in sorted(os.listdir(".")) if f.endswith(".html")]
-    if os.path.isdir("data"):
-        pages += [f"data/{f}" for f in sorted(os.listdir("data")) if f.endswith(".html")]
+    for sub in ("data", "entropy"):
+        if os.path.isdir(sub):
+            pages += [f"{sub}/{f}" for f in sorted(os.listdir(sub)) if f.endswith(".html")]
 
     for page in pages:
         src = open(page, encoding="utf-8").read()

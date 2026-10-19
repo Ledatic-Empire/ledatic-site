@@ -666,6 +666,7 @@ verify_deploy_all() {
   verify_route "$SITE_ORIGIN/"        "_shared/site.css?v=${CSS_VER}"
   verify_route "$SITE_ORIGIN/rail"    "_shared/site.css?v=${CSS_VER}"
   verify_route "$SITE_ORIGIN/entropy" "_shared/site.css?v=${CSS_VER}"
+  verify_route "$SITE_ORIGIN/entropy/spec" "_shared/site.css?v=${CSS_VER}"
   verify_route "$SITE_ORIGIN/_shared/site.css" "."
   verify_route "$SITE_ORIGIN/_shared/site.js"  "."
   verify_route "$SITE_ORIGIN/_shared/shaders/field.frag" "."
@@ -751,6 +752,20 @@ deploy_all() {
   # master. verifier_gate has already proven these are master's and the
   # witness's; the byte-diff below proves the edge serves them.
   for f in attest/verify.sh attest/fleet0.pub.pem; do
+    [ -f "$f" ] || continue
+    stage_raw "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
+  # The entropy beacon's pulse format 2 surface (2026-10-18): the spec page,
+  # served at /entropy/spec by the Worker's extension-less fallback, and the
+  # reference verifier it links (/entropy/verify_v2.py, text/plain). The page
+  # carries Figures, so it is staged like a top-level page.
+  for f in entropy/*.html; do
+    [ -f "$f" ] || continue
+    stage_html_versioned "$f"
+    upload "$STAGE_DIR/$f" "$f"
+  done
+  for f in entropy/*.py; do
     [ -f "$f" ] || continue
     stage_raw "$f"
     upload "$STAGE_DIR/$f" "$f"

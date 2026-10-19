@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="The Ledatic entropy beacon's pulse format 2: the canonical message, the status bits, the record fields, and how to check every pulse with public data only.">
+<!-- og:start -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ledatic.org/entropy/spec">
+<meta property="og:title" content="Beacon pulse format 2 · Ledatic">
+<meta property="og:description" content="The Ledatic entropy beacon's pulse format 2: the canonical message, the status bits, the record fields, and how to check every pulse with public data only.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Beacon pulse format 2 · Ledatic">
+<meta name="twitter:description" content="The Ledatic entropy beacon's pulse format 2: the canonical message, the status bits, the record fields, and how to check every pulse with public data only.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Beacon pulse format 2 · Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/entropy/spec">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='48'%20font-family='ui-monospace,monospace'%20font-size='48'%20fill='%2305e601'%20text-anchor='middle'%3E/%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- served at /entropy/spec, so every asset path is root-absolute -->
+<link rel="preload" href="/_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="/_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- link order contract: tokens, fonts, site, proof, page styles last -->
+<link rel="stylesheet" href="/_shared/tokens.css">
+<link rel="stylesheet" href="/_shared/fonts.css">
+<link rel="stylesheet" href="/_shared/site.css">
+<link rel="stylesheet" href="/_shared/proof.css">
+<style>
+/* /entropy/spec page styles: consumes tokens only, defines no custom props */
+
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+
+.spec-head { padding-top: var(--sp-32); padding-bottom: var(--sp-8); }
+.spec-head .status { color: var(--tx-dim); font-size: var(--t-data); }
+.spec .section { padding: var(--sp-12) 0; }
+.spec h2 { margin-bottom: var(--sp-4); }
+.spec ol, .spec ul { max-width: 64ch; color: var(--tx-lo); line-height: 1.65; padding-left: 1.5rem; }
+.spec li { margin-bottom: var(--sp-2); }
+.spec li strong { color: var(--tx-hi); }
+
+.spec pre, pre.recipe {
+  background: var(--ink-2);
+  box-shadow: var(--e1);
+  border-radius: var(--r-0);
+  padding: var(--sp-4);
+  margin: var(--sp-4) 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--tx-hi);
+  max-width: 100%;
+}
+
+.bits {
+  width: 100%;
+  max-width: 52rem;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: var(--t-data);
+  margin: var(--sp-4) 0;
+}
+.bits th, .bits td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+}
+.bits th { color: var(--tx-dim); font-weight: 400; }
+.bits td { color: var(--tx-lo); }
+.bits td:nth-child(-n+2) { color: var(--tx-hi); white-space: nowrap; }
+.bits-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail">Rail</a>
+    <a href="/receipts">Receipts</a>
+    <a href="/data">Data</a>
+    <div class="navmore">
+      <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
+      <div class="navmore-menu" role="menu">
+        <div class="navmore-group" role="group" aria-label="Verify">
+          <span class="navmore-h">// Verify</span>
+          <a href="/verify" role="menuitem">Verify an artifact</a>
+          <a href="/entropy" role="menuitem">Entropy beacon</a>
+          <a href="/system" role="menuitem">System</a>
+          <a href="/replay" role="menuitem">Replay</a>
+        </div>
+        <div class="navmore-group" role="group" aria-label="Build">
+          <span class="navmore-h">// Build</span>
+          <a href="/oracle" role="menuitem">The oracle</a>
+          <a href="/plasma" role="menuitem">Plasma</a>
+          <a href="/changelog" role="menuitem">Changelog</a>
+          <a href="/tios" role="menuitem">TIOS</a>
+        </div>
+        <div class="navmore-group" role="group" aria-label="Read">
+          <span class="navmore-h">// Read</span>
+          <a href="/manifesto" role="menuitem">Manifesto</a>
+          <a href="/physicify" role="menuitem">physicify</a>
+          <a href="/life" role="menuitem">Life</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5"></pulse-clock>
+    <a class="nav-cta" href="#verify">Verify</a>
+  </div>
+</nav>
+
+<main class="spec">
+
+<section class="spec-head">
+  <div class="wrap">
+    <span class="eyebrow fade-up">Entropy beacon &middot; specification</span>
+    <h1 class="hero-title fade-up">Pulse format 2</h1>
+    <p class="lead fade-up">
+      What one pulse of the <a href="/entropy">Ledatic entropy beacon</a>
+      contains, what it promises and what it does not, and how anyone can
+      check it with public data only.
+    </p>
+    <p class="status fade-up">
+      Status: draft, 2026-10-18. Supersedes the undocumented format 1
+      (<code>"version":1</code>).
+    </p>
+  </div>
+</section>
+
+<section class="section" id="promises">
+  <div class="wrap">
+    <span class="eyebrow reveal">Promises</span>
+    <h2 class="reveal">What a pulse promises.</h2>
+    <ol class="reveal">
+      <li><strong>Unpredictable until published.</strong> Each pulse mixes 32
+        bytes of fresh operating-system randomness (<code>local_random</code>)
+        that nobody outside the operator has seen before the pulse appears.
+        The physics frame alone is never the source of unpredictability.</li>
+      <li><strong>Committed before it is known.</strong> The operator publishes
+        <code>SHA-256(local_random)</code> one pulse early (<code>precommit</code>).
+        Once pulse N is out, the operator cannot change pulse N+1&rsquo;s
+        <code>local_random</code> without breaking that commitment.</li>
+      <li><strong>Chained.</strong> <code>value</code> is the SHA-256 of a
+        canonical message that contains the previous pulse&rsquo;s
+        <code>value</code>. Rewriting any pulse changes every value after it.</li>
+      <li><strong>Signed.</strong> The operator signs the canonical message with
+        an Ed25519 key whose public half is published
+        (<a href="/entropy/v2/key"><code>/entropy/v2/key</code></a>). A verifier
+        needs nothing else.</li>
+      <li><strong>Backed by checkable physics.</strong> <code>frame.digest</code>
+        is the SHA-256 of the 393,216 float32 bytes the MHD solver wrote for
+        that frame. <code>frame.epoch_seed</code> and <code>frame.epoch_frame</code>
+        say exactly where in a deterministic epoch the frame sits, so anyone
+        can replay the epoch from its seed and compare digests
+        (<a href="https://github.com/Ledatic-Empire/rail/blob/master/tools/plasma/mhd_verify_epoch.rail" rel="noopener"><code>tools/plasma/mhd_verify_epoch.rail</code></a>).</li>
+      <li><strong>Honest about gaps.</strong> <code>status</code> is a bit set; a
+        pulse after an outage, a pulse that re-hashed the previous frame, or a
+        pulse whose commitment was lost says so in-band.</li>
+    </ol>
+    <p class="body reveal">
+      What a pulse does <strong>not</strong> promise: that the operator cannot
+      see its own next value (<code>local_random</code> is generated by the
+      operator, as in NIST Beacon 2.0), or that the operator cannot withhold
+      a pulse. Mixing an external public beacon into <code>external</code>
+      (planned as format 2.1, drand) narrows the first; outside witnesses
+      narrow the second.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="cadence">
+  <div class="wrap">
+    <span class="eyebrow reveal">Cadence</span>
+    <h2 class="reveal">One pulse, on the even second.</h2>
+    <p class="body reveal">
+      One pulse <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every 2 s</data>, aligned to even UTC seconds
+      (<code>unix_ms % 2000 == 0</code> at the scheduled instant;
+      <code>unix_ms</code> records the actual write time). The solver
+      produces about 0.94 frames a second, so almost every pulse sees a new
+      frame.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="canonical">
+  <div class="wrap">
+    <span class="eyebrow reveal">Canonical message</span>
+    <h2 class="reveal">Twelve lines, in this order.</h2>
+    <p class="body reveal">
+      UTF-8, <code>\n</code>-terminated lines, in this order, no trailing spaces:
+    </p>
+    <pre class="reveal"><code>ledatic-beacon/2
+&lt;pulse_id&gt;                decimal
+&lt;unix_ms&gt;                 decimal, milliseconds since the Unix epoch
+&lt;prev_value_hex&gt;          64 lowercase hex
+&lt;frame.digest&gt;            64 lowercase hex, or 64 zeros when no frame was readable
+&lt;frame.run_frame&gt;         decimal (solver frame counter within its run)
+&lt;frame.epoch_seed&gt;        decimal, or -1 when the solver did not report it
+&lt;frame.epoch_frame&gt;       decimal frames since that seed's perturbation, or -1
+&lt;local_random_hex&gt;        64 lowercase hex
+&lt;precommit_hex&gt;           64 lowercase hex = SHA-256(next pulse's local_random)
+&lt;external&gt;                empty in format 2.0
+&lt;status&gt;                  decimal bit set (below)</code></pre>
+    <ul class="reveal">
+      <li><code>value_hex = SHA-256(canonical message)</code>, lowercase hex.</li>
+      <li><code>signature = Ed25519(operator key, canonical message)</code>,
+        base64 (standard, padded).</li>
+      <li><code>key_id</code> = first 16 hex of SHA-256 of the public key&rsquo;s
+        DER SubjectPublicKeyInfo (the same fingerprint rule the fleet0 witness
+        uses).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" id="status">
+  <div class="wrap">
+    <span class="eyebrow reveal">Status bits</span>
+    <h2 class="reveal">Gaps, said in-band.</h2>
+    <div class="bits-wrap reveal">
+      <table class="bits">
+        <thead><tr><th scope="col">bit</th><th scope="col">value</th><th scope="col">meaning</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>1</td><td>GAP: more than 10 s since the previous pulse was written</td></tr>
+          <tr><td>1</td><td>2</td><td>FRAME_REPEAT: same <code>frame.digest</code> as the previous pulse</td></tr>
+          <tr><td>2</td><td>4</td><td>NO_PROVENANCE: the solver did not report <code>epoch_seed</code>/<code>epoch_frame</code></td></tr>
+          <tr><td>3</td><td>8</td><td>NO_FRAME: no readable frame; <code>frame.digest</code> is all zeros</td></tr>
+          <tr><td>4</td><td>16</td><td>UNCOMMITTED: <code>local_random</code> was not committed by the previous pulse (first pulse of format 2, or the commitment was lost)</td></tr>
+          <tr><td>5</td><td>32</td><td>FORMAT_CHANGE: the previous pulse is format 1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="record">
+  <div class="wrap">
+    <span class="eyebrow reveal">Record</span>
+    <h2 class="reveal">JSON, one per pulse.</h2>
+    <pre class="reveal"><code>{"version":2,"pulse_id":9100000,"timestamp_utc":"2026-10-19T03:00:00Z","unix_timestamp":1792378800,
+ "unix_ms":1792378800004,"period_ms":2000,
+ "value_hex":"…","prev_value_hex":"…",
+ "frame":{"digest":"…","run_frame":4127,"epoch_seed":471529,"epoch_frame":88},
+ "local_random_hex":"…","precommit_hex":"…","external":"","status":0,
+ "signature":"…","key_id":"…",
+ "source":{"type":"2D_MHD_OrszagTang","grid":"128x128","node":"mini"},
+ "spec":"https://ledatic.org/entropy/spec"}</code></pre>
+    <p class="body reveal">
+      <code>pulse_id</code>, <code>timestamp_utc</code>, <code>unix_timestamp</code>,
+      <code>value_hex</code> and <code>prev_value_hex</code> keep their format 1
+      names and meanings, so the chain continues across the format change: the
+      first format 2 pulse&rsquo;s <code>prev_value_hex</code> is the last
+      format 1 pulse&rsquo;s <code>value_hex</code>.
+    </p>
+    <p class="body reveal">
+      Where the records are: <code>/entropy/pulse</code> (the latest),
+      <code>/entropy/pulse/log</code> (the newest 50, oldest first),
+      <code>/entropy/pulse/&lt;id&gt;</code> (one pulse by id) and
+      <code>/entropy/v2/key</code> (the operator key, PEM).
+    </p>
+  </div>
+</section>
+
+<section class="section" id="verifying">
+  <div class="wrap">
+    <span class="eyebrow reveal">Verifying</span>
+    <h2 class="reveal">Four checks per pulse.</h2>
+    <p class="body reveal">
+      For each pulse: rebuild the canonical message from the record, check
+      <code>SHA-256</code> equals <code>value_hex</code>, check the Ed25519
+      signature, check <code>prev_value_hex</code> equals the previous
+      record&rsquo;s <code>value_hex</code>, and check
+      <code>SHA-256(local_random)</code> equals the previous record&rsquo;s
+      <code>precommit_hex</code> unless status bit 4 is set. Reference
+      verifier: <a href="/entropy/verify_v2.py"><code>verify_v2.py</code></a>.
+    </p>
+    <p class="body reveal">
+      Replaying physics: run the epoch from <code>epoch_seed</code> for
+      <code>epoch_frame + 1</code> frames and compare the float32 planes&rsquo;
+      SHA-256 to <code>frame.digest</code>.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="verify">
+  <div class="wrap">
+    <span class="eyebrow reveal">Verify it yourself</span>
+    <h2 class="reveal">Public data, one script.</h2>
+    <p class="body reveal">
+      <a href="/entropy/verify_v2.py"><code>verify_v2.py</code></a> runs the
+      four checks above. It needs only stock Python 3.8 or newer and its
+      standard library: it uses the <code>cryptography</code> package for
+      signatures when one is installed and falls back to the RFC 8032
+      reference arithmetic when not. It prints the key fingerprint it used
+      (compare it with <code>5780ca472c3db50d</code>), one line of counts,
+      and <code>VERDICT=PASS</code>, exiting 0 only when every check held.
+    </p>
+<pre class="recipe"><code>curl -sO https://ledatic.org/entropy/verify_v2.py
+python3 verify_v2.py --url https://ledatic.org                              # the newest 50
+python3 verify_v2.py --url https://ledatic.org --from &lt;pulse_id&gt; --count 500   # a range, by id</code></pre>
+    <p class="body reveal">
+      Or keep your own copy of the data and check it offline:
+    </p>
+<pre class="recipe"><code>curl -s https://ledatic.org/entropy/v2/key &gt; beacon_v2.pub.pem
+curl -s https://ledatic.org/entropy/pulse/log &gt; pulses.json
+python3 verify_v2.py --file pulses.json --key beacon_v2.pub.pem</code></pre>
+    <p class="body reveal">
+      To replay a frame, take a pulse whose status does not carry
+      NO_PROVENANCE (bit 2, value 4), and run the Rail replay tool from a
+      clone of the public Rail repository:
+    </p>
+<pre class="reveal"><code>./rail_native run tools/plasma/mhd_verify_epoch.rail &lt;epoch_seed&gt; &lt;epoch_frame + 1&gt; - planes.f32
+shasum -a 256 planes.f32      # or sha256sum; equals the pulse's frame.digest</code></pre>
+    <p class="body reveal">
+      The same checks run in your browser on <a href="/entropy#verify">/entropy</a>,
+      against the newest 50 pulses.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="/rail">Rail</a></li>
+          <li><a href="/changelog">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="/verify">Verify an artifact</a></li>
+          <li><a href="/entropy">Entropy beacon</a></li>
+          <li><a href="/system">System</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="/manifesto">Manifesto</a></li>
+          <li><a href="https://github.com/Ledatic-Empire/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio" value="187" data-pulse="2941323">187/187</data> &middot; <data class="fig" data-src="repo:rail_native" value="908360" data-pulse="2941323">0.9 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags" value="47" data-pulse="2941323">47 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/_shared/site.js" defer></script>
+<script type="module" src="/_shared/pulse-clock.js"></script>
+<script type="module">
+/* /entropy/spec wiring: the footer self-check only. The page is a
+   document and is complete without JavaScript. */
+import { mountSelfCheck } from '/_shared/proof-tray.js';
+const strip = document.querySelector('.foot-bottom [data-selfcheck]');
+if (strip) mountSelfCheck(strip);
+</script>
+</body>
+</html>
