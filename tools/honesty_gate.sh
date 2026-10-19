@@ -19,9 +19,15 @@
 #   R5  Internal plumbing on a public surface: mesh-VPN vendor names, CGNAT
 #       100.x.x.x / 10.42.0.x IPs, internal ports, fleet auth header names,
 #       LLM model/vendor names, node hostnames, operator paths.
+#   R6  Retired beacon claims (pulse format 2, staged 2026-10-18): exact
+#       phrases that stopped being true when format 2 took over, matched in
+#       HTML and llms.txt in every spelling (tags dropped, entities decoded,
+#       line wraps collapsed, case folded), plus the cadence figure's source.
+#   R7  An unfilled CUTOVER_DATE placeholder on a public surface.
 #
-# Scope: every file deploy.sh uploads — *.html at repo root, _shared CSS/JS,
-# shaders. worker/ and tools/ are server/operator side, not scanned.
+# Scope: every file deploy.sh uploads: *.html at repo root and in entropy/,
+# _shared CSS/JS, shaders; R6 and R7 also read llms.txt. worker/ and tools/
+# are server/operator side, not scanned.
 #
 # Usage: tools/honesty_gate.sh        (from anywhere; cds to repo root)
 # Exit:  0 clean · 1 violations · 2 missing prerequisites
@@ -35,7 +41,7 @@ ALLOWLIST="tools/honesty_allowlist.txt"
 [ -f "$STATS" ] || { echo "honesty_gate: $STATS missing — run tools/gen_stats.sh first" >&2; exit 2; }
 [ -f "$ALLOWLIST" ] || { echo "honesty_gate: $ALLOWLIST missing" >&2; exit 2; }
 
-HTML_FILES=$(ls ./*.html 2>/dev/null)
+HTML_FILES=$(ls ./*.html ./entropy/*.html 2>/dev/null)
 ASSET_FILES=$(ls ./_shared/*.css ./_shared/*.js ./_shared/shaders/*.frag 2>/dev/null)
 [ -n "$HTML_FILES" ] || { echo "honesty_gate: no HTML files found" >&2; exit 2; }
 
@@ -225,6 +231,98 @@ for f in $HTML_FILES $ASSET_FILES; do
       fi
     done < <(grep -nE "$pat" "$f" || true)
   done
+done
+
+# ── R6: retired beacon claims (pulse format 2) ───────────────────────────
+#    Each phrase below was on /entropy or /llms.txt and stopped being true
+#    when pulse format 2 took over the chain (spec: entropy/spec.html). A
+#    phrase is matched as a reader sees it: tags dropped, entities decoded,
+#    curly quotes, tildes and hyphens folded, line wraps collapsed, case
+#    ignored, so it cannot come back in a spelling the gate never checked.
+R6_OUT=$(python3 - "$STATS" $HTML_FILES llms.txt <<'PYEOF'
+import html, json, re, sys
+PHRASES = [
+    "SHA-256 of the plasma state",                 # format 2 hashes a canonical message
+    "prev_hash || state_hash",                     # ditto
+    "same frame that gets SHA-256",                # /entropy/frame/current is not the hashed bytes
+    "bytes that just got SHA-256",                 # llms.txt's form of the same claim
+    "every ~2 s",                                  # the cadence is exactly 2 s
+    "cosigned by an independent witness",          # the witness is a machine Ledatic runs
+    "independently observed and Ed25519-cosigned", # ditto
+    "checks each link it sees",                    # the witness does not check links yet
+    "public store at the edge",                    # the store is the Ledatic origin behind a tunnel
+    "does not control alone",                      # Ledatic runs every signer
+    "no Ledatic trust required",                   # ditto
+]
+FOLD = {"‘": "'", "’": "'", "ʼ": "'", "“": '"', "”": '"',
+        "∼": "~", "˜": "~", "～": "~", "‐": "-", "‑": "-"}
+TOKEN = re.compile(r"<[^>]*>|&#?\w+;|\s+|.", re.S)
+ATTR = re.compile(r'\s[\w:-]+="([^"]*)"')      # every quoted attribute value
+
+def fold(text):
+    """Reader's-eye text, plus the source line of every character in it."""
+    out, lines, line = [], [], 1
+    for m in TOKEN.finditer(text):
+        t = m.group(0)
+        if t.startswith("<") and len(t) > 1:
+            piece = ""
+        elif t.startswith("&") and t.endswith(";"):
+            piece = html.unescape(t)
+        else:
+            piece = t
+        piece = re.sub(r"\s+", " ", "".join(FOLD.get(c, c) for c in piece))
+        if piece == " " and out and out[-1] == " ":
+            piece = ""
+        for c in piece.casefold():
+            out.append(c)
+            lines.append(line)
+        line += t.count("\n")
+    return "".join(out), lines
+
+stats_path, files = sys.argv[1], sys.argv[2:]
+for path in files:
+    try:
+        raw = open(path, encoding="utf-8").read()
+    except OSError:
+        continue
+    src = raw.splitlines()
+    # Body text as one stream, and every quoted attribute value on its own
+    # (meta descriptions and og cards are public copy too).
+    streams = [fold(raw)]
+    for m in ATTR.finditer(raw):
+        t, ls = fold(m.group(1))
+        base = raw.count("\n", 0, m.start(1))
+        streams.append((t, [base + n for n in ls]))
+    for text, lines in streams:
+        for phrase in PHRASES:
+            want = fold(phrase)[0]
+            at = text.find(want)
+            while at >= 0:
+                snip = " ".join(src[lines[at] - 1].split())[:90]
+                print(f"{path.lstrip('./')}:{lines[at]}\t'{phrase}' in: {snip}")
+                at = text.find(want, at + 1)
+cad = json.load(open(stats_path))["stats"].get("beacon:cadence", {})
+for name, val in [("display", cad.get("display", ""))] + sorted((cad.get("formats") or {}).items()):
+    if "~" in str(val):
+        print(f"{stats_path}:beacon:cadence.{name}\trenders '{val}'; the cadence is exactly 2 s (tools/gen_stats.sh)")
+PYEOF
+)
+if [ -n "$R6_OUT" ]; then
+  while IFS=$'\t' read -r loc what; do
+    violate "R6 retired beacon claim" "$loc" "$what"
+  done <<< "$R6_OUT"
+fi
+
+# ── R7: placeholders that must be filled before a deploy ─────────────────
+#    entropy.html names format 2's cutover as the literal token CUTOVER_DATE
+#    until the day it happens; the deploy that ships it fills in the date.
+for f in $HTML_FILES llms.txt; do
+  [ -f "$f" ] || continue
+  rel="${f#./}"
+  while IFS= read -r hit; do
+    [ -n "$hit" ] || continue
+    violate "R7 unfilled CUTOVER_DATE placeholder" "$rel:${hit%%:*}" "$(printf '%s' "${hit#*:}" | sed -E 's/^[[:space:]]+//' | cut -c1-110)"
+  done < <(grep -n 'CUTOVER_DATE' "$f" || true)
 done
 
 # ── Verdict ──────────────────────────────────────────────────────────────

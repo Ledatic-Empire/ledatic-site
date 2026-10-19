@@ -30,9 +30,6 @@ rail.html|140/140
 index.html|seed binary you can
 rail.html|visor-value
 
-# ── Cadence prose ─────────────────────────────────────────────────────────
-entropy.html|pulsing every two seconds
-
 # ── Non-managed numbers that collide with drift values [keep] ────────────
 dda.html|~140 distinct advertisers
 
