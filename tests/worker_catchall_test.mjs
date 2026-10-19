@@ -40,7 +40,19 @@ const kv = memKV({
   "tios/current": "abc1234",
   "attest/releases/v5.4.0/compile.rail": "let x = 1 < 2",
   "releases/v5.1.0/rail_native": "\x7fELF-ish",
+  "entropy:frame:current": "stale frame from july",
 });
+// The beacon origin, as the Worker sees it through the tunnel.
+let originUp = true;
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (u, init) => {
+  const url = typeof u === "string" ? u : u.url;
+  if (url === "https://beacon.ledatic.org/frame/current") {
+    if (!originUp) throw new Error("tunnel down");
+    return new Response(new Uint8Array(393264).fill(7), { headers: { "content-type": "application/octet-stream" } });
+  }
+  return realFetch(u, init);
+};
 const env = { LEDATIC_KV: kv, GREATLAKES_PASS: "test-pass", API_BEARER: "b", BEACON_TOKEN: "t" };
 const ctx = { waitUntil() {}, passThroughOnException() {} };
 const hit = (path, init = {}) => worker.fetch(new Request("https://ledatic.org" + path, init), env, ctx);
@@ -94,7 +106,17 @@ check("release binary still served by its own route", bin.status === 200, `statu
 const miss = await hit("/no-such-page");
 check("unknown page is a real 404", miss.status === 404, `status ${miss.status}`);
 
-// 6. Anonymous requests that fail auth write nothing.
+// 6. The plasma frame comes from the origin, and a stale copy is never served.
+const fr = await hit("/entropy/frame/current");
+const fb = new Uint8Array(await fr.arrayBuffer());
+check("frame served from the origin", fr.status === 200 && fb.length === 393264 && fb[0] === 7, `status ${fr.status} len ${fb.length}`);
+originUp = false;
+const fd = await hit("/entropy/frame/current");
+const fdBody = await fd.text();
+check("origin down: 503, not the frozen KV frame", fd.status === 503 && !fdBody.includes("stale"), `status ${fd.status} ${fdBody.slice(0, 30)}`);
+originUp = true;
+
+// 7. Anonymous requests that fail auth write nothing.
 const before = kv.writes;
 const wit = await hit("/attest/witness", { method: "POST", body: "{}" });
 check("/attest/witness without a key: 401", wit.status === 401, `status ${wit.status}`);

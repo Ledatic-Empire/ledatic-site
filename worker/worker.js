@@ -2309,12 +2309,18 @@ async function handleSite(request, env, url) {
       });
       return new Response("ok", { headers: sec({ "content-type": "text/plain" }) });
     }
+    // 2026-10-19: from the Mini origin, like /entropy/pulse. The PUT above
+    // has thrown since R2 was retired (2026-07-24), and the KV fallback had
+    // served one frozen frame (step 247) to every viewer ever since. A stale
+    // frame is never served now: no origin answer is a 503 the viewers show.
     const obj = await env.REPORTS_R2.get("entropy/frame.bin");
-    const frame = obj
-      ? await obj.arrayBuffer()
-      : await env.LEDATIC_KV.get("entropy:frame:current", { type: "arrayBuffer" });
-    if (!frame) return new Response("No frame yet", {
-      status: 503, headers: sec({ "content-type": "text/plain" }),
+    let frame = obj ? await obj.arrayBuffer() : null;
+    if (!frame) {
+      const r = await fetch("https://beacon.ledatic.org/frame/current").catch(() => null);
+      if (r && r.ok) frame = await r.arrayBuffer();
+    }
+    if (!frame) return new Response("frame feed unavailable", {
+      status: 503, headers: sec({ "content-type": "text/plain", "cache-control": "no-store" }),
     });
     return new Response(frame, {
       headers: sec({
