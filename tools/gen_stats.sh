@@ -15,7 +15,8 @@
 #   tests:total       live attested build record (/attest/latest → result.json,
 #                     pass/total), falling back to the "/N tests passed"
 #                     literal in origin/master:tools/compile.rail
-#   beacon:cadence    entropy beacon publish cadence (design constant ~2 s)
+#   beacon:cadence    entropy beacon publish cadence (pulse format 2: exactly 2 s,
+#                     aligned to even UTC seconds; /entropy/spec)
 #
 # Usage: tools/gen_stats.sh [output-path]   (default _shared/stats.json)
 # Env:   RAIL_REPO (default ~/projects/rail), RAIL_REF (default origin/master)
@@ -157,9 +158,9 @@ stats = {
     },
     "beacon:cadence": {
         "value": 2,
-        "display": "~2 s",
-        "formats": {"s": "~2 s", "words": "every ~2 s"},
-        "source": "entropy beacon publish cadence (design constant; the pulse clock measures the real interval at runtime)",
+        "display": "2 s",
+        "formats": {"s": "2 s", "words": "every 2 s"},
+        "source": "entropy beacon pulse format 2: one pulse every 2 s, aligned to even UTC seconds (https://ledatic.org/entropy/spec); the pulse clock measures the real interval at runtime",
     },
 }
 
