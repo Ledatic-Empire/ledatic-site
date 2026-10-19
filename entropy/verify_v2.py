@@ -5,7 +5,7 @@ Usage:
   verify_v2.py --url https://ledatic.org            # the newest 50 pulses, key fetched too
   verify_v2.py --url https://ledatic.org --from 9100000 --count 500
   verify_v2.py --file pulses.json --key beacon_v2.pub.pem
-  verify_v2.py --dir ~/.ledatic/entropy/archive --last 43200 --key ...
+  verify_v2.py --dir ./archive --last 43200 --key beacon_v2.pub.pem
 
 For every format 2 pulse it rebuilds the canonical message (spec: /entropy/spec), checks
 that SHA-256 of it is value_hex, checks the operator's Ed25519 signature, checks that
