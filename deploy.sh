@@ -62,10 +62,14 @@ check_clean_tree() {
     return 0
   fi
   local dirty
-  # sitemap.xml is rewritten by the 06:00 regeneration (lastmod dates), so it
-  # is dirty on any day the daily deploy runs. Like stats.json it is a
-  # generated artifact, not half-merged work; commit it when convenient.
-  dirty=$(git status -s | grep -vE '^(\?\? _shared/stats\.json| M sitemap\.xml)$' || true)
+  # llms.txt, robots.txt and sitemap.xml are rewritten every morning by
+  # rail-https/tools/deploy/gen_llms.rail (Rail's state is their source), so
+  # any of them is dirty on a day the generator's text moved (2026-10-20: the
+  # Tier 1 cut turned "Six backends" into "Four" and the 06:20 deploy refused).
+  # Like stats.json they are generated artifacts, not half-merged work; the
+  # generator is the one writer, and the committed copy is a record. Commit
+  # them when convenient.
+  dirty=$(git status -s | grep -vE '^(\?\? _shared/stats\.json| M (llms\.txt|robots\.txt|sitemap\.xml))$' || true)
   if [ -n "$dirty" ]; then
     echo "deploy: working tree not clean — refusing to deploy:" >&2
     echo "$dirty" >&2
