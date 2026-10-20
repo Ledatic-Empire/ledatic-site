@@ -166,24 +166,7 @@ Compiling examples/wasm/hello.rail to WASM...
 <p>
 You need <code>wat2wasm</code> on <code>PATH</code> for this step. On macOS: <code>brew install wabt</code>.
 </p>
-<h2>8. Try the Cortex-M4 backend</h2>
-<pre><code class="lang-bash">
-./rail_native cortexm examples/m4_uart_hello.rail
-</code></pre>
-<pre><code class="lang-">
-Compiling examples/m4_uart_hello.rail -&gt; Cortex-M4 (Thumb-2)...
-  Assembly: /tmp/rail_m4.s (1084 chars)
-  as: OK -&gt; /tmp/rail_m4.o
-  startup as: OK
-  ld: OK -&gt; /tmp/rail_m4.elf
-</code></pre>
-<p>
-This produces a flashable Thumb-2 ELF at <code>/tmp/rail_m4.elf</code>. Run in <code>qemu-system-arm -M mps2-an386</code> to see "Hi!" on the serial console.
-</p>
-<p>
-You need <code>clang</code> with the <code>thumbv7em-none-eabi</code> target on <code>PATH</code>. On macOS: <code>brew install llvm</code> and the install will print the <code>clang</code> path.
-</p>
-<h2>9. Regenerate the stdlib reference</h2>
+<h2>8. Regenerate the stdlib reference</h2>
 <pre><code class="lang-bash">
 ./rail_native run tools/docs/gen_stdlib_ref.rail
 </code></pre>
@@ -194,7 +177,7 @@ wrote: docs/site/stdlib.md (124876 bytes)
 <p>
 The reference at <a href="stdlib.html">stdlib.md</a> is auto-generated from the actual stdlib source. The walker is a 250-line Rail program that reads each <code>stdlib/*.rail</code>, extracts top-level function signatures with their leading comments, and emits markdown. Read it: <code>tools/docs/gen_stdlib_ref.rail</code>.
 </p>
-<h2>10. Verify a signed release</h2>
+<h2>9. Verify a signed release</h2>
 <p>
 Rail's tagged releases are signed against the Ledatic entropy beacon. Check one with the site's verifier. It needs OpenSSL 3; stock macOS LibreSSL exits 1 without a message.
 </p>
@@ -215,9 +198,9 @@ The downloaded binary is the one committed at the tag: <code>git show v5.4.0:rai
 You now have a working Rail toolchain on local hardware. Next steps:
 </p>
 <ul>
-<li>Skim <a href="examples/">examples/</a> — 22 runnable programs with explanations.</li>
+<li>Skim <a href="examples/">examples/</a> — 19 runnable programs with explanations.</li>
 <li>Skim <a href="stdlib.html">stdlib.md</a>, generated from the source of every stdlib module.</li>
-<li>Read <a href="backends.html">backends.md</a> if you want to target Linux ARM64, x86_64, RISC-V, or WASM-in-a-browser.</li>
+<li>Read <a href="backends.html">backends.md</a> if you want to target Linux ARM64, x86_64, or WASM-in-a-browser.</li>
 </ul>
 </main>
 <div class="docfooter">
