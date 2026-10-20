@@ -64,8 +64,18 @@
 
 .nav-side { display: flex; align-items: center; gap: 1rem; }
 
+/* The field is the page (2026-10-20): one canvas, fixed to the viewport,
+   behind everything. It costs what the old hero cost (one viewport of
+   pixels); the content scrolls over it in placards. */
+.home .scene-fixed { position: fixed; inset: 0; z-index: -2; }
+.home .scene-fixed .overlay { z-index: 1; }
+.home section.hero { background: transparent; overflow: visible; }
+.home .section { padding: var(--sp-16) 0; }
+.home .section + .section::before { display: none; }
+.home footer.site-foot { background: color-mix(in oklab, var(--ink-0) 88%, transparent); }
+
 /* The nav clock owns the cross-document view-transition continuity
-   (§3.2). The hero clock is this page's content-scale instrument —
+   (§3.2). The hero clock is this page's content-scale instrument;
    it must NOT share the view-transition-name or the transition skips. */
 pulse-clock.hero-clock {
   view-transition-name: none;
@@ -76,7 +86,7 @@ pulse-clock.hero-clock {
   border: 0;
   box-shadow: none;
   padding: 0;
-  margin: 0.75rem 0 0.25rem;
+  margin: 1.25rem 0 0.25rem;
   font-family: var(--font-display);
   font-size: clamp(1.75rem, 5.5vw, 3.5rem);
   font-weight: 500;
@@ -97,34 +107,34 @@ pulse-clock.hero-clock .pc-word {
   text-transform: uppercase;
   color: var(--tx-lo);
 }
-/* No state override needed: this base rule's specificity (0,1,1) already
-   beats the shared [data-state] rules (0,1,0) for box-shadow/border, while
-   color still inherits the earned state hue from site.css. */
 
-.hero-gloss {
-  font-size: var(--t-data);
-  margin-bottom: 1.5rem;
-  max-width: 64ch;
-}
-
-/* state hex — the confirmed pulse value under the clock. Authored text is
-   em-dashes; it fills only from this document's own confirmed receipt via
-   the shared bus (§5.3) — with JS off it claims nothing. */
-.hero-hex {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: var(--t-data);
-  color: var(--tx-lo);
-  letter-spacing: 0.06em;
-  margin: 0 0 0.5rem;
-}
-.hero-hex [data-hero-hex] { color: var(--tx-hi); }
-
-/* hero-content is pointer-events:none; the proof object earns input back */
+/* hero-content is pointer-events:none; the clock and the act earn input back */
 .hero-content pulse-clock,
-.hero-content .prove,
-.hero-content .tray { pointer-events: auto; }
+.hero-content .proof-act { pointer-events: auto; }
+.hero-content .hero-desc { max-width: 40ch; }
 
-/* PROVE THIS PAGE — the one hero button (§6 /) */
+/* PLACARDS: the three panels floating on the field. A .card for the LED and
+   the in-view observer (site.css A3); the hover lift is a card thing, not a
+   placard thing. */
+.placard {
+  background: color-mix(in oklab, var(--ink-1) 86%, transparent);
+  border-radius: var(--r-2);
+  padding: var(--sp-8) var(--sp-6);
+  max-width: 44rem;
+}
+.placard:hover { transform: none; box-shadow: var(--e1); }
+@media (min-width: 1024px) { .placard { padding: var(--sp-12) var(--sp-8); } }
+.placard .eyebrow { margin-bottom: 1rem; }
+.placard h2 { margin-bottom: 1rem; }
+.placard p.lead { font-size: var(--t-1); line-height: 1.5; color: var(--tx-lo); margin-bottom: 1.5rem; }
+.placard .pchip { margin-bottom: 1.25rem; }
+.placard .gloss { font-size: var(--t-data); margin-top: 1.5rem; margin-bottom: 0; }
+.doors { display: flex; flex-wrap: wrap; gap: 0.6rem 1.75rem; margin-top: 1.25rem; }
+.doors a { color: var(--ph-600); font-size: 0.9rem; letter-spacing: 0.04em; }
+.doors a::after { content: " \2192"; }
+.doors a:hover { color: var(--tx-hi); }
+
+/* PROVE THIS PAGE, in its placard */
 #prove-page {
   display: inline-flex;
   align-items: center;
@@ -146,44 +156,17 @@ pulse-clock.hero-clock .pc-word {
   border-color: var(--ph-600);
   transition-duration: var(--hover-in);
 }
+.placard .tray { max-width: none; width: 100%; margin-top: 1rem; overflow-x: clip; }
+/* On a phone the tray's result cells (a key fingerprint and its label) are
+   wider than the placard; they wrap instead of pushing the page wide.
+   Measured 2026-10-20 at 390 px: scrollWidth 422 before this rule. */
+.placard .tray-step .st-res { flex: 0 1 auto; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; }
 
-/* full-width proof tray in the hero (§6 /) */
-.hero-content .tray { max-width: none; width: 100%; }
-
-/* Plain Figures are citation elements (§5.4): dotted provenance underline.
-   (.prove > data already carries its own underline via proof.css.) */
+/* Plain Figures are citation elements (§5.4): dotted provenance underline. */
 data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
-
-/* stats row — five figures, one rhythm */
-.stat-row { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, 1fr); }
-    /* stat-row: single column on phones. Two columns were unconditional,
-       and the display-size numerals inside cannot shrink below ~157px, so
-       the row demanded 434px on a 390px screen and the second card was
-       clipped. Measured 2026-08-28. */
-    @media (max-width: 480px) { .stat-row { grid-template-columns: 1fr; } }
-@media (min-width: 900px) { .stat-row { grid-template-columns: repeat(5, 1fr); } }
-.stat .value .prove { font: inherit; color: inherit; }
 
 /* chain-link section markers fill via view() timeline (§3.1, site.css) */
 .section .chain-link { display: block; margin-bottom: 0.75rem; }
-
-.push { margin-top: var(--sp-8); }
-
-/* home products band — the live commercial offering, foregrounded */
-.home-products { display: grid; gap: var(--sp-4); grid-template-columns: 1fr; margin-top: var(--sp-6); }
-@media (min-width: 760px) { .home-products { grid-template-columns: 1fr 1fr; } }
-.hp-card {
-  position: relative;                 /* the LED (Track A, A3) sits in its corner */
-  display: flex; flex-direction: column; gap: var(--sp-2);
-  border: 1px solid var(--line); padding: var(--sp-6);
-  text-decoration: none; color: inherit;
-  transition: border-color var(--hover-in, .2s) ease, transform var(--hover-in, .2s) ease;
-}
-.hp-card:hover { border-color: var(--accent, #05e601); transform: translateY(-2px); }
-.hp-tag { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent, #05e601); }
-.hp-card h3 { margin: 0; font-size: 1.1rem; line-height: 1.3; }
-.hp-card p { margin: 0; font-size: .92rem; color: var(--tx-lo); }
-.hp-go { margin-top: auto; font-size: .9rem; color: var(--accent, #05e601); }
 </style>
 <script type="speculationrules">
 {
@@ -233,18 +216,18 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   </div>
 </nav>
 
-<!-- HERO — a live proof object (§6 /): pulse-driven plasma field behind a
-     giant pulse clock and one button. The field advances only on confirmed
-     receipts and freezes when the beacon goes quiet (§5.5). With JS off
-     this degrades to the static poster, a hollow clock that claims
-     nothing, and a plain page. -->
-<section class="hero">
-  <div class="scene">
-    <div class="scene-fallback" aria-hidden="true"></div>
-    <canvas id="scene-canvas" data-field="home" data-field-src="_shared/shaders/field.frag" aria-hidden="true"></canvas>
-  </div>
-  <div class="overlay" aria-hidden="true"></div>
+<!-- THE FIELD: one canvas, fixed behind the whole page (2026-10-20). It is
+     drawn from confirmed beacon receipts and freezes when the beacon goes
+     quiet (§5.5). With JS off this is the static poster. -->
+<div class="scene scene-fixed" aria-hidden="true">
+  <div class="scene-fallback"></div>
+  <canvas id="scene-canvas" data-field="home" data-field-src="_shared/shaders/field.frag"></canvas>
+  <div class="overlay"></div>
+</div>
 
+<!-- HERO: the name, one sentence, the heartbeat. The proof lives in its own
+     placard below; the act strip here plays the steps as they happen. -->
+<section class="hero">
   <div class="hero-content">
     <span class="eyebrow fade-up">Makers of Fieldcraft</span>
     <h1 class="hero-title fade-up">
@@ -253,18 +236,14 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     <p class="hero-sub fade-up">
       We make Fieldcraft, a front-desk tool for service businesses.
     </p>
-    <p class="hero-verb fade-up">
-      Staff get answers drawn from the business&rsquo;s own approved documents, and a person reviews every draft before it goes out.
+    <p class="hero-desc fade-up">
+      The lab behind it signs what it publishes. The field behind this page is
+      redrawn on every pulse of its beacon; if the beacon stops, the field freezes.
     </p>
     <div class="cta-row fade-up">
       <a class="btn btn-primary" href="mailto:hello@ledatic.org?subject=Fieldcraft">Ask about Fieldcraft</a>
+      <a class="btn btn-ghost" href="#lab">The lab &darr;</a>
     </div>
-    <p class="hero-tenets gloss fade-up">
-      And a lab that publishes work you can check: every release, deploy and pulse here ships a proof you can verify yourself.
-    </p>
-    <p class="hero-verb fade-up">
-      We <a class="accent" href="physicify.html">physicify</a> it &mdash; make it live, make it attested, make it yours.
-    </p>
     <pulse-clock class="hero-clock fade-up" data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
     <!-- the second act (B1): the five real steps of this page's proof, fed only by the
          tray's own events; authored with dim names and a dot, claiming nothing -->
@@ -275,184 +254,77 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       <span class="pa-cell" data-id="SIG"><b>sig</b><i>·</i></span>
       <span class="pa-cell" data-id="CHAIN"><b>chain</b><i>·</i></span>
     </div>
-    <p class="hero-hex fade-up">state <span data-hero-hex>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</span></p>
-    <p class="hero-gloss gloss fade-up">
-      the public heartbeat this site is clocked to &mdash; every age below is
-      denominated in pulses, wall-clock is just the translation.
-      the plasma behind this page is drawn from it, pulse by pulse: each
-      receipt fires the shockwave, and if the beacon ever stops, the field
-      freezes. not a video, not a library &mdash;
-      <a href="_shared/shaders/field.frag">one shader you can read</a> ⌁
-    </p>
-    <div class="cta-row fade-up">
-      <button class="prove" id="prove-page" aria-expanded="false" aria-controls="prove-page-tray"
-              data-manifest="/attest/site/latest.json"
-              data-name="this page &middot; signed deploy manifest"><span class="prove-val">Prove this page</span><span class="affix" aria-hidden="true">⌁</span></button>
-      <a class="btn btn-secondary" href="#products">What&rsquo;s live &darr;</a>
-      <a class="btn btn-ghost" href="manifesto.html">Read the manifesto</a>
-    </div>
-    <div class="tray" id="prove-page-tray" role="log" aria-live="polite" hidden></div>
   </div>
 </section>
 
 <main>
 
-<section class="section" id="products">
+<section class="section" id="fieldcraft">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Now live</span>
-    <h2 class="reveal">Buy proof &mdash; and data you can prove.</h2>
-    <p class="lead reveal">
-      Two products, both built on the same attestation spine you just
-      verified with the button above. Verification is free; you only pay to
-      anchor or to license.
-    </p>
-    <div class="home-products">
-      <a class="hp-card reveal" href="/receipts">
-        <span class="hp-tag">Receipts &middot; access to the instrument</span>
-        <h3>A live attestation instrument &mdash; and the key to put your work through it</h3>
-        <p>A signed physics beacon and a witness key that turn any file into a receipt anyone can verify offline with standard Ed25519. Verification is free forever. Curious? The $5 door is always open.</p>
-        <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
-        <span class="hp-go">Look inside &rarr;</span>
-      </a>
-      <a class="hp-card reveal" href="/data">
-        <span class="hp-tag">Data &middot; provenance-attested</span>
-        <h3>Training datasets you can audit before you buy</h3>
-        <p>Oracle-verified code pairs and provenance-gated text, each with a signed chain you can re-verify yourself. Free sample first. From $199.</p>
-        <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
-        <span class="hp-go">Browse datasets &rarr;</span>
-      </a>
+    <div class="placard card reveal">
+      <span class="eyebrow">Fieldcraft</span>
+      <h2>A front desk that answers from the business&rsquo;s own documents.</h2>
+      <p class="lead">
+        Staff get answers drawn from the documents the business approved, and a
+        person reviews every draft before it goes out. Built for service
+        businesses, front desk first.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="mailto:hello@ledatic.org?subject=Fieldcraft%20pilot">Ask about a pilot</a>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="lab">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Substrate</span>
-    <h2 class="reveal">One language under most of what you just verified.</h2>
-    <p class="lead reveal">
-      The compiler. The MHD simulation that becomes the beacon. The server
-      that publishes each pulse, and the signer on the witness. A TLS 1.3
-      stack. Each of those is Rail, and all of it compiles from a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed
-      binary you can read end to end. The rest, named plainly: the pulse
-      signer is Python, this page is served by a Cloudflare Worker, and the
-      button up top checks signatures with your browser's own WebCrypto.
-    </p>
-    <p class="gloss reveal">the compiler you run is the compiler you read</p>
-    <p class="lead push reveal">
-      Being readable is the prerequisite, not the point. A compiler small
-      enough to audit and reproducible enough to trust can act as a
-      <strong>referee</strong> &mdash; which is what machine-written code has
-      never had. A model's claim that its output is correct can't be checked
-      by anyone. A compile can be re-run by everyone.
-    </p>
-    <div class="cta-row push reveal">
-      <a class="btn btn-primary" href="oracle.html">How we train against it</a>
-      <a class="btn btn-secondary" href="rail.html">See the language</a>
-      <a class="btn btn-ghost" href="https://github.com/Ledatic-Empire/rail" target="_blank" rel="noopener">Source on GitHub</a>
+    <div class="placard card reveal">
+      <span class="eyebrow">The lab</span>
+      <h2>Rail runs on Rail. The rest runs on physics.</h2>
+      <p class="lead">
+        Rail is a self-hosting compiler: <data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data> builds itself from a
+        <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed binary that links only libSystem, with
+        <data class="fig" data-src="tests:total" data-fmt="ratio" value="187" data-pulse="2941323">187/187</data> tests green. The entropy beacon is a plasma
+        simulation that signs a pulse every <data class="fig" data-src="beacon:cadence" data-fmt="s" value="2" data-pulse="2941323">2 s</data>, each pulse committing
+        to the one before it. Every release, deploy and pulse carries a
+        signature you can check yourself.
+      </p>
+      <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
+      <div class="doors">
+        <a href="rail.html">Rail</a>
+        <a href="entropy.html">Entropy beacon</a>
+        <a href="receipts.html">Receipts</a>
+        <a href="https://github.com/Ledatic-Empire/rail" rel="noopener">Source</a>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="proof">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">From the doorstep to the monolith</span>
-    <h2 class="reveal">Same primitive. Every scale.</h2>
-    <p class="lead reveal">
-      A signature you can re-derive in your browser, anchored to a public,
-      hash-chained physics beacon and countersigned by a witness on separate
-      hardware (a Raspberry Pi that Ledatic runs).
-      That primitive runs from one artifact at your doorstep all the way
-      out to every deploy of this site, and to every record in a public
-      archive. Same chain. Different scope.
-    </p>
-
-    <div class="grid grid-2 grid-4 push">
-      <a class="card reveal" href="verify.html">
-        <span class="eyebrow">Doorstep</span>
-        <h3>Verify</h3>
-        <p>One record, one chain, "ok" in your browser. Drop any artifact and its signed record &mdash; your browser re-hashes the bytes and checks the Ed25519 signature against the pinned witness key and the entropy pulse it was anchored to.</p>
-        <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
-      </a>
-      <a class="card reveal" href="system.html">
-        <span class="eyebrow">Fleet</span>
-        <h3>System</h3>
-        <p>Mission control, sentinel-checked. Every surface renders unknown until a signed check passes &mdash; nothing glows that hasn't proven itself.</p>
-        <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
-      </a>
-      <a class="card reveal" href="replay.html">
-        <span class="eyebrow">Archive</span>
-        <h3>Replay</h3>
-        <p>Every full deploy of this site since 2026-06-10 in one ledger, each pulse-anchored and Ed25519-signed. Diff any two and see what changed; prove either one in your browser.</p>
-        <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
-      </a>
-      <a class="card reveal" href="oracle.html">
-        <span class="eyebrow">Machine</span>
-        <h3>The oracle</h3>
-        <p>What the compiler is <em>for</em>. A model's claim that its code is correct can't be checked; a compile can. We train against the checker &mdash; and publish the month that method lied to us.</p>
-        <span class="pchip" data-proof-chip="prove-page" data-state="unknown">page proof</span>
-      </a>
+    <div class="placard card reveal">
+      <span class="eyebrow">This page</span>
+      <h2>Signed at deploy. Checked in your browser.</h2>
+      <p class="lead">
+        Every deploy of this site ships a manifest signed against a beacon
+        pulse. Press the button: your browser fetches it, re-hashes the files
+        and checks the signature. Nothing runs on our side.
+      </p>
+      <div class="cta-row">
+        <button class="prove" id="prove-page" aria-expanded="false" aria-controls="prove-page-tray"
+                data-manifest="/attest/site/latest.json"
+                data-name="this page &middot; signed deploy manifest"><span class="prove-val">Prove this page</span><span class="affix" aria-hidden="true">⌁</span></button>
+      </div>
+      <div class="tray" id="prove-page-tray" role="log" aria-live="polite" hidden></div>
+      <div class="doors">
+        <a href="replay.html">Every deploy, replayed</a>
+        <a href="verify.html">Verify an artifact</a>
+      </div>
+      <p class="gloss">fourteen years from now, this page will be able to prove what it said today</p>
     </div>
-
-    <div class="cta-row push reveal">
-      <a class="btn btn-primary" href="verify.html">Verify a real artifact</a>
-      <a class="btn btn-secondary" href="manifesto.html">Read the manifesto</a>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap chain-spine">
-    <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Shipping cadence</span>
-    <h2 class="reveal"><data class="fig" data-src="repo:tags" data-fmt="count" value="47" data-pulse="2941323">47</data> tagged releases and counting.</h2>
-
-    <div class="stat-row push">
-      <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="repo:version" value="v5.3.0" data-pulse="2941323">v5.3.0</data></div>
-        <div class="label">Current Rail</div>
-      </div>
-      <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="tests:total" data-fmt="ratio" value="187" data-pulse="2941323">187/187</data></div>
-        <div class="label">Tests green</div>
-      </div>
-      <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="repo:rail_native" value="908360" data-pulse="2941323">0.9 MB</data></div>
-        <div class="label">Seed binary</div>
-      </div>
-      <div class="stat reveal">
-        <div class="value"><data class="fig" data-src="repo:tags" data-fmt="count" value="47" data-pulse="2941323">47</data></div>
-        <div class="label">Tagged releases</div>
-      </div>
-      <div class="stat reveal">
-        <div class="value">0</div>
-        <div class="label">C deps in the seed binary</div>
-      </div>
-    </div>
-    <p class="gloss push reveal">
-      the first four figures are injected at deploy time from a generated
-      registry, not typed by hand; the last is a fact about the seed binary
-      (<code>otool -L</code> lists only libSystem). all but one tagged release
-      carries a signed attestation on the changelog, and the proof you can
-      press right here is the signed deploy manifest at the top of this page.
-    </p>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap chain-spine">
-    <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">2040, backwards</span>
-    <h2 class="reveal">Every pulse now commits to the one before it.</h2>
-    <p class="lead reveal">
-      The beacon ticks every <data class="fig" data-src="beacon:cadence" data-fmt="s" value="2" data-pulse="2941323">2 s</data>. Kept up, that is roughly 220 million
-      pulses by 2040. Since pulse format 2 (2026-10-19) each one hashes the
-      one before it, and every deploy of this site is signed against the chain. Rewrite any old pulse and every
-      later one changes, so every copy saved anywhere would disagree.
-    </p>
-    <p class="gloss reveal">fourteen years from now, this page will be able to prove what it said today</p>
   </div>
 </section>
 
@@ -529,24 +401,6 @@ function whenVisible(cb) {
   });
 }
 
-// state hex under the hero clock — fed by the shared bus only (§5.3), so
-// it fills exclusively on this document's own confirmed pulse receipts.
-function whenPulseBus(cb) {
-  if (window.LedaticPulse) { cb(window.LedaticPulse); return; }
-  window.addEventListener('ledatic:pulsebus',
-    (e) => cb(e.detail || window.LedaticPulse), { once: true });
-}
-whenPulseBus((P) => {
-  const el = document.querySelector('[data-hero-hex]');
-  if (!el || !P || !P.bus || typeof P.bus.subscribe !== 'function') return;
-  P.bus.subscribe((p) => {
-    const hex = p && p.value_hex;
-    if (typeof hex === 'string' && hex.length >= 20) {
-      el.textContent = hex.slice(0, 14) + '…' + hex.slice(-6);
-    }
-  });
-});
-
 whenProof((P) => {
   if (SAVE) return;            // §3.5 — reduced data: no automatic fetches;
                                // the strip keeps its honest authored text and
@@ -559,9 +413,9 @@ whenProof((P) => {
     if (strip) P.mountSelfCheck(strip);
   });
 
-  // PROVE THIS PAGE — the deploy-manifest proof runs in the full-width
-  // hero tray within 3 s of arrival (§6 /). Never re-fires over a tray
-  // the visitor already opened.
+  // PROVE THIS PAGE: the deploy-manifest proof runs in its placard within
+  // 3 s of arrival; the act strip under the hero clock plays the steps.
+  // Never re-fires over a tray the visitor already opened.
   whenVisible(() => {
     setTimeout(() => {
       const btn = document.getElementById('prove-page');

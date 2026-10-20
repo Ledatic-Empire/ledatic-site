@@ -48,7 +48,7 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 <main>
 <h1>Rail</h1>
 <p>
-Rail is a self-hosted ARM64 language with six backends (macOS ARM64, Linux ARM64, Linux x86_64, WebAssembly, Cortex-M4, RISC-V rv32imc), an LLM training substrate, and a verifiable provenance layer. The compiler is about 9,700 lines of Rail and compiles itself byte-identically at gen2; the runtime is ARM64 assembly embedded in the compiler. The compiler binary links only libSystem. Programs it builds may link small optional C and ObjC helpers (the JIT trampoline, the Metal host) and system libraries such as SQLite when they use them; <code>SHIMS.md</code> lists every one.
+Rail is a self-hosted ARM64 language with four backends (macOS ARM64, Linux ARM64, Linux x86_64, WebAssembly), an LLM training substrate, and a verifiable provenance layer. The compiler is about 9,700 lines of Rail and compiles itself byte-identically at gen2; the runtime is ARM64 assembly embedded in the compiler. The compiler binary links only libSystem. Programs it builds may link small optional C and ObjC helpers (the JIT trampoline, the Metal host) and system libraries such as SQLite when they use them; <code>SHIMS.md</code> lists every one.
 </p>
 <h2>Quickstart</h2>
 <pre><code class="lang-bash">
@@ -79,7 +79,7 @@ For Apple Silicon you're done. Other targets need cross-toolchains; see <a href=
 <li><strong><a href="stdlib.html">stdlib.md</a></strong>: auto-generated reference for every top-level function in <code>stdlib/*.rail</code>. Regenerate with <code>./rail_native run tools/docs/gen_stdlib_ref.rail</code>.</li>
 <li><strong><a href="backends.html">backends.md</a></strong>: one-page-per-backend with the literal command line you'd type.</li>
 <li><strong><a href="jit.html">jit.md</a></strong>: a self-hosted JIT in pure Rail. ARM64 emit + <code>mmap</code>-executable, called via a <code>pthread_create</code> trampoline. About 7,400 lines across 32 files.</li>
-<li><strong><a href="examples/">examples/</a></strong>: 22 runnable programs with source, command, and real captured output. Start with <a href="examples/hello.html">hello</a>, <a href="examples/pattern_matching.html">pattern_matching</a>, <a href="examples/calculator.html">calculator</a>.</li>
+<li><strong><a href="examples/">examples/</a></strong>: 19 runnable programs with source, command, and real captured output. Start with <a href="examples/hello.html">hello</a>, <a href="examples/pattern_matching.html">pattern_matching</a>, <a href="examples/calculator.html">calculator</a>.</li>
 <li><strong><a href="TODO.html">TODO.md</a></strong>: what's deferred for v0 and why.</li>
 </ul>
 <h2>Language at a glance</h2>
@@ -107,8 +107,6 @@ Functions are <code>name args = body</code>. <code>main</code> is the entry poin
 ./rail_native linux file.rail      # Linux ARM64 (cross)
 ./rail_native x86 file.rail        # Linux x86_64 (cross, emits .s)
 ./rail_native wasm file.rail       # WebAssembly
-./rail_native cortexm file.rail    # Cortex-M4 (Thumb-2)
-./rail_native riscv32 file.rail    # RISC-V rv32imc
 </code></pre>
 <p>
 The same source compiles to all of them. See <a href="backends.html">backends.md</a> for toolchain requirements.
