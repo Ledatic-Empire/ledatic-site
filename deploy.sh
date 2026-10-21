@@ -63,7 +63,7 @@ check_clean_tree() {
   fi
   local dirty
   # llms.txt, robots.txt and sitemap.xml are rewritten every morning by
-  # rail-https/tools/deploy/gen_llms.rail (Rail's state is their source), so
+  # railgen/gen_llms.rail, run with cwd rail-https (Rail's state is their source), so
   # any of them is dirty on a day the generator's text moved (2026-10-20: the
   # Tier 1 cut turned "Six backends" into "Four" and the 06:20 deploy refused).
   # Like stats.json they are generated artifacts, not half-merged work; the
