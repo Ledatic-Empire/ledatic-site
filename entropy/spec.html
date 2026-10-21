@@ -246,7 +246,8 @@
     <pre class="reveal"><code>{"version":2,"pulse_id":9100000,"timestamp_utc":"2026-10-19T03:00:00Z","unix_timestamp":1792378800,
  "unix_ms":1792378800004,"period_ms":2000,
  "value_hex":"…","prev_value_hex":"…",
- "frame":{"digest":"…","run_frame":4127,"epoch_seed":471529,"epoch_frame":88},
+ "frame":{"digest":"…","run_frame":4127,"epoch_seed":471529,"epoch_frame":88,
+          "rail_commit":"…","plasma_commit":"…","os_build":"25G83"},
  "local_random_hex":"…","precommit_hex":"…","external":"","status":0,
  "signature":"…","key_id":"…",
  "source":{"type":"2D_MHD_OrszagTang","grid":"128x128","node":"mini"},
@@ -283,7 +284,12 @@
     <p class="body reveal">
       Replaying physics: run the epoch from <code>epoch_seed</code> for
       <code>epoch_frame + 1</code> frames and compare the float32 planes&rsquo;
-      SHA-256 to <code>frame.digest</code>.
+      SHA-256 to <code>frame.digest</code>. Since 2026-10-21 the frame block also
+      names the program that wrote it: <code>rail_commit</code> (the Rail commit
+      whose committed compiler built the beacon), <code>plasma_commit</code> (the
+      rail-plasma commit it ran) and <code>os_build</code>. These three sit outside
+      the canonical message; the digest they point at is inside it, and the replay
+      is their check.
     </p>
   </div>
 </section>
@@ -312,11 +318,19 @@ curl -s https://ledatic.org/entropy/pulse/log &gt; pulses.json
 python3 verify_v2.py --file pulses.json --key beacon_v2.pub.pem</code></pre>
     <p class="body reveal">
       To replay a frame, take a pulse whose status does not carry
-      NO_PROVENANCE (bit 2, value 4), and run the Rail replay tool from a
-      clone of the public Rail repository:
+      NO_PROVENANCE (bit 2, value 4), clone the public Rail repository and the
+      beacon&rsquo;s repository beside it, and run one command (ARM64 macOS with
+      the command line tools; the Rail clone&rsquo;s committed
+      <code>rail_native</code> is the compiler):
     </p>
-<pre class="reveal"><code>./rail_native run tools/plasma/mhd_verify_epoch.rail &lt;epoch_seed&gt; &lt;epoch_frame + 1&gt; - planes.f32
-shasum -a 256 planes.f32      # or sha256sum; equals the pulse's frame.digest</code></pre>
+<pre class="reveal"><code>git clone https://github.com/Ledatic-Empire/rail.git
+git clone https://github.com/Ledatic-Empire/rail-plasma.git
+cd rail-plasma &amp;&amp; bash replay.sh &lt;pulse_id&gt;      # prints MATCH or MISMATCH; exit 0 or 1</code></pre>
+    <p class="body reveal">
+      It rebuilds the frame from the seed with the beacon&rsquo;s own kernel and
+      hashes the planes in Rail. What MATCH does and does not prove is written in
+      that repository&rsquo;s <code>docs/REPLAY.md</code>.
+    </p>
     <p class="body reveal">
       The same checks run in your browser on <a href="/entropy#verify">/entropy</a>,
       against the newest 50 pulses.
