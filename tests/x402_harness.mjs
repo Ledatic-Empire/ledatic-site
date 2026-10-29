@@ -168,6 +168,26 @@ let requirements;
     r.status === 200 && j.receipt && /sample200\.jsonl$/.test(j.receipt.download_url) && j.receipt.sha256 === "79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64"
     && ![...kv.m.keys()].some((k) => k.startsWith("dl:")), `status ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
 }
+// 8c. the EIP-712 domain the 402 advertises must be what the token contract says (the first
+// mainnet purchase failed on exactly this: Base USDC is "USD Coin", Sepolia's is "USDC")
+{
+  const rpcs = { mainnet: "https://base-rpc.publicnode.com", sepolia: "https://base-sepolia-rpc.publicnode.com" };
+  const call = async (rpc, to, data) => {
+    const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json", "user-agent": "ledatic-stall/1.0" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }) });
+    const hex = (await r.json()).result.slice(2);
+    const len = parseInt(hex.slice(64, 128), 16);
+    return Buffer.from(hex.slice(128, 128 + len * 2), "hex").toString("utf8");
+  };
+  for (const mode of ["mainnet", "sepolia"]) {
+    const r = await get(env(mode, kvStub()), URL_);
+    const acc = unb64(r.headers.get("payment-required")).accepts[0];
+    let name = null, version = null;
+    try { name = await call(rpcs[mode], acc.asset, "0x06fdde03"); version = await call(rpcs[mode], acc.asset, "0x54fd4d50"); } catch { /* rpc down */ }
+    check(`the ${mode} 402 names the token's own EIP-712 domain (chain says ${JSON.stringify(name)} v${version})`,
+      name !== null && acc.extra.name === name && acc.extra.version === version);
+  }
+}
 // 9. mainnet without CDP credentials
 {
   const p = payload({ ...requirements, network: "eip155:8453", asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" });
