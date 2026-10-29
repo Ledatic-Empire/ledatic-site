@@ -692,24 +692,30 @@ function timingSafeEqualHex(a, b) {
 // Each data SKU maps to an R2 object under the REPORTS_R2 bucket. A purchase
 // (or admin grant) mints a random, time-limited, download-capped token in KV;
 // GET /data/download/<token> streams the object. No public bucket, no S3 creds.
-// 2026-07-25: automated delivery is OFF while R2 is retired (free-tier pivot).
-// The tarballs are intact on the Mini (~/.ledatic/data-products/, with their
-// .sha256 sidecars) — they just have no public origin, and streaming a 2.3 GB
-// object through a Free zone is exactly what CF's ToS §2.8 prohibits. So data
-// sales fall through to the existing "delivery by email within 24h" path
-// rather than minting a token that resolves to nothing. Flip to true once
-// /data/download has a real origin behind it.
-const DATA_DELIVERY_ONLINE = false;
+// 2026-07-25: automated delivery went OFF when R2 was retired (free-tier pivot).
+// 2026-10-29 (the agent stall, docs/plans/2026-10-29-agent-stall.md step 3): the
+// pairs tarball (805 KB, sha256 cebed0a4...) lives in KV as `deliverable:pairs`
+// and is served from there, so a pairs sale needs no human. The corpus (2.45 GB)
+// stays offline: streaming it through a Free zone is what CF's ToS §2.8
+// prohibits, and KV caps a value at 25 MB. A pack with `online: false` mints no
+// token, so the claim endpoint keeps saying "delivery by email within 24h",
+// which is true; the stall_watch job on the Mini rings on every sale.
 const DATA_DELIVERABLES = {
   pairs: {
+    online: true,
+    kv_key: "deliverable:pairs",
     r2_key: "data-deliverables/rail-verified-pairs-v2.tar.gz",
     filename: "rail-verified-pairs-v2.tar.gz",
     size_bytes: 805232,
+    sha256: "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff",
   },
   corpus: {
+    online: false,
+    kv_key: null,
     r2_key: "data-deliverables/attested-text-corpus-v2.tar.gz",
     filename: "attested-text-corpus-v2.tar.gz",
     size_bytes: 2449467895,
+    sha256: "36a799c793d3c055f92e741445539710e48a92542f07acba13799bdc6d373bb1",
   },
 };
 
@@ -719,11 +725,11 @@ async function mintDownloadToken(env, pack, ref) {
   // No live origin → no token. A null here makes the claim endpoint report
   // "delivery by email within 24h", which is true, instead of handing the
   // buyer a download URL that 404s.
-  if (!DATA_DELIVERY_ONLINE) return null;
+  if (!meta.online) return null;
   const token = sdkBytesToHex(crypto.getRandomValues(new Uint8Array(24)));
   const now = Math.floor(Date.now() / 1000);
   const grant = {
-    pack, r2_key: meta.r2_key, filename: meta.filename,
+    pack, kv_key: meta.kv_key || null, r2_key: meta.r2_key, filename: meta.filename, sha256: meta.sha256,
     created_at: now, expires_at: now + 30 * 24 * 3600, max: 25, used: 0, ref,
   };
   // KV TTL as a backstop to the explicit expiry check.
@@ -1368,7 +1374,16 @@ async function handleSite(request, env, url) {
     if ((grant.used || 0) >= (grant.max || 25)) {
       return new Response("download limit reached — contact hello@ledatic.org", { status: 429, headers: sec({ "content-type": "text/plain" }) });
     }
-    const obj = await env.REPORTS_R2.get(grant.r2_key);
+    // Since 2026-10-29 a small deliverable is read from KV (`grant.kv_key`); the
+    // R2 path stays for the day a bucket exists again. Both degrade to the 503
+    // text below, never to a 200 with an empty body.
+    let obj = null;
+    if (grant.kv_key) {
+      const buf = await env.LEDATIC_KV.get(grant.kv_key, "arrayBuffer");
+      if (buf && buf.byteLength > 0) obj = { body: buf, size: buf.byteLength };
+    } else {
+      obj = await env.REPORTS_R2.get(grant.r2_key);
+    }
     // A token minted before delivery went offline must not read as "your link
     // is bad" — the purchase is valid, only the automated path is down.
     if (!obj) return new Response(
@@ -1403,6 +1418,7 @@ async function handleSite(request, env, url) {
     if (!DATA_DELIVERABLES[pack]) return jsonResponse({ error: "unknown_pack", packs: Object.keys(DATA_DELIVERABLES) }, 400);
     const token = await mintDownloadToken(env, pack, `admin:${body.note || ""}`);
     const meta = DATA_DELIVERABLES[pack];
+    if (!token) return jsonResponse({ error: "pack_offline", pack, note: "no automated delivery for this pack; send it by email" }, 409);
     return jsonResponse({
       pack, download_url: `https://ledatic.org/data/download/${token}`,
       filename: meta.filename, expires_in_days: 30,
