@@ -1,0 +1,42 @@
+# gemm_cost.cu on Modal T4, 2026-10-29 01:57Z, variant=strict, args=-
+gpu: Tesla T4, 610.57.04, 15360 MiB
+nvcc: Cuda compilation tools, release 12.4, V12.4.131  (image nvidia/cuda:12.4.1-devel-ubuntu22.04)
+build: nvcc -arch=sm_75 -O2 -fmad=false -prec-div=true -prec-sqrt=true -ftz=false -Xcompiler -ffp-contract=off -I/root/common -I/root/rungb_common -lcublas -DFMAD="false" -o /tmp/gemm_cost /root/src/gemm_cost.cu
+device: Tesla T4 (sm_75), 40 SMs
+cublas: 120405
+S1 M=512   K=768   N=768    qkv/out projection
+  plain chain  hash=610373b9518a6824    1.458 ms    414.2 GFLOPS
+  tiled chain  hash=610373b9518a6824    0.442 ms   1365.2 GFLOPS
+  cublas fp32  hash=3470edcd578f3aba    0.203 ms   2970.9 GFLOPS
+  cublas tf32  hash=3470edcd578f3aba    0.200 ms   3016.5 GFLOPS
+S2 M=512   K=768   N=3072   mlp up
+  plain chain  hash=dbd1e7f1cb869cbb    6.203 ms    389.4 GFLOPS
+  tiled chain  hash=dbd1e7f1cb869cbb    1.620 ms   1491.0 GFLOPS
+  cublas fp32  hash=dbd1e7f1cb869cbb    0.662 ms   3652.0 GFLOPS
+  cublas tf32  hash=dbd1e7f1cb869cbb    0.662 ms   3652.0 GFLOPS
+S3 M=512   K=3072  N=768    mlp down
+  plain chain  hash=9b631078d89c5795    6.752 ms    357.8 GFLOPS
+  tiled chain  hash=9b631078d89c5795    2.077 ms   1163.1 GFLOPS
+  cublas fp32  hash=72f8cac1b5d0bb75    0.727 ms   3321.9 GFLOPS
+  cublas tf32  hash=72f8cac1b5d0bb75    0.725 ms   3332.3 GFLOPS
+S4 M=512   K=768   N=16384  head (logits)
+  plain chain  hash=43e17df400ee8a00  116.128 ms    111.0 GFLOPS
+  tiled chain  hash=43e17df400ee8a00    4.274 ms   3014.8 GFLOPS
+  cublas fp32  hash=43e17df400ee8a00    1.705 ms   7555.0 GFLOPS
+  cublas tf32  hash=43e17df400ee8a00    1.704 ms   7559.4 GFLOPS
+S5 M=768   K=512   N=16384  head grad (as nn)
+  plain chain  hash=7891783da4c3e9e8  115.054 ms    112.0 GFLOPS
+  tiled chain  hash=7891783da4c3e9e8    4.294 ms   3000.4 GFLOPS
+  cublas fp32  hash=7891783da4c3e9e8    1.954 ms   6594.1 GFLOPS
+  cublas tf32  hash=7891783da4c3e9e8    1.957 ms   6585.0 GFLOPS
+S6 M=512   K=16384 N=768    head input grad (as nn)
+  plain chain  hash=4adc397312a8de1c   91.205 ms    141.3 GFLOPS
+  tiled chain  hash=4adc397312a8de1c    6.624 ms   1945.3 GFLOPS
+  cublas fp32  hash=3b38f0dc9f00e861    1.984 ms   6493.6 GFLOPS
+  cublas tf32  hash=3b38f0dc9f00e861    1.902 ms   6773.4 GFLOPS
+S7 M=2048  K=2048  N=2048   rung B's largest
+  plain chain  hash=85a91cf3360d8a85   29.546 ms    581.5 GFLOPS
+  tiled chain  hash=85a91cf3360d8a85    6.291 ms   2730.7 GFLOPS
+  cublas fp32  hash=0e0e54e734187c5b    2.734 ms   6283.6 GFLOPS
+  cublas tf32  hash=0e0e54e734187c5b    2.730 ms   6293.6 GFLOPS
+done

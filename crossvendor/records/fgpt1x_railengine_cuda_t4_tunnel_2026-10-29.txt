@@ -1,0 +1,30 @@
+# fgpt_engine.rail (Rail, arm64, on the Mac Mini M4 Pro) over fgserver_cuda.cu on a Modal Tesla T4 through a Modal TCP tunnel (r468.modal.host), 2026-10-29 05:30Z, 16 layers 2 steps; the verbs are rungc/cuda kernels, the sequence, ledger and signature are Rail's on the Mini
+device: kernel server on 127.0.0.1 (see its banner); orchestration, ledger and signature in Rail
+gemm: plain fma chain per output (the server's kernels)
+fastMath: OFF in the server; the sequence is fgpt_model.h verb by verb
+model: 16 of 16 layers, d=768 heads=12 head_dim=64 ff=3072 vocab=16384, real weights (canonical_bestpass), S=128 B=4, lr=0.0001 adam(0.9,0.999,1e-08), 2 steps
+INPUTS hash=b945789c2b99965c
+act emb        hash=39e8610151ce0d43
+act L0.n1      hash=64c30731b649fdbd
+act L0.q       hash=cb45546361a7edc1
+act L0.k       hash=372bd6b9ebec03eb
+act L0.v       hash=e5e40c9ce3d782f3
+act L0.p       hash=86cfa99c7e6099b7
+act L0.ctx     hash=8b4daebc642205c1
+act L0.a       hash=138aef759edd9b29
+act L0.h       hash=8c08ea810556982b
+act L0.hg      hash=0ea340a3e832255c
+act L0.out     hash=06d70633730c846d
+act xL         hash=815562b75135c5ae
+act nf         hash=def1487114e05c29
+act logits     hash=d85fdc8a1b6a26ce
+act probs      hash=a694a4cea65d29c7
+step 0  hash=a8640674579d37bd
+LEDGER step 0 rec=4acc79a3bce7092bf9e24667145d8babb1e94bcdd0f86fe219608529616c6b9c prev=9fedda9c7d95df41d90bb1b6b9782492f916083198656149d4b29490ea1c5955
+step 1  hash=2b74323f764c3690
+LEDGER step 1 rec=f4a8526aed1ae2424c8462ce5590241b9312c120e76cbb9767e7aaba89ac7208 prev=4acc79a3bce7092bf9e24667145d8babb1e94bcdd0f86fe219608529616c6b9c
+FINAL hash=2b74323f764c3690
+HEAD f4a8526aed1ae2424c8462ce5590241b9312c120e76cbb9767e7aaba89ac7208
+SIG 0cc2fa4413502058441304ec251995ba7f996b4e7be6d86df0361a73356d7d04c8ae9f9d238f480ac6158cc25a35f78e70071f5c79e3a7fa2e01a4a34df3870e PK 9197ddad2777f0ad4e0683719419aa299c050bbe5c8372bae6e38a4419d3af9d
+(2 steps, Rail over the kernel server)
+done

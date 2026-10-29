@@ -1,0 +1,31 @@
+# gemm_cost.mm on the Mac Mini M4 Pro (Metal, MPS), 2026-10-29 01:56Z
+device: Apple M4 Pro
+S1 M=512   K=768   N=768    qkv/out projection
+  plain chain  hash=610373b9518a6824    5.966 ms    101.2 GFLOPS
+  simdgroup v2 hash=610373b9518a6824    1.436 ms    420.6 GFLOPS
+  MPS          hash=610373b9518a6824    1.107 ms    545.6 GFLOPS
+S2 M=512   K=768   N=3072   mlp up
+  plain chain  hash=dbd1e7f1cb869cbb   22.495 ms    107.4 GFLOPS
+  simdgroup v2 hash=dbd1e7f1cb869cbb    3.813 ms    633.6 GFLOPS
+  MPS          hash=dbd1e7f1cb869cbb    2.822 ms    856.1 GFLOPS
+S3 M=512   K=3072  N=768    mlp down
+  plain chain  hash=9b631078d89c5795    8.432 ms    286.5 GFLOPS
+  simdgroup v2 hash=9b631078d89c5795    1.715 ms   1408.7 GFLOPS
+  MPS          hash=9b631078d89c5795    1.435 ms   1683.6 GFLOPS
+S4 M=512   K=768   N=16384  head (logits)
+  plain chain  hash=43e17df400ee8a00   44.335 ms    290.6 GFLOPS
+  simdgroup v2 hash=43e17df400ee8a00    4.544 ms   2835.6 GFLOPS
+  MPS          hash=43e17df400ee8a00   11.434 ms   1126.9 GFLOPS
+S5 M=768   K=512   N=16384  head grad (as nn)
+  plain chain  hash=7891783da4c3e9e8   43.477 ms    296.4 GFLOPS
+  simdgroup v2 hash=7891783da4c3e9e8    4.397 ms   2930.4 GFLOPS
+  MPS          hash=7891783da4c3e9e8    3.475 ms   3707.9 GFLOPS
+S6 M=512   K=16384 N=768    head input grad (as nn)
+  plain chain  hash=4adc397312a8de1c   43.248 ms    297.9 GFLOPS
+  simdgroup v2 hash=4adc397312a8de1c    5.957 ms   2163.0 GFLOPS
+  MPS          hash=4adc397312a8de1c    3.085 ms   4176.6 GFLOPS
+S7 M=2048  K=2048  N=2048   rung B's largest
+  plain chain  hash=85a91cf3360d8a85   44.401 ms    386.9 GFLOPS
+  simdgroup v2 hash=85a91cf3360d8a85    6.714 ms   2558.8 GFLOPS
+  MPS          hash=85a91cf3360d8a85    3.893 ms   4413.0 GFLOPS
+done

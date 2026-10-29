@@ -1,0 +1,30 @@
+# fgpt1x.cu on Modal T4, 2026-10-29 02:01Z, variant=strict, args=--steps 3, image=nvidia/cuda:11.8.0-devel-ubuntu22.04
+gpu: Tesla T4, 610.57.04, 15360 MiB
+nvcc: Cuda compilation tools, release 11.8, V11.8.89
+build: nvcc -arch=sm_75 -O2 -fmad=false -prec-div=true -prec-sqrt=true -ftz=false -Xcompiler -ffp-contract=off -I/root/common -I/root/rungb_common -DFMAD="false" -o /tmp/fgpt1x /root/src/fgpt1x.cu
+device: Tesla T4 (sm_75)
+gemm: plain fma chain per output
+fastMath: OFF (-fmad=false -prec-div=true -prec-sqrt=true -ftz=false), host -ffp-contract=off
+model: 16 of 16 layers, d=768 heads=12 head_dim=64 ff=3072 vocab=16384, real weights (canonical_bestpass), S=128 B=4, lr=0.0001 adam(0.9,0.999,1e-08), 3 steps
+INPUTS hash=b945789c2b99965c
+act emb        hash=39e8610151ce0d43
+act L0.n1      hash=64c30731b649fdbd
+act L0.q       hash=cb45546361a7edc1
+act L0.k       hash=372bd6b9ebec03eb
+act L0.v       hash=e5e40c9ce3d782f3
+act L0.p       hash=86cfa99c7e6099b7
+act L0.ctx     hash=8b4daebc642205c1
+act L0.a       hash=138aef759edd9b29
+act L0.h       hash=8c08ea810556982b
+act L0.hg      hash=0ea340a3e832255c
+act L0.out     hash=06d70633730c846d
+act xL         hash=815562b75135c5ae
+act nf         hash=def1487114e05c29
+act logits     hash=d85fdc8a1b6a26ce
+act probs      hash=a694a4cea65d29c7
+step   0  ptgt 1.187299e-03  ce 15.6009  hash=a8640674579d37bd
+step   1  ptgt 1.430872e-03  ce 15.5560  hash=2b74323f764c3690
+step   2  ptgt 5.540316e-04  ce 14.6398  hash=b4b0e8cb33ed9fdc
+FINAL hash=b4b0e8cb33ed9fdc
+(3 steps, 3.242 s/step compute, 12.3 s total with hashing)
+done

@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="A 138M-parameter GPT trained for twenty Adam steps from its real weights on real text, to the same bytes, on Apple M1 and M4 Pro GPUs, NVIDIA Turing and Ampere GPUs, and plain CPUs. One hash per step, every record published, the gate that compares them, the defects planted to prove the gate bites, and the cost against cuBLAS and MPS." />
+<!-- og:start -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ledatic.org/crossvendor">
+<meta property="og:title" content="Cross-vendor · Ledatic">
+<meta property="og:description" content="The same 138M training run, bit for bit, from chips of three makers: Apple GPUs, NVIDIA GPUs and plain CPUs. Records, gate, plants and the cost of doing it.">
+<meta property="og:image" content="https://ledatic.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Ledatic">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cross-vendor · Ledatic">
+<meta name="twitter:description" content="The same 138M training run, bit for bit, from chips of three makers: Apple GPUs, NVIDIA GPUs and plain CPUs.">
+<meta name="twitter:image" content="https://ledatic.org/og.png">
+<!-- og:end -->
+<title>Cross-vendor · Ledatic</title>
+<link rel="canonical" href="https://ledatic.org/crossvendor">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23141414'/%3E%3Ctext%20x='32'%20y='44'%20font-size='36'%20text-anchor='middle'%20fill='%2322c55e'%20font-family='monospace'%3EL%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#141414">
+<meta name="view-transition" content="same-origin">
+<!-- §2: self-hosted type only — zero third-party requests. -->
+<link rel="preload" href="_shared/fonts/MartianMonoVF.dda1215d.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<link rel="preload" href="_shared/fonts/IBMPlexMono-Regular.6490a869.woff2" as="font" type="font/woff2" crossorigin media="(prefers-reduced-data: no-preference)">
+<!-- Link order contract: tokens → fonts → site → proof, page styles last. -->
+<link rel="stylesheet" href="_shared/tokens.css">
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/site.css">
+<link rel="stylesheet" href="_shared/proof.css">
+<style>
+/* ── /crossvendor page styles — consumes tokens only ── */
+.nav-side { display: flex; align-items: center; gap: 1rem; }
+.hero.compact { min-height: 46vh; }
+.hero.compact .hero-content { padding-top: 7rem; padding-bottom: 2rem; }
+.hero-content a { pointer-events: auto; }
+
+/* a record table: the grammar of the records themselves, monospace, hairlines */
+.rec { width: 100%; border-collapse: collapse; margin: var(--sp-6) 0 var(--sp-4);
+  font-family: var(--font-body); font-size: var(--t-data); line-height: 1.8; color: var(--tx-lo); }
+.rec th, .rec td { text-align: left; vertical-align: top; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.rec th { color: var(--tx-dim); font-weight: 400; letter-spacing: 0.03em; }
+.rec td.h { color: var(--tx-hi); white-space: nowrap; }
+.rec td.n { text-align: right; white-space: nowrap; }
+.rec .same { color: var(--st-replay); }
+.rec .diff { color: var(--st-fail); }
+.chip { display: inline-block; border: 1px solid var(--line); border-radius: var(--r-1); padding: 2px 9px;
+  color: var(--tx-lo); background: var(--ink-2); font-family: var(--font-body); font-size: var(--t-data); letter-spacing: 0.03em; }
+.chip[data-state="pass"] { color: var(--st-replay); border-color: var(--st-replay); }
+.chip[data-state="fail"] { color: var(--st-fail); border-color: var(--st-fail); }
+.rec-wrap { overflow-x: auto; }
+.cmd { font-family: var(--font-body); font-size: var(--t-data); line-height: 1.8; color: var(--tx-lo);
+  background: var(--ink-2); border: 1px solid var(--line); border-radius: var(--r-1); padding: var(--sp-4); overflow-x: auto; margin: var(--sp-4) 0; }
+.cmd b { color: var(--tx-hi); font-weight: 400; }
+.not { margin: var(--sp-4) 0 0 1.2rem; color: var(--tx-lo); }
+.not li { margin: 0.35rem 0; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="/">Ledatic<span class="accent"> /</span></a>
+  <div class="navlinks">
+    <a href="/rail">Rail</a>
+    <a href="/receipts">Receipts</a>
+    <a href="/data">Data</a>
+    <div class="navmore">
+      <button class="navmore-btn" aria-haspopup="true" aria-expanded="false">Explore &#9662;</button>
+      <div class="navmore-menu" role="menu">
+        <div class="navmore-group" role="group" aria-label="Verify">
+          <span class="navmore-h">// Verify</span>
+          <a href="/verify" role="menuitem">Verify an artifact</a>
+          <a href="/entropy" role="menuitem">Entropy beacon</a>
+          <a href="/system" role="menuitem">System</a>
+          <a href="/replay" role="menuitem">Replay</a>
+        </div>
+        <div class="navmore-group" role="group" aria-label="Build">
+          <span class="navmore-h">// Build</span>
+          <a href="/oracle" role="menuitem">The oracle</a>
+          <a href="/plasma" role="menuitem">Plasma</a>
+          <a href="/changelog" role="menuitem">Changelog</a>
+          <a href="/tios" role="menuitem">TIOS</a>
+        </div>
+        <div class="navmore-group" role="group" aria-label="Read">
+          <span class="navmore-h">// Read</span>
+          <a href="/manifesto" role="menuitem">Manifesto</a>
+          <a href="/physicify" role="menuitem">physicify</a>
+          <a href="/life" role="menuitem">Life</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-side">
+    <pulse-clock data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
+    <a class="nav-cta" href="https://github.com/Ledatic-Empire/ledatic-site" target="_blank" rel="noopener">Source</a>
+  </div>
+</nav>
+
+<section class="hero compact">
+  <div class="scene">
+    <div class="scene-fallback" aria-hidden="true"></div>
+  </div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fade-up">Cross-vendor</span>
+    <h1 class="hero-title fade-up">The same training run, from chips of three makers.</h1>
+    <p class="hero-sub fade-up">
+      A 138M-parameter GPT, twenty Adam steps, one hash per step. Apple, NVIDIA and plain CPUs produce the same bytes.
+    </p>
+    <p class="hero-desc fade-up">
+      Float arithmetic is deterministic on one chip and famously not across chips: every vendor
+      sums in its own order, fuses what it likes and approximates what it can. This page is a
+      record of making it cross the line anyway, at real scale, with the real weights of a real
+      model: the rules that did it, the records from every chip, the gate that compares them, the
+      defects planted to prove the gate fails, and what the discipline costs against the vendors'
+      own libraries. Nothing here is a claim about the model. It is a claim about replay: a
+      verifier with any of these chips, or none, recomputes the producer's exact state.
+    </p>
+  </div>
+</section>
+
+<main>
+
+<section class="section" id="claim">
+  <div class="wrap">
+    <span class="eyebrow reveal">The claim, measured</span>
+    <h2 class="reveal">Twenty steps, six chips, one hash.</h2>
+    <p class="body reveal">
+      The model is Ledatic's own 138M GPT (16 pre-norm blocks, d=768, 12 heads, FF=3072, vocab
+      16384), loaded from its checkpoint with every parameter trained: embeddings, blocks, final
+      LayerNorm, head. Each step is 512 tokens of real text as four windows of 128. After each
+      step every one of the 197 tensors (555,669,504 bytes) is hashed (FNV-1a) and the hash is the
+      record. The step-0 activations are hashed too, fifteen of them, so a defect is named by the
+      first kernel it touches. Measured 2026-10-29.
+    </p>
+    <div class="rec-wrap">
+    <table class="rec">
+      <thead><tr><th>Chip</th><th>Vendor, generation</th><th>Compiler</th><th class="n">s/step</th><th>step 0</th><th>step 19, final</th><th>gate</th></tr></thead>
+      <tbody>
+        <tr><td class="h">Mac Mini M4 Pro, GPU</td><td>Apple, M4</td><td>Metal, fast math off</td><td class="n">1.591</td><td>a8640674579d37bd</td><td class="same">67ca0134ec6c1391</td><td><span class="chip" data-state="pass">reference</span></td></tr>
+        <tr><td class="h">MacBook Air M1, GPU</td><td>Apple, M1</td><td>Metal, fast math off</td><td class="n">13.247</td><td>a8640674579d37bd</td><td class="same">67ca0134ec6c1391</td><td><span class="chip" data-state="pass">37 PASS</span></td></tr>
+        <tr><td class="h">Tesla T4</td><td>NVIDIA, Turing</td><td>nvcc 12.4, -fmad=false</td><td class="n">3.181</td><td>a8640674579d37bd</td><td class="same">67ca0134ec6c1391</td><td><span class="chip" data-state="pass">37 PASS</span></td></tr>
+        <tr><td class="h">NVIDIA A10</td><td>NVIDIA, Ampere</td><td>nvcc 12.4, -fmad=false</td><td class="n">1.225</td><td>a8640674579d37bd</td><td class="same">67ca0134ec6c1391</td><td><span class="chip" data-state="pass">37 PASS</span></td></tr>
+        <tr><td class="h">Tesla T4, second compiler</td><td>NVIDIA, Turing</td><td>nvcc 11.8, 3 steps</td><td class="n">3.242</td><td>a8640674579d37bd</td><td class="same">prefix, step 2 b4b0e8cb33ed9fdc</td><td><span class="chip" data-state="pass">19 PASS</span></td></tr>
+        <tr><td class="h">Mac Mini M4 Pro, CPU cores</td><td>Apple, arm64, 12 threads</td><td>clang 17, plain C, -ffp-contract=off</td><td class="n">26.581</td><td>a8640674579d37bd</td><td class="same">67ca0134ec6c1391</td><td><span class="chip" data-state="pass">37 PASS</span></td></tr>
+        <tr><td class="h">GitHub runner, AMD EPYC 9V74</td><td>AMD, x86-64 Linux, 2 vCPU</td><td>gcc, plain C, -mfma -ffp-contract=off, 3 steps</td><td class="n">430.039</td><td>a8640674579d37bd</td><td class="same">prefix, step 2 b4b0e8cb33ed9fdc</td><td><span class="chip" data-state="pass">19 PASS</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="body reveal">
+      37 PASS is one pair's full score: the inputs hash, fifteen activations, twenty steps, the
+      final state. The loss is a human reading beside the hashes, not a gated one: cross-entropy
+      15.60 at step 0 to 9.34 at step 19 (the text is tokenized by a later tokenizer than the
+      checkpoint's, so the model starts by learning a new vocabulary; the model's own corpus did
+      not survive). A CPU replays the GPUs' trajectory byte for byte, sixteen times slower than
+      the same machine's GPU: a verifier needs no GPU, only patience.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <span class="eyebrow reveal">How</span>
+    <h2 class="reveal">One arithmetic, written once, compiled three ways.</h2>
+    <p class="body reveal">
+      Every operation lives in one C header that the Metal shader, the CUDA kernel and the plain
+      C program all compile from the same text. The rules, each one measured first on a probe
+      before it was trusted: a fused multiply-add is written as an explicit <code>fma</code> and
+      nothing else may be fused (Metal: <code>#pragma METAL fp contract(off)</code>; nvcc:
+      <code>-fmad=false</code>, which contracts across statements by default; hosts:
+      <code>-ffp-contract=off</code>); every dot product is one sequential fma chain over its
+      reduction axis ascending, the order Apple's matrix unit was measured to use, so CUDA cores
+      reproduce the Apple matrix unit's bits; LayerNorm takes <code>1/sqrt</code>, two correctly
+      rounded operations on every vendor, never the hardware <code>rsqrt</code>; exp and tanh are
+      fma polynomials, never the hardware builtins, which differ across vendors; division and
+      square root are the IEEE ones, which agree. The step itself (forward, causal multi-head
+      attention backward, embeddings, Adam over everything) is one shared orchestration that each
+      backend includes, so the sequence of kernels cannot differ either.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="gate">
+  <div class="wrap">
+    <span class="eyebrow reveal">The gate, and what was planted to break it</span>
+    <h2 class="reveal">A gate that has never failed is a hope.</h2>
+    <p class="body reveal">
+      The gate takes the Mini GPU record as the reference and checks every other record against
+      it, hash by hash. Before it was trusted, defects were planted in the real source, built by the
+      real build script, run at the real configuration and judged by the real gate; the source was
+      restored and compared byte for byte after each, and a control run passed.
+    </p>
+    <div class="rec-wrap">
+    <table class="rec">
+      <thead><tr><th>Plant</th><th>Where</th><th>What the gate said</th></tr></thead>
+      <tbody>
+        <tr><td class="h">causal bound</td><td>attention context, <code>j &lt;= i</code> became <code>j &lt; i</code></td><td><span class="chip" data-state="fail">11 FAIL</span> the first at the attention output; every activation before it passes, so the gate names the kernel</td></tr>
+        <tr><td class="h">sum order</td><td>a bias gradient's column sum walked backwards</td><td><span class="chip" data-state="fail">2 FAIL</span> all fifteen activations pass (the forward is untouched), step 0 and step 1 fail</td></tr>
+        <tr><td class="h">fast math</td><td>Metal fast math on, contraction pragma removed</td><td><span class="chip" data-state="fail">16 FAIL</span> the first at the first LayerNorm</td></tr>
+        <tr><td class="h">pragma alone</td><td>the Metal contraction pragma removed, fast math still off</td><td><span class="chip" data-state="pass">PASS</span> in these headers every multiply-add is already explicit or split into statements; the pragma is belt over braces here</td></tr>
+        <tr><td class="h">nvcc default</td><td>CUDA built with nvcc's default <code>-fmad=true</code></td><td><span class="chip" data-state="fail">FAIL</span> step 0 c944670e7b5d200a against a8640674579d37bd, while the loss agrees to four digits: a loss log cannot see this, a hash can</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="cost">
+  <div class="wrap">
+    <span class="eyebrow reveal">The cost</span>
+    <h2 class="reveal">What the discipline costs against the vendors' libraries.</h2>
+    <p class="body reveal">
+      At the model's GEMM shapes, C = A B was computed by the plain one-thread-per-output chain the
+      run above uses, by a tiled kernel that keeps the same per-output chain (so the same bits), and
+      by the vendor's library. Best of five, TFLOPS, every output hashed. On the NVIDIA A10:
+    </p>
+    <div class="rec-wrap">
+    <table class="rec">
+      <thead><tr><th>Shape (M x K x N)</th><th class="n">plain chain</th><th class="n">tiled chain</th><th class="n">cuBLAS FP32</th><th class="n">cuBLAS TF32</th></tr></thead>
+      <tbody>
+        <tr><td class="h">512 x 768 x 768, projections</td><td class="n">1.21</td><td class="n">3.93</td><td class="n">8.19 <span class="diff">x</span></td><td class="n">14.4 <span class="diff">x</span></td></tr>
+        <tr><td class="h">512 x 768 x 3072, MLP up</td><td class="n">1.04</td><td class="n">4.94</td><td class="n">12.9 <span class="diff">x</span></td><td class="n">31.5 <span class="diff">x</span></td></tr>
+        <tr><td class="h">512 x 3072 x 768, MLP down</td><td class="n">1.18</td><td class="n">2.87</td><td class="n">11.4 <span class="diff">x</span></td><td class="n">29.5 <span class="diff">x</span></td></tr>
+        <tr><td class="h">512 x 768 x 16384, head</td><td class="n">0.25</td><td class="n">7.97</td><td class="n">16.7 <span class="same">=</span></td><td class="n">39.0 <span class="diff">x</span></td></tr>
+        <tr><td class="h">768 x 512 x 16384, head gradient</td><td class="n">0.26</td><td class="n">7.84</td><td class="n">15.1 <span class="same">=</span></td><td class="n">35.2 <span class="diff">x</span></td></tr>
+        <tr><td class="h">512 x 16384 x 768, head input gradient</td><td class="n">0.99</td><td class="n">2.33</td><td class="n">12.2 <span class="diff">x</span></td><td class="n">41.7 <span class="diff">x</span></td></tr>
+        <tr><td class="h">2048 x 2048 x 2048</td><td class="n">0.83</td><td class="n">8.31</td><td class="n">18.6 <span class="same">=</span></td><td class="n">42.4 <span class="diff">x</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="body reveal">
+      <span class="same">=</span> marks a library output whose hash equals the chain's; <span class="diff">x</span> one that
+      differs. The best deterministic kernel runs at about half of cuBLAS FP32 and a fifth of TF32
+      on the biggest shape, and worse where the tile count is small. cuBLAS FP32 happened to
+      accumulate in the chain's order on three shapes of seven; TF32 differs everywhere it exists.
+      On the Mac Mini M4 Pro the same comparison against Apple's MPS: the house's simdgroup kernel
+      2.84 TFLOPS against MPS 1.13 on the head shape, 2.56 against 4.41 at 2048 cubed, and MPS
+      reproduced the chain's bits on all seven shapes at these sizes. The training run above does
+      not yet use the tiled kernels; that is its next step, with the hashes required to stay.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="rail">
+  <div class="wrap">
+    <span class="eyebrow reveal">The language's turn</span>
+    <h2 class="reveal">Rail computes it, and Rail signs it.</h2>
+    <p class="body reveal">
+      Nothing above ran Rail, Ledatic's own language with no C in its runtime. The same night, three
+      more assays asked what Rail could say about the same trajectory, each with a gate. First, its own
+      double arithmetic was compared with C's, bit for bit, on both Macs and an x86 runner: equal on
+      every primitive, and the comparison found a compiler defect (a declared foreign float function's
+      result read back as a generic value) that was fixed, tested and shipped the same night. Second,
+      three builtins (<code>round32</code>, <code>fma32</code>, <code>f32_bits</code>) made float32
+      arithmetic expressible on Rail's doubles, with a test that catches an <code>fma32</code> that is
+      secretly a rounded double fma; with them, rung C's program written in Rail computed the first
+      Adam step of the 138M model, all sixteen layers, to the same bytes as the GPUs: 43 minutes on one
+      CPU thread against 1.6 seconds on the same machine's GPU. Third, a Rail program that owns the
+      step sequence, the data contract, a SHA-256 ledger per step and the Ed25519 signature of its
+      head, while a kernel server owns the arithmetic one verb at a time, reproduced all twenty steps
+      over the Metal kernels; its signature verifies with openssl and every ledger record recomputes
+      from the printed pieces with nothing but SHA-256.
+    </p>
+    <div class="rec-wrap">
+    <table class="rec">
+      <thead><tr><th>Program</th><th>Chip</th><th class="n">time</th><th>what matched</th><th>gate</th></tr></thead>
+      <tbody>
+        <tr><td class="h">rung C in Rail, one thread</td><td>Mac Mini M4 Pro, CPU</td><td class="n">43 min for one step</td><td>INPUTS, 15 activations, step 0 a8640674579d37bd</td><td><span class="chip" data-state="pass">17 PASS, a prefix</span></td></tr>
+        <tr><td class="h">the Rail engine over the Metal kernel server</td><td>Mac Mini M4 Pro, GPU</td><td class="n">about a minute for 20 steps</td><td>every step, final 67ca0134ec6c1391; ledger head signed</td><td><span class="chip" data-state="pass">37 PASS</span></td></tr>
+        <tr><td class="h">the same Rail engine, on the Mini, over the CUDA kernel server through a tunnel</td><td>Tesla T4 on Modal</td><td class="n">26 min for 2 steps</td><td>steps 0 and 1 equal; ledger head and signature equal the Metal run's byte for byte</td><td><span class="chip" data-state="pass">18 PASS, a prefix</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="records">
+  <div class="wrap">
+    <span class="eyebrow reveal">Records</span>
+    <h2 class="reveal">Every number above has a file.</h2>
+    <p class="body reveal">
+      The records are the programs' unedited output, one file per chip, with the device, compiler
+      and flags in their first lines. The summary over all of them is signed by Ledatic's Mini
+      witness key against a beacon pulse; the key's public half sits beside it.
+    </p>
+    <div class="cmd">
+<b>crossvendor/records/</b>fgpt1x_metal_m4pro_2026-10-29.txt (reference)<br>
+<b>crossvendor/records/</b>fgpt1x_metal_m1air_2026-10-29.txt · fgpt1x_cuda_t4_modal_2026-10-29.txt · fgpt1x_cuda_a10_modal_2026-10-29.txt<br>
+<b>crossvendor/records/</b>fgpt1x_cuda_t4_modal_2026-10-29_nvcc118.txt · fgpt1x_cpu_m4pro_2026-10-29.txt<br>
+<b>crossvendor/records/</b>neg_fgpt1x_cuda_t4_fmad_2026-10-29.txt (the negative) · gemm_cost_cuda_a10_modal_2026-10-29.txt · gemm_cost_cuda_t4_modal_2026-10-29.txt · gemm_cost_metal_m4pro_2026-10-29.txt<br>
+<b>crossvendor/records/</b>fgpt1x_rail_m4pro_2026-10-29.txt (rung C in Rail) · fgpt1x_railengine_metal_m4pro_2026-10-29.txt (the Rail engine; its HEAD, SIG and PK lines are the ledger)<br>
+<b>crossvendor/records/</b>RUNGC_SUMMARY.txt · RUNGC_SUMMARY.attest.json · mini_witness.pub.pem
+    </div>
+    <p class="body reveal">
+      To check a record against another, the gate is forty lines of shell: it compares every
+      <code>hash=</code> field keyed by its line, in order, and exits nonzero on the first
+      difference. To reproduce a record, the programs and the data manifest (sha256 of the
+      checkpoint slice and the token windows) are in Ledatic's <code>rail-lab</code> repository
+      under <code>crossvendor/rungc</code>.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="not">
+  <div class="wrap">
+    <span class="eyebrow reveal">Not claimed</span>
+    <h2 class="reveal">What this does not say.</h2>
+    <ul class="not">
+      <li>Nothing about the model's quality or its own training. The text is another tokenizer's, the loss starts at 15.6, the GELU is the tanh form and the checkpoint may have used the erf form.</li>
+      <li>Twenty steps, 512 tokens a step. Longer runs, bigger batches and other shapes are not measured.</li>
+      <li>Two NVIDIA generations and two Apple generations, two kinds of CPU. No AMD or Intel GPU, no Hopper, yet.</li>
+      <li>The run's kernels are the slow plain chain. The cost table says what a tiled deterministic kernel costs against the vendor libraries; the run's seconds are not that kernel's.</li>
+      <li>This is the craft half of the thesis, replayability across vendors. The signed ledger, provenance and retention, needs none of this and is the other page.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Ledatic</h4>
+        <p>Rail runs on Rail. The rest runs on physics. Built in Detroit, MI.</p>
+      </div>
+      <div>
+        <h4>Build</h4>
+        <ul>
+          <li><a href="rail.html">Rail</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verify</h4>
+        <ul>
+          <li><a href="verify.html">Verify an artifact</a></li>
+          <li><a href="entropy.html">Entropy beacon</a></li>
+          <li><a href="system.html">System</a></li>
+          <li><a href="replay.html">Replay</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Read</h4>
+        <ul>
+          <li><a href="manifesto.html">Manifesto</a></li>
+          <li><a href="https://github.com/Ledatic-Empire/rail" rel="noopener">Source</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; 2026 Ledatic</span>
+      <span class="trust-strip"><data class="fig" data-src="repo:version">v5.1.0</data> &middot; <data class="fig" data-src="tests:total" data-fmt="ratio">170/170</data> &middot; <data class="fig" data-src="repo:rail_native">1.2 MB</data> &middot; <data class="fig" data-src="repo:tags" data-fmt="tags">45 tags</data> &middot; <span data-selfcheck>self-check not run</span></span>
+    </div>
+  </div>
+</footer>
+
+<script src="_shared/site.js" defer></script>
+<script type="module" src="_shared/pulse-clock.js"></script>
+<script type="module" src="_shared/proof-tray.js"></script>
+</body>
+</html>
