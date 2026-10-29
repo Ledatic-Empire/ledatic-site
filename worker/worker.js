@@ -753,10 +753,10 @@ async function mintDownloadToken(env, pack, ref) {
 // docs/plans/2026-10-29-agent-stall.md; local gate: node tests/x402_harness.mjs.
 const X402_PAY_TO = "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7";   // key: ~/.ledatic/stall/base_wallet.json
 const X402_NETWORKS = {
-  mainnet: { id: "eip155:8453", usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  mainnet: { id: "eip155:8453", usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", eip712: { name: "USD Coin", version: "2" },
              facilitator: "https://api.cdp.coinbase.com/platform/v2/x402",
              cdpHost: "api.cdp.coinbase.com", cdpPath: "/platform/v2/x402" },
-  sepolia: { id: "eip155:84532", usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  sepolia: { id: "eip155:84532", usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", eip712: { name: "USDC", version: "2" },
              facilitator: "https://x402.org/facilitator" },
 };
 const X402_PRODUCTS = {
@@ -874,7 +874,7 @@ async function handleX402(request, env, url, pathname) {
   const net = X402_NETWORKS[mode];
   const requirements = {
     scheme: "exact", network: net.id, amount: String(prod.usd * 1000000), asset: net.usdc, payTo: X402_PAY_TO,
-    maxTimeoutSeconds: X402_TIMEOUT, extra: { name: "USDC", version: "2" },
+    maxTimeoutSeconds: X402_TIMEOUT, extra: net.eip712,   // the token's EIP-712 domain, read from name() and version() on chain
   };
   const resource = {
     url: `https://ledatic.org/x402/${slug}`,
