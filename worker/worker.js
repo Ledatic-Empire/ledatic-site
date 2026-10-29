@@ -833,6 +833,10 @@ async function x402Facilitator(env, net, suffix, body) {
       method: "POST", headers, body: JSON.stringify(body), signal: AbortSignal.timeout(20000) });
   } catch (e) { return { error: `facilitator unreachable: ${e.message}` }; }
   let data; try { data = await resp.json(); } catch { data = {}; }
+  // CDP answers a declined verify with HTTP 400 and a full verdict body
+  // ({isValid: false, invalidReason, invalidMessage}); that is a decision about the
+  // payment, not a facilitator failure, so it flows back to the buyer as a 402.
+  if (!resp.ok && data && (data.isValid === false || data.success === false)) return data;
   if (!resp.ok) return { error: `facilitator ${suffix} answered ${resp.status}`, detail: data };
   return data;
 }
