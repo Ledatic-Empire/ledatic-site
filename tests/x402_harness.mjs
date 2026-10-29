@@ -80,6 +80,11 @@ let requirements;
     && requirements.amount === "199000000" && requirements.asset === SEPOLIA_USDC && requirements.payTo === PAY_TO
     && requirements.extra && requirements.extra.name === "USDC" && requirements.extra.version === "2"
     && body.x402Version === 2 && body.resource && body.resource.url === URL_, JSON.stringify(requirements));
+  const bz = req && req.extensions && req.extensions.bazaar;
+  check("the 402 carries a Bazaar discovery declaration (GET, no input, output example, schema) and an icon",
+    bz && bz.info && bz.info.input.type === "http" && bz.info.input.method === "GET" && bz.info.output && bz.info.output.example
+    && bz.info.output.example.receipt && bz.schema && bz.schema.required[0] === "input" && body.resource.iconUrl === "https://ledatic.org/og.png",
+    JSON.stringify(req && req.extensions).slice(0, 160));
 }
 // 4. v1 refused
 {
@@ -108,10 +113,11 @@ let requirements;
   const e = env("sepolia", kv);
   const realFetch = globalThis.fetch;
   const TX = "0x" + randomBytes(32).toString("hex");
+  let settleBody = null;
   globalThis.fetch = async (url, init) => {
     const u = String(url);
     if (u.startsWith("https://x402.org/facilitator/verify")) return new Response(JSON.stringify({ isValid: true, payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json" } });
-    if (u.startsWith("https://x402.org/facilitator/settle")) return new Response(JSON.stringify({ success: true, transaction: TX, network: "eip155:84532", payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json" } });
+    if (u.startsWith("https://x402.org/facilitator/settle")) { settleBody = JSON.parse(init.body); return new Response(JSON.stringify({ success: true, transaction: TX, network: "eip155:84532", payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json", "extension-responses": Buffer.from(JSON.stringify({ bazaar: { status: "processing" } })).toString("base64") } }); }
     return realFetch(url, init);
   };
   const nonce = "0x" + randomBytes(32).toString("hex");
@@ -125,6 +131,13 @@ let requirements;
   check("testnet delivers the free sample, never the paid file", j.receipt && /sample200\.jsonl$/.test(j.receipt.download_url || "") && !kv.m.has("dl:" + (j.receipt.download_url || "").split("/").pop()));
   const pr = r.headers.get("payment-response") ? unb64(r.headers.get("payment-response")) : null;
   check("PAYMENT-RESPONSE header carries the settlement", pr && pr.success === true && pr.transaction === TX);
+  const bz = settleBody && settleBody.paymentPayload && settleBody.paymentPayload.extensions && settleBody.paymentPayload.extensions.bazaar;
+  check("the settle call carries the Bazaar declaration and the resource even when the buyer omitted them",
+    bz && bz.info && bz.info.input.method === "GET" && bz.schema && settleBody.paymentPayload.resource && settleBody.paymentPayload.resource.url === URL_,
+    JSON.stringify(settleBody && settleBody.paymentPayload).slice(0, 200));
+  check("the facilitator's EXTENSION-RESPONSES reaches the sale record and the buyer",
+    j.facilitator_extensions && j.facilitator_extensions.bazaar && j.facilitator_extensions.bazaar.status === "processing"
+    && JSON.parse(kv.m.get(`x402sale:${TX}`)).extension_responses.bazaar.status === "processing");
   // signature check with node's own Ed25519 against the key the route publishes
   const kr = await get(e, "https://ledatic.org/x402/key");
   const kj = await kr.json();

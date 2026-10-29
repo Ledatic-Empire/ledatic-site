@@ -848,7 +848,43 @@ async function x402Facilitator(env, net, suffix, body) {
   // payment, not a facilitator failure, so it flows back to the buyer as a 402.
   if (!resp.ok && data && (data.isValid === false || data.success === false)) return data;
   if (!resp.ok) return { error: `facilitator ${suffix} answered ${resp.status}`, detail: data };
+  // EXTENSION-RESPONSES: base64 JSON keyed by extension; bazaar.status says whether
+  // the facilitator took the discovery declaration (success, processing, rejected).
+  const ext = resp.headers.get("extension-responses");
+  if (ext) data.extensionResponses = x402UnB64(ext) || ext;
   return data;
+}
+// The Bazaar discovery declaration (Coinbase's x402 catalog). The CDP facilitator
+// indexes a resource only after a settled payment whose 402 carried this block;
+// without it, validate says "no bazaar discovery extension found" (2026-10-29).
+// Shape copied from the SDK's declare_discovery_extension for a GET with no input.
+function x402BazaarExtension(slug, prod) {
+  const example = {
+    receipt: {
+      product: slug, sha256: prod.lookInside ? prod.sampleSha256 : DATA_DELIVERABLES[prod.pack].sha256,
+      amount: String(prod.usd * 1000000), asset: X402_NETWORKS.mainnet.usdc, network: X402_NETWORKS.mainnet.id,
+      payer: "0x7874DD28b9b4751E267B48D13172247cE55beE49",
+      transaction: "0xd6b7f7ce0cf72a5e5e63cd05d9b2d83d9a85d40f7c892b8ab3058017928dbf5a", pay_to: X402_PAY_TO,
+      delivered: prod.lookInside ? "look inside: the public 200-pair sample, receipted" : "the paid file (30-day link, 25 downloads)",
+      download_url: prod.lookInside ? prod.sample : "https://ledatic.org/data/download/<token>",
+      beacon_pulse: 9518363, issued_at: "2026-10-29T17:07:41.000Z",
+    },
+    canonical_sha256: "<sha256 hex of the receipt JSON with sorted keys>",
+    signature: "<ed25519 hex over the utf-8 bytes of canonical_sha256>",
+    public_key_hex: "abe6541ed50705b183d6d88caea0c17cc03e752a0951ce5af8acd5cca88c2939",
+    verify: "ed25519: signature over the utf-8 bytes of canonical_sha256, public key at /x402/key",
+  };
+  return {
+    info: { input: { type: "http", method: "GET" }, output: { type: "json", example } },
+    schema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema", type: "object", required: ["input"],
+      properties: {
+        input: { type: "object", required: ["type", "method"], additionalProperties: false,
+          properties: { type: { type: "string", const: "http" }, method: { type: "string", enum: ["GET", "HEAD", "DELETE"] } } },
+        output: { type: "object", required: ["type"], properties: { type: { type: "string" }, example: { type: "object" } } },
+      },
+    },
+  };
 }
 async function handleX402(request, env, url, pathname) {
   const mode = (env.X402_MODE || "off").trim();
@@ -880,8 +916,10 @@ async function handleX402(request, env, url, pathname) {
     url: `https://ledatic.org/x402/${slug}`,
     description: prod.description + (mode === "sepolia" ? " (TESTNET: pays test USDC, receives the free sample plus a signed receipt)" : ""),
     mimeType: "application/json",
+    iconUrl: "https://ledatic.org/og.png",
   };
-  const required = { x402Version: 2, resource, accepts: [requirements], extensions: {} };
+  const extensions = { bazaar: x402BazaarExtension(slug, prod) };
+  const required = { x402Version: 2, resource, accepts: [requirements], extensions };
   const deny = (error, status = 402) => new Response(JSON.stringify({ ...required, error }), {
     status, headers: sec({ "content-type": "application/json", "payment-required": x402B64({ ...required, error }), "cache-control": "no-store" }),
   });
@@ -899,6 +937,10 @@ async function handleX402(request, env, url, pathname) {
   const nonce = String(auth.nonce || "");
   if (!/^0x[0-9a-fA-F]{64}$/.test(nonce)) return deny("malformed authorization nonce");
   if (await env.LEDATIC_KV.get(`x402nonce:${nonce}`)) return jsonResponse({ error: "this payment authorization was already used" }, 409);
+  // Indexing needs the declaration and the resource on the settle call too; a client
+  // that did not echo them from the 402 gets ours (the SDK clients do echo them).
+  if (!payload.resource) payload.resource = resource;
+  if (!payload.extensions || !payload.extensions.bazaar) payload.extensions = { ...(payload.extensions || {}), ...extensions };
   const body = { x402Version: 2, paymentPayload: payload, paymentRequirements: requirements };
   const v = await x402Facilitator(env, net, "/verify", body);
   if (v.error) return jsonResponse({ error: v.error, detail: v.detail || null }, 503);
@@ -935,7 +977,8 @@ async function handleX402(request, env, url, pathname) {
   const canonical = JSON.stringify(receipt, Object.keys(receipt).sort());
   const digest = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
   const signature = await sdkWitnessSign(env.X402_GRANT_KEY.trim(), digest);
-  const sale = { receipt, signature, created_at: Math.floor(Date.now() / 1000), mode };
+  const sale = { receipt, signature, created_at: Math.floor(Date.now() / 1000), mode,
+    extension_responses: s.extensionResponses || null };
   await env.LEDATIC_KV.put(`x402sale:${s.transaction}`, JSON.stringify(sale));
   try {
     const log = JSON.parse((await env.LEDATIC_KV.get("x402sales:log")) || "[]");
@@ -946,6 +989,7 @@ async function handleX402(request, env, url, pathname) {
   return new Response(JSON.stringify({
     receipt, canonical_sha256: digest, signature, public_key_hex: await x402PubHex(env),
     verify: "ed25519: signature over the utf-8 bytes of canonical_sha256, public key at /x402/key",
+    facilitator_extensions: s.extensionResponses || null,
   }), { status: 200, headers: sec({ "content-type": "application/json", "cache-control": "no-store",
     "payment-response": x402B64({ success: true, transaction: s.transaction, network: net.id, payer: receipt.payer }) }) });
 }
