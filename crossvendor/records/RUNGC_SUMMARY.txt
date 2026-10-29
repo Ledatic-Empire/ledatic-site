@@ -1,4 +1,4 @@
-# rung C summary, 2026-10-29 02:22Z: the house's 138M GPT (16 layers, real weights, every parameter under Adam) trained 20 steps of 512 real tokens to byte-identical parameter hashes on an Apple M4 Pro GPU, an Apple M1 GPU, an NVIDIA T4 (nvcc 12.4 and 11.8), an NVIDIA A10, the M4 Pro's CPU cores and an AMD EPYC x86-64 runner; gate.sh over every record as run below.
+# rung C summary, 2026-10-29 05:59Z: the house's 138M GPT (16 layers, real weights, every parameter under Adam) trained to byte-identical parameter hashes on an Apple M4 Pro GPU, an Apple M1 GPU, an NVIDIA T4 (nvcc 12.4 and 11.8), an NVIDIA A10, the M4 Pro's CPU cores, an AMD EPYC x86-64 runner, and by Rail: rung C's program in Rail (one step), and the Rail engine over kernel servers on the Mini's Metal (20 steps) and on a Modal T4 through a tunnel (2 steps, the same signed ledger HEAD as the Metal 2-step run); gate.sh over every record as run below. Negative records (not judged) are listed by sha256 only.
 
 ## records (sha256)
 2080362e4ad8ca45d8cc6a4261fddb107d226917e25548efd951619724401a1b  records/fgpt1x_cpu_m4pro_2026-10-29.txt
@@ -8,7 +8,12 @@ bf7a8e4a6924387efb38daa0f880a36ce482a1f37f84c4f7eb924296a5170db9  records/fgpt1x
 9a86baf6640aa0e0bc5be70e9a03ca9a43446a3a1d4d1310d9ec686e94ba8738  records/fgpt1x_cuda_t4_modal_2026-10-29.txt
 bef89ff33fce168f9bcc5ccaca0c33106722eeac95cf970aeac919ee38821f1b  records/fgpt1x_metal_m1air_2026-10-29.txt
 c4419063ad1a205b983914e40b8e14381bdaff6affa165e049eea26635b7d476  records/fgpt1x_metal_m4pro_2026-10-29.txt
+7618bec0c59d0dbe77d28714c794636a02c344a7509d0652d2fb6e56c6171e3b  records/fgpt1x_rail_m4pro_2026-10-29.txt
+ffb41f4d288bbff7944823e3ea900eccd7b78944d67d83478502f8b672c5563d  records/fgpt1x_railengine_cuda_t4_tunnel_2026-10-29.txt
+9ebc050aca46605cb3e74682034197ccafe3fc4f76f73ad2f6dc5946bc853242  records/fgpt1x_railengine_metal_m4pro_2026-10-29.txt
+ee4fce0a6d7c96d5134559a32f139e0d648c0bf918893876e752acc075c88096  records/fgpt1x_railengine_metal_m4pro_2steps_2026-10-29.txt
 509695824f4829a5f16553bfa8b2c4cacd6342e891e9a5a354b2f2c94606783a  records/neg_fgpt1x_cuda_t4_fmad_2026-10-29.txt
+febafa81b754eb47261d091badb44a08f91995d36984f0872549836aa25bd3c6  records/neg_x86engine_cuda_t4_modal_2026-10-29.txt
 39b75b73a1276573dc63aa410b7e51c9208b5c1a9443d94e8f1ebcfb35ad2b05  records/gemm_cost_cuda_a10_modal_2026-10-29.txt
 4d117de3485b54919efbba8b2bc27b6a25e675fcb5958ba5d31f121c394f4e24  records/gemm_cost_cuda_t4_modal_2026-10-29.txt
 3f819a5e4133bcc958215e32858f5984193f605c83ed1c3196c113f01b7fcfb9  records/gemm_cost_metal_m4pro_2026-10-29.txt
@@ -16,8 +21,15 @@ c4419063ad1a205b983914e40b8e14381bdaff6affa165e049eea26635b7d476  records/fgpt1x
 ## data (sha256, from data/fgpt_data.json)
 c3d7bdbedc1b1564607525653517705ab1a5955fd10c5d8e9d21e86be99dddc2  fgpt_init.bin
 ed17d9cac97b6bb73a76da10b6e9e7ed9cf0e31790c4df11d5d47d4bd94c86b7  fgpt_batches.bin
+c36b518db71909b04293efbbcfef11ae02c2fe441d32a41c5bbbb4f4a2e99750  fgpt_batches.txt
 cbbabfe71bdf3db6c638aafad42b00cdbe888c46601b45a65278cb675ef76809  canonical_bestpass.safetensors
 7b137d0593d4f1c050e79b0121a5b000cbe55a50bb29f8a7404aebb7b09283dd  provesmall/train.bin
+
+## the Rail engine's ledger HEADs (2 steps, both vendors)
+fgpt1x_railengine_metal_m4pro_2steps_2026-10-29.txt:HEAD f4a8526aed1ae2424c8462ce5590241b9312c120e76cbb9767e7aaba89ac7208
+fgpt1x_railengine_metal_m4pro_2steps_2026-10-29.txt:SIG 0cc2fa4413502058441304ec251995ba7f996b4e7be6d86df0361a73356d7d04c8ae9f9d238f480ac6158cc25a35f78e70071f5c79e3a7fa2e01a4a34df3870e PK 9197ddad2777f0ad4e0683719419aa299c050bbe5c8372bae6e38a4419d3af9d
+fgpt1x_railengine_cuda_t4_tunnel_2026-10-29.txt:HEAD f4a8526aed1ae2424c8462ce5590241b9312c120e76cbb9767e7aaba89ac7208
+fgpt1x_railengine_cuda_t4_tunnel_2026-10-29.txt:SIG 0cc2fa4413502058441304ec251995ba7f996b4e7be6d86df0361a73356d7d04c8ae9f9d238f480ac6158cc25a35f78e70071f5c79e3a7fa2e01a4a34df3870e PK 9197ddad2777f0ad4e0683719419aa299c050bbe5c8372bae6e38a4419d3af9d
 
 ## gate.sh, as run
 reference: records/fgpt1x_metal_m4pro_2026-10-29.txt (20 steps)
@@ -215,5 +227,102 @@ PASS metal_m1air            step 17        7fdc8e6e6d457091
 PASS metal_m1air            step 18        65bc8836954c4efd
 PASS metal_m1air            step 19        67ca0134ec6c1391
 PASS metal_m1air            FINAL          67ca0134ec6c1391
+== rail_m4pro: records/fgpt1x_rail_m4pro_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS rail_m4pro             INPUTS         b945789c2b99965c
+PASS rail_m4pro             act emb        39e8610151ce0d43
+PASS rail_m4pro             act L0.n1      64c30731b649fdbd
+PASS rail_m4pro             act L0.q       cb45546361a7edc1
+PASS rail_m4pro             act L0.k       372bd6b9ebec03eb
+PASS rail_m4pro             act L0.v       e5e40c9ce3d782f3
+PASS rail_m4pro             act L0.p       86cfa99c7e6099b7
+PASS rail_m4pro             act L0.ctx     8b4daebc642205c1
+PASS rail_m4pro             act L0.a       138aef759edd9b29
+PASS rail_m4pro             act L0.h       8c08ea810556982b
+PASS rail_m4pro             act L0.hg      0ea340a3e832255c
+PASS rail_m4pro             act L0.out     06d70633730c846d
+PASS rail_m4pro             act xL         815562b75135c5ae
+PASS rail_m4pro             act nf         def1487114e05c29
+PASS rail_m4pro             act logits     d85fdc8a1b6a26ce
+PASS rail_m4pro             act probs      a694a4cea65d29c7
+PASS rail_m4pro             step 0         a8640674579d37bd
+note rail_m4pro FINAL not compared: 1 of 20 steps (a prefix)
+== railengine_cuda_t4_tunnel: records/fgpt1x_railengine_cuda_t4_tunnel_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS railengine_cuda_t4_tunnel INPUTS         b945789c2b99965c
+PASS railengine_cuda_t4_tunnel act emb        39e8610151ce0d43
+PASS railengine_cuda_t4_tunnel act L0.n1      64c30731b649fdbd
+PASS railengine_cuda_t4_tunnel act L0.q       cb45546361a7edc1
+PASS railengine_cuda_t4_tunnel act L0.k       372bd6b9ebec03eb
+PASS railengine_cuda_t4_tunnel act L0.v       e5e40c9ce3d782f3
+PASS railengine_cuda_t4_tunnel act L0.p       86cfa99c7e6099b7
+PASS railengine_cuda_t4_tunnel act L0.ctx     8b4daebc642205c1
+PASS railengine_cuda_t4_tunnel act L0.a       138aef759edd9b29
+PASS railengine_cuda_t4_tunnel act L0.h       8c08ea810556982b
+PASS railengine_cuda_t4_tunnel act L0.hg      0ea340a3e832255c
+PASS railengine_cuda_t4_tunnel act L0.out     06d70633730c846d
+PASS railengine_cuda_t4_tunnel act xL         815562b75135c5ae
+PASS railengine_cuda_t4_tunnel act nf         def1487114e05c29
+PASS railengine_cuda_t4_tunnel act logits     d85fdc8a1b6a26ce
+PASS railengine_cuda_t4_tunnel act probs      a694a4cea65d29c7
+PASS railengine_cuda_t4_tunnel step 0         a8640674579d37bd
+PASS railengine_cuda_t4_tunnel step 1         2b74323f764c3690
+note railengine_cuda_t4_tunnel FINAL not compared: 2 of 20 steps (a prefix)
+== railengine_metal_m4pro: records/fgpt1x_railengine_metal_m4pro_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS railengine_metal_m4pro INPUTS         b945789c2b99965c
+PASS railengine_metal_m4pro act emb        39e8610151ce0d43
+PASS railengine_metal_m4pro act L0.n1      64c30731b649fdbd
+PASS railengine_metal_m4pro act L0.q       cb45546361a7edc1
+PASS railengine_metal_m4pro act L0.k       372bd6b9ebec03eb
+PASS railengine_metal_m4pro act L0.v       e5e40c9ce3d782f3
+PASS railengine_metal_m4pro act L0.p       86cfa99c7e6099b7
+PASS railengine_metal_m4pro act L0.ctx     8b4daebc642205c1
+PASS railengine_metal_m4pro act L0.a       138aef759edd9b29
+PASS railengine_metal_m4pro act L0.h       8c08ea810556982b
+PASS railengine_metal_m4pro act L0.hg      0ea340a3e832255c
+PASS railengine_metal_m4pro act L0.out     06d70633730c846d
+PASS railengine_metal_m4pro act xL         815562b75135c5ae
+PASS railengine_metal_m4pro act nf         def1487114e05c29
+PASS railengine_metal_m4pro act logits     d85fdc8a1b6a26ce
+PASS railengine_metal_m4pro act probs      a694a4cea65d29c7
+PASS railengine_metal_m4pro step 0         a8640674579d37bd
+PASS railengine_metal_m4pro step 1         2b74323f764c3690
+PASS railengine_metal_m4pro step 2         b4b0e8cb33ed9fdc
+PASS railengine_metal_m4pro step 3         2a09c5e9f2a8d50a
+PASS railengine_metal_m4pro step 4         25d2a902df106c28
+PASS railengine_metal_m4pro step 5         7580a42c9b472473
+PASS railengine_metal_m4pro step 6         750edd9fbc16ffc9
+PASS railengine_metal_m4pro step 7         a2caf77cf2280da5
+PASS railengine_metal_m4pro step 8         eb1828da7fe9e396
+PASS railengine_metal_m4pro step 9         ad8d17b1c2c69751
+PASS railengine_metal_m4pro step 10        5446d478b358be19
+PASS railengine_metal_m4pro step 11        2aa1fff0d8a77f18
+PASS railengine_metal_m4pro step 12        a174215eb400fdff
+PASS railengine_metal_m4pro step 13        366e4c7cb6caa31d
+PASS railengine_metal_m4pro step 14        49c03cc8962f8d6f
+PASS railengine_metal_m4pro step 15        78a1398b524fd87e
+PASS railengine_metal_m4pro step 16        c28343172ef5d113
+PASS railengine_metal_m4pro step 17        7fdc8e6e6d457091
+PASS railengine_metal_m4pro step 18        65bc8836954c4efd
+PASS railengine_metal_m4pro step 19        67ca0134ec6c1391
+PASS railengine_metal_m4pro FINAL          67ca0134ec6c1391
+== railengine_metal_m4pro_2steps: records/fgpt1x_railengine_metal_m4pro_2steps_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS railengine_metal_m4pro_2steps INPUTS         b945789c2b99965c
+PASS railengine_metal_m4pro_2steps act emb        39e8610151ce0d43
+PASS railengine_metal_m4pro_2steps act L0.n1      64c30731b649fdbd
+PASS railengine_metal_m4pro_2steps act L0.q       cb45546361a7edc1
+PASS railengine_metal_m4pro_2steps act L0.k       372bd6b9ebec03eb
+PASS railengine_metal_m4pro_2steps act L0.v       e5e40c9ce3d782f3
+PASS railengine_metal_m4pro_2steps act L0.p       86cfa99c7e6099b7
+PASS railengine_metal_m4pro_2steps act L0.ctx     8b4daebc642205c1
+PASS railengine_metal_m4pro_2steps act L0.a       138aef759edd9b29
+PASS railengine_metal_m4pro_2steps act L0.h       8c08ea810556982b
+PASS railengine_metal_m4pro_2steps act L0.hg      0ea340a3e832255c
+PASS railengine_metal_m4pro_2steps act L0.out     06d70633730c846d
+PASS railengine_metal_m4pro_2steps act xL         815562b75135c5ae
+PASS railengine_metal_m4pro_2steps act nf         def1487114e05c29
+PASS railengine_metal_m4pro_2steps act logits     d85fdc8a1b6a26ce
+PASS railengine_metal_m4pro_2steps act probs      a694a4cea65d29c7
+PASS railengine_metal_m4pro_2steps step 0         a8640674579d37bd
+PASS railengine_metal_m4pro_2steps step 1         2b74323f764c3690
+note railengine_metal_m4pro_2steps FINAL not compared: 2 of 20 steps (a prefix)
 GATE PASS
 exit=0
