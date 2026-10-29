@@ -139,11 +139,20 @@ Keccak checked against the empty-string vector and the key-1 address vector); ke
 it (public `abe6541e...`, served at /x402/key). Test payer for Sepolia: `sepolia_payer.json`
 (`0x628aB52b4701071EDe5F2C859B5c8586489fB3F8`, test coins only).
 
-**Not proven:** a real settle. Testnet needs test USDC in the payer wallet (Circle's faucet or the CDP faucet);
-mainnet needs a Coinbase Developer Platform API key (free account; verify is free, the first 1,000 settles a
-month are free) saved as `~/.ledatic/stall/cdp_key_id` and `cdp_key_secret`, then `echo mainnet >
-~/.ledatic/stall/x402_mode` and `worker/deploy_worker.sh`. Both are the owner's actions; the first mainnet
-purchase of the $5 look-inside from our own wallet is the real-path proof.
+**Mainnet, later the same afternoon.** The owner made the CDP account and pasted the key (`cdp_key_id` a
+UUID, `cdp_key_secret` 64 base64 bytes, both mode 600). A JWT signed with it got 200 from CDP's
+`/supported` (Base mainnet: v1 exact, v2 exact, upto, batch-settlement). Mode flipped to mainnet, Worker
+deployed: the live 402 names `eip155:8453`, Base USDC and our address. The official Python client
+(`~/.ledatic/stall/venv`, x402 2.26.0, `buy.py`) was run against both endpoints with unfunded payers: on
+Sepolia the x402.org facilitator answered `invalid_exact_evm_insufficient_balance`; on mainnet CDP answered
+HTTP 400 with `invalid_payload` / "execution reverted" (the same thing, said by a simulation), which the
+Worker first reported as a 503 and now passes through as a 402 (site 4a38aad). So the whole path, client,
+Worker, JWT, facilitator, is exercised up to the point where money exists.
+
+**Not proven:** a settle. The mainnet payer `~/.ledatic/stall/mainnet_payer.json`
+(`0x7874DD28b9b4751E267B48D13172247cE55beE49`) holds nothing. The first real purchase is the owner's call on
+money: fund that wallet with 199 USDC on Base and buy the pairs (the USDC lands back in our own payTo
+address), or name a cheaper x402 SKU for the proof.
 
 ## Dross
 - The `aitwoz-cloud` tunnel (down) and the aitwoz webhook endpoint still enabled in Stripe: harmless,
