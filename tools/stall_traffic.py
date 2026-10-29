@@ -19,7 +19,7 @@ from collections import defaultdict
 HOME = os.path.expanduser("~")
 BOT = re.compile(r"bot|crawl|spider|slurp|fetch|python|curl|wget|go-http|httpx|java|okhttp|scrapy|headless|preview|"
                  r"facebookexternalhit|GPT|Claude|anthropic|openai|perplexity|bytespider|ccbot|ahrefs|semrush|petal|"
-                 r"yandex|bing|duckduck|applebot|amazonbot|meta-external|discovery|node", re.I)
+                 r"yandex|bing|duckduck|applebot|amazonbot|meta-external|discovery|node", re.IGNORECASE)
 
 
 def ids():
@@ -48,10 +48,10 @@ def main(days):
     cfg = ids()
     since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)).strftime("%Y-%m-%dT00:00:00Z")
     acct = cfg["CF_ACCOUNT"]
-    rows = gql(cfg, '{ viewer { accounts(filter:{accountTag:"%s"}) { httpRequestsAdaptiveGroups(limit:400, filter:{datetime_geq:"%s", '
-                    'clientRequestHTTPHost:"ledatic.org", requestSource:"eyeball", OR:[{clientRequestPath_like:"/data%%"},'
-                    '{clientRequestPath_like:"/x402%%"},{clientRequestPath:"/llms.txt"}]}, orderBy:[count_DESC]) '
-                    '{ count dimensions{clientRequestPath userAgent} } } } }' % (acct, since))
+    rows = gql(cfg, '{ viewer { accounts(filter:{accountTag:"' + acct + '"}) { httpRequestsAdaptiveGroups(limit:400, '
+                    'filter:{datetime_geq:"' + since + '", clientRequestHTTPHost:"ledatic.org", requestSource:"eyeball", '
+                    'OR:[{clientRequestPath_like:"/data%"},{clientRequestPath_like:"/x402%"},{clientRequestPath:"/llms.txt"}]}, '
+                    'orderBy:[count_DESC]) { count dimensions{clientRequestPath userAgent} } } } }')
     by = defaultdict(lambda: [0, 0])
     crawlers = defaultdict(int)
     for r in rows:
@@ -60,15 +60,15 @@ def main(days):
         by[p][1 if bot else 0] += r["count"]
         if bot and ua:
             crawlers[ua.split("(")[-1].split(";")[0].split("/")[0][:28] if "compatible" in ua else ua.split("/")[0][:28]] += r["count"]
-    print("stall surfaces since %s (eyeball requests to ledatic.org, sampled estimates)" % since[:10])
-    print("%-46s %7s %5s" % ("path", "browser", "bot"))
+    print(f"stall surfaces since {since[:10]} (eyeball requests to ledatic.org, sampled estimates)")
+    print(f"{'path':46} {'browser':>7} {'bot':>5}")
     for p, (h, b) in sorted(by.items(), key=lambda kv: -(kv[1][0] + kv[1][1]))[:25]:
-        print("%-46s %7d %5d" % (p[:46], h, b))
-    print("\ncrawlers:", ", ".join("%s %d" % kv for kv in sorted(crawlers.items(), key=lambda kv: -kv[1])[:12]))
-    daily = gql(cfg, '{ viewer { accounts(filter:{accountTag:"%s"}) { httpRequestsAdaptiveGroups(limit:60, filter:{datetime_geq:"%s", '
-                     'clientRequestHTTPHost:"ledatic.org", requestSource:"eyeball", edgeResponseContentTypeName:"html"}, '
-                     'orderBy:[date_ASC]) { count dimensions{date} } } } }' % (acct, since))
-    print("\nhtml pageviews per day:", " ".join("%s:%d" % (r["dimensions"]["date"][5:], r["count"]) for r in daily))
+        print(f"{p[:46]:46} {h:7d} {b:5d}")
+    print("\ncrawlers:", ", ".join(f"{name} {n}" for name, n in sorted(crawlers.items(), key=lambda kv: -kv[1])[:12]))
+    daily = gql(cfg, '{ viewer { accounts(filter:{accountTag:"' + acct + '"}) { httpRequestsAdaptiveGroups(limit:60, '
+                     'filter:{datetime_geq:"' + since + '", clientRequestHTTPHost:"ledatic.org", requestSource:"eyeball", '
+                     'edgeResponseContentTypeName:"html"}, orderBy:[date_ASC]) { count dimensions{date} } } } }')
+    print("\nhtml pageviews per day:", " ".join(f"{r['dimensions']['date'][5:]}:{r['count']}" for r in daily))
     return 0
 
 
