@@ -736,6 +736,200 @@ async function mintDownloadToken(env, pack, ref) {
   await env.LEDATIC_KV.put(`dl:${token}`, JSON.stringify(grant), { expirationTtl: 30 * 24 * 3600 });
   return token;
 }
+
+// ─── x402: agents buy the stall's goods with USDC (agent stall step 5, 2026-10-29) ─
+// GET /x402/<slug> without a payment header answers 402 with a PAYMENT-REQUIRED
+// header (x402 v2, base64 JSON; the same JSON is the body). With a
+// PAYMENT-SIGNATURE header (v1 X-PAYMENT is read but refused) the Worker asks the
+// facilitator to verify, then settle, the signed USDC authorization; on a settled
+// transfer it mints a download grant and returns a receipt signed by the stall's
+// Ed25519 key (X402_GRANT_KEY binding; public half at /x402/key).
+// X402_MODE binding: "off" (503, buy by card); "sepolia" (Base Sepolia test USDC
+// through the public x402.org facilitator; delivers the FREE SAMPLE, never the
+// paid file, so testnet coins buy nothing real); "mainnet" (Base USDC through
+// Coinbase's CDP facilitator, which needs CDP_API_KEY_ID + CDP_API_KEY_SECRET;
+// delivers the paid file). The nonce of every authorization is kept 7 days so a
+// replayed header answers 409 before the facilitator is asked. Plan:
+// docs/plans/2026-10-29-agent-stall.md; local gate: node tests/x402_harness.mjs.
+const X402_PAY_TO = "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7";   // key: ~/.ledatic/stall/base_wallet.json
+const X402_NETWORKS = {
+  mainnet: { id: "eip155:8453", usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+             facilitator: "https://api.cdp.coinbase.com/platform/v2/x402",
+             cdpHost: "api.cdp.coinbase.com", cdpPath: "/platform/v2/x402" },
+  sepolia: { id: "eip155:84532", usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+             facilitator: "https://x402.org/facilitator" },
+};
+const X402_PRODUCTS = {
+  "rail-verified-pairs-v2": {
+    pack: "pairs", usd: 199, buy: "https://buy.stripe.com/6oU28j5cBbsDaoC3lN0Fi03",
+    description: "Rail Verified-Pairs Corpus v2: 52,243 compiler-verified pairs (tar.gz, 805,232 bytes)",
+    sample: "https://ledatic.org/data/rail-verified-pairs-v2-sample200.jsonl",
+  },
+  "attested-text-corpus-v2": {
+    pack: "corpus", usd: 499, buy: "https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04",
+    description: "Attested Text Corpus v2 (2.45 GB)", sample: null,
+  },
+};
+const X402_TIMEOUT = 300;
+
+function x402B64(obj) {
+  const b = new TextEncoder().encode(JSON.stringify(obj));
+  let s = ""; for (const x of b) s += String.fromCharCode(x);
+  return btoa(s);
+}
+function x402UnB64(str) {
+  try {
+    const bin = atob(String(str).trim());
+    const b = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(b));
+  } catch { return null; }
+}
+function x402B64Url(bytes) {
+  let s = ""; for (const x of bytes) s += String.fromCharCode(x);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function x402PrivateKey(seedHex, extractable = false) {
+  const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + 32);
+  pkcs8.set(ED25519_PKCS8_PREFIX, 0);
+  pkcs8.set(sdkHexToBytes(seedHex), ED25519_PKCS8_PREFIX.length);
+  return crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, extractable, ["sign"]);
+}
+async function x402PubHex(env) {
+  const jwk = await crypto.subtle.exportKey("jwk", await x402PrivateKey(env.X402_GRANT_KEY.trim(), true));
+  const bin = atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4));
+  return sdkBytesToHex(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
+}
+// Coinbase CDP bearer: an EdDSA JWT over {sub: key id, iss: "cdp", aud: ["cdp_service"],
+// nbf, exp: +120 s, uri: "POST host/path"}; header carries kid and a random nonce.
+async function x402CdpJwt(env, method, net, suffix) {
+  const kid = (env.CDP_API_KEY_ID || "").trim();
+  const secret = (env.CDP_API_KEY_SECRET || "").trim();
+  if (!kid || !secret) return null;
+  let seed;
+  if (/^[0-9a-f]{64}$/i.test(secret)) seed = sdkHexToBytes(secret);
+  else seed = Uint8Array.from(atob(secret), (c) => c.charCodeAt(0)).slice(0, 32);   // CDP keys: base64(seed || pub)
+  const now = Math.floor(Date.now() / 1000);
+  const enc = new TextEncoder();
+  const header = x402B64Url(enc.encode(JSON.stringify({
+    alg: "EdDSA", typ: "JWT", kid, nonce: sdkBytesToHex(crypto.getRandomValues(new Uint8Array(16))) })));
+  const claims = x402B64Url(enc.encode(JSON.stringify({
+    sub: kid, iss: "cdp", aud: ["cdp_service"], nbf: now, exp: now + 120,
+    uri: `${method} ${net.cdpHost}${net.cdpPath}${suffix}` })));
+  const key = await x402PrivateKey(sdkBytesToHex(seed));
+  const sig = new Uint8Array(await crypto.subtle.sign({ name: "Ed25519" }, key, enc.encode(`${header}.${claims}`)));
+  return `${header}.${claims}.${x402B64Url(sig)}`;
+}
+async function x402Facilitator(env, net, suffix, body) {
+  const headers = { "content-type": "application/json" };
+  if (net.cdpHost) {
+    const jwt = await x402CdpJwt(env, "POST", net, suffix);
+    if (!jwt) return { error: "settlement not configured: the Worker holds no CDP API key" };
+    headers.authorization = `Bearer ${jwt}`;
+  }
+  let resp;
+  try {
+    resp = await fetch(net.facilitator + suffix, {
+      method: "POST", headers, body: JSON.stringify(body), signal: AbortSignal.timeout(20000) });
+  } catch (e) { return { error: `facilitator unreachable: ${e.message}` }; }
+  let data; try { data = await resp.json(); } catch { data = {}; }
+  if (!resp.ok) return { error: `facilitator ${suffix} answered ${resp.status}`, detail: data };
+  return data;
+}
+async function handleX402(request, env, url, pathname) {
+  const mode = (env.X402_MODE || "off").trim();
+  if (pathname === "/x402/key") {
+    if (!env.X402_GRANT_KEY) return jsonResponse({ error: "no receipt key bound" }, 503);
+    return jsonResponse({ algorithm: "ed25519", public_key_hex: await x402PubHex(env),
+      message: "the utf-8 bytes of canonical_sha256 (sha256 hex of the receipt JSON with sorted keys, no spaces)" }, 200);
+  }
+  const slug = pathname.slice("/x402/".length).replace(/\/+$/, "");
+  const prod = X402_PRODUCTS[slug];
+  if (!prod) return jsonResponse({ error: "unknown product", catalog: "https://ledatic.org/data/catalog.json" }, 404);
+  const meta = DATA_DELIVERABLES[prod.pack];
+  if (mode !== "sepolia" && mode !== "mainnet") {
+    return jsonResponse({ error: "x402 is not enabled on this product yet", buy_url: prod.buy,
+      note: "card checkout works today; see the catalog's x402.status" }, 503);
+  }
+  if (mode === "mainnet" && !meta.online) {
+    return jsonResponse({ error: "not delivered over x402 yet (2.45 GB; card checkout, then email within 24 h)", buy_url: prod.buy }, 503);
+  }
+  if (mode === "sepolia" && !prod.sample) {
+    return jsonResponse({ error: "no testnet sample for this product" }, 503);
+  }
+  const net = X402_NETWORKS[mode];
+  const requirements = {
+    scheme: "exact", network: net.id, amount: String(prod.usd * 1000000), asset: net.usdc, payTo: X402_PAY_TO,
+    maxTimeoutSeconds: X402_TIMEOUT, extra: { name: "USDC", version: "2" },
+  };
+  const resource = {
+    url: `https://ledatic.org/x402/${slug}`,
+    description: prod.description + (mode === "sepolia" ? " (TESTNET: pays test USDC, receives the free sample plus a signed receipt)" : ""),
+    mimeType: "application/json",
+  };
+  const required = { x402Version: 2, resource, accepts: [requirements], extensions: {} };
+  const deny = (error, status = 402) => new Response(JSON.stringify({ ...required, error }), {
+    status, headers: sec({ "content-type": "application/json", "payment-required": x402B64({ ...required, error }), "cache-control": "no-store" }),
+  });
+  const header = request.headers.get("payment-signature") || request.headers.get("x-payment") || "";
+  if (!header) return deny("payment required");
+  const payload = x402UnB64(header);
+  if (!payload || payload.x402Version !== 2) return deny("x402 v2 payload required (PAYMENT-SIGNATURE: base64 JSON with x402Version 2)");
+  const acc = payload.accepted || {};
+  const okAmount = /^\d+$/.test(String(acc.amount || "")) && BigInt(acc.amount) >= BigInt(requirements.amount);
+  if (acc.scheme !== "exact" || acc.network !== net.id || String(acc.asset || "").toLowerCase() !== net.usdc.toLowerCase()
+      || String(acc.payTo || "").toLowerCase() !== X402_PAY_TO.toLowerCase() || !okAmount) {
+    return deny("accepted requirements do not match this resource");
+  }
+  const auth = (payload.payload || {}).authorization || {};
+  const nonce = String(auth.nonce || "");
+  if (!/^0x[0-9a-fA-F]{64}$/.test(nonce)) return deny("malformed authorization nonce");
+  if (await env.LEDATIC_KV.get(`x402nonce:${nonce}`)) return jsonResponse({ error: "this payment authorization was already used" }, 409);
+  const body = { x402Version: 2, paymentPayload: payload, paymentRequirements: requirements };
+  const v = await x402Facilitator(env, net, "/verify", body);
+  if (v.error) return jsonResponse({ error: v.error, detail: v.detail || null }, 503);
+  if (!v.isValid) return deny(`payment not valid: ${v.invalidReason || "unknown"}`);
+  await env.LEDATIC_KV.put(`x402nonce:${nonce}`, "1", { expirationTtl: 7 * 86400 });
+  const s = await x402Facilitator(env, net, "/settle", body);
+  if (s.error) return jsonResponse({ error: s.error, detail: s.detail || null }, 503);
+  if (!s.success) return deny(`settlement failed: ${s.errorReason || "unknown"}`);
+  let downloadUrl, delivered;
+  if (mode === "mainnet") {
+    const token = await mintDownloadToken(env, prod.pack, `x402:${s.transaction}`);
+    downloadUrl = `https://ledatic.org/data/download/${token}`;
+    delivered = "the paid file (30-day link, 25 downloads)";
+  } else {
+    downloadUrl = prod.sample;
+    delivered = "testnet: the free sample";
+  }
+  let pulse = null;
+  try {
+    const p = await fetch("https://ledatic.org/entropy/pulse", { signal: AbortSignal.timeout(3000) });
+    const j = await p.json();
+    pulse = j.pulse_id ?? j.id ?? j.pulse ?? null;
+  } catch { pulse = null; }
+  const receipt = {
+    product: slug, sha256: meta.sha256, amount: requirements.amount, asset: net.usdc, network: net.id,
+    payer: s.payer || v.payer || null, transaction: s.transaction, pay_to: X402_PAY_TO, delivered,
+    download_url: downloadUrl, beacon_pulse: pulse, issued_at: new Date().toISOString(),
+  };
+  const canonical = JSON.stringify(receipt, Object.keys(receipt).sort());
+  const digest = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
+  const signature = await sdkWitnessSign(env.X402_GRANT_KEY.trim(), digest);
+  const sale = { receipt, signature, created_at: Math.floor(Date.now() / 1000), mode };
+  await env.LEDATIC_KV.put(`x402sale:${s.transaction}`, JSON.stringify(sale));
+  try {
+    const log = JSON.parse((await env.LEDATIC_KV.get("x402sales:log")) || "[]");
+    log.push({ transaction: s.transaction, product: slug, amount: requirements.amount, payer: receipt.payer,
+               network: net.id, created_at: sale.created_at, mode });
+    await env.LEDATIC_KV.put("x402sales:log", JSON.stringify(log.slice(-500)));
+  } catch { /* best-effort ledger */ }
+  return new Response(JSON.stringify({
+    receipt, canonical_sha256: digest, signature, public_key_hex: await x402PubHex(env),
+    verify: "ed25519: signature over the utf-8 bytes of canonical_sha256, public key at /x402/key",
+  }), { status: 200, headers: sec({ "content-type": "application/json", "cache-control": "no-store",
+    "payment-response": x402B64({ success: true, transaction: s.transaction, network: net.id, payer: receipt.payer }) }) });
+}
 async function sdkWitnessSign(seedHex, msg) {
   const seed = sdkHexToBytes(seedHex);
   const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + 32);
@@ -1361,6 +1555,10 @@ async function handleSite(request, env, url) {
   // grant), unguessable, time-limited, and download-capped — a worker-native
   // stand-in for an S3 presigned URL that needs no S3 credentials. Streams
   // the object straight from R2; the bucket is never public.
+  if (pathname.startsWith("/x402/") && method === "GET") {
+    return handleX402(request, env, url, pathname);
+  }
+
   if (pathname.startsWith("/data/download/") && (method === "GET" || method === "HEAD")) {
     const token = pathname.slice("/data/download/".length);
     if (!/^[0-9a-f]{48}$/.test(token)) return notFound();

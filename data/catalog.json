@@ -23,10 +23,12 @@
         "maxAmountRequired": "199000000",
         "payTo": "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7",
         "attestation": "ed25519",
-        "status": "pending: the endpoint answers 404 until USDC settlement is live; buy by card at buy_url, delivered at once",
+        "status": "serving on Base Sepolia (testnet) since 2026-10-29: GET the endpoint for a 402 with PAYMENT-REQUIRED, pay 199 test USDC and receive the free sample plus an Ed25519-signed receipt. Mainnet (real USDC, the paid file) when settlement is configured; until then buy by card at buy_url, delivered at once",
         "content_sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
         "witness_pulse": 2641877,
-        "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff"
+        "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff",
+        "testnet_network": "eip155:84532",
+        "receipt_key": "https://ledatic.org/x402/key"
       },
       "delivery": "instant: the confirmation page returns a 30-day download link; the file hashes to download_sha256"
     },
@@ -50,17 +52,19 @@
         "maxAmountRequired": "499000000",
         "payTo": "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7",
         "attestation": "ed25519",
-        "status": "pending: the endpoint answers 404 until USDC settlement is live; buy by card at buy_url, delivered by email within 24 h",
+        "status": "not served over x402 (2.45 GB has no automated delivery); the endpoint answers 503 with buy_url. Buy by card, delivered by email within 24 h",
         "content_sha256": "92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63",
         "witness_pulse": 2516402,
-        "download_sha256": "36a799c793d3c055f92e741445539710e48a92542f07acba13799bdc6d373bb1"
+        "download_sha256": "36a799c793d3c055f92e741445539710e48a92542f07acba13799bdc6d373bb1",
+        "testnet_network": "eip155:84532",
+        "receipt_key": "https://ledatic.org/x402/key"
       },
       "delivery": "by email within 24 h of checkout"
     }
   ],
   "payment_rails": {
     "human": "stripe: see each dataset's buy_url and delivery",
-    "agent": "x402 (USDC on Base, eip155:8453): see each dataset's x402.endpoint and x402.status; a served response carries an Ed25519-signed receipt verifiable against download_sha256"
+    "agent": "x402 v2 (USDC, EIP-3009 exact scheme): see each dataset's x402.endpoint and x402.status; a served response carries a receipt signed by the key at /x402/key, verifiable offline against download_sha256"
   },
-  "agents_note": "Machine buyers: the x402 endpoints are not serving yet (404) while settlement is brought up. Today, buy through the card checkout at buy_url: the pairs corpus downloads at once from the confirmation page, the text corpus arrives by email within 24 h. Verify the free sample on each dataset page first; the paid tarball must hash to download_sha256."
+  "agents_note": "Machine buyers: the pairs endpoint serves x402 on Base Sepolia today (testnet coins buy the free sample and a signed receipt, a dry run of the whole flow); mainnet settlement is next. To own the file today, use the card checkout at buy_url: the pairs corpus downloads at once from the confirmation page, the text corpus arrives by email within 24 h. Verify the free sample first; the paid tarball must hash to download_sha256."
 }
