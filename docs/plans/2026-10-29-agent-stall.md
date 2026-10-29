@@ -121,6 +121,30 @@ sale what it was and whether we had to touch it. Decision rule, written now so i
 - Zero: the stall stays up as it is, nothing more is built for agents, and this document records that
   the claim was measured and did not hold. No second attempt without new evidence.
 
+## As run, 2026-10-29 (same day; the owner: "lets make a new address ... other than that lets do it")
+
+| Step | State | Proof as run |
+|---|---|---|
+| 1 wallet ring | live, `com.ledatic.stall_watch` | `--selftest` 9/9; plants: sale branch off 3/6 exit 1, open branch off 5/6 exit 1, x402 mainnet branch off 8/9 exit 1; first real tick deferred the two open checkouts of 10-28; a fake Stripe sale against the real KV ledger rang red |
+| 2 analytics permission | **open, the owner** | the token still lacks Zone Analytics Read |
+| 3 pairs from KV | live | `deliverable:pairs` in KV hashes `cebed0a4...`; admin grant then GET: 200, 805,232 bytes, same sha256; HEAD 200; meter counts; corpus grant 409; plant (wrong KV key): the 503 text, restore `cmp` identical, 200 again |
+| 4 findable | live | llms.txt "Data for agents" (live grep: 1), sitemap lists four /data URLs (live grep: 4), catalog rewritten; the em-dash ratchet blocked every deploy until three in crossvendor.html went |
+| 5 x402 | live on Base Sepolia; mainnet dormant | `node tests/x402_harness.mjs` 16/16 (a forged signature refused by the real x402.org facilitator: `invalid_exact_evm_signature`; settle stubbed; receipt verifies with node's Ed25519 against /x402/key; tamper fails; replay 409); plants: nonce guard off 15/16 exit 1, payTo check off 15/16 exit 1; live: /x402/key serves `abe6541e...`, GET answers 402 with PAYMENT-REQUIRED (eip155:84532, 199000000, our address), the forged header through the real Worker answers 402 `invalid_exact_evm_signature`, corpus 503, unknown 404 |
+| 6 corpus origin | not built | waits for the first corpus sale |
+| 7 the measurement | clock starts when step 4 landed: 2026-10-29 | table due 2026-11-28 |
+
+New address: `0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7`, made with `~/.ledatic/stall/keccak_addr.py` (stdlib
+Keccak checked against the empty-string vector and the key-1 address vector); key in
+`~/.ledatic/stall/base_wallet.json`, mode 600, on the Mini only. Receipt signing key `grant_key.hex` beside
+it (public `abe6541e...`, served at /x402/key). Test payer for Sepolia: `sepolia_payer.json`
+(`0x628aB52b4701071EDe5F2C859B5c8586489fB3F8`, test coins only).
+
+**Not proven:** a real settle. Testnet needs test USDC in the payer wallet (Circle's faucet or the CDP faucet);
+mainnet needs a Coinbase Developer Platform API key (free account; verify is free, the first 1,000 settles a
+month are free) saved as `~/.ledatic/stall/cdp_key_id` and `cdp_key_secret`, then `echo mainnet >
+~/.ledatic/stall/x402_mode` and `worker/deploy_worker.sh`. Both are the owner's actions; the first mainnet
+purchase of the $5 look-inside from our own wallet is the real-path proof.
+
 ## Dross
 - The `aitwoz-cloud` tunnel (down) and the aitwoz webhook endpoint still enabled in Stripe: harmless,
   removed in a later deletion pass, not here.
