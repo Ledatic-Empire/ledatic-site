@@ -142,6 +142,32 @@ let requirements;
   const r2 = await get(e, URL_, { "payment-signature": b64(payload(requirements, { nonce })) });
   check("the same authorization nonce again answers 409 without asking the facilitator", r2.status === 409);
 }
+// 8b. look inside: one USDC, the sample, receipted, on mainnet with a stubbed facilitator
+{
+  const kv = kvStub();
+  const e = env("mainnet", kv);
+  const LI = "https://ledatic.org/x402/rail-verified-pairs-v2-look-inside";
+  const r0 = await get(e, LI);
+  const req0 = unb64(r0.headers.get("payment-required")).accepts[0];
+  check("look inside asks for exactly 1 USDC on Base mainnet", r0.status === 402 && req0.amount === "1000000" && req0.network === "eip155:8453");
+  const realFetch = globalThis.fetch;
+  const TX = "0x" + randomBytes(32).toString("hex");
+  globalThis.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.includes("/x402/verify")) return new Response(JSON.stringify({ isValid: true, payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json" } });
+    if (u.includes("/x402/settle")) return new Response(JSON.stringify({ success: true, transaction: TX, network: "eip155:8453", payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json" } });
+    return realFetch(url, init);
+  };
+  let r, j;
+  try {
+    e.CDP_API_KEY_ID = "test"; e.CDP_API_KEY_SECRET = randomBytes(32).toString("hex");
+    r = await get(e, LI, { "payment-signature": b64(payload(req0)) });
+    j = await r.json();
+  } finally { globalThis.fetch = realFetch; }
+  check("look inside delivers the public sample with its own sha256 in the receipt, no download grant minted",
+    r.status === 200 && j.receipt && /sample200\.jsonl$/.test(j.receipt.download_url) && j.receipt.sha256 === "79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64"
+    && ![...kv.m.keys()].some((k) => k.startsWith("dl:")), `status ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
+}
 // 9. mainnet without CDP credentials
 {
   const p = payload({ ...requirements, network: "eip155:8453", asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" });

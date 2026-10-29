@@ -769,6 +769,16 @@ const X402_PRODUCTS = {
     pack: "corpus", usd: 499, buy: "https://buy.stripe.com/fZudR17kJ54f1S64pR0Fi04",
     description: "Attested Text Corpus v2 (2.45 GB)", sample: null,
   },
+  // Look inside: one USDC buys the public 200-pair sample through the paid path,
+  // with the same signed receipt a $199 buyer gets. It exists so an agent (and we)
+  // can exercise the whole flow, 402 to receipt, for a dollar. The file itself is
+  // free at the sample URL; the receipt is what is bought.
+  "rail-verified-pairs-v2-look-inside": {
+    pack: "pairs", usd: 1, buy: null, lookInside: true,
+    description: "Look inside Rail Verified-Pairs v2: the public 200-pair sample (37,173 bytes JSONL) delivered through the paid path with a signed receipt",
+    sample: "https://ledatic.org/data/rail-verified-pairs-v2-sample200.jsonl",
+    sampleSha256: "79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64",
+  },
 };
 const X402_TIMEOUT = 300;
 
@@ -898,14 +908,18 @@ async function handleX402(request, env, url, pathname) {
   if (s.error) return jsonResponse({ error: s.error, detail: s.detail || null }, 503);
   if (!s.success) return deny(`settlement failed: ${s.errorReason || "unknown"}`);
   let downloadUrl, delivered;
-  if (mode === "mainnet") {
+  if (mode === "mainnet" && !prod.lookInside) {
     const token = await mintDownloadToken(env, prod.pack, `x402:${s.transaction}`);
     downloadUrl = `https://ledatic.org/data/download/${token}`;
     delivered = "the paid file (30-day link, 25 downloads)";
+  } else if (prod.lookInside) {
+    downloadUrl = prod.sample;
+    delivered = "look inside: the public 200-pair sample, receipted";
   } else {
     downloadUrl = prod.sample;
     delivered = "testnet: the free sample";
   }
+  const deliveredSha = prod.lookInside ? prod.sampleSha256 : meta.sha256;
   let pulse = null;
   try {
     const p = await fetch("https://ledatic.org/entropy/pulse", { signal: AbortSignal.timeout(3000) });
@@ -913,7 +927,7 @@ async function handleX402(request, env, url, pathname) {
     pulse = j.pulse_id ?? j.id ?? j.pulse ?? null;
   } catch { pulse = null; }
   const receipt = {
-    product: slug, sha256: meta.sha256, amount: requirements.amount, asset: net.usdc, network: net.id,
+    product: slug, sha256: deliveredSha, amount: requirements.amount, asset: net.usdc, network: net.id,
     payer: s.payer || v.payer || null, transaction: s.transaction, pay_to: X402_PAY_TO, delivered,
     download_url: downloadUrl, beacon_pulse: pulse, issued_at: new Date().toISOString(),
   };

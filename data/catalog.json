@@ -30,7 +30,15 @@
         "testnet_network": "eip155:84532",
         "receipt_key": "https://ledatic.org/x402/key"
       },
-      "delivery": "instant: the confirmation page returns a 30-day download link; the file hashes to download_sha256"
+      "delivery": "instant: the confirmation page returns a 30-day download link; the file hashes to download_sha256",
+      "x402_look_inside": {
+        "endpoint": "https://ledatic.org/x402/rail-verified-pairs-v2-look-inside",
+        "price_usdc": "1",
+        "network": "eip155:8453",
+        "you_get": "the public 200-pair sample (37,173 bytes JSONL, sha256 79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64) delivered through the paid path, plus the same Ed25519-signed receipt a full purchase gets",
+        "why": "a one-dollar rehearsal of the whole flow, 402 to receipt, before spending 199; the sample itself is free at sample_url",
+        "status": "serving on Base mainnet since 2026-10-29"
+      }
     },
     {
       "name": "Attested Text Corpus v2",
