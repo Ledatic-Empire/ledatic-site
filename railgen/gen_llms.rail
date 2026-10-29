@@ -45,6 +45,8 @@ main =
   let _ = w f "4. **[System](https://ledatic.org/system)** — mission control. Five live panels — beacon, witness, fleet, build, self-host. Every cell is a current value fetched from a signed JSON artifact at page load. If any of it's stale, this page shows it.\n\n"
   let _ = w f "5. **[The oracle](https://ledatic.org/oracle)** — what the compiler is *for*. A model's claim that its code is correct is unfalsifiable; a compile is a fact anyone can reproduce. Ledatic trains models against the compiler as the fitness function, with bit-reproducible corpora bound into hash-chained, witness-signed ledgers. The page reports the result AND its limits, including a month-long self-improvement run whose entire signed capability climb turned out to be measurement noise once re-scored on a five-times-wider held-out sample. Attestation of a computation is not validation of its metric — that distinction is load-bearing here and is stated publicly rather than buried.\n\n"
 
+  let _ = w f "6. **[Cross-vendor](https://ledatic.org/crossvendor)**: the replay record. Ledatic's own 138M GPT trained for twenty Adam steps from its real weights on real text produced the same per-step parameter hashes on Apple M1 and M4 Pro GPUs, NVIDIA Turing and Ampere GPUs (two nvcc versions) and plain CPUs (2026-10-29). The rules: explicit fma only, one sequential fma chain per dot product in the order Apple's matrix unit uses, 1/sqrt not rsqrt, polynomial exp and tanh, contraction off on every compiler. The page carries every record, the gate that compares them, the defects planted to make the gate fail, and the cost against cuBLAS and MPS. A claim about replay, not about the model.\n\n"
+
   -- Direction
   let _ = w f "## Direction: proof-of-human-authorship\n\n"
   let _ = w f "Where the verifiable layer extends next: hardware-rooted, human-bound, time-anchored signing of creative artifacts so the open internet keeps a way to tell humans from AI. The primitive is built; the human-binding layer (Secure Enclave + proof-of-personhood) is the work ahead. See [/provenance](https://ledatic.org/provenance) for the buyer-side framing.\n\n"
@@ -119,6 +121,7 @@ main =
   let _ = surl s "/case-campaign-intel" date "monthly" "0.6"
   let _ = surl s "/ot" date "monthly" "0.5"
   let _ = surl s "/fleet" date "weekly" "0.5"
+  let _ = surl s "/crossvendor" date "monthly" "0.6"
   let _ = surl s "/llms.txt" date "weekly" "0.5"
   let _ = w s "</urlset>\n"
   let ssize = trim (shell (cat ["wc -c < ", s]))
