@@ -47,7 +47,7 @@ Two attested datasets are for sale at [/data](https://ledatic.org/data). The mac
 
 - **Rail Verified-Pairs Corpus v2**: 52,243 compiler-verified pairs, 4.4 MB JSONL, $199. Card checkout through the Stripe link in the catalog; the confirmation page returns a 30-day download link at once, no human in the loop.
 - **Attested Text Corpus v2**: 25,541 documents, about 1.54B tokens, per-document provenance, 2.45 GB, $499. Card checkout; delivered by email within 24 hours.
-- **Paying as an agent** (x402, USDC on Base): the endpoints named in the catalog are being brought up; each dataset's `x402.status` field in the catalog says what the endpoint does today. Until it says "serving", a card checkout is the way to buy.
+- **Paying as an agent** (x402 v2, USDC on Base mainnet, no account, no gas): `GET https://ledatic.org/x402/rail-verified-pairs-v2` answers 402 with the payment requirements; pay 199 USDC through a signed EIP-3009 authorization and the response carries a 30-day download link plus an Ed25519-signed receipt, public key at https://ledatic.org/x402/key. Each dataset's `x402.status` in the catalog says what its endpoint does today.
 
 ## Contact
 

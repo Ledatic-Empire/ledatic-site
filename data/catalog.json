@@ -23,7 +23,7 @@
         "maxAmountRequired": "199000000",
         "payTo": "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7",
         "attestation": "ed25519",
-        "status": "serving on Base Sepolia (testnet) since 2026-10-29: GET the endpoint for a 402 with PAYMENT-REQUIRED, pay 199 test USDC and receive the free sample plus an Ed25519-signed receipt. Mainnet (real USDC, the paid file) when settlement is configured; until then buy by card at buy_url, delivered at once",
+        "status": "serving on Base mainnet since 2026-10-29: GET the endpoint for a 402 with PAYMENT-REQUIRED (x402 v2, exact scheme), pay 199 USDC, receive a 30-day download link for the tarball and an Ed25519-signed receipt (key at receipt_key). Settlement by the Coinbase CDP facilitator; the payer needs USDC on Base and no gas",
         "content_sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
         "witness_pulse": 2641877,
         "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff",
@@ -66,5 +66,5 @@
     "human": "stripe: see each dataset's buy_url and delivery",
     "agent": "x402 v2 (USDC, EIP-3009 exact scheme): see each dataset's x402.endpoint and x402.status; a served response carries a receipt signed by the key at /x402/key, verifiable offline against download_sha256"
   },
-  "agents_note": "Machine buyers: the pairs endpoint serves x402 on Base Sepolia today (testnet coins buy the free sample and a signed receipt, a dry run of the whole flow); mainnet settlement is next. To own the file today, use the card checkout at buy_url: the pairs corpus downloads at once from the confirmation page, the text corpus arrives by email within 24 h. Verify the free sample first; the paid tarball must hash to download_sha256."
+  "agents_note": "Machine buyers: the pairs corpus is sold over x402 on Base mainnet (USDC, no account, no gas: a 402, a signed EIP-3009 authorization, the file and a signed receipt). The text corpus is card checkout only, delivered by email within 24 h. Humans: buy_url. Verify the free sample first; the paid tarball must hash to download_sha256."
 }
