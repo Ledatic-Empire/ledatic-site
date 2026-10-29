@@ -775,7 +775,7 @@ const X402_PRODUCTS = {
   // free at the sample URL; the receipt is what is bought.
   "rail-verified-pairs-v2-look-inside": {
     pack: "pairs", usd: 1, buy: null, lookInside: true,
-    description: "Look inside Rail Verified-Pairs v2: the public 200-pair sample (37,173 bytes JSONL) delivered through the paid path with a signed receipt",
+    description: "Look inside Rail Verified-Pairs v2 for 1 USDC: the public 200-pair sample (37,173 bytes JSONL) delivered through the paid path with a signed Ed25519 receipt (verifiable offline against /x402/key). The full file, 52,243 compiler-verified Rail pairs (805,232 bytes tar.gz), is the same flow at https://ledatic.org/x402/rail-verified-pairs-v2 for 199 USDC.",
     sample: "https://ledatic.org/data/rail-verified-pairs-v2-sample200.jsonl",
     sampleSha256: "79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64",
   },
@@ -864,13 +864,14 @@ function x402BazaarExtension(slug, prod) {
       product: slug, sha256: prod.lookInside ? prod.sampleSha256 : DATA_DELIVERABLES[prod.pack].sha256,
       amount: String(prod.usd * 1000000), asset: X402_NETWORKS.mainnet.usdc, network: X402_NETWORKS.mainnet.id,
       payer: "0x7874DD28b9b4751E267B48D13172247cE55beE49",
-      transaction: "0xd6b7f7ce0cf72a5e5e63cd05d9b2d83d9a85d40f7c892b8ab3058017928dbf5a", pay_to: X402_PAY_TO,
-      delivered: prod.lookInside ? "look inside: the public 200-pair sample, receipted" : "the paid file (30-day link, 25 downloads)",
-      download_url: prod.lookInside ? prod.sample : "https://ledatic.org/data/download/<token>",
-      beacon_pulse: 9518363, issued_at: "2026-10-29T17:07:41.000Z",
+      transaction: "0x981b58e02c164365bf8f48daf5126f0e44f06b5ef41c705996dddb47aefe01e0", pay_to: X402_PAY_TO,
+      delivered: prod.lookInside ? "look inside: the public 200-pair sample, receipted; the full file is https://ledatic.org/x402/rail-verified-pairs-v2 (199 USDC)"
+        : "the paid file (30-day link, 25 downloads)",
+      download_url: prod.lookInside ? prod.sample : "https://ledatic.org/data/download/7f3a9c1e2b5d4a6f8e0c1b2a3d4e5f60",
+      beacon_pulse: 9522259, issued_at: "2026-10-29T19:19:04.963Z",
     },
-    canonical_sha256: "<sha256 hex of the receipt JSON with sorted keys>",
-    signature: "<ed25519 hex over the utf-8 bytes of canonical_sha256>",
+    canonical_sha256: "4592040c9413c403e112f0f073f0eb6976e188e3c649968f180b8c6b3fa70cc7",
+    signature: "50bb37a327fbe82e1d8866fe5ed8dcf5f9c70644e552676b0855b8f7a672fdb9544f0dbca14666bcbad47f86fc9dc3d8b3d0b844ff14281f9396f61df5377304",
     public_key_hex: "abe6541ed50705b183d6d88caea0c17cc03e752a0951ce5af8acd5cca88c2939",
     verify: "ed25519: signature over the utf-8 bytes of canonical_sha256, public key at /x402/key",
   };
@@ -956,7 +957,7 @@ async function handleX402(request, env, url, pathname) {
     delivered = "the paid file (30-day link, 25 downloads)";
   } else if (prod.lookInside) {
     downloadUrl = prod.sample;
-    delivered = "look inside: the public 200-pair sample, receipted";
+    delivered = "look inside: the public 200-pair sample, receipted; the full file is https://ledatic.org/x402/rail-verified-pairs-v2 (199 USDC)";
   } else {
     downloadUrl = prod.sample;
     delivered = "testnet: the free sample";

@@ -191,6 +191,37 @@ So the base rate the 30-day table will be judged against is on the order of a fe
 per day, the same again from crawlers, and AI search crawlers (Exa, Grok, Kimi) already reading the catalog
 and llms.txt. The measurement script is `tools/stall_traffic.py` (added with this section).
 
+## Step 4b, 19:19 UTC: listed where agents look
+
+Two indexes exist for x402 resources and the stall was in one of them. **x402scan** indexes settlements
+on chain: `https://www.x402scan.com/recipient/0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7` already showed
+the two 17:07 transactions, nothing to do. **Coinbase's Bazaar** (97,032 resources at 19:15; the catalog
+CDP-settling agents search) rejected us: its validator (`POST api.cdp.coinbase.com/platform/v2/x402/validate`,
+no key) said "no bazaar discovery extension found". Indexing needs `extensions.bazaar` on the 402, the
+same block plus the resource on the settle call, and one settled payment.
+
+Landed (site 44b6b87): every 402 carries the declaration (GET, no input, a real receipt as the output
+example, the SDK's schema) and `resource.iconUrl`; the Worker fills the declaration and the resource into
+the settle call when a buyer's payload lacks them; the facilitator's `EXTENSION-RESPONSES` header is kept
+in the sale record and returned to the buyer as `facilitator_extensions`. Harness 23/23 (plant: fill-in
+off, 22/23 exit 1). Validate after deploy: look-inside and pairs `valid: true, simulation accepted`; the
+corpus 503s by design (offline until step 6). One 1 USDC look-inside purchase from the test budget
+(tx `0x981b58e0...`, beacon pulse 9522259) came back with `bazaar: processing`. Payer 25 USDC, payTo 3.
+Listing check: `~/.ledatic/stall/bazaar_check.py` (exit 0 once a ledatic.org resource is in the index).
+Result: **listed at 20:18 UTC**, about an hour after the settle (the docs say 15 minutes): the keyless
+merchant lookup `GET api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0x64b9...eFD7` returns
+the look-inside resource and `discovery/search?urlSubstring=ledatic.org` finds it. The unauthenticated
+full listing is not date-ordered and ignores search parameters (a scan of all 97,326 rows at 19:50 found
+nothing; the merchant lookup is the check, and `bazaar_check.py` now uses it). Only a resource with a
+CDP-settled payment is listed, so the 199 USDC file itself is not in the Bazaar and cannot be put there
+by us (25 USDC budget). Instead the listed 1 USDC resource names the full file and its price in its
+description and in the receipt's `delivered` line, and its output example is the real 19:19 receipt; one
+more 1 USDC call (tx `0x760ead82...`, beacon pulse 9524068, 20:21 UTC) re-submitted it, `processing`.
+Payer 24 USDC, payTo 4. Semantic search ("compiler verified pairs dataset") does not rank it yet;
+ranking takes up to six hours and a resource with no settlement for 30 days is dropped, so the stall
+stays listed only while something buys the look-inside about monthly (our own call counts).
+
+
 ## Dross
 - The `aitwoz-cloud` tunnel (down) and the aitwoz webhook endpoint still enabled in Stripe: harmless,
   removed in a later deletion pass, not here.
