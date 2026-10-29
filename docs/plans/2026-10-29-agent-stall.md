@@ -149,10 +149,22 @@ HTTP 400 with `invalid_payload` / "execution reverted" (the same thing, said by 
 Worker first reported as a 503 and now passes through as a 402 (site 4a38aad). So the whole path, client,
 Worker, JWT, facilitator, is exercised up to the point where money exists.
 
-**Not proven:** a settle. The mainnet payer `~/.ledatic/stall/mainnet_payer.json`
-(`0x7874DD28b9b4751E267B48D13172247cE55beE49`) holds nothing. The first real purchase is the owner's call on
-money: fund that wallet with 199 USDC on Base and buy the pairs (the USDC lands back in our own payTo
-address), or name a cheaper x402 SKU for the proof.
+**Settled, 17:07 UTC.** The owner asked for a cheaper SKU and funded the payer with 28 USDC. "Look inside"
+(`/x402/rail-verified-pairs-v2-look-inside`, 1 USDC, the public sample delivered through the paid path with
+the same receipt) went live (site 4a5b67d). The first funded purchase still failed with CDP's
+`invalid_payload` / "execution reverted": the 402 advertised the EIP-712 domain `USDC` v2, but Base mainnet
+USDC's contract says `USD Coin` v2 (Sepolia's says `USDC`), so the client's signature recovered to the wrong
+signer. Fixed by reading `name()` and `version()` from both chains into the Worker (c2e9345); the harness now
+checks the advertised domain against the contract on both chains (8c). Then:
+
+| Purchase | Transaction on Base | Receipt |
+|---|---|---|
+| look inside, 1 USDC | `0x6008e815cbe4e683bf50d50e2aa7f45384ce0310b8aab01c67848c4f57eaf5d0`, block 53,252,151, Transfer payer to payTo 1.0 USDC | signature verifies offline against /x402/key; `beacon_pulse` null (the Worker fetched its own zone, which Workers cannot) |
+| look inside, 1 USDC, after the fix (3724242) | `0xd6b7f7ce0cf72a5e5e63cd05d9b2d83d9a85d40f7c892b8ab3058017928dbf5a` | verifies; `beacon_pulse` 9518363 |
+
+Balances after: payTo 2.0 USDC, payer 26.0 USDC (the owner's standing budget for the stall's own tests). The
+wallet ring rang red by mail and push for the first sale (`notify.log` 17:08:39Z); a kickstart a minute after
+the sale had read an empty ledger, KV being eventually consistent, and the next tick caught it.
 
 ## Dross
 - The `aitwoz-cloud` tunnel (down) and the aitwoz webhook endpoint still enabled in Stripe: harmless,
