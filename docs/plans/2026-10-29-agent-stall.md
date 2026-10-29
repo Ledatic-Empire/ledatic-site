@@ -166,6 +166,31 @@ Balances after: payTo 2.0 USDC, payer 26.0 USDC (the owner's standing budget for
 wallet ring rang red by mail and push for the first sale (`notify.log` 17:08:39Z); a kickstart a minute after
 the sale had read an empty ledger, KV being eventually consistent, and the next tick caught it.
 
+## Step 2 landed, 17:31 UTC: the base rate
+
+The owner granted the fleet token **Account** Analytics Read (not zone-level; the account-scoped GraphQL
+dataset filtered by host serves the same purpose). The Free plan exposes no `botScore` and no ASN, so
+human vs bot is judged by user agent, and the adaptive dataset is sampled (counts are estimates in tens).
+
+30 days to 2026-10-29, eyeball requests to ledatic.org, by surface (estimate; browser UA / bot UA):
+
+| Surface | browser | bot | who the bots are |
+|---|---|---|---|
+| /llms.txt | 120 | 150 | |
+| /data and /data.html | 230 | 240 | ExaSearchBot, Barkrowler, curl |
+| /data/catalog.json | 100 | 70 | |
+| the two dataset pages | 150 | 130 | AteveSearchSourceUrlDiscovery, curl |
+| sample, sha256 sidecar, ledger sig | 70 | 300 | Elevenlabs crawler, curl |
+| /x402/rail-verified-pairs-v2 | 20 | 0 | our own tests today |
+| /data/.env, /database.sql and kin | 0 | 300 | GrokBot, KimiBot, curl: scanners, not buyers |
+
+ledatic.org html pageviews per day, 10-19 to 10-29: 2460, 2264, 1104, 3163, 2033, 395, 768, 920, 1170,
+616, 431. On 10-28 the data pages saw browser visitors from DE, ID, PY, GB, ZA, US and CL and the crawlers
+Exa and Barkrowler; the sampling is too coarse to pin the two checkout opens (19:38 and 01:58 UTC) to a row.
+So the base rate the 30-day table will be judged against is on the order of a few browser visits to /data
+per day, the same again from crawlers, and AI search crawlers (Exa, Grok, Kimi) already reading the catalog
+and llms.txt. The measurement script is `tools/stall_traffic.py` (added with this section).
+
 ## Dross
 - The `aitwoz-cloud` tunnel (down) and the aitwoz webhook endpoint still enabled in Stripe: harmless,
   removed in a later deletion pass, not here.
