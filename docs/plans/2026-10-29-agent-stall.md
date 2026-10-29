@@ -216,7 +216,7 @@ nothing; the merchant lookup is the check, and `bazaar_check.py` now uses it). O
 CDP-settled payment is listed, so the 199 USDC file itself is not in the Bazaar and cannot be put there
 by us (25 USDC budget). Instead the listed 1 USDC resource names the full file and its price in its
 description and in the receipt's `delivered` line, and its output example is the real 19:19 receipt; one
-more 1 USDC call (tx `0x760ead82...`, beacon pulse 9524068, 20:21 UTC) re-submitted it, `processing`.
+more 1 USDC call (tx `0x760ead82...`, beacon pulse 9524068, 20:21 UTC) re-submitted it, `processing`; the revised listing was live at 20:19:22 UTC, eight minutes later.
 Payer 24 USDC, payTo 4. Semantic search ("compiler verified pairs dataset") does not rank it yet;
 ranking takes up to six hours and a resource with no settlement for 30 days is dropped, so the stall
 stays listed only while something buys the look-inside about monthly (our own call counts).
