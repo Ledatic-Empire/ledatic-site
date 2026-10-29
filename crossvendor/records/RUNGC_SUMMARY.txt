@@ -1,0 +1,219 @@
+# rung C summary, 2026-10-29 02:22Z: the house's 138M GPT (16 layers, real weights, every parameter under Adam) trained 20 steps of 512 real tokens to byte-identical parameter hashes on an Apple M4 Pro GPU, an Apple M1 GPU, an NVIDIA T4 (nvcc 12.4 and 11.8), an NVIDIA A10, the M4 Pro's CPU cores and an AMD EPYC x86-64 runner; gate.sh over every record as run below.
+
+## records (sha256)
+2080362e4ad8ca45d8cc6a4261fddb107d226917e25548efd951619724401a1b  records/fgpt1x_cpu_m4pro_2026-10-29.txt
+7ca29dd03fafd9aae4ada2fe5d1f11f80a7ab5d7e754dc4703b5bbf72400f17b  records/fgpt1x_cpu_x86_gh_2026-10-29.txt
+77ccd52c1560e6da6477d2613710952ebdeee81622fc6820aa1b3616181850cb  records/fgpt1x_cuda_a10_modal_2026-10-29.txt
+bf7a8e4a6924387efb38daa0f880a36ce482a1f37f84c4f7eb924296a5170db9  records/fgpt1x_cuda_t4_modal_2026-10-29_nvcc118.txt
+9a86baf6640aa0e0bc5be70e9a03ca9a43446a3a1d4d1310d9ec686e94ba8738  records/fgpt1x_cuda_t4_modal_2026-10-29.txt
+bef89ff33fce168f9bcc5ccaca0c33106722eeac95cf970aeac919ee38821f1b  records/fgpt1x_metal_m1air_2026-10-29.txt
+c4419063ad1a205b983914e40b8e14381bdaff6affa165e049eea26635b7d476  records/fgpt1x_metal_m4pro_2026-10-29.txt
+509695824f4829a5f16553bfa8b2c4cacd6342e891e9a5a354b2f2c94606783a  records/neg_fgpt1x_cuda_t4_fmad_2026-10-29.txt
+39b75b73a1276573dc63aa410b7e51c9208b5c1a9443d94e8f1ebcfb35ad2b05  records/gemm_cost_cuda_a10_modal_2026-10-29.txt
+4d117de3485b54919efbba8b2bc27b6a25e675fcb5958ba5d31f121c394f4e24  records/gemm_cost_cuda_t4_modal_2026-10-29.txt
+3f819a5e4133bcc958215e32858f5984193f605c83ed1c3196c113f01b7fcfb9  records/gemm_cost_metal_m4pro_2026-10-29.txt
+
+## data (sha256, from data/fgpt_data.json)
+c3d7bdbedc1b1564607525653517705ab1a5955fd10c5d8e9d21e86be99dddc2  fgpt_init.bin
+ed17d9cac97b6bb73a76da10b6e9e7ed9cf0e31790c4df11d5d47d4bd94c86b7  fgpt_batches.bin
+cbbabfe71bdf3db6c638aafad42b00cdbe888c46601b45a65278cb675ef76809  canonical_bestpass.safetensors
+7b137d0593d4f1c050e79b0121a5b000cbe55a50bb29f8a7404aebb7b09283dd  provesmall/train.bin
+
+## gate.sh, as run
+reference: records/fgpt1x_metal_m4pro_2026-10-29.txt (20 steps)
+== cpu_m4pro: records/fgpt1x_cpu_m4pro_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS cpu_m4pro              INPUTS         b945789c2b99965c
+PASS cpu_m4pro              act emb        39e8610151ce0d43
+PASS cpu_m4pro              act L0.n1      64c30731b649fdbd
+PASS cpu_m4pro              act L0.q       cb45546361a7edc1
+PASS cpu_m4pro              act L0.k       372bd6b9ebec03eb
+PASS cpu_m4pro              act L0.v       e5e40c9ce3d782f3
+PASS cpu_m4pro              act L0.p       86cfa99c7e6099b7
+PASS cpu_m4pro              act L0.ctx     8b4daebc642205c1
+PASS cpu_m4pro              act L0.a       138aef759edd9b29
+PASS cpu_m4pro              act L0.h       8c08ea810556982b
+PASS cpu_m4pro              act L0.hg      0ea340a3e832255c
+PASS cpu_m4pro              act L0.out     06d70633730c846d
+PASS cpu_m4pro              act xL         815562b75135c5ae
+PASS cpu_m4pro              act nf         def1487114e05c29
+PASS cpu_m4pro              act logits     d85fdc8a1b6a26ce
+PASS cpu_m4pro              act probs      a694a4cea65d29c7
+PASS cpu_m4pro              step 0         a8640674579d37bd
+PASS cpu_m4pro              step 1         2b74323f764c3690
+PASS cpu_m4pro              step 2         b4b0e8cb33ed9fdc
+PASS cpu_m4pro              step 3         2a09c5e9f2a8d50a
+PASS cpu_m4pro              step 4         25d2a902df106c28
+PASS cpu_m4pro              step 5         7580a42c9b472473
+PASS cpu_m4pro              step 6         750edd9fbc16ffc9
+PASS cpu_m4pro              step 7         a2caf77cf2280da5
+PASS cpu_m4pro              step 8         eb1828da7fe9e396
+PASS cpu_m4pro              step 9         ad8d17b1c2c69751
+PASS cpu_m4pro              step 10        5446d478b358be19
+PASS cpu_m4pro              step 11        2aa1fff0d8a77f18
+PASS cpu_m4pro              step 12        a174215eb400fdff
+PASS cpu_m4pro              step 13        366e4c7cb6caa31d
+PASS cpu_m4pro              step 14        49c03cc8962f8d6f
+PASS cpu_m4pro              step 15        78a1398b524fd87e
+PASS cpu_m4pro              step 16        c28343172ef5d113
+PASS cpu_m4pro              step 17        7fdc8e6e6d457091
+PASS cpu_m4pro              step 18        65bc8836954c4efd
+PASS cpu_m4pro              step 19        67ca0134ec6c1391
+PASS cpu_m4pro              FINAL          67ca0134ec6c1391
+== cpu_x86_gh: records/fgpt1x_cpu_x86_gh_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS cpu_x86_gh             INPUTS         b945789c2b99965c
+PASS cpu_x86_gh             act emb        39e8610151ce0d43
+PASS cpu_x86_gh             act L0.n1      64c30731b649fdbd
+PASS cpu_x86_gh             act L0.q       cb45546361a7edc1
+PASS cpu_x86_gh             act L0.k       372bd6b9ebec03eb
+PASS cpu_x86_gh             act L0.v       e5e40c9ce3d782f3
+PASS cpu_x86_gh             act L0.p       86cfa99c7e6099b7
+PASS cpu_x86_gh             act L0.ctx     8b4daebc642205c1
+PASS cpu_x86_gh             act L0.a       138aef759edd9b29
+PASS cpu_x86_gh             act L0.h       8c08ea810556982b
+PASS cpu_x86_gh             act L0.hg      0ea340a3e832255c
+PASS cpu_x86_gh             act L0.out     06d70633730c846d
+PASS cpu_x86_gh             act xL         815562b75135c5ae
+PASS cpu_x86_gh             act nf         def1487114e05c29
+PASS cpu_x86_gh             act logits     d85fdc8a1b6a26ce
+PASS cpu_x86_gh             act probs      a694a4cea65d29c7
+PASS cpu_x86_gh             step 0         a8640674579d37bd
+PASS cpu_x86_gh             step 1         2b74323f764c3690
+PASS cpu_x86_gh             step 2         b4b0e8cb33ed9fdc
+note cpu_x86_gh FINAL not compared: 3 of 20 steps (a prefix)
+== cuda_a10_modal: records/fgpt1x_cuda_a10_modal_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS cuda_a10_modal         INPUTS         b945789c2b99965c
+PASS cuda_a10_modal         act emb        39e8610151ce0d43
+PASS cuda_a10_modal         act L0.n1      64c30731b649fdbd
+PASS cuda_a10_modal         act L0.q       cb45546361a7edc1
+PASS cuda_a10_modal         act L0.k       372bd6b9ebec03eb
+PASS cuda_a10_modal         act L0.v       e5e40c9ce3d782f3
+PASS cuda_a10_modal         act L0.p       86cfa99c7e6099b7
+PASS cuda_a10_modal         act L0.ctx     8b4daebc642205c1
+PASS cuda_a10_modal         act L0.a       138aef759edd9b29
+PASS cuda_a10_modal         act L0.h       8c08ea810556982b
+PASS cuda_a10_modal         act L0.hg      0ea340a3e832255c
+PASS cuda_a10_modal         act L0.out     06d70633730c846d
+PASS cuda_a10_modal         act xL         815562b75135c5ae
+PASS cuda_a10_modal         act nf         def1487114e05c29
+PASS cuda_a10_modal         act logits     d85fdc8a1b6a26ce
+PASS cuda_a10_modal         act probs      a694a4cea65d29c7
+PASS cuda_a10_modal         step 0         a8640674579d37bd
+PASS cuda_a10_modal         step 1         2b74323f764c3690
+PASS cuda_a10_modal         step 2         b4b0e8cb33ed9fdc
+PASS cuda_a10_modal         step 3         2a09c5e9f2a8d50a
+PASS cuda_a10_modal         step 4         25d2a902df106c28
+PASS cuda_a10_modal         step 5         7580a42c9b472473
+PASS cuda_a10_modal         step 6         750edd9fbc16ffc9
+PASS cuda_a10_modal         step 7         a2caf77cf2280da5
+PASS cuda_a10_modal         step 8         eb1828da7fe9e396
+PASS cuda_a10_modal         step 9         ad8d17b1c2c69751
+PASS cuda_a10_modal         step 10        5446d478b358be19
+PASS cuda_a10_modal         step 11        2aa1fff0d8a77f18
+PASS cuda_a10_modal         step 12        a174215eb400fdff
+PASS cuda_a10_modal         step 13        366e4c7cb6caa31d
+PASS cuda_a10_modal         step 14        49c03cc8962f8d6f
+PASS cuda_a10_modal         step 15        78a1398b524fd87e
+PASS cuda_a10_modal         step 16        c28343172ef5d113
+PASS cuda_a10_modal         step 17        7fdc8e6e6d457091
+PASS cuda_a10_modal         step 18        65bc8836954c4efd
+PASS cuda_a10_modal         step 19        67ca0134ec6c1391
+PASS cuda_a10_modal         FINAL          67ca0134ec6c1391
+== cuda_t4_modal: records/fgpt1x_cuda_t4_modal_2026-10-29_nvcc118.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS cuda_t4_modal          INPUTS         b945789c2b99965c
+PASS cuda_t4_modal          act emb        39e8610151ce0d43
+PASS cuda_t4_modal          act L0.n1      64c30731b649fdbd
+PASS cuda_t4_modal          act L0.q       cb45546361a7edc1
+PASS cuda_t4_modal          act L0.k       372bd6b9ebec03eb
+PASS cuda_t4_modal          act L0.v       e5e40c9ce3d782f3
+PASS cuda_t4_modal          act L0.p       86cfa99c7e6099b7
+PASS cuda_t4_modal          act L0.ctx     8b4daebc642205c1
+PASS cuda_t4_modal          act L0.a       138aef759edd9b29
+PASS cuda_t4_modal          act L0.h       8c08ea810556982b
+PASS cuda_t4_modal          act L0.hg      0ea340a3e832255c
+PASS cuda_t4_modal          act L0.out     06d70633730c846d
+PASS cuda_t4_modal          act xL         815562b75135c5ae
+PASS cuda_t4_modal          act nf         def1487114e05c29
+PASS cuda_t4_modal          act logits     d85fdc8a1b6a26ce
+PASS cuda_t4_modal          act probs      a694a4cea65d29c7
+PASS cuda_t4_modal          step 0         a8640674579d37bd
+PASS cuda_t4_modal          step 1         2b74323f764c3690
+PASS cuda_t4_modal          step 2         b4b0e8cb33ed9fdc
+note cuda_t4_modal FINAL not compared: 3 of 20 steps (a prefix)
+== cuda_t4_modal: records/fgpt1x_cuda_t4_modal_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS cuda_t4_modal          INPUTS         b945789c2b99965c
+PASS cuda_t4_modal          act emb        39e8610151ce0d43
+PASS cuda_t4_modal          act L0.n1      64c30731b649fdbd
+PASS cuda_t4_modal          act L0.q       cb45546361a7edc1
+PASS cuda_t4_modal          act L0.k       372bd6b9ebec03eb
+PASS cuda_t4_modal          act L0.v       e5e40c9ce3d782f3
+PASS cuda_t4_modal          act L0.p       86cfa99c7e6099b7
+PASS cuda_t4_modal          act L0.ctx     8b4daebc642205c1
+PASS cuda_t4_modal          act L0.a       138aef759edd9b29
+PASS cuda_t4_modal          act L0.h       8c08ea810556982b
+PASS cuda_t4_modal          act L0.hg      0ea340a3e832255c
+PASS cuda_t4_modal          act L0.out     06d70633730c846d
+PASS cuda_t4_modal          act xL         815562b75135c5ae
+PASS cuda_t4_modal          act nf         def1487114e05c29
+PASS cuda_t4_modal          act logits     d85fdc8a1b6a26ce
+PASS cuda_t4_modal          act probs      a694a4cea65d29c7
+PASS cuda_t4_modal          step 0         a8640674579d37bd
+PASS cuda_t4_modal          step 1         2b74323f764c3690
+PASS cuda_t4_modal          step 2         b4b0e8cb33ed9fdc
+PASS cuda_t4_modal          step 3         2a09c5e9f2a8d50a
+PASS cuda_t4_modal          step 4         25d2a902df106c28
+PASS cuda_t4_modal          step 5         7580a42c9b472473
+PASS cuda_t4_modal          step 6         750edd9fbc16ffc9
+PASS cuda_t4_modal          step 7         a2caf77cf2280da5
+PASS cuda_t4_modal          step 8         eb1828da7fe9e396
+PASS cuda_t4_modal          step 9         ad8d17b1c2c69751
+PASS cuda_t4_modal          step 10        5446d478b358be19
+PASS cuda_t4_modal          step 11        2aa1fff0d8a77f18
+PASS cuda_t4_modal          step 12        a174215eb400fdff
+PASS cuda_t4_modal          step 13        366e4c7cb6caa31d
+PASS cuda_t4_modal          step 14        49c03cc8962f8d6f
+PASS cuda_t4_modal          step 15        78a1398b524fd87e
+PASS cuda_t4_modal          step 16        c28343172ef5d113
+PASS cuda_t4_modal          step 17        7fdc8e6e6d457091
+PASS cuda_t4_modal          step 18        65bc8836954c4efd
+PASS cuda_t4_modal          step 19        67ca0134ec6c1391
+PASS cuda_t4_modal          FINAL          67ca0134ec6c1391
+== metal_m1air: records/fgpt1x_metal_m1air_2026-10-29.txt  vs  records/fgpt1x_metal_m4pro_2026-10-29.txt
+PASS metal_m1air            INPUTS         b945789c2b99965c
+PASS metal_m1air            act emb        39e8610151ce0d43
+PASS metal_m1air            act L0.n1      64c30731b649fdbd
+PASS metal_m1air            act L0.q       cb45546361a7edc1
+PASS metal_m1air            act L0.k       372bd6b9ebec03eb
+PASS metal_m1air            act L0.v       e5e40c9ce3d782f3
+PASS metal_m1air            act L0.p       86cfa99c7e6099b7
+PASS metal_m1air            act L0.ctx     8b4daebc642205c1
+PASS metal_m1air            act L0.a       138aef759edd9b29
+PASS metal_m1air            act L0.h       8c08ea810556982b
+PASS metal_m1air            act L0.hg      0ea340a3e832255c
+PASS metal_m1air            act L0.out     06d70633730c846d
+PASS metal_m1air            act xL         815562b75135c5ae
+PASS metal_m1air            act nf         def1487114e05c29
+PASS metal_m1air            act logits     d85fdc8a1b6a26ce
+PASS metal_m1air            act probs      a694a4cea65d29c7
+PASS metal_m1air            step 0         a8640674579d37bd
+PASS metal_m1air            step 1         2b74323f764c3690
+PASS metal_m1air            step 2         b4b0e8cb33ed9fdc
+PASS metal_m1air            step 3         2a09c5e9f2a8d50a
+PASS metal_m1air            step 4         25d2a902df106c28
+PASS metal_m1air            step 5         7580a42c9b472473
+PASS metal_m1air            step 6         750edd9fbc16ffc9
+PASS metal_m1air            step 7         a2caf77cf2280da5
+PASS metal_m1air            step 8         eb1828da7fe9e396
+PASS metal_m1air            step 9         ad8d17b1c2c69751
+PASS metal_m1air            step 10        5446d478b358be19
+PASS metal_m1air            step 11        2aa1fff0d8a77f18
+PASS metal_m1air            step 12        a174215eb400fdff
+PASS metal_m1air            step 13        366e4c7cb6caa31d
+PASS metal_m1air            step 14        49c03cc8962f8d6f
+PASS metal_m1air            step 15        78a1398b524fd87e
+PASS metal_m1air            step 16        c28343172ef5d113
+PASS metal_m1air            step 17        7fdc8e6e6d457091
+PASS metal_m1air            step 18        65bc8836954c4efd
+PASS metal_m1air            step 19        67ca0134ec6c1391
+PASS metal_m1air            FINAL          67ca0134ec6c1391
+GATE PASS
+exit=0
