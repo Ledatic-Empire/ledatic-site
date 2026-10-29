@@ -922,7 +922,8 @@ async function handleX402(request, env, url, pathname) {
   const deliveredSha = prod.lookInside ? prod.sampleSha256 : meta.sha256;
   let pulse = null;
   try {
-    const p = await fetch("https://ledatic.org/entropy/pulse", { signal: AbortSignal.timeout(3000) });
+    // The beacon origin directly: a Worker cannot fetch its own zone's routes.
+    const p = await fetch("https://beacon.ledatic.org/pulse", { signal: AbortSignal.timeout(3000) });
     const j = await p.json();
     pulse = j.pulse_id ?? j.id ?? j.pulse ?? null;
   } catch { pulse = null; }
