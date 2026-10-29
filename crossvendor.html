@@ -245,6 +245,39 @@
   </div>
 </section>
 
+<section class="section" id="rail">
+  <div class="wrap">
+    <span class="eyebrow reveal">The language's turn</span>
+    <h2 class="reveal">Rail computes it, and Rail signs it.</h2>
+    <p class="body reveal">
+      Nothing above ran Rail, Ledatic's own language with no C in its runtime. The same night, three
+      more assays asked what Rail could say about the same trajectory, each with a gate. First, its own
+      double arithmetic was compared with C's, bit for bit, on both Macs and an x86 runner: equal on
+      every primitive, and the comparison found a compiler defect (a declared foreign float function's
+      result read back as a generic value) that was fixed, tested and shipped the same night. Second,
+      three builtins (<code>round32</code>, <code>fma32</code>, <code>f32_bits</code>) made float32
+      arithmetic expressible on Rail's doubles, with a test that catches an <code>fma32</code> that is
+      secretly a rounded double fma; with them, rung C's program written in Rail computed the first
+      Adam step of the 138M model, all sixteen layers, to the same bytes as the GPUs: 43 minutes on one
+      CPU thread against 1.6 seconds on the same machine's GPU. Third, a Rail program that owns the
+      step sequence, the data contract, a SHA-256 ledger per step and the Ed25519 signature of its
+      head, while a kernel server owns the arithmetic one verb at a time, reproduced all twenty steps
+      over the Metal kernels; its signature verifies with openssl and every ledger record recomputes
+      from the printed pieces with nothing but SHA-256.
+    </p>
+    <div class="rec-wrap">
+    <table class="rec">
+      <thead><tr><th>Program</th><th>Chip</th><th class="n">time</th><th>what matched</th><th>gate</th></tr></thead>
+      <tbody>
+        <tr><td class="h">rung C in Rail, one thread</td><td>Mac Mini M4 Pro, CPU</td><td class="n">43 min for one step</td><td>INPUTS, 15 activations, step 0 a8640674579d37bd</td><td><span class="chip" data-state="pass">17 PASS, a prefix</span></td></tr>
+        <tr><td class="h">the Rail engine over the Metal kernel server</td><td>Mac Mini M4 Pro, GPU</td><td class="n">about a minute for 20 steps</td><td>every step, final 67ca0134ec6c1391; ledger head signed</td><td><span class="chip" data-state="pass">37 PASS</span></td></tr>
+        <!-- rail-cuda -->
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="records">
   <div class="wrap">
     <span class="eyebrow reveal">Records</span>
@@ -259,6 +292,7 @@
 <b>crossvendor/records/</b>fgpt1x_metal_m1air_2026-10-29.txt · fgpt1x_cuda_t4_modal_2026-10-29.txt · fgpt1x_cuda_a10_modal_2026-10-29.txt<br>
 <b>crossvendor/records/</b>fgpt1x_cuda_t4_modal_2026-10-29_nvcc118.txt · fgpt1x_cpu_m4pro_2026-10-29.txt<br>
 <b>crossvendor/records/</b>neg_fgpt1x_cuda_t4_fmad_2026-10-29.txt (the negative) · gemm_cost_cuda_a10_modal_2026-10-29.txt · gemm_cost_cuda_t4_modal_2026-10-29.txt · gemm_cost_metal_m4pro_2026-10-29.txt<br>
+<b>crossvendor/records/</b>fgpt1x_rail_m4pro_2026-10-29.txt (rung C in Rail) · fgpt1x_railengine_metal_m4pro_2026-10-29.txt (the Rail engine; its HEAD, SIG and PK lines are the ledger)<br>
 <b>crossvendor/records/</b>RUNGC_SUMMARY.txt · RUNGC_SUMMARY.attest.json · mini_witness.pub.pem
     </div>
     <p class="body reveal">
