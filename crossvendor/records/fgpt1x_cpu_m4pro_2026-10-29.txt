@@ -1,0 +1,44 @@
+# fgpt1x.c on the Mac Mini M4 Pro (arm64 CPU, 12 threads), 2026-10-29 01:53Z, 16 layers 20 steps
+device: cpu arm64 Darwin, 12 threads
+gemm: plain fma chain per output (pthreads over outputs)
+fastMath: OFF (-ffp-contract=off, fmaf, IEEE div and sqrt)
+model: 16 of 16 layers, d=768 heads=12 head_dim=64 ff=3072 vocab=16384, real weights (canonical_bestpass), S=128 B=4, lr=0.0001 adam(0.9,0.999,1e-08), 20 steps
+INPUTS hash=b945789c2b99965c
+act emb        hash=39e8610151ce0d43
+act L0.n1      hash=64c30731b649fdbd
+act L0.q       hash=cb45546361a7edc1
+act L0.k       hash=372bd6b9ebec03eb
+act L0.v       hash=e5e40c9ce3d782f3
+act L0.p       hash=86cfa99c7e6099b7
+act L0.ctx     hash=8b4daebc642205c1
+act L0.a       hash=138aef759edd9b29
+act L0.h       hash=8c08ea810556982b
+act L0.hg      hash=0ea340a3e832255c
+act L0.out     hash=06d70633730c846d
+act xL         hash=815562b75135c5ae
+act nf         hash=def1487114e05c29
+act logits     hash=d85fdc8a1b6a26ce
+act probs      hash=a694a4cea65d29c7
+step   0  ptgt 1.187299e-03  ce 15.6009  hash=a8640674579d37bd
+step   1  ptgt 1.430872e-03  ce 15.5560  hash=2b74323f764c3690
+step   2  ptgt 5.540316e-04  ce 14.6398  hash=b4b0e8cb33ed9fdc
+step   3  ptgt 1.423060e-04  ce 14.1368  hash=2a09c5e9f2a8d50a
+step   4  ptgt 3.615122e-04  ce 13.5058  hash=25d2a902df106c28
+step   5  ptgt 5.290124e-04  ce 12.6395  hash=7580a42c9b472473
+step   6  ptgt 4.298361e-04  ce 11.9078  hash=750edd9fbc16ffc9
+step   7  ptgt 7.475497e-04  ce 11.3015  hash=a2caf77cf2280da5
+step   8  ptgt 8.039330e-04  ce 10.7080  hash=eb1828da7fe9e396
+step   9  ptgt 4.310322e-04  ce 10.5204  hash=ad8d17b1c2c69751
+step  10  ptgt 3.449322e-04  ce 10.2713  hash=5446d478b358be19
+step  11  ptgt 5.540262e-04  ce 10.0770  hash=2aa1fff0d8a77f18
+step  12  ptgt 5.278546e-04  ce 9.7849  hash=a174215eb400fdff
+step  13  ptgt 4.443364e-04  ce 9.6676  hash=366e4c7cb6caa31d
+step  14  ptgt 3.515612e-04  ce 9.6215  hash=49c03cc8962f8d6f
+step  15  ptgt 3.495801e-04  ce 9.5655  hash=78a1398b524fd87e
+step  16  ptgt 2.710079e-04  ce 9.6398  hash=c28343172ef5d113
+step  17  ptgt 2.791961e-04  ce 9.6201  hash=7fdc8e6e6d457091
+step  18  ptgt 3.613930e-04  ce 9.3263  hash=65bc8836954c4efd
+step  19  ptgt 3.361920e-04  ce 9.3449  hash=67ca0134ec6c1391
+FINAL hash=67ca0134ec6c1391
+(20 steps, 26.581 s/step compute, 543.0 s total with hashing)
+done

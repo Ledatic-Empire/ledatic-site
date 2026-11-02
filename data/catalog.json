@@ -1,6 +1,6 @@
 {
   "catalog": "ledatic-attested-data",
-  "updated": "2026-07-02",
+  "updated": "2026-10-29",
   "verify_note": "Every listing's provenance chain is independently re-verifiable; see each dataset page.",
   "datasets": [
     {
@@ -18,15 +18,26 @@
       "license": "single-organization commercial",
       "x402": {
         "endpoint": "https://ledatic.org/x402/rail-verified-pairs-v2",
-        "network": "base",
+        "network": "eip155:8453",
         "asset": "USDC",
         "maxAmountRequired": "199000000",
-        "payTo": "0x0129b9e66C449b4c7027F07A7b8811BBf6fb3301",
+        "payTo": "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7",
         "attestation": "ed25519",
-        "status": "not serving yet (the endpoint returns 404); buy by email",
+        "status": "serving on Base mainnet since 2026-10-29: GET the endpoint for a 402 with PAYMENT-REQUIRED (x402 v2, exact scheme), pay 199 USDC, receive a 30-day download link for the tarball and an Ed25519-signed receipt (key at receipt_key). Settlement by the Coinbase CDP facilitator; the payer needs USDC on Base and no gas",
         "content_sha256": "1a6941afad3ad6259af6a0a48f0554108ba0b3197e8e05e53e487833a6cd046c",
         "witness_pulse": 2641877,
-        "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff"
+        "download_sha256": "cebed0a4072df5116812b024e7818aeb3eaa1a5334b7882c3c8e59dd7a967fff",
+        "testnet_network": "eip155:84532",
+        "receipt_key": "https://ledatic.org/x402/key"
+      },
+      "delivery": "instant: the confirmation page returns a 30-day download link; the file hashes to download_sha256",
+      "x402_look_inside": {
+        "endpoint": "https://ledatic.org/x402/rail-verified-pairs-v2-look-inside",
+        "price_usdc": "1",
+        "network": "eip155:8453",
+        "you_get": "the public 200-pair sample (37,173 bytes JSONL, sha256 79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64) delivered through the paid path, plus the same Ed25519-signed receipt a full purchase gets",
+        "why": "a one-dollar rehearsal of the whole flow, 402 to receipt, before spending 199; the sample itself is free at sample_url",
+        "status": "serving on Base mainnet since 2026-10-29"
       }
     },
     {
@@ -44,20 +55,24 @@
       "license": "single-organization commercial",
       "x402": {
         "endpoint": "https://ledatic.org/x402/attested-text-corpus-v2",
-        "network": "base",
+        "network": "eip155:8453",
         "asset": "USDC",
         "maxAmountRequired": "499000000",
-        "payTo": "0x0129b9e66C449b4c7027F07A7b8811BBf6fb3301",
+        "payTo": "0x64b9ee0EC9bE1dcC7d39Afa37AA75CCACd32eFD7",
         "attestation": "ed25519",
-        "status": "not serving yet (the endpoint returns 404); buy by email",
+        "status": "not served over x402 (2.45 GB has no automated delivery); the endpoint answers 503 with buy_url. Buy by card, delivered by email within 24 h",
         "content_sha256": "92e9af57335910a57e5f50d33564aa07542d6406cb0cde010f0e3c139f2e9e63",
-        "witness_pulse": 2516402
-      }
+        "witness_pulse": 2516402,
+        "download_sha256": "36a799c793d3c055f92e741445539710e48a92542f07acba13799bdc6d373bb1",
+        "testnet_network": "eip155:84532",
+        "receipt_key": "https://ledatic.org/x402/key"
+      },
+      "delivery": "by email within 24 h of checkout"
     }
   ],
   "payment_rails": {
-    "human": "stripe \u2014 see each dataset's buy_url",
-    "agent": "x402 \u2014 see each dataset's x402.endpoint (per-request USDC, response is Ed25519-signed and verifiable against download_sha256 / content_sha256)"
+    "human": "stripe: see each dataset's buy_url and delivery",
+    "agent": "x402 v2 (USDC, EIP-3009 exact scheme): see each dataset's x402.endpoint and x402.status; a served response carries a receipt signed by the key at /x402/key, verifiable offline against download_sha256"
   },
-  "agents_note": "Machine buyers: the x402 endpoints are not serving yet and return 404. To buy, email hello@ledatic.org with the dataset name; delivery is by email within 24 h. Each dataset page shows how to verify the free sample first."
+  "agents_note": "Machine buyers: the pairs corpus is sold over x402 on Base mainnet (USDC, no account, no gas: a 402, a signed EIP-3009 authorization, the file and a signed receipt). The text corpus is card checkout only, delivered by email within 24 h. Humans: buy_url. Verify the free sample first; the paid tarball must hash to download_sha256."
 }

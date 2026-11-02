@@ -67,6 +67,15 @@ SDK_WITNESS_KEY_VAL=$(cat ~/.ledatic/sdk_witness/key.hex)
 # creates the Stripe webhook endpoint and saves its whsec_… here — the worker
 # route answers 503 unconfigured while empty, so deploys stay safe pre-Stripe.
 STRIPE_WEBHOOK_SECRET_VAL=$(cat ~/.ledatic/stripe/webhook_secret 2>/dev/null || echo "")
+# The agent stall (2026-10-29, docs/plans/2026-10-29-agent-stall.md step 5): the
+# x402 route's mode (off | sepolia | mainnet), the Ed25519 seed that signs its
+# receipts (public half served at /x402/key), and Coinbase CDP facilitator
+# credentials for mainnet settlement (empty until the owner creates them; the
+# route answers 503 "settlement not configured" while empty).
+X402_MODE_VAL=$(cat ~/.ledatic/stall/x402_mode 2>/dev/null || echo "off")
+X402_GRANT_KEY_VAL=$(cat ~/.ledatic/stall/grant_key.hex 2>/dev/null || echo "")
+CDP_API_KEY_ID_VAL=$(cat ~/.ledatic/stall/cdp_key_id 2>/dev/null || echo "")
+CDP_API_KEY_SECRET_VAL=$(cat ~/.ledatic/stall/cdp_key_secret 2>/dev/null || echo "")
 # 2026-07-24 free-tier pivot: the REPORTS_R2 r2_bucket binding is REMOVED —
 # CF rejects deploys declaring R2 while R2 is disabled on the account.
 # worker.js stubs env.REPORTS_R2 so all call sites degrade safely. If R2 is
@@ -83,7 +92,11 @@ cat > "$META" <<JSON
     {"type":"secret_text","name":"DDA_FLEET_TOKEN","text":"$DDA_FLEET_TOKEN_VAL"},
     {"type":"secret_text","name":"DDA_PORTAL_TOKEN","text":"$DDA_PORTAL_TOKEN_VAL"},
     {"type":"secret_text","name":"SDK_WITNESS_KEY","text":"$SDK_WITNESS_KEY_VAL"},
-    {"type":"secret_text","name":"STRIPE_WEBHOOK_SECRET","text":"$STRIPE_WEBHOOK_SECRET_VAL"}
+    {"type":"secret_text","name":"STRIPE_WEBHOOK_SECRET","text":"$STRIPE_WEBHOOK_SECRET_VAL"},
+    {"type":"plain_text","name":"X402_MODE","text":"$X402_MODE_VAL"},
+    {"type":"secret_text","name":"X402_GRANT_KEY","text":"$X402_GRANT_KEY_VAL"},
+    {"type":"secret_text","name":"CDP_API_KEY_ID","text":"$CDP_API_KEY_ID_VAL"},
+    {"type":"secret_text","name":"CDP_API_KEY_SECRET","text":"$CDP_API_KEY_SECRET_VAL"}
   ]
 }
 JSON
