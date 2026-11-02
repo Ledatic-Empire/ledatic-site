@@ -70,7 +70,7 @@ main =
   let _ = w f "## Manifesto\n\n"
   let _ = w f "- [/manifesto](https://ledatic.org/manifesto) — \"Rail runs on Rail. The rest runs on physics.\" Two load-bearing claims: a compiler that rebuilds itself byte-for-byte, and a stack answerable to a verifiable physical clock.\n\n"
 
-  -- Data for agents (the stall, ledatic-site 643f8e0 and f103b47, 2026-10-29). Those commits edited
+  -- Data for agents (the stall, ledatic-site bc3037c and 73a63b3, 2026-10-29). Those commits edited
   -- llms.txt itself, so every morning's rebuild deleted the section until it moved here (2026-11-02).
   -- Each dataset's x402.status lives in /data/catalog.json; this names the endpoints.
   let _ = w f "## Data for agents\n\n"

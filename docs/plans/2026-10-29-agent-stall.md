@@ -146,21 +146,21 @@ deployed: the live 402 names `eip155:8453`, Base USDC and our address. The offic
 (`~/.ledatic/stall/venv`, x402 2.26.0, `buy.py`) was run against both endpoints with unfunded payers: on
 Sepolia the x402.org facilitator answered `invalid_exact_evm_insufficient_balance`; on mainnet CDP answered
 HTTP 400 with `invalid_payload` / "execution reverted" (the same thing, said by a simulation), which the
-Worker first reported as a 503 and now passes through as a 402 (site 4a38aad). So the whole path, client,
+Worker first reported as a 503 and now passes through as a 402 (site 7b44bd2). So the whole path, client,
 Worker, JWT, facilitator, is exercised up to the point where money exists.
 
 **Settled, 17:07 UTC.** The owner asked for a cheaper SKU and funded the payer with 28 USDC. "Look inside"
 (`/x402/rail-verified-pairs-v2-look-inside`, 1 USDC, the public sample delivered through the paid path with
-the same receipt) went live (site 4a5b67d). The first funded purchase still failed with CDP's
+the same receipt) went live (site 4c5738e). The first funded purchase still failed with CDP's
 `invalid_payload` / "execution reverted": the 402 advertised the EIP-712 domain `USDC` v2, but Base mainnet
 USDC's contract says `USD Coin` v2 (Sepolia's says `USDC`), so the client's signature recovered to the wrong
-signer. Fixed by reading `name()` and `version()` from both chains into the Worker (c2e9345); the harness now
+signer. Fixed by reading `name()` and `version()` from both chains into the Worker (994a898); the harness now
 checks the advertised domain against the contract on both chains (8c). Then:
 
 | Purchase | Transaction on Base | Receipt |
 |---|---|---|
 | look inside, 1 USDC | `0x6008e815cbe4e683bf50d50e2aa7f45384ce0310b8aab01c67848c4f57eaf5d0`, block 53,252,151, Transfer payer to payTo 1.0 USDC | signature verifies offline against /x402/key; `beacon_pulse` null (the Worker fetched its own zone, which Workers cannot) |
-| look inside, 1 USDC, after the fix (3724242) | `0xd6b7f7ce0cf72a5e5e63cd05d9b2d83d9a85d40f7c892b8ab3058017928dbf5a` | verifies; `beacon_pulse` 9518363 |
+| look inside, 1 USDC, after the fix (2cef6b8) | `0xd6b7f7ce0cf72a5e5e63cd05d9b2d83d9a85d40f7c892b8ab3058017928dbf5a` | verifies; `beacon_pulse` 9518363 |
 
 Balances after: payTo 2.0 USDC, payer 26.0 USDC (the owner's standing budget for the stall's own tests). The
 wallet ring rang red by mail and push for the first sale (`notify.log` 17:08:39Z); a kickstart a minute after
@@ -200,7 +200,7 @@ CDP-settling agents search) rejected us: its validator (`POST api.cdp.coinbase.c
 no key) said "no bazaar discovery extension found". Indexing needs `extensions.bazaar` on the 402, the
 same block plus the resource on the settle call, and one settled payment.
 
-Landed (site 44b6b87): every 402 carries the declaration (GET, no input, a real receipt as the output
+Landed (site 6321c7b): every 402 carries the declaration (GET, no input, a real receipt as the output
 example, the SDK's schema) and `resource.iconUrl`; the Worker fills the declaration and the resource into
 the settle call when a buyer's payload lacks them; the facilitator's `EXTENSION-RESPONSES` header is kept
 in the sale record and returned to the buyer as `facilitator_extensions`. Harness 23/23 (plant: fill-in
