@@ -16,6 +16,8 @@
 #   6. upload                staged bytes → KV
 #   7. sign                  Ed25519 deploy manifest (file list + sha256s + pulse_id),
 #                            published at attest/site/<n>.json + attest/site/latest.json
+#   6b. prune                keys the previous manifest signed and this run did not
+#                            stage are deleted from KV (at most 20; more refuses, exit 6)
 #   8. byte-diff verify      fetch every uploaded file, sha256 vs the signed manifest;
 #                            mismatch → one re-upload retry, then exit nonzero loudly
 #
@@ -813,6 +815,44 @@ deploy_all() {
   done
 }
 
+# ── Prune: a file removed from the repo leaves the site ─────────────────
+# deploy_all uploads and, until 2026-11-03, nothing deleted: the /rail/docs
+# rebuild that day dropped jit.html and five WebAssembly example pages from the
+# repo, and all six went on answering 200 from KV until they were deleted by
+# hand. A key the previous signed manifest carried that this run did not stage
+# is a file that left the repo. Only those keys are candidates, so KV keys this
+# script never signed (half one's feed.xml, the beacon's data, attest/site/*)
+# are never touched. More than PRUNE_MAX candidates means the stage itself is
+# suspect: nothing is deleted and the run stops before signing (exit 6), loudly.
+PRUNE_MAX=${DEPLOY_PRUNE_MAX:-20}
+PRUNED=0
+PRUNE_REFUSED=0
+prune_removed() {
+  [ -s "$PREV_SHA_FILE" ] || { echo "deploy: no previous manifest to compare; prune skipped"; return 0; }
+  local gone n key out
+  gone=$(LC_ALL=C comm -23 <(cut -f1 "$PREV_SHA_FILE" | LC_ALL=C sort -u) \
+                           <(cut -f1 "$MANIFEST_TSV" | LC_ALL=C sort -u))
+  [ -n "$gone" ] || return 0
+  n=$(printf '%s\n' "$gone" | wc -l | tr -d ' ')
+  if [ "$n" -gt "$PRUNE_MAX" ]; then
+    echo "deploy: PRUNE REFUSED: $n keys of manifest #${PREV_N:-?} were not staged this run (cap $PRUNE_MAX); nothing deleted:" >&2
+    printf '%s\n' "$gone" | head -30 | sed 's/^/        /' >&2
+    PRUNE_REFUSED=1
+    return 0
+  fi
+  while IFS= read -r key; do
+    out=$(curl -sS -X DELETE -H "Authorization: Bearer $CF_TOKEN" \
+      "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/storage/kv/namespaces/$CF_KV_NS/values/$key")
+    if echo "$out" | grep -q '"success":true'; then
+      echo "- $key  (left the repo; deleted from KV)"
+      PRUNED=$((PRUNED + 1))
+    else
+      echo "deploy: PRUNE FAILED for $key: $out" >&2
+      PRUNE_REFUSED=1
+    fi
+  done <<< "$gone"
+}
+
 # ── Main ────────────────────────────────────────────────────────────────
 cd "$(dirname "$0")"
 check_clean_tree
@@ -827,7 +867,15 @@ load_prev_manifest
 if [ $# -eq 0 ]; then
   gate_on_signing
   deploy_all
-  if [ "$WRITTEN" -eq 0 ] && [ -n "$PREV_N" ]; then
+  prune_removed
+  if [ "$PRUNE_REFUSED" -eq 1 ]; then
+    # Stop before signing: a new manifest would drop these keys, the next run
+    # would no longer see them as candidates, and they would serve forever.
+    echo "deploy: PRUNE did not complete (above); the manifest is NOT re-signed, so the" >&2
+    echo "        next run sees the same candidates. $WRITTEN key(s) were written first." >&2
+    exit 6
+  fi
+  if [ "$WRITTEN" -eq 0 ] && [ "$PRUNED" -eq 0 ] && [ -n "$PREV_N" ]; then
     # Nothing moved, so the live manifest already describes every staged
     # byte. Minting a new sequence number for identical content would claim
     # a freshness the site does not have (the reason gen_stats keeps its
@@ -840,7 +888,7 @@ if [ $# -eq 0 ]; then
   fi
   verify_manifest_bytes
   verify_deploy_all
-  echo "deploy: KV writes this run: $WRITTEN written, $SKIPPED skipped as unchanged"
+  echo "deploy: KV writes this run: $WRITTEN written, $SKIPPED skipped as unchanged, $PRUNED pruned"
 else
   # A single-file deploy cannot re-sign: publish_signed_manifest needs the
   # staged sha of EVERY key, and only the named files were staged. For most
