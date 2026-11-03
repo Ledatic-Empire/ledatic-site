@@ -48,15 +48,14 @@ main hr { border:none; border-top:1px solid #222; margin:2rem 0; }
 <main>
 <h1>Backends</h1>
 <p>
-One Rail compiler, four targets. All driven from the same <code>rail_native</code> binary.
+One Rail compiler, three targets. All driven from the same <code>rail_native</code> binary.
 </p>
 <p>
 | Backend | Verb | Output | Toolchain needed | Status (local-verified) |
 |---|---|---|---|---|
-| macOS ARM64 (Mach-O) | _(default)_ / <code>run</code> | <code>/tmp/rail_out</code> | none (host <code>as</code>+<code>ld</code>) | runs end-to-end |
+| macOS ARM64 (Mach-O) | _(default)_ / <code>run</code> | <code>/tmp/rail_out</code> | none (Rail assembles, links and signs in process) | runs end-to-end |
 | Linux ARM64 (ELF) | <code>linux</code> | <code>/tmp/rail_linux</code> | <code>aarch64-elf-as</code>, <code>aarch64-elf-ld</code> | needs cross-binutils |
 | Linux x86_64 (ELF, source-only) | <code>x86</code> | <code>/tmp/rail_x86.s</code> | remote <code>gcc</code> (or Docker <code>linux/amd64</code>) | emits <code>.s</code>, 71/79 conformance via Docker harness |
-| WebAssembly | <code>wasm</code> | <code>/tmp/rail_out.wasm</code> | <code>wat2wasm</code> (wabt) | compiles end-to-end |
 </p>
 <hr>
 <h2>macOS ARM64 (Mach-O)</h2>
@@ -68,8 +67,8 @@ This is the primary target. No flags, no setup.
 </code></pre>
 <pre><code class="lang-">
 Compiling examples/hello.rail (244 chars)...
-  as: OK
-  ld: OK
+wrote /tmp/rail_out (50104 bytes); imports=10 rebases=11 main@0x1000005ac
+  link: OK
 hello, rail
 3628800
 42
@@ -116,30 +115,13 @@ Rail emits the GAS assembly directly; assemble on the target with <code>gcc -o p
 <p>
 <strong>Conformance:</strong> <code>bash tools/test/x86_conformance.sh</code> (requires Docker + <code>linux/amd64</code> image, e.g., Colima/Rosetta) currently passes <strong>71/79</strong> representative tests covering ints, strings, lists, ADTs, closures, floats, FFI, TCO, and arena ops. The 8 remaining failures are 3 ELF-prefix ffi-libc tests and 5 missing str-runtime symbols, all classified in <code>~/.claude/projects/-Users-user/memory/x86_backend_status.md</code>.
 </p>
-<h2>WebAssembly</h2>
-<pre><code class="lang-bash">
-./rail_native wasm examples/wasm/hello.rail
-</code></pre>
-<pre><code class="lang-">
-Compiling examples/wasm/hello.rail to WASM...
-  WAT: 51277 bytes
-  wat2wasm: OK
-  Binary: /tmp/rail_out.wasm
-</code></pre>
-<p>
-Requires <code>wat2wasm</code> from the WebAssembly Binary Toolkit (<code>brew install wabt</code>). The output is <code>/tmp/rail_out.wasm</code> — drop into any WASM runtime that provides the <code>env.print</code> import. The live playground at https://ledatic.org embeds exactly this output.
-</p>
-<p>
-Known WASM-backend limits (see CLAUDE.md): no <code>filter</code>/<code>map</code>/<code>fold</code> as WASM builtins, 1 MB linear memory. Closures, ADTs, pattern matching, and string ops all work.
-</p>
-<hr>
 <h2>Adding a backend</h2>
 <p>
 Look at <code>tools/compile.rail</code> around line 9630 (<code>main</code>): the <code>cmd</code> dispatch table. Each backend is roughly:
 </p>
 <p>
 1. A new "emit" pass that walks the AST.
-2. A driver function (<code>compile_x86</code>, <code>compile_wasm</code>, etc.) that calls the right assembler/linker via <code>shell</code>.
+2. A driver function (<code>compile_x86</code>, <code>dispatch_linux</code>, etc.) that calls the right assembler/linker via <code>shell</code>.
 3. A runtime or startup file under <code>tools/</code>.
 </p>
 <p>
@@ -147,7 +129,7 @@ The Cortex-M4 and RISC-V backends (about 600 lines together) were removed on 202
 </p>
 </main>
 <div class="docfooter">
-  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
+  Rail · self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
 </div>
 </body>
 </html>

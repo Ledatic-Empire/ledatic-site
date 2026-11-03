@@ -479,81 +479,6 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>chacha20_xor_seg_at pt off ks ct i n</code></h3>
 <h3><code>chacha20_encrypt_loop key nonce counter pt pt_len ct off</code></h3>
 <h3><code>chacha20_encrypt key nonce counter pt pt_len</code></h3>
-<h2><code>stdlib/checkpoint.rail</code></h2>
-<h3><code>shape_line_loop shape acc</code></h3>
-<blockquote>Format a tensor's shape as "<rank> <dim0> <dim1> ...".</blockquote>
-<h3><code>shape_line shape</code></h3>
-<h3><code>save_loop prefix tensors i</code></h3>
-<blockquote>Write manifest + N binary files. Tensors are written in list order.</blockquote>
-<h3><code>build_manifest tensors acc</code></h3>
-<h3><code>save_model prefix tensors</code></h3>
-<h3><code>parse_dims_loop parts acc</code></h3>
-<blockquote>Parse one shape line "rank d0 d1 ..." into a list of ints.</blockquote>
-<blockquote>split is single-char so " " as a separator is fine here.</blockquote>
-<h3><code>parse_shape_line line</code></h3>
-<h3><code>load_loop prefix lines i count acc</code></h3>
-<blockquote>Load a previously-saved model into fresh Tensors. Returns a list.</blockquote>
-<h3><code>load_model prefix</code></h3>
-<h3><code>check_vocab_matches V w_e_tensor</code></h3>
-<blockquote>Sanity-check that the loaded embedding's row count matches the vocab</blockquote>
-<blockquote>size derived from the corpus. Returns 1 on match, 0 on mismatch (with</blockquote>
-<blockquote>an error message printed). Catches the V_corpus vs W[0].rows drift</blockquote>
-<blockquote>that silently OOB-reads in matmul_cpu and produces "garbage finite"</blockquote>
-<blockquote>heisenbug values. Per memory vocab_embedding_shape_mismatch_2026-05-10.md</blockquote>
-<blockquote>— every CPU-substrate bench number on a drifted corpus was</blockquote>
-<blockquote>OOB-garbage-dependent.</blockquote>
-<blockquote></blockquote>
-<blockquote>Usage:</blockquote>
-<blockquote>let weights = load_model prefix</blockquote>
-<blockquote>let w_e = list_nth 0 weights</blockquote>
-<blockquote>if check_vocab_matches V w_e == 0 then 1</blockquote>
-<blockquote>else ...</blockquote>
-<h3><code>adam_manifest_line state</code></h3>
-<blockquote>"<size> <step>" manifest line for one state.</blockquote>
-<h3><code>save_adam_loop prefix states i</code></h3>
-<blockquote>Write the i'th (and onward) Adam state's m/v payloads.</blockquote>
-<h3><code>build_adam_manifest states acc</code></h3>
-<h3><code>save_adam_states prefix states</code></h3>
-<h3><code>parse_adam_line_ints parts acc</code></h3>
-<blockquote>Parse "<size> <step>" → 2-int list.</blockquote>
-<h3><code>parse_adam_line line</code></h3>
-<h3><code>load_adam_loop prefix lines i count acc</code></h3>
-<h3><code>load_adam_states prefix</code></h3>
-<h3><code>save_meta prefix step best_val</code></h3>
-<h3><code>find_meta_loop lines key</code></h3>
-<h3><code>load_meta_text prefix</code></h3>
-<h3><code>meta_step prefix</code></h3>
-<h3><code>meta_best_val prefix</code></h3>
-<blockquote>Returns best_val_loss or -1.0 sentinel if key missing.</blockquote>
-<h3><code>ckpt_exists prefix</code></h3>
-<h3><code>clear_committed prefix</code></h3>
-<h3><code>mark_committed prefix</code></h3>
-<h3><code>save_checkpoint prefix weights adam_states step best_val</code></h3>
-<blockquote>Full checkpoint save (atomic via commit sentinel).</blockquote>
-<h3><code>load_checkpoint prefix</code></h3>
-<blockquote>Returns [weights, adam_states, step, best_val] or [] if no committed ckpt.</blockquote>
-<h3><code>save_half_loop prefix halftensors i</code></h3>
-<h3><code>build_half_manifest halftensors acc</code></h3>
-<h3><code>save_half_model prefix halftensors</code></h3>
-<h3><code>load_half_loop prefix lines i count acc</code></h3>
-<h3><code>load_half_model prefix</code></h3>
-<h3><code>save_half_checkpoint prefix halftensors adam_states step best_val</code></h3>
-<blockquote>Full checkpoint save with HalfTensor weights (atomic via commit sentinel).</blockquote>
-<blockquote>Adam states are f64 on both the training side and on disk (unchanged</blockquote>
-<blockquote>from save_checkpoint) — only the weights round-trip through the half</blockquote>
-<blockquote>pack.</blockquote>
-<h3><code>load_half_checkpoint prefix</code></h3>
-<h3><code>overwrite_half_model_loop prefix halftensors i</code></h3>
-<blockquote>In-place variant for training resume: HalfTensor weights are already</blockquote>
-<blockquote>allocated by the caller (same shape); overwrite their packed-half</blockquote>
-<blockquote>buffers in place. Mirrors load_model_into but with the f32→f64→half</blockquote>
-<blockquote>round-trip per tensor.</blockquote>
-<h3><code>load_half_model_into prefix halftensors</code></h3>
-<h3><code>overwrite_model_loop prefix tensors i</code></h3>
-<h3><code>load_model_into prefix tensors</code></h3>
-<h3><code>overwrite_adam_loop prefix states lines i</code></h3>
-<h3><code>load_adam_states_into prefix states</code></h3>
-<h3><code>corpus_split text val_pct</code></h3>
 <h2><code>stdlib/codesign.rail</code></h2>
 <h3><code>cs_magic_embedded_signature</code></h3>
 <h3><code>cs_magic_codedirectory</code></h3>
@@ -637,53 +562,6 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>emit_code_slots_n buf cd_start code_limit n_code i</code></h3>
 <blockquote>hash each 16K page [i*16384, min(code_limit,(i+1)*16384)) into code slot i</blockquote>
 <h3><code>emit_signature_n binary_buf sig_off code_limit text_base text_limit</code></h3>
-<h2><code>stdlib/concurrent.rail</code></h2>
-<h3><code>rc_chan_make capacity</code></h3>
-<blockquote>Create a bounded blocking channel with <code>capacity</code> slots.</blockquote>
-<h3><code>rc_chan_send ch value</code></h3>
-<blockquote>Send a value; blocks if the channel is full. Returns 1 ok / 0 closed.</blockquote>
-<h3><code>rc_chan_recv ch</code></h3>
-<blockquote>Receive a value; blocks if the channel is empty.</blockquote>
-<h3><code>rc_chan_close ch</code></h3>
-<blockquote>Close a channel; wakes all blocked threads.</blockquote>
-<h3><code>rc_chan_count ch</code></h3>
-<blockquote>Current buffered count.</blockquote>
-<h3><code>rc_spawn_producer ch n</code></h3>
-<blockquote>Spawn a demo producer that sends 1..n then closes the channel. Returns</blockquote>
-<blockquote>a task handle for rc_join.</blockquote>
-<h3><code>rc_spawn_consumer ch</code></h3>
-<blockquote>Spawn a demo consumer that drains the channel, summing recvd values.</blockquote>
-<blockquote>The sum is returned by rc_join.</blockquote>
-<h3><code>rc_join task_id</code></h3>
-<blockquote>Join a task handle; blocks until the thread exits. Returns the int64</blockquote>
-<blockquote>result the worker stored on exit.</blockquote>
-<h3><code>chan_send_v ch v</code></h3>
-<h3><code>chan_recv_v ch</code></h3>
-<h3><code>chan_send_float ch f</code></h3>
-<blockquote>Float convenience aliases (ARM64: floats are register-raw doubles, so</blockquote>
-<blockquote>the v1 box path bit-preserves them; on x86 floats are heap-boxed</blockquote>
-<blockquote>pointers and ride the same path — the box ends up holding the boxed-</blockquote>
-<blockquote>float pointer rather than raw d-bits, which is identical from the</blockquote>
-<blockquote>recv-side semantics).</blockquote>
-<h3><code>chan_recv_float ch</code></h3>
-<h3><code>select handles</code></h3>
-<blockquote><code>select</code> is the typed-value variant: assumes channels carry boxed</blockquote>
-<blockquote>values (sent via chan_send_v / chan_send_float). Returns the logical</blockquote>
-<blockquote>Rail value, not the wire box pointer.</blockquote>
-<h3><code>select_with_default handles default_val</code></h3>
-<blockquote><code>select_with_default</code> is the non-blocking typed-value variant.</blockquote>
-<blockquote>Returns (-1, default_val) immediately if no channel has a value.</blockquote>
-<h3><code>select_int handles</code></h3>
-<blockquote><code>select_int</code> is the raw int64 variant for channels used via the v0</blockquote>
-<blockquote>rc_chan_send / rc_chan_recv API. Returns the wire value as a tagged</blockquote>
-<blockquote>int. The C side pre-retags the wire bits before writing the out-slot</blockquote>
-<blockquote>so Rail can use arr_get directly without further bit manipulation.</blockquote>
-<h3><code>select_int_with_default handles default_val</code></h3>
-<h3><code>arr_from_list xs n</code></h3>
-<blockquote>Small helper: copy a list into a freshly-allocated mutable array of the</blockquote>
-<blockquote>given length. Used to flatten the handle list into a layout the C bridge</blockquote>
-<blockquote>can index by offset.</blockquote>
-<h3><code>arr_fill_from_list a xs i</code></h3>
 <h2><code>stdlib/dns.rail</code></h2>
 <h3><code>dns_servers _</code></h3>
 <blockquote>Read /etc/resolv.conf and collect EVERY IPv4 nameserver, in order,</blockquote>
@@ -1147,6 +1025,25 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>L = float_dot y g treats g as a fixed upstream cotangent on the net output y;</blockquote>
 <blockquote>its VJP wrt y is g, so net__rgrad seeds __cty_i = g_i * __gy. With g = ones this</blockquote>
 <blockquote>reduces to float_arr_sum (the proven slice-5b readout), so it strictly generalizes.</blockquote>
+<h2><code>stdlib/float_hex.rail</code></h2>
+<h3><code>fh_digit d</code></h3>
+<h3><code>fh_hex_loop n w acc</code></h3>
+<blockquote>n as exactly w hex digits, most significant first (n >= 0, w <= 15).</blockquote>
+<h3><code>fh_hex n w</code></h3>
+<h3><code>fh_exp_down m e</code></h3>
+<blockquote>The binary exponent of m > 0 and m scaled into [1, 2), by exact halvings and doublings.</blockquote>
+<blockquote>Halving is exact while the result stays normal (it does: m >= 2 halves to m >= 1);</blockquote>
+<blockquote>doubling is exact for every finite double short of overflow, subnormals included.</blockquote>
+<h3><code>fh_exp_up m e</code></h3>
+<h3><code>fh_scale_down m</code></h3>
+<h3><code>fh_scale_up m</code></h3>
+<h3><code>fh_double m k</code></h3>
+<blockquote>m * 2^k by k exact doublings (k >= 0).</blockquote>
+<h3><code>fh_fields_pos x sign</code></h3>
+<blockquote>(sign and biased exponent as one 12-bit int, the 52-bit fraction) for x > 0, NaN or +inf.</blockquote>
+<h3><code>fh_fields x</code></h3>
+<blockquote>Zero keeps its sign: 1/(-0.0) is -inf, and -inf < 0 is a comparison, not a reinterpret.</blockquote>
+<h3><code>show_float_hex x</code></h3>
 <h2><code>stdlib/hash.rail</code></h2>
 <h3><code>hash_buckets</code></h3>
 <h3><code>hash_mask</code></h3>
@@ -1420,415 +1317,6 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>https_get_url_strict url</code></h3>
 <h3><code>https_post_strict host ip port path ctype body hdrs</code></h3>
 <h3><code>https_post_url_strict url ctype body hdrs</code></h3>
-<h2><code>stdlib/ijit.rail</code></h2>
-<h3><code>ijit_compile msl</code></h3>
-<blockquote>Compile MSL source -> pipeline id.  Writes the int JIT tmp file the</blockquote>
-<blockquote>dylib reads, then JIT-compiles.</blockquote>
-<h3><code>ijit_run kid a b o sizeA sizeB sizeO nthreads</code></h3>
-<blockquote>Dispatch a shaped kernel.  Thin pass-through; kept so callers read as</blockquote>
-<blockquote>ijit_run (mirrors jit_run_*), and so a future arg-packing change stays</blockquote>
-<blockquote>local to this module.</blockquote>
-<h3><code>ibuf_upload arr n</code></h3>
-<h3><code>ibuf_update wid arr n</code></h3>
-<blockquote>overwrite a resident weight buffer IN PLACE (training loop: no leak). returns 0 ok.</blockquote>
-<h3><code>ijit_run_wx kid wid x o sizeX sizeO nthreads</code></h3>
-<h2><code>stdlib/infer_kv.rail</code></h2>
-<h3><code>kv_matmul_cpu a b</code></h3>
-<blockquote>Force-CPU matmul, same shape as lm_infer_cpu's wrapper: bypasses the</blockquote>
-<blockquote>gpu_available gate so this module is deterministic regardless of</blockquote>
-<blockquote>dylib/.no_gpu state.</blockquote>
-<h3><code>kv_cache_build n_blocks max_seq d i acc</code></h3>
-<blockquote>Fresh cache list for n_blocks layers, positions up to max_seq, width d.</blockquote>
-<h3><code>kv_cache_new n_blocks max_seq d</code></h3>
-<h3><code>kv_row_store src dst pos d j</code></h3>
-<blockquote>Copy one 1-row tensor's data into cache row <code>pos</code>.</blockquote>
-<h3><code>kv_score_dot qd ck base d kk acc</code></h3>
-<blockquote>score(j) = (q . K[j]) * scale -- dot ascending over d, one scalar</blockquote>
-<blockquote>accumulator, then a single scale multiply: matches matmul_k(q, K^T)</blockquote>
-<blockquote>followed by tensor_scale, bit for bit.</blockquote>
-<h3><code>kv_scores_loop qd ck sd pos d scale j</code></h3>
-<h3><code>kv_ctx_dot pd cv pos d c j acc</code></h3>
-<blockquote>ctx[c] = sum_j probs[j] * V[j][c], j ascending -- matmul_k order for</blockquote>
-<blockquote>attn @ V restricted to the causal window.</blockquote>
-<h3><code>kv_ctx_loop pd cv ctxd pos d c</code></h3>
-<h3><code>kv_attention_step qd ck cv pos d scale</code></h3>
-<blockquote>One attention step: q row (already RoPE'd) against cache rows 0..pos.</blockquote>
-<blockquote>Returns the context row as a float_arr of width d. softmax_row is the</blockquote>
-<blockquote>stdlib CPU softmax -- same max-subtract, same order.</blockquote>
-<h3><code>kv_add_cpu a b</code></h3>
-<blockquote>Force-CPU elementwise add (tensor_add would GPU-dispatch through f32</blockquote>
-<blockquote>when the dylib is present -- a silent precision change; add_loop is</blockquote>
-<blockquote>tensor.rail's own CPU fallback).</blockquote>
-<h3><code>kv_had_loop ad bd cd n i</code></h3>
-<blockquote>Elementwise product of two 1-row tensors (SwiGLU gate * up).</blockquote>
-<h3><code>kv_hadamard a b</code></h3>
-<h3><code>kv_block_step x_row w_block ck cv pos d</code></h3>
-<blockquote>One block, one new position. x_row is [1,d]; ck/cv are this block's</blockquote>
-<blockquote>cache arrays; pos is the new token's absolute position. Mirrors</blockquote>
-<blockquote>lm_infer_cpu.rail infer_block_fwd stage for stage; RoPE reuses</blockquote>
-<blockquote>rope_row_pairs directly with the explicit position.</blockquote>
-<h3><code>kv_unwrap t</code></h3>
-<h3><code>kv_blocks_step_loop x blocks caches pos d i n</code></h3>
-<h3><code>kv_forward_step x_row w_e we_t blocks caches gf pos d</code></h3>
-<blockquote>Full incremental forward for ONE token: one-hot row -> embed -> blocks</blockquote>
-<blockquote>(caches updated at <code>pos</code>) -> final RMSNorm -> logits -> probs row.</blockquote>
-<blockquote>we_t is tensor_transpose w_e, computed once by the caller. Returns the</blockquote>
-<blockquote>[1,V] probs tensor for the next-token decision. CPU softmax forced</blockquote>
-<blockquote>(softmax_row), matching the reference path's documented .no_gpu config.</blockquote>
-<h2><code>stdlib/jit.rail</code></h2>
-<h3><code>jit_compile_rmsnorm_qkv _</code></h3>
-<blockquote>Compile the fused rmsnorm+QKV kernel.  Source is emitted by jit_emit.</blockquote>
-<h3><code>jit_run_rmsnorm_qkv kid x_arr g_arr wq_arr wk_arr wv_arr qkv_packed seq d</code></h3>
-<blockquote>Dispatch.  Packs SEQ+D into one int (Rail FFI's 8-arg cap).</blockquote>
-<h3><code>jit_compile_silu_hadamard _</code></h3>
-<blockquote>Compile the fused silu+hadamard kernel.  Source is emitted by jit_emit.</blockquote>
-<h3><code>jit_run_silu_hadamard kid g_arr u_arr out_sig n</code></h3>
-<blockquote>Dispatch.  <code>out_sig</code> is a packed buffer of 2*N doubles: h_act in</blockquote>
-<blockquote>[0, N), sigmoid(gate) in [N, 2N).</blockquote>
-<h3><code>jit_compile_rmsnorm_qkv_shaped seq d</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Phase 2.9 v1.5 — shape-specialized compile entry points.  Take concrete</blockquote>
-<blockquote>dimensions, emit shape-baked MSL via jit_emit.rail's *_shaped emitters,</blockquote>
-<blockquote>JIT-compile.  Returns a kid specialized to those dims; Metal can fully</blockquote>
-<blockquote>unroll the D-loops.  Dispatch wrappers (jit_run_*) stay shape-agnostic.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>jit_compile_silu_hadamard_shaped n</code></h3>
-<h2><code>stdlib/jit_emit.rail</code></h2>
-<h3><code>emit_msl_rmsnorm_qkv _</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Generic-shape emitters (Phase 2.5).  Kept for v5.1.0 callers and for</blockquote>
-<blockquote>the byte-verification fixtures.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>emit_msl_silu_hadamard _</code></h3>
-<h3><code>emit_msl_rmsnorm_qkv_shaped seq d</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Phase 2.9 v1.5 — shape-specialized emitters.  Each call returns MSL</blockquote>
-<blockquote>where the dimensions are top-level <code>constant uint</code> declarations</blockquote>
-<blockquote>instead of buffer arguments.  Metal can fully unroll the D-loops.</blockquote>
-<blockquote>Different (SEQ, D) produces different bytes, validated in the</blockquote>
-<blockquote>jit_emit_shaped_smoke fuzz check.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>emit_msl_silu_hadamard_shaped n</code></h3>
-<h3><code>emit_msl_idot_shaped rows d</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Integer-exact kernels (attested-GPU track, 2026-07-03).</blockquote>
-<blockquote></blockquote>
-<blockquote>int32 inputs, int64 accumulate -- no floats anywhere, so the result</blockquote>
-<blockquote>is the SAME BITS on every device that runs it.  That is what lets a</blockquote>
-<blockquote>GPU dispatch join the attestation chain: the CPU reference (plain</blockquote>
-<blockquote>Rail 63-bit integers) and the emitted GPU kernel are twin</blockquote>
-<blockquote>implementations of one exact computation, and agreement is</blockquote>
-<blockquote>byte-equality, not "close enough".</blockquote>
-<blockquote></blockquote>
-<blockquote>Caller contract: |A[i]|, |B[j]| < 2^15 and d <= 2^16 keeps every</blockquote>
-<blockquote>accumulator below 2^46 -- exact in Metal's int64 AND in Rail's</blockquote>
-<blockquote>63-bit tagged ints, with headroom.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>emit_msl_fx_matvec_shaped rows d shift</code></h3>
-<blockquote>Fixed-point matvec with mul_shr rescale (attested-GPU track, act 2).</blockquote>
-<blockquote></blockquote>
-<blockquote>Mirrors Rail's mul_shr primitive EXACTLY: full 128-bit product</blockquote>
-<blockquote>(mul = low 64, smulh/mulhi = high 64), logical-shift the low half,</blockquote>
-<blockquote>arithmetic-shift-combine the high half.  Same formula as the ARM64</blockquote>
-<blockquote>emit in tools/compile.rail (search "mul_shr"), so CPU twin and GPU</blockquote>
-<blockquote>twin agree bit-for-bit even when a*b overflows int64 -- the</blockquote>
-<blockquote>massive-activation regime that motivated mul_shr in the first</blockquote>
-<blockquote>place (t173: 3.2e11 * 3.2e11 >> 24).</blockquote>
-<blockquote></blockquote>
-<blockquote>Caller contract: 1 <= shift < 64, and |mul_shr result| * d must fit</blockquote>
-<blockquote>int64 (and Rail's 63-bit ints) for the row accumulator.</blockquote>
-<h3><code>emit_msl_fx_rmsnorm_shaped rows d</code></h3>
-<blockquote>Fixed-point RMSNorm (attested-GPU track, act 3).</blockquote>
-<blockquote></blockquote>
-<blockquote>The last transformer-layer op that needed a discovery step: rsqrt.</blockquote>
-<blockquote>Computed as a pure-integer binary search -- find the largest r with</blockquote>
-<blockquote>mul_shr(mul_shr(r,r,S), v, S) <= ONE -- the same move as Path-B's</blockquote>
-<blockquote>bx4_fxsqrt.  Every operation is mul_shr / add / compare / shift, so</blockquote>
-<blockquote>a CPU twin using the mul_shr primitive lands on identical bits.</blockquote>
-<blockquote></blockquote>
-<blockquote>Q32.32 fixed point (S=32).  Caller contract: |x| < 2^34, |g| < 2^33,</blockquote>
-<blockquote>d <= 2^12; the search bound hi=2^45 keeps every intermediate inside</blockquote>
-<blockquote>int64.  One thread per row; the search is ~45 exact iterations.</blockquote>
-<h3><code>emit_fx_body u j</code></h3>
-<blockquote>Unroll-parameterized fx matvec (attested-GPU track, act 5: kernel</blockquote>
-<blockquote>tournament).  Integer addition is associative, so EVERY unroll</blockquote>
-<blockquote>factor produces byte-identical output -- the twin oracle stays</blockquote>
-<blockquote>exact while an optimization search explores variants.  (A float</blockquote>
-<blockquote>kernel can never promise that.)  Caller: d divisible by unroll.</blockquote>
-<h3><code>emit_msl_fx_matvec_unrolled rows d shift unroll</code></h3>
-<h3><code>emit_msl_fx_softmax_shaped rows d</code></h3>
-<blockquote>Fixed-point softmax (attested-GPU track, act 7 -- the LAST</blockquote>
-<blockquote>discovery item).</blockquote>
-<blockquote></blockquote>
-<blockquote>exp is the one transcendental a transformer needs (softmax AND</blockquote>
-<blockquote>silu).  Fixed-point spec, exact on both twins:</blockquote>
-<blockquote>range-reduce:  n = (-x)/LN2  (trunc),  r = x + n*LN2 in (-ln2, 0]</blockquote>
-<blockquote>exp(x) = taylor(r) >> n     -- the 2^-n scaling is a pure shift</blockquote>
-<blockquote>taylor: 1 + r + r^2/2 + ... + r^7/5040, every power via mul_shr,</blockquote>
-<blockquote>every divisor a truncating int64 division -- semantics identical</blockquote>
-<blockquote>on ARM64 sdiv and Metal long division.</blockquote>
-<blockquote>Softmax rows: m = max, e_j = fx_exp(s_j - m)  (arg <= 0 always),</blockquote>
-<blockquote>p_j = (e_j << 16) / (sum >> 16)  ~ e_j * 2^32 / sum.  sum >= ONE</blockquote>
-<blockquote>(the max element contributes exp(0) = exactly ONE), so no div-by-0.</blockquote>
-<blockquote></blockquote>
-<blockquote>Q32.32.  Approximation error ~1e-6 vs real exp; twin agreement is</blockquote>
-<blockquote>exact by construction regardless -- the spec IS the computation.</blockquote>
-<h3><code>jit_isqrt_walk n i</code></h3>
-<blockquote>integer sqrt for emit-time constants (d <= 2^12, trivial walk)</blockquote>
-<h3><code>jit_isqrt n</code></h3>
-<h3><code>emit_msl_fx_attention_shaped seq d</code></h3>
-<blockquote>Fused fixed-point single-head attention (attested-GPU track, act 8:</blockquote>
-<blockquote>THE COMPOSITION).  No new math -- rmsnorm, matvec, softmax are the</blockquote>
-<blockquote>proven acts 2/3/7 device functions, fused into one kernel:</blockquote>
-<blockquote>xn = rmsnorm(x)  ->  q,k = Wq,Wk projections  ->  scores/sqrt(D)</blockquote>
-<blockquote>->  softmax  ->  out = x + sum_j p_j * (Wv . xn_j)   (residual)</blockquote>
-<blockquote>Params ride in ONE packed buffer (X | G | WQ | WK | WV), the same</blockquote>
-<blockquote>shape as a real weights blob.  One thread per query position.</blockquote>
-<blockquote></blockquote>
-<blockquote>Bounds (|x|<2^29, |g|,|W|<2^27, d<=64, seq<=16) keep every</blockquote>
-<blockquote>accumulator under 2^56 -- inside int64 AND Rail's 63-bit ints, so</blockquote>
-<blockquote>twin agreement is guaranteed worst-case, not statistically.</blockquote>
-<h3><code>emit_msl_fx_ffn_shaped seq d</code></h3>
-<blockquote>Fused fixed-point SwiGLU FFN (attested-GPU track, act 9).  No new</blockquote>
-<blockquote>discovery: silu is x * sigmoid(x), sigmoid reduces to fx_exp (act</blockquote>
-<blockquote>7), the rest is matvec (act 2) + rmsnorm (act 3).  Fused:</blockquote>
-<blockquote>xn = rmsnorm(x)  ->  gate = WG.xn,  up = WU.xn</blockquote>
-<blockquote>act = silu(gate) * up  ->  down = WD.act  ->  out = x + down</blockquote>
-<blockquote>Hidden dim = D (square FFN keeps the packed layout simple; the</blockquote>
-<blockquote>twin-exactness point is identical at h != D).</blockquote>
-<blockquote>Params packed: X | G | WG(DxD) | WU(DxD) | WD(DxD).</blockquote>
-<blockquote></blockquote>
-<blockquote>sigmoid is the ONLY division; done overflow-safe as</blockquote>
-<blockquote>(num << 16) / (denom >> 16) -- the act-8 lesson: any path that can</blockquote>
-<blockquote>overflow int64 is where Rail's 63-bit and Metal's 64-bit wrap</blockquote>
-<blockquote>diverge.  This form keeps every intermediate < 2^48.</blockquote>
-<h3><code>emit_msl_fx_sgd_step d lr_num</code></h3>
-<blockquote>Fused fixed-point SGD step (attested-GPU track, act 10: the BACKWARD</blockquote>
-<blockquote>pass -- attested TRAINING).  One linear layer y=W.x, MSE loss, one</blockquote>
-<blockquote>SGD update, all mul_shr/add/shift (no division -> no rounding</blockquote>
-<blockquote>trap).  Per review: bounds EXERCISE the 128-bit path (products</blockquote>
-<blockquote>>2^63) while results stay <2^62; LR baked at emit time is bound via</blockquote>
-<blockquote>the msl hash in the record.  One thread per row i:</blockquote>
-<blockquote>y_i  = sum_j mul_shr(W_ij, x_j, 32)     (forward, inline)</blockquote>
-<blockquote>g_i  = (y_i - t_i) << 1                  (MSE grad, x2 = shift)</blockquote>
-<blockquote>W'_ij = W_ij - mul_shr(LR, mul_shr(g_i, x_j, 32), 32)</blockquote>
-<blockquote>Params packed W(d*d) | x(d) | t(d); output = updated W (d*d).</blockquote>
-<blockquote>Every transformer weight update is this shape (upstream grad</blockquote>
-<blockquote>replaces the MSE term); this proves the training step stays exact</blockquote>
-<blockquote>and attestable.  lr_num is the Q32.32 learning-rate constant.</blockquote>
-<h3><code>emit_msl_fx_layernorm24_shaped rows d</code></h3>
-<blockquote>Fixed-point GPT-style LayerNorm (attested-GPU track, act 11 -- the</blockquote>
-<blockquote>REAL-MODEL wiring).  The 138M attested base model is GPT-2 family</blockquote>
-<blockquote>(LayerNorm+bias, GELU, learned pos-emb) at F=24, NOT the Llama</blockquote>
-<blockquote>family (RMSNorm/SwiGLU, F=32) of acts 3/8/9.  This emitter ports</blockquote>
-<blockquote>the model's ACTUAL gp_layernorm (pathb_gpt_forward.rail) exactly:</blockquote>
-<blockquote>mean-subtract, population variance, fxrsqrt (128-bit binary-search</blockquote>
-<blockquote>sqrt at F=24 with the exact fractional tie-break), affine WITH bias.</blockquote>
-<blockquote>S=2^24, eps=168 (round(1e-5 * 2^24)).  One thread per row.</blockquote>
-<blockquote>Params packed X(rows*D) | gamma(D) | beta(D).</blockquote>
-<h3><code>emit_msl_fx_matmul24_shaped rows k</code></h3>
-<blockquote>GPT matvec with idot semantics (attested-GPU track, act 12).  The</blockquote>
-<blockquote>138M model's projections use <code>idot</code> = (sum_i W_i*x_i) >> 24 -- a</blockquote>
-<blockquote>FULL-precision accumulate then ONE arithmetic shift (NOT per-element</blockquote>
-<blockquote>mul_shr).  GPU: int64 accumulate, then >>24 (arithmetic floor,</blockquote>
-<blockquote>matches Rail's smulh-based shift).  Bound: the raw sum must stay</blockquote>
-<blockquote>< 2^63; for d<=1024 with normalized activations it stays ~2^55.</blockquote>
-<blockquote>Packed W(rows*K) | x(K).  One thread per output row.</blockquote>
-<h3><code>emit_msl_fx_matmul24_batched rows k seqL</code></h3>
-<blockquote>BATCHED matvec (act 20 -- the perf item).  Same idot math as fx_matmul but</blockquote>
-<blockquote>Y[t,o] = (sum_i W[o,i]*X[t,i])>>24 for ALL L tokens in ONE dispatch: the</blockquote>
-<blockquote>weight W is uploaded ONCE (packed P = W(ROWS*K) | X(L*K)) instead of</blockquote>
-<blockquote>re-uploaded per token.  Bit-for-bit identical to L separate fx_matmul</blockquote>
-<blockquote>dispatches; kills the per-token weight-reupload bottleneck.  One thread per</blockquote>
-<blockquote>(t,o) output; O laid out [t][o] = t*ROWS + o (same as the per-token path).</blockquote>
-<h3><code>emit_msl_fx_matmul_bwd_batched out k seqL</code></h3>
-<blockquote>BATCHED linear-backward (act 20).  dx[t,i] = (sum_o W[o,i]*dy[t,o])>>24 for</blockquote>
-<blockquote>all L tokens in one dispatch.  Packed P = W(OUT*K) | dy(L*OUT), OFF_DY=OUT*K.</blockquote>
-<blockquote>One thread per (t,i); O laid out [t][i] = t*K + i.  Bit-for-bit identical to</blockquote>
-<blockquote>L separate fx_matmul_bwd dispatches.</blockquote>
-<h3><code>emit_msl_fx_matmul24_wx rows k seqL</code></h3>
-<blockquote>PERSISTENT-WEIGHT variants (act 23): W in buffer(0) (resident, uploaded once</blockquote>
-<blockquote>via tgl_ibuf_upload), X/dy in buffer(1) (small, uploaded per dispatch).</blockquote>
-<blockquote>Same math as the _batched kernels; bit-for-bit identical.  Eliminates the</blockquote>
-<blockquote>per-dispatch re-pack + re-upload of the (unchanging) weight.</blockquote>
-<h3><code>emit_msl_fx_matmul_bwd_wx out k seqL</code></h3>
-<h3><code>emit_msl_fx_gelu24_shaped n</code></h3>
-<blockquote>GPT GELU (tanh-approx) device function + elementwise kernel (act 12).</blockquote>
-<blockquote>Faithful MSL port of bx4_gelu -> bx4_tanh -> bx4_fxexp -> bx4_exp_poly</blockquote>
-<blockquote>(bx_fixed.rail, F=24).  Uses truncating <code>/</code> (NOT >>) everywhere to</blockquote>
-<blockquote>match Rail's division rounding exactly on negatives.</blockquote>
-<h3><code>emit_msl_fx_attn24_shaped seqL qdim nh hd</code></h3>
-<blockquote>GPT causal multi-head attention, F=24 (attested-GPU track, act 13).</blockquote>
-<blockquote>Faithful port of the model's pf_heads: per query token i, per head h,</blockquote>
-<blockquote>causal scores (idot(Q_h,K_h)>>24, then *scaleq trunc-div, mask j>i to</blockquote>
-<blockquote>-1000*S), softmax over positions (rowmax, fxexp, normalize), then</blockquote>
-<blockquote>weighted-V (sum_j P[j]*V_h >>24).  scaleq = 2097152 = 1/sqrt(64) in</blockquote>
-<blockquote>F=24.  Q|K|V packed (each L*QDIM, group=1 so kvdim=qdim).  One thread</blockquote>
-<blockquote>per query token.  L small (<=64) -> thread-local score/exp arrays fit.</blockquote>
-<h3><code>emit_msl_fx_attn24_par seqL qdim nh hd</code></h3>
-<blockquote>Attention forward, PARALLELIZED per (query, head) (act 22 -- the perf item).</blockquote>
-<blockquote>Identical math to fx_attn but ONE thread per (query i, head h) = L*NH threads</blockquote>
-<blockquote>instead of L threads each looping all NH heads.  On the model shape (L=9,</blockquote>
-<blockquote>NH=12) that is 108 threads vs 9 -- 12x more GPU occupancy for the single most</blockquote>
-<blockquote>expensive op.  Bit-for-bit identical (each thread does the SAME per-(i,h)</blockquote>
-<blockquote>sequential work).  gid -> i = gid/NH, h = gid%NH.</blockquote>
-<h3><code>emit_msl_fx_matmul_bwd_shaped out k</code></h3>
-<blockquote>dx = W^T . dy ; W is [OUT x K] row-major, packed W(OUT*K) | dy(OUT).</blockquote>
-<blockquote>One thread per input index i.  Same idot semantics as the forward.</blockquote>
-<h3><code>emit_msl_fx_gelu_grad24_shaped n</code></h3>
-<blockquote>gelu'(x), F=24 -- faithful port of bx4_gelu_grad -> bx4_tanh -></blockquote>
-<blockquote>bx4_fxexp.  All truncating <code>/</code>.  Elementwise, one thread per element.</blockquote>
-<h3><code>emit_msl_fx_wupdate24_shaped out k lr_num</code></h3>
-<blockquote>Fused weight-gradient + SGD update for a linear layer, F=24 (attested-</blockquote>
-<blockquote>GPU track, act 16 -- completes the training step).  For y = W.x with</blockquote>
-<blockquote>upstream dy (out), the weight gradient is the outer product</blockquote>
-<blockquote>dW[o,i] = dy[o]*x[i] and the SGD step is W'[o,i] = W[o,i] - lr*dW[o,i].</blockquote>
-<blockquote>Both products go through mul_shr_gpu (the exact 128-bit-reconstruct port</blockquote>
-<blockquote>of Rail's mul_shr, already twin-verified in acts 10/11), so the result</blockquote>
-<blockquote>is bit-identical to the CPU twin's mul_shr on every sign.  This is the</blockquote>
-<blockquote>F=24 adaptation of the Q32 act-10 sgd_step, split out as update-only so</blockquote>
-<blockquote>it composes with the separately-attested matmul24 forward and</blockquote>
-<blockquote>matmul_bwd (dx) rather than re-deriving y internally.</blockquote>
-<blockquote>Packed P = W(OUT*K) | x(K) | dy(OUT).  One thread per output row; each</blockquote>
-<blockquote>writes its whole K-length weight row.  FX_LR is the learning rate in F=24.</blockquote>
-<h3><code>emit_msl_fx_layernorm_bwd_shaped rows d</code></h3>
-<blockquote>LayerNorm-backward, F=24 (attested-GPU track, act 17 -- the first of the</blockquote>
-<blockquote>two backward ops the full 16-layer backprop needs).  Input gradient dx for</blockquote>
-<blockquote>GPT-style LayerNorm y = gamma*xhat + beta, xhat = (x-mean)/sqrt(var+eps)</blockquote>
-<blockquote>(mean-subtract + POPULATION variance, matching gp_layernorm exactly).</blockquote>
-<blockquote>The standard row-local result:</blockquote>
-<blockquote>dxhat_i = dy_i*gamma_i</blockquote>
-<blockquote>dx_i = inv * (dxhat_i - mean(dxhat) - xhat_i*mean(dxhat*xhat))</blockquote>
-<blockquote>Recomputes mean/var/inv/xhat/dxhat on the fly (NO d-length thread-local</blockquote>
-<blockquote>arrays -- d=768 would blow the per-thread stack), so it is a pure one-</blockquote>
-<blockquote>thread-per-row kernel like the forward.  fxrsqrt24 = the exact 128-bit</blockquote>
-<blockquote>binary-search rsqrt (same helper the forward uses).  beta does not affect</blockquote>
-<blockquote>dx.  Packed P = X(rows*d) | gamma(d) | dy(rows*d).  eps=168.</blockquote>
-<h3><code>emit_msl_fx_attn_bwd_shaped seqL qdim nh hd</code></h3>
-<blockquote>Attention-backward, F=24 (attested-GPU track, act 18 -- the last backward</blockquote>
-<blockquote>op the full 16-layer backprop needs).  dQ, dK, dV through the causal MHA</blockquote>
-<blockquote>forward (emit_msl_fx_attn24_shaped / pf_heads):</blockquote>
-<blockquote>O[i,c] = (sum_{j<=i} p[i,j]*V[j,c]) >> 24,  p = softmax(scaled causal QK^T)</blockquote>
-<blockquote>Backward (dm cancels in the softmax Jacobian, so no max-grad):</blockquote>
-<blockquote>dp[i,j]   = sum_c dO[i,c]*V[j,c] (>>24 per term)</blockquote>
-<blockquote>dsc[i,j]  = p[i,j]*(dp[i,j] - sum_k p[i,k]*dp[i,k])       (softmax Jacobian)</blockquote>
-<blockquote>draw[i,j] = dsc[i,j]*SCALEQ/S                              (scale chain)</blockquote>
-<blockquote>dQ[i,c]  = sum_{j<=i} draw[i,j]*K[j,c] (>>24 per term)</blockquote>
-<blockquote>dK[j,c]  = sum_{i>=j} draw[i,j]*Q[i,c]</blockquote>
-<blockquote>dV[j,c]  = sum_{i>=j} dO[i,c]*p[i,j]</blockquote>
-<blockquote>SCHEDULE-INDEPENDENT / bit-exact: one thread per position, each doing its</blockquote>
-<blockquote>OWN sequential accumulation (dQ per query, dK/dV per key recompute every</blockquote>
-<blockquote>query i>=j's softmax) -- no atomics, no cross-thread reduction.  3*L threads:</blockquote>
-<blockquote>region gid/L in {0=dQ,1=dK,2=dV}, pos gid%L.  P = Q|K|V, U = dO,</blockquote>
-<blockquote>O = dQ|dK|dV (each L*QDIM).  Thread-local arrays sized L,HD -> keep L modest.</blockquote>
-<h3><code>emit_msl_fx_attn_bwd_par seqL qdim nh hd</code></h3>
-<blockquote>Attention-backward, PARALLELIZED per (region, pos, head) (act 24 -- perf).</blockquote>
-<blockquote>Identical math to fx_attn_bwd but ONE thread per (region, position, head) =</blockquote>
-<blockquote>3*L*NH threads instead of 3*L threads each looping all NH heads.  On the</blockquote>
-<blockquote>model shape that is 3*9*12=324 threads vs 27 -- 12x occupancy for the most</blockquote>
-<blockquote>expensive backward op (it recomputes a softmax per output).  Bit-for-bit</blockquote>
-<blockquote>identical.  gid -> region = gid/(L*NH), rem = gid%(L*NH), pos = rem/NH, h = rem%NH.</blockquote>
-<h3><code>emit_msl_fx_elemul24 n</code></h3>
-<blockquote>Elementwise fixed-point multiply O[i]=A[i]*B[i]>>24 (A=buf0, B=buf1).</blockquote>
-<blockquote>Used for dh1 = dh2 (x) gelu'(h1) in the MLP backward.</blockquote>
-<h3><code>emit_msl_fx_wgrad24_shaped out k seqL</code></h3>
-<blockquote>Weight-gradient accumulate over tokens: dW[o,i] = sum_t dy[t,o]*x[t,i] >>24.</blockquote>
-<blockquote>Packed P = dy(L*OUT) | x(L*K); one thread per output row o.  This is the</blockquote>
-<blockquote>multi-token weight gradient (the act-16 wupdate was single-token fused).</blockquote>
-<h3><code>emit_msl_fx_sgd_apply n lr_num</code></h3>
-<blockquote>Elementwise SGD apply: O[i] = W[i] - lr*dW[i]>>24  (W=buf0, dW=buf1).</blockquote>
-<h3><code>emit_msl_fx_adam_step n b1 b2 eps lr</code></h3>
-<blockquote>F=24 AdamW update, twin of the CPU fx_adam (fx_adam_gate.rail). One thread per</blockquote>
-<blockquote>weight element. Bias-correction c1,c2 (=1-beta^t) change per step, so they ride</blockquote>
-<blockquote>in the packed buffer rather than being baked; lr/beta1/beta2/eps are constants.</blockquote>
-<blockquote>fx_sqrt24 = pure-integer binary search matching Path-B bx4_fxsqrt bit-for-bit</blockquote>
-<blockquote>(same move as fx_rsqrt above), so a CPU twin using mul_shr lands identical bits.</blockquote>
-<blockquote>P (buffer0), size 3N+2: W[0..N) | m[N..2N) | v[2N..3N) | c1@[3N] | c2@[3N+1]</blockquote>
-<blockquote>G (buffer1), size N: gradient (already summed; caller means it by scaling lr)</blockquote>
-<blockquote>O (buffer2), size 3N: W'[0..N) | m'[N..2N) | v'[2N..3N)</blockquote>
-<blockquote>CRITICAL (measured in fx_adam_gate): EPS must be ~1e-3 (16777) in F=24, not the</blockquote>
-<blockquote>fp32-default 1e-8 -- else v=g^2 underflows to 0 and the update mhat/eps explodes.</blockquote>
-<h3><code>node_seq node</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Shape extraction helpers.  Pull SEQ/D out of a JitNode's .shape field.</blockquote>
-<blockquote>The rmsnorm node's shape is [seq, d].  The silu node's shape is [seq, d_ff];</blockquote>
-<blockquote>its N = seq * d_ff.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>node_d   node</code></h3>
-<h3><code>node_n   node</code></h3>
-<h3><code>emit_msl_for_match _ m</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Pattern dispatch — Phase 2.5 generic stubs.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>emit_msl_for_match_shaped tape m</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Phase 2.9 v1.5 — shape-aware dispatch.  Looks up the matched node's</blockquote>
-<blockquote>shape and emits specialized MSL.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h2><code>stdlib/jit_match.rail</code></h2>
-<h3><code>match_kind m</code></h3>
-<h3><code>find_matmul_children tape p i n acc</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Children search.</blockquote>
-<blockquote>find_matmul_children tape p i n acc:</blockquote>
-<blockquote>walk tape from index i to n, accumulating tape indices of "matmul"</blockquote>
-<blockquote>nodes whose parents[0] == p.  Returns the list in tape order.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>find_hadamard_child tape p i n</code></h3>
-<blockquote>Returns -1 if no matching hadamard child found.</blockquote>
-<h3><code>try_qkv_match tape rms_idx n acc</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Per-pattern emitters.  Each appends 0 or 1 FuseMatch to acc.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>try_silu_match tape silu_idx n acc</code></h3>
-<h3><code>walk_tape_loop tape i n acc</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Main walker.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>walk_tape tape</code></h3>
-<h3><code>dump_match m</code></h3>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<blockquote>Debug helper: print all matches one per line.</blockquote>
-<blockquote>───────────────────────────────────────────────────────────────────────</blockquote>
-<h3><code>dump_matches_loop ms</code></h3>
-<h3><code>dump_matches ms</code></h3>
-<h2><code>stdlib/jit_node.rail</code></h2>
-<h3><code>jit_tape_new _</code></h3>
-<blockquote>Array-backed op-DAG tape: slot 0 holds the node count, slots 1..count hold</blockquote>
-<blockquote>JitNodes. Push is O(1) amortized (doubling) and get is O(1); the old list</blockquote>
-<blockquote>form did <code>length</code> + <code>append</code> per push (O(n^2) build) and an O(i) walk per get.</blockquote>
-<h3><code>jit_tape_len tape</code></h3>
-<blockquote>jit_tape_len: number of nodes on the tape (O(1)).</blockquote>
-<h3><code>jit_tape_push tape node</code></h3>
-<blockquote>jit_tape_push: store node at slot count+1 (growing if full), return [tape, idx].</blockquote>
-<h3><code>jit_tape_grow tape</code></h3>
-<h3><code>jit_tape_copy src dst k</code></h3>
-<h3><code>jit_tape_get tape i</code></h3>
-<blockquote>jit_tape_get: O(1) random access; slot 0 is the count, node i lives at slot i+1.</blockquote>
-<blockquote>Out-of-range (i<0 or i>=count) returns the "missing" sentinel, as before.</blockquote>
-<h3><code>jit_nth n xs</code></h3>
-<blockquote>Same as stdlib/tensor.rail's list_nth.  Named jit_nth so consumers of</blockquote>
-<blockquote>jit_node can avoid importing tensor.rail (which would re-introduce a</blockquote>
-<blockquote>duplicate-symbol path through transformer for callers like</blockquote>
-<blockquote>lm_v3_chunked_jit_long that import transformer directly).</blockquote>
-<h3><code>traced_value t</code></h3>
-<h3><code>traced_idx   t</code></h3>
-<h3><code>node_tag     n</code></h3>
-<h3><code>node_shape   n</code></h3>
-<h3><code>node_dtype   n</code></h3>
-<h3><code>node_parents n</code></h3>
-<h3><code>jit_tape_dump_loop tape n i</code></h3>
-<h3><code>jit_tape_dump tape</code></h3>
-<h2><code>stdlib/jit_tape.rail</code></h2>
-<h3><code>jit_leaf tape t dtype</code></h3>
-<blockquote>Wrap an existing Tensor as a leaf TracedTensor.  Pushes a "leaf" node</blockquote>
-<blockquote>onto the tape that codegen treats as a kernel input buffer.</blockquote>
-<h3><code>traced_rmsnorm tape x g dtype</code></h3>
-<blockquote>traced_rmsnorm: trace + execute rmsnorm.  Returns updated tape + a</blockquote>
-<blockquote>TracedTensor for the y output (rstd is dropped for now; Phase 3 may</blockquote>
-<blockquote>need it as a separate tape entry for backward).</blockquote>
-<h3><code>traced_matmul tape a b dtype</code></h3>
-<blockquote>traced_matmul: trace + execute (default f64) matmul.</blockquote>
 <h2><code>stdlib/json.rail</code></h2>
 <h3><code>json_skip_ws cs</code></h3>
 <blockquote>Skip whitespace characters</blockquote>
@@ -2114,17 +1602,60 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>comparisons lower to fcmp across the function boundary.</blockquote>
 <h3><code>is_finite x</code></h3>
 <blockquote>Finite = not NaN and not infinite. Avoids && (no short-circuit) by nesting.</blockquote>
-<h2><code>stdlib/metal_kernel.rail</code></h2>
-<h3><code>metal_kernel_header</code></h3>
-<blockquote>Standard header every Metal kernel needs.</blockquote>
-<h3><code>metal_kernel_sig</code></h3>
-<blockquote>The standard parameter signature for a unary kernel.</blockquote>
-<h3><code>emit_metal_unary name body_expr</code></h3>
-<blockquote>Wrap a single C expression over <code>x</code> into a full unary kernel.</blockquote>
-<blockquote><code>body_expr</code> should reference <code>x</code> (the input element) and evaluate</blockquote>
-<blockquote>to a float.  Example:  emit_metal_unary "relu2" "x > 0.0f ? x : 0.0f"</blockquote>
-<h3><code>metal_apply_unary src name x_arr</code></h3>
-<blockquote>Apply a Metal kernel to a float_arr.  Returns a fresh float_arr.</blockquote>
+<h2><code>stdlib/math_exact.rail</code></h2>
+<h3><code>fx_quant x</code></h3>
+<blockquote>round(x * 2^24) as an integer, ties away from zero.</blockquote>
+<h3><code>fx_back xq</code></h3>
+<blockquote>X / 2^24 as a double (exact: an integer below 2^53 over a power of two).</blockquote>
+<h3><code>fx_topbit_a n d</code></h3>
+<h3><code>fx_topbit_b n d</code></h3>
+<h3><code>fx_topbit n d</code></h3>
+<h3><code>fx_isqrt_a n c d</code></h3>
+<h3><code>fx_isqrt_b n c d</code></h3>
+<h3><code>fx_isqrt n</code></h3>
+<blockquote>floor(sqrt n) for an integer n >= 0.</blockquote>
+<h3><code>fx_sqrt xq</code></h3>
+<blockquote>sqrt(x) * S for X = x * S >= 0.</blockquote>
+<h3><code>fx_rsqrt xq</code></h3>
+<blockquote>1 / sqrt(x) * S; 0 for X = 0.</blockquote>
+<h3><code>fx_pow2_go acc k</code></h3>
+<h3><code>fx_pow2 k</code></h3>
+<h3><code>fx_exp_poly fq</code></h3>
+<blockquote>e^f * S for f = F / S in [0, ln 2). Degree 8; coefficients c_i = round(S / i!).</blockquote>
+<h3><code>fx_exp_neg ax</code></h3>
+<blockquote>e^x * S for x <= 0, given A = |x| * S. round(ln 2 * S) = 11629080.</blockquote>
+<h3><code>fx_exp_pos xq</code></h3>
+<blockquote>e^x * S for x > 0; saturates at 2^35 * e^f above x = 36 ln 2.</blockquote>
+<h3><code>fx_exp xq</code></h3>
+<blockquote>e^x * S for X = x * S.</blockquote>
+<h3><code>fx_tanh_pos axq</code></h3>
+<h3><code>fx_tanh xq</code></h3>
+<blockquote>tanh(x) * S for X = x * S.</blockquote>
+<h3><code>fx_gelu xq</code></h3>
+<blockquote>gelu(x) * S, the tanh form: 0.5 x (1 + tanh(g (x + a x^3))), g * S = 13386610, a * S = 750194.</blockquote>
+<h3><code>fx_gelu_grad xq</code></h3>
+<blockquote>gelu'(x) * S: 0.5 (1 + t) + 0.5 x sech^2(u) du/dx with u = g (x + a x^3), t = tanh u,</blockquote>
+<blockquote>sech^2(u) = 1 - t^2, du/dx = g (1 + 3 a x^2).</blockquote>
+<h3><code>fx_sin_unit aq</code></h3>
+<blockquote>sin(a) * S for a in [0, pi/4], A = a * S.</blockquote>
+<h3><code>fx_cos_unit aq</code></h3>
+<blockquote>cos(a) * S for a in [0, pi/4].</blockquote>
+<h3><code>fx_sin th</code></h3>
+<blockquote>sin(theta) * S for a quantized theta in [0, 2pi): quadrant, then the cofunction fold.</blockquote>
+<h3><code>fx_cos th</code></h3>
+<blockquote>cos(theta) * S for a quantized theta in [0, 2pi).</blockquote>
+<h3><code>fx_reduce_2pi th</code></h3>
+<blockquote>A quantized angle of either sign, |theta| < 4096, reduced into [0, 2pi) against 2 pi held</blockquote>
+<blockquote>to 48 fractional bits, so the reduction error is the residue's, not k times a 24-bit 2 pi.</blockquote>
+<h3><code>fx_sin_any th</code></h3>
+<blockquote>sin and cos of any quantized angle in (-4096, 4096).</blockquote>
+<h3><code>fx_cos_any th</code></h3>
+<h3><code>sin_fixed x</code></h3>
+<h3><code>cos_fixed x</code></h3>
+<h3><code>exp_fixed x</code></h3>
+<h3><code>tanh_fixed x</code></h3>
+<h3><code>sqrt_fixed x</code></h3>
+<h3><code>gelu_fixed x</code></h3>
 <h2><code>stdlib/mmap.rail</code></h2>
 <h3><code>prot_none</code></h3>
 <blockquote>Protection flags</blockquote>
@@ -2140,68 +1671,12 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>Map anonymous memory (no file backing)</blockquote>
 <h3><code>free_pages addr len</code></h3>
 <blockquote>Unmap memory</blockquote>
-<h2><code>stdlib/optim.rail</code></h2>
-<h3><code>adam_state n</code></h3>
-<blockquote>Build a fresh AdamState matching an existing float_arr (weights) in size.</blockquote>
-<blockquote>m and v start at zeros; step counter starts at 0.</blockquote>
-<h3><code>adam_hyp lr b1 b2 eps t</code></h3>
-<blockquote>Pack the six hyperparameters for this step into a float_arr the dylib</blockquote>
-<blockquote>can read. Bias correction is recomputed every step because pow is cheap.</blockquote>
-<h3><code>cpu_adam_loop w g m v h n i</code></h3>
-<blockquote>CPU Adam inner loop. Hyperparameter layout matches adam_hyp:</blockquote>
-<blockquote>h[0]=lr, h[1]=b1, h[2]=b2, h[3]=eps, h[4]=bc1=1-b1^t, h[5]=bc2=1-b2^t.</blockquote>
-<h3><code>adam_update_raw w g state lr b1 b2 eps</code></h3>
-<blockquote>One fused Adam update on a raw float_arr (weights data). Mutates w, m, v.</blockquote>
-<blockquote>Returns the new step counter. Dylib path when gpu_available; pure-Rail</blockquote>
-<blockquote>CPU fallback otherwise (machines where the Metal dylib can't be loaded).</blockquote>
-<h3><code>adam_update param grad state lr b1 b2 eps</code></h3>
-<blockquote>Tensor-level wrapper: unwraps the Tensor ADT and calls the raw path.</blockquote>
-<blockquote>param and grad must share shape; state must have been built with</blockquote>
-<blockquote>adam_state matching that shape's element count.</blockquote>
-<h3><code>apply_decay_loop w lr_wd n i</code></h3>
-<blockquote>─────────────────────────────────────────────────────────────</blockquote>
-<blockquote>AdamW: Adam + decoupled weight decay (Loshchilov & Hutter 2019).</blockquote>
-<blockquote>Instead of L2 regularization embedded in the gradient, we shrink</blockquote>
-<blockquote>weights toward zero by a small factor (1 - lr*wd) each step, then</blockquote>
-<blockquote>run the normal Adam step on the unregularized gradient.</blockquote>
-<blockquote></blockquote>
-<blockquote>Used by every modern transformer (GPT / Llama / Qwen) with wd</blockquote>
-<blockquote>typically 0.01-0.1.</blockquote>
-<blockquote>─────────────────────────────────────────────────────────────</blockquote>
-<h3><code>adamw_update_raw w g state lr b1 b2 eps wd</code></h3>
-<h3><code>adamw_update param grad state lr b1 b2 eps wd</code></h3>
-<h3><code>adam_lr_mult_gamma</code></h3>
-<h3><code>adam_lr_mult_tied_embed</code></h3>
-<h3><code>adam_lr_mult_default</code></h3>
-<h3><code>adam_default_wd</code></h3>
-<h3><code>adam_default_lr</code></h3>
-<blockquote>Default hyperparameters (Kingma & Ba 2015). Use as:</blockquote>
-<blockquote>let lr = adam_default_lr</blockquote>
-<blockquote>let b1 = adam_default_b1</blockquote>
-<blockquote>etc. Not a record because Rail lacks record-of-floats destructure.</blockquote>
-<h3><code>adam_default_b1</code></h3>
-<h3><code>adam_default_b2</code></h3>
-<h3><code>adam_default_eps</code></h3>
-<h3><code>cosine_decay step warmup max_steps base_lr</code></h3>
-<h3><code>sum_sq_tensor g</code></h3>
-<h3><code>total_sq_into grads acc_arr</code></h3>
-<blockquote>Accumulate sum-of-squares across a list of tensors into a mutable</blockquote>
-<blockquote>float_arr slot. Rail's cross-function float-param inference can</blockquote>
-<blockquote>misclassify a float accumulator passed recursively, so we route</blockquote>
-<blockquote>the running total through a float_arr instead of an <code>acc</code> arg.</blockquote>
-<h3><code>scale_each grads factor acc</code></h3>
-<blockquote>Fold helper: scale every tensor in a list by a constant factor.</blockquote>
-<blockquote><code>factor</code> is a float but only participates in arithmetic inside</blockquote>
-<blockquote>tensor_scale, which already handles float scalars correctly via</blockquote>
-<blockquote>its own float_arr dispatch.</blockquote>
-<h3><code>clip_grad_norm grads max_norm</code></h3>
-<blockquote>Returns (clipped_grads, total_norm).</blockquote>
 <h2><code>stdlib/oracle.rail</code></h2>
 <h3><code>oracle_compile_at code path</code></h3>
 <blockquote>Runs the rail_native compiler on <code>code</code>, returns the combined</blockquote>
 <blockquote>stdout+stderr. The compiler prints one "file:line:col: error: msg"</blockquote>
 <blockquote>per parse/type/link error plus a trailing "N error(s) found" line</blockquote>
-<blockquote>on failure, or "as: OK" + "ld: OK" on success.</blockquote>
+<blockquote>on failure, or "link: OK" on success (since Tier 3 step 6; "as: OK" + "ld: OK" before).</blockquote>
 <blockquote></blockquote>
 <blockquote>oracle_compile_at takes an explicit input path, which callers MUST</blockquote>
 <blockquote>use when invoking the oracle concurrently — the shared default path</blockquote>
@@ -2364,51 +1839,6 @@ import "stdlib/&lt;name&gt;.rail"
 <h3><code>poly1305_process_block msg offset block_len acc r</code></h3>
 <h3><code>poly1305_loop msg msg_len acc r offset</code></h3>
 <h3><code>poly1305_mac key msg msg_len</code></h3>
-<h2><code>stdlib/quartz.rail</code></h2>
-<h3><code>qz_ev_none</code></h3>
-<blockquote>Event-type codes (returned by qb_next_event)</blockquote>
-<h3><code>qz_ev_mouse_move</code></h3>
-<h3><code>qz_ev_mouse_down</code></h3>
-<h3><code>qz_ev_mouse_up</code></h3>
-<h3><code>qz_ev_key_down</code></h3>
-<h3><code>qz_ev_key_up</code></h3>
-<h3><code>qz_ev_scroll</code></h3>
-<h3><code>qz_ev_flags_change</code></h3>
-<h3><code>qz_mask_mouse_move</code></h3>
-<blockquote>Event-mask bits (passed to qb_init). OR them together for what to capture.</blockquote>
-<h3><code>qz_mask_mouse_button</code></h3>
-<h3><code>qz_mask_key</code></h3>
-<h3><code>qz_mask_scroll</code></h3>
-<h3><code>qz_mask_flags</code></h3>
-<h3><code>qz_mask_all</code></h3>
-<h3><code>qz_btn_left</code></h3>
-<blockquote>Mouse buttons (matches CGMouseButton values).</blockquote>
-<h3><code>qz_btn_right</code></h3>
-<h3><code>qz_btn_middle</code></h3>
-<h3><code>qz_mod_shift</code></h3>
-<blockquote>Modifier-flag bits (NSEventModifierFlag values shifted to fit in low bits).</blockquote>
-<h3><code>qz_mod_ctrl</code></h3>
-<h3><code>qz_mod_alt</code></h3>
-<h3><code>qz_mod_cmd</code></h3>
-<h3><code>qz_mod_fn</code></h3>
-<h3><code>qz_mod_caps</code></h3>
-<h3><code>qz_init event_mask</code></h3>
-<blockquote>Initialize. Recommended event_mask: qz_mask_all unless you have a reason.</blockquote>
-<h3><code>qz_next_event timeout_ms</code></h3>
-<blockquote>Block up to timeout_ms for the next event, decode into an ADT.</blockquote>
-<h3><code>qz_decode_event ty buf</code></h3>
-<h3><code>qz_move_to x y</code></h3>
-<blockquote>Inject helpers — same args as the foreign decls but Rail-friendly names.</blockquote>
-<h3><code>qz_click button down</code></h3>
-<h3><code>qz_key keycode down mods</code></h3>
-<h3><code>qz_scroll dx dy</code></h3>
-<h3><code>qz_screen_count _</code></h3>
-<blockquote>Display geometry helpers.</blockquote>
-<h3><code>qz_screen_bounds idx</code></h3>
-<blockquote>Returns [ox, oy, w, h] for screen index idx, or empty on error.</blockquote>
-<h3><code>qz_shutdown _</code></h3>
-<h3><code>qz_event_show ev</code></h3>
-<h3><code>cat parts</code></h3>
 <h2><code>stdlib/rsa_pss.rail</code></h2>
 <h3><code>rsa_hlen _</code></h3>
 <h3><code>rsa_slen _</code></h3>
@@ -2693,349 +2123,6 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>Join list with separator (alias for builtin join)</blockquote>
 <h3><code>from_chars cs</code></h3>
 <blockquote>Convert list of chars back to string</blockquote>
-<h2><code>stdlib/tensor.rail</code></h2>
-<h3><code>mul_acc a b</code></h3>
-<blockquote>Product of a list of ints</blockquote>
-<h3><code>list_product xs</code></h3>
-<h3><code>compute_strides_rev rev_shape</code></h3>
-<blockquote>Compute row-major strides from shape</blockquote>
-<blockquote>[2,3,4] -> [12, 4, 1]</blockquote>
-<h3><code>compute_strides shape</code></h3>
-<h3><code>compute_offset indices strides</code></h3>
-<blockquote>Compute flat offset from multi-dim indices and strides</blockquote>
-<h3><code>list_nth n xs</code></h3>
-<blockquote>Nth element of a list (0-indexed)</blockquote>
-<h3><code>tensor_new shape init_val</code></h3>
-<blockquote>Create tensor with given shape, all elements set to init_val</blockquote>
-<h3><code>tensor_zeros shape</code></h3>
-<blockquote>Convenience constructors</blockquote>
-<h3><code>tensor_ones shape</code></h3>
-<h3><code>tensor_shape t</code></h3>
-<blockquote>Get tensor shape</blockquote>
-<h3><code>tensor_size t</code></h3>
-<blockquote>Get total number of elements</blockquote>
-<h3><code>dim t axis</code></h3>
-<blockquote>Get size of dimension at axis</blockquote>
-<h3><code>tensor_get t indices</code></h3>
-<blockquote>Get element at multi-dimensional indices (returns float)</blockquote>
-<h3><code>tensor_set t indices val</code></h3>
-<blockquote>Set element at multi-dimensional indices</blockquote>
-<h3><code>tensor_get_flat t i</code></h3>
-<blockquote>Get/set by flat index</blockquote>
-<h3><code>tensor_set_flat t i val</code></h3>
-<h3><code>gpu_binary_path</code></h3>
-<h3><code>gpu_flag_arr</code></h3>
-<blockquote>Cached GPU availability flag (0 = unchecked, 1 = available, -1 = unavailable)</blockquote>
-<h3><code>gpu_available _</code></h3>
-<blockquote><code>tools/metal/.no_gpu</code> sentinel forces the CPU path for every tensor op.</blockquote>
-<blockquote>Motivation: on machines where the Metal dylib loads but silently returns</blockquote>
-<blockquote>zeros (Studio M1 Ultra w/ stale Xcode CLT is the current case), touch</blockquote>
-<blockquote>tools/metal/.no_gpu once and CPU fallbacks stay engaged until it's</blockquote>
-<blockquote>removed — no per-run binary shuffling. File-based over env-based because</blockquote>
-<blockquote><code>foreign getenv</code> doesn't propagate reliably through rail_native run's</blockquote>
-<blockquote>/bin/sh -c child (see docs/ffi-str-return-bug.md).</blockquote>
-<h3><code>gpu_write_floats path arr n</code></h3>
-<blockquote>Write float_arr to text file for GPU consumption</blockquote>
-<h3><code>gpu_write_loop arr n i acc</code></h3>
-<h3><code>gpu_read_floats path n</code></h3>
-<blockquote>Read float_arr from GPU output text file</blockquote>
-<h3><code>gpu_parse_lines arr lines i n</code></h3>
-<h3><code>gpu_cleanup _</code></h3>
-<blockquote>Cleanup tmp files after GPU ops</blockquote>
-<h3><code>gpu_daemon_flag</code></h3>
-<blockquote>Check if tensor daemon is running on :9300</blockquote>
-<h3><code>gpu_daemon_available _</code></h3>
-<h3><code>gpu_format_floats arr n</code></h3>
-<blockquote>Format float_arr as space-separated string</blockquote>
-<h3><code>gpu_format_loop arr n i acc</code></h3>
-<h3><code>gpu_parse_inline str n</code></h3>
-<blockquote>Parse space-separated floats into float_arr</blockquote>
-<h3><code>gpu_parse_inline_loop arr parts i n</code></h3>
-<h3><code>ensure_dylib _</code></h3>
-<blockquote>Has dylib been initialized this process?</blockquote>
-<blockquote>Note: the previous top-level <code>float_arr</code> cache was broken by Rail's</blockquote>
-<blockquote>re-evaluate-per-reference rule for nullary bindings (float_arr_new</blockquote>
-<blockquote>runs fresh on every reference), so ensure_dylib paid a shell + tgl_init</blockquote>
-<blockquote>on EVERY matmul call. Fix: tgl_init is idempotent (the dylib has its</blockquote>
-<blockquote>own g_initialized flag); call it unconditionally and trust it. Shell</blockquote>
-<blockquote>existence check is compile-time anyway — if the dylib weren't linked,</blockquote>
-<blockquote>ld would have failed, so this symbol exists by construction.</blockquote>
-<h3><code>gpu_matmul_dispatch a_data b_data m k n</code></h3>
-<blockquote>GPU matmul: in-process dylib. Zero-copy path, ~1ms per 128x128 matmul.</blockquote>
-<blockquote>The historical binary-file and text-file fallbacks were dropped from the</blockquote>
-<blockquote>hot path — if the dylib isn't linked, link would fail at build time.</blockquote>
-<blockquote>Callers needing a non-dylib path should call gpu_matmul_file (below)</blockquote>
-<blockquote>explicitly. This keeps the common case branch-free.</blockquote>
-<h3><code>gpu_matmul_file a_data b_data m k n</code></h3>
-<blockquote>Legacy binary-file dispatch, kept for debugging. ~50ms/call.</blockquote>
-<h3><code>gpu_relu_dispatch src_data n</code></h3>
-<blockquote>GPU relu: daemon (fast) or file-mode (fallback)</blockquote>
-<h3><code>gpu_unop_ffi op src_data n</code></h3>
-<blockquote>Unary activation (relu, sigmoid, exp, tanh). Op string maps to FFI.</blockquote>
-<h3><code>gpu_binop_ffi op a_data b_data n</code></h3>
-<blockquote>Binary elementwise (add, mul).</blockquote>
-<h3><code>gpu_scale_ffi src_data s n</code></h3>
-<blockquote>Scalar multiply. Scalar wrapped into a tiny float_arr so we can pass by pointer.</blockquote>
-<h3><code>gpu_softmax_ffi src_data rows cols</code></h3>
-<blockquote>Softmax (row-wise). 2D input [rows,cols]. Shape-preserving.</blockquote>
-<h3><code>gpu_transpose_ffi src_data m n</code></h3>
-<blockquote>Transpose: A[M,N]^T returns a new flat buffer of shape [N,M].</blockquote>
-<h3><code>gpu_relu_backward_ffi x_data grad_data n</code></h3>
-<blockquote>ReLU backward: ∂L/∂x = (x > 0) ? ∂L/∂y : 0</blockquote>
-<h3><code>gpu_sgd_ffi w_data g_data lr n</code></h3>
-<blockquote>In-place SGD step: w -= lr * grad</blockquote>
-<h3><code>gpu_matmul_relu_ffi a_data b_data bias_data m k n</code></h3>
-<blockquote>Fused matmul+bias+relu</blockquote>
-<h3><code>matmul_k a_data b_data acc_arr k_dim n_dim i j kk</code></h3>
-<blockquote>Innermost loop: accumulate a[i,k]*b[k,j] for k</blockquote>
-<h3><code>matmul_j a_data b_data c_data acc_arr m_dim n_dim k_dim i j</code></h3>
-<blockquote>Middle loop: iterate over columns j</blockquote>
-<h3><code>matmul_i a_data b_data c_data acc_arr m_dim n_dim k_dim i</code></h3>
-<blockquote>Outer loop: iterate over rows i</blockquote>
-<h3><code>matmul a b</code></h3>
-<blockquote>Matrix multiply: a(M,K) @ b(K,N) -> c(M,N)</blockquote>
-<blockquote>Tries Metal GPU first (269 GFLOPS), falls back to CPU loops</blockquote>
-<h3><code>matmul_f16 a b</code></h3>
-<blockquote>fp16 matmul: Tensor wrapper around tgl_matmul_f16. Dylib stages f64→f16</blockquote>
-<blockquote>on the way in and f16→f64 on the way out; accumulator stays fp32 inside</blockquote>
-<blockquote>the kernel. GPU-only (no CPU fallback — callers should gate on</blockquote>
-<blockquote>gpu_available if they need graceful degradation). ~1.7-1.8× speedup vs</blockquote>
-<blockquote>tgl_matmul_f64 on M1 Ultra per fp16_drafts/RESULTS.md; Phase 4b training</blockquote>
-<blockquote>uses this in lm_v3_chunked_fp16.rail.</blockquote>
-<h3><code>matmul_bf16 a b</code></h3>
-<blockquote>bf16 matmul (added 2026-05-14): same Rail signature as matmul_f16.</blockquote>
-<blockquote>Dylib stages f64→bf16 on input and bf16→f64 on output; accumulator</blockquote>
-<blockquote>stays fp32 inside the kernel. bf16's exponent range matches f32</blockquote>
-<blockquote>(~3.4e38) — fp16's step-2759 overflow simply cannot happen here.</blockquote>
-<h3><code>matmul_bias_relu_f16 a b bias</code></h3>
-<blockquote>fp16 fused matmul+bias+relu. <code>bias</code> is a float_arr (length n) — stays</blockquote>
-<blockquote>fp32 on the GPU per the fp32-bias hint that landed the fused kernels.</blockquote>
-<blockquote>Semantics: out[i,j] = max(0, sum_k a[i,k]*b[k,j] + bias[j]).</blockquote>
-<h3><code>matmul_bias_gelu_f16 a b bias</code></h3>
-<blockquote>fp16 fused matmul+bias+gelu (same pattern, GELU activation).</blockquote>
-<h3><code>half_storage_slots n</code></h3>
-<blockquote>Packed-half storage size: one 8-byte float_arr slot holds 4 halfs.</blockquote>
-<blockquote>For n half elements we need ceil(n/4) slots. Slot 0 of the underlying</blockquote>
-<blockquote>float_arr still holds the slot-count header (set by float_arr_new).</blockquote>
-<h3><code>half_tensor_new shape</code></h3>
-<blockquote>Allocate an uninitialized HalfTensor with the given shape. Content</blockquote>
-<blockquote>is zero-bit-pattern, which in fp16 is 0.0 — so this is effectively</blockquote>
-<blockquote>half_zeros, same as tensor_zeros for Tensor.</blockquote>
-<h3><code>half_of_tensor t</code></h3>
-<blockquote>f64 Tensor → packed HalfTensor (host-side, one cast). Used at init,</blockquote>
-<blockquote>checkpoint load, and eval boundaries — NOT inside the training loop.</blockquote>
-<h3><code>tensor_of_half h</code></h3>
-<blockquote>Packed HalfTensor → f64 Tensor. Inverse of half_of_tensor; used at</blockquote>
-<blockquote>measurement / checkpoint save time.</blockquote>
-<h3><code>matmul_half a b</code></h3>
-<blockquote>fp16 matmul on already-packed HalfTensors. Zero cast at the host</blockquote>
-<blockquote>boundary — memcpy in, GPU kernel runs on fp16, memcpy out. This is</blockquote>
-<blockquote>the Phase 4b follow-on: the language stops paying the cast on every</blockquote>
-<blockquote>call; it pays once at init/checkpoint.</blockquote>
-<h3><code>matmul_mixed x w_h</code></h3>
-<blockquote>Rail-native mixed precision matmul: f64 activations × fp16 weights → f64.</blockquote>
-<blockquote>Acts arrive as a Tensor (f64) and leave as a Tensor (f64) — Rail-side code</blockquote>
-<blockquote>never sees fp32 directly. GPU keeps acts in fp32 and weights in fp16; the</blockquote>
-<blockquote>dot product runs in fp32 (Apple Silicon GPU's native compute precision).</blockquote>
-<blockquote>This is the precision-preserving sibling of matmul_half: a HalfTensor of</blockquote>
-<blockquote>weights composes with f64 activations through every block boundary</blockquote>
-<blockquote>without the half-cast precision loss that flipped argmax in v3_half.</blockquote>
-<h3><code>add_half a b</code></h3>
-<blockquote>fp16 element-wise add on already-packed HalfTensors. Same zero-cast</blockquote>
-<blockquote>contract as matmul_half: storage stays fp16, GPU keeps an fp32</blockquote>
-<blockquote>accumulator per element.</blockquote>
-<h3><code>scale_half t s</code></h3>
-<blockquote>Scalar × HalfTensor. Scalar passed as a 1-element float_arr (ABI</blockquote>
-<blockquote>match with tgl_scale_f64). GPU narrows the scalar to fp32.</blockquote>
-<h3><code>transpose_half t</code></h3>
-<blockquote>Transpose a 2-D HalfTensor. Shape [M,N] → [N,M]; storage stays fp16</blockquote>
-<blockquote>so the op is bit-exact vs its f64 cast-path counterpart (shape</blockquote>
-<blockquote>permutation only, no arithmetic).</blockquote>
-<h3><code>softmax_half t</code></h3>
-<blockquote>Row-wise softmax on a 2-D HalfTensor. GPU keeps the fp32 max-subtract</blockquote>
-<blockquote>and exp-sum in fp32 so raw logits up to ~88 (exp overflow in fp32)</blockquote>
-<blockquote>are safe — far above fp16's ~65504 ceiling. Output stored in fp16,</blockquote>
-<blockquote>in [0, 1] by construction.</blockquote>
-<h3><code>add_loop a_data b_data c_data n i</code></h3>
-<blockquote>Add loop</blockquote>
-<h3><code>sub_loop a_data b_data c_data n i</code></h3>
-<blockquote>Sub loop</blockquote>
-<h3><code>hmul_loop a_data b_data c_data n i</code></h3>
-<blockquote>Hadamard (element-wise multiply) loop</blockquote>
-<h3><code>scale_loop src dst n i s</code></h3>
-<blockquote>Scalar multiply loop</blockquote>
-<h3><code>gpu_binop_dispatch op a_data b_data n</code></h3>
-<blockquote>GPU binary elementwise dispatch (add, mul) via daemon or file</blockquote>
-<h3><code>gpu_unop_dispatch op src_data n</code></h3>
-<blockquote>GPU unary elementwise dispatch (relu, exp, tanh, sigmoid)</blockquote>
-<h3><code>tensor_add a b</code></h3>
-<blockquote>tensor_add: element-wise addition (GPU via dylib, CPU fallback)</blockquote>
-<h3><code>tensor_sub a b</code></h3>
-<blockquote>tensor_sub: element-wise subtraction</blockquote>
-<h3><code>tensor_mul a b</code></h3>
-<blockquote>tensor_mul: element-wise (Hadamard) multiplication (GPU via dylib, CPU fallback)</blockquote>
-<h3><code>tensor_scale t s</code></h3>
-<blockquote>tensor_scale: scalar multiply (GPU via dylib, CPU fallback)</blockquote>
-<h3><code>relu_loop src dst n i</code></h3>
-<blockquote>ReLU loop: max(0, x)</blockquote>
-<h3><code>tensor_relu t</code></h3>
-<h3><code>gelu_loop src dst n i</code></h3>
-<blockquote>GELU loop: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))</blockquote>
-<h3><code>tensor_gelu t</code></h3>
-<h3><code>tensor_exp_gpu t</code></h3>
-<blockquote>GPU-accelerated exp, tanh, sigmoid</blockquote>
-<h3><code>exp_loop src dst n i</code></h3>
-<h3><code>tensor_tanh_gpu t</code></h3>
-<h3><code>tanh_loop src dst n i</code></h3>
-<h3><code>tensor_sigmoid t</code></h3>
-<h3><code>sigmoid_loop src dst n i</code></h3>
-<h3><code>sum_loop data n i acc_arr</code></h3>
-<blockquote>Sum all elements (uses mutable accumulator array)</blockquote>
-<h3><code>tensor_sum t</code></h3>
-<h3><code>tensor_mean t</code></h3>
-<blockquote>Mean of all elements</blockquote>
-<h3><code>relu_mask_loop src dst n i</code></h3>
-<blockquote>tensor_relu_mask: 1.0 where x > 0, 0.0 otherwise</blockquote>
-<h3><code>tensor_relu_mask t</code></h3>
-<h3><code>gelu_back_loop x_data grad_data dst n i</code></h3>
-<blockquote>tensor_gelu_backward: dGELU/dx * upstream gradient</blockquote>
-<h3><code>tensor_gelu_backward x grad</code></h3>
-<h3><code>softmax_row src dst cols offset</code></h3>
-<blockquote>tensor_softmax: numerically stable softmax along last axis</blockquote>
-<blockquote>For 2D [batch, classes]: softmax each row</blockquote>
-<h3><code>softmax_find_max src cols offset acc j</code></h3>
-<h3><code>softmax_exp_sum src dst cols offset mx acc j</code></h3>
-<h3><code>softmax_normalize dst cols offset sm j</code></h3>
-<h3><code>softmax_rows src dst rows cols r</code></h3>
-<h3><code>gpu_softmax_dispatch src_data rows cols</code></h3>
-<blockquote>GPU softmax dispatch: daemon or file</blockquote>
-<h3><code>tensor_softmax t</code></h3>
-<h3><code>sum_last_loop src dst rows cols r</code></h3>
-<blockquote>tensor_sum_last: sum along last axis. [batch, N] → [batch, 1]</blockquote>
-<h3><code>sum_last_row src cols offset acc j</code></h3>
-<h3><code>tensor_sum_last t</code></h3>
-<h3><code>sum_batch_loop src dst rows cols r</code></h3>
-<blockquote>tensor_sum_batch: sum along first axis. [batch, N] → [1, N]</blockquote>
-<h3><code>sum_batch_add_row src dst cols offset j</code></h3>
-<h3><code>tensor_sum_batch t</code></h3>
-<h3><code>tensor_mean_last t</code></h3>
-<blockquote>tensor_mean_last: mean along last axis. [batch, N] → [batch, 1]</blockquote>
-<h3><code>broadcast_last_loop src dst rows cols r</code></h3>
-<blockquote>tensor_broadcast_last: [batch, 1] → [batch, N] by repeating</blockquote>
-<h3><code>broadcast_last_fill dst offset cols v j</code></h3>
-<h3><code>tensor_broadcast_last t cols</code></h3>
-<h3><code>mul_bcast_loop a_data b_data dst rows cols r</code></h3>
-<blockquote>tensor_mul_broadcast: [batch, N] * [1, N] element-wise (broadcast first dim)</blockquote>
-<h3><code>mul_bcast_row a_data b_data dst cols offset j</code></h3>
-<h3><code>tensor_mul_broadcast a b</code></h3>
-<h3><code>one_hot_loop indices dst batch vocab i</code></h3>
-<blockquote>tensor_one_hot: indices tensor [batch] → [batch, vocab_size]</blockquote>
-<h3><code>tensor_one_hot t vocab_size</code></h3>
-<h3><code>embed_lookup_loop weights indices dst batch dim i</code></h3>
-<blockquote>tensor_embedding_lookup: weights [vocab, dim], indices [batch] → [batch, dim]</blockquote>
-<h3><code>embed_copy_row src dst dim src_off dst_off j</code></h3>
-<h3><code>tensor_embedding_lookup weights indices</code></h3>
-<h3><code>tensor_slice_row t row_idx</code></h3>
-<blockquote>tensor_slice_row: extract row i from 2D tensor [rows, cols] → [1, cols]</blockquote>
-<h3><code>accum_row_loop grad weights indices batch dim i</code></h3>
-<blockquote>tensor_accumulate_row: scatter-add grad into weight rows (for embedding backward)</blockquote>
-<h3><code>accum_row_add dst src dim dst_off src_off j</code></h3>
-<h3><code>tensor_accumulate_row weights grad indices</code></h3>
-<h3><code>tensor_scale_by_loss t loss_grad</code></h3>
-<blockquote>tensor_scale_by_loss: scale all elements by scalar loss gradient</blockquote>
-<h3><code>tensor_copy t</code></h3>
-<blockquote>tensor_copy: alias for tensor_clone</blockquote>
-<h3><code>tensor_matmul a b</code></h3>
-<blockquote>tensor_matmul: alias for matmul (autograd uses this name)</blockquote>
-<h3><code>tensor_sum_all t</code></h3>
-<blockquote>tensor_sum_all: alias for tensor_sum</blockquote>
-<h3><code>tensor_ones_like_shape shape</code></h3>
-<blockquote>tensor_ones_like_shape: ones tensor with given shape</blockquote>
-<h3><code>tensor_scalar_val t</code></h3>
-<blockquote>tensor_scalar_val: extract scalar from a 1-element tensor</blockquote>
-<h3><code>tensor_from_int n</code></h3>
-<blockquote>tensor_from_int: wrap an int as a 1-element tensor</blockquote>
-<h3><code>tensor_to_int t</code></h3>
-<blockquote>tensor_to_int: extract int from a 1-element tensor</blockquote>
-<h3><code>tensor_get_int t i</code></h3>
-<blockquote>tensor_get_int: get element as int (for indexing)</blockquote>
-<h3><code>map_scalar_loop src dst n i fn_tag</code></h3>
-<blockquote>tensor_map_scalar: apply a scalar function to all elements</blockquote>
-<blockquote>Since Rail lambdas can segfault, this takes a function tag string</blockquote>
-<blockquote>and dispatches. Use named functions instead.</blockquote>
-<h3><code>tensor_map_scalar fn_tag t</code></h3>
-<h3><code>ce_loss_loop probs targets batch vocab i acc</code></h3>
-<blockquote>tensor_cross_entropy_loss: -sum(targets * log(probs)) / batch</blockquote>
-<blockquote>probs: [batch, vocab] (after softmax), targets: [batch] (indices)</blockquote>
-<h3><code>tensor_cross_entropy_loss probs targets</code></h3>
-<h3><code>transpose_copy_loop src dst rows cols i</code></h3>
-<blockquote>Transpose: for 2D tensors, copies data into new row-major layout</blockquote>
-<blockquote>This is a REAL transpose (data copy), not just stride swap,</blockquote>
-<blockquote>because matmul assumes contiguous row-major data.</blockquote>
-<h3><code>transpose_copy_row src dst rows cols i j</code></h3>
-<h3><code>gpu_transpose_dispatch src_data rows cols</code></h3>
-<blockquote>GPU transpose dispatch: daemon or file</blockquote>
-<h3><code>tensor_transpose t</code></h3>
-<h3><code>tensor_reshape t new_shape</code></h3>
-<blockquote>Reshape: new shape, same data, recompute strides</blockquote>
-<blockquote>Caller must ensure same total element count</blockquote>
-<h3><code>tensor_rank t</code></h3>
-<blockquote>tensor_rank: number of dimensions</blockquote>
-<h3><code>copy_range src dst src_off n i</code></h3>
-<blockquote>Helper: copy [start*block..end*block) from src to dst starting at dst offset 0.</blockquote>
-<h3><code>tensor_slice t start end</code></h3>
-<blockquote>tensor_slice: extract a contiguous slice along axis 0 (outermost).</blockquote>
-<blockquote>For a tensor with shape [D0, D1, D2, ...], returns shape [end-start, D1, D2, ...].</blockquote>
-<blockquote>start is inclusive, end is exclusive. Caller must ensure 0 <= start < end <= D0.</blockquote>
-<blockquote>This is the common case for attention KV-cache rolling, batch splits, etc.</blockquote>
-<blockquote>For slicing along inner axes, compose with transpose first.</blockquote>
-<h3><code>ln_row x y gamma beta row dim eps</code></h3>
-<blockquote>Inner: per-row normalization. Writes y[row*dim..(row+1)*dim] in place.</blockquote>
-<blockquote>Returns 0 (float-result-via-mutation convention — see module header).</blockquote>
-<h3><code>ln_row_sum x base dim i acc</code></h3>
-<h3><code>ln_row_sq x base dim i mean acc</code></h3>
-<h3><code>ln_row_apply x y gamma beta base dim i mean rstd</code></h3>
-<h3><code>ln_rows x y gamma beta rows dim eps r</code></h3>
-<h3><code>tensor_layer_norm t gamma beta eps</code></h3>
-<h3><code>print_row t n_cols i j</code></h3>
-<h3><code>print_rows t n_rows n_cols i</code></h3>
-<h3><code>tensor_print_2d t</code></h3>
-<h3><code>tensor_clone t</code></h3>
-<blockquote>Clone: deep copy a tensor (new buffer, same shape/strides)</blockquote>
-<h3><code>tensor_clone_copy src dst n i</code></h3>
-<h3><code>read_binary path</code></h3>
-<blockquote>Read binary file as float_arr of bytes</blockquote>
-<h3><code>read_binary_fill arr hex n i</code></h3>
-<h3><code>hex_val c</code></h3>
-<h3><code>tensor_test_main _</code></h3>
-<h3><code>grad_eps</code></h3>
-<h3><code>sum_sq_grad t</code></h3>
-<h3><code>sum_sq_grad_acc t n i acc</code></h3>
-<h3><code>sum_relu_grad t</code></h3>
-<h3><code>sum_relu_grad_acc t n i acc</code></h3>
-<h3><code>sum_exp_grad t</code></h3>
-<h3><code>sum_exp_grad_acc t n i acc</code></h3>
-<h3><code>numgrad_sq t i</code></h3>
-<h3><code>numgrad_relu_fn t i</code></h3>
-<h3><code>numgrad_exp_fn t i</code></h3>
-<h3><code>abs_f x</code></h3>
-<h3><code>check_g name i numerical analytical</code></h3>
-<h3><code>gradient_test_main _</code></h3>
-<h2><code>stdlib/tensord.rail</code></h2>
-<h3><code>tensord_port</code></h3>
-<h3><code>tensord_host_str</code></h3>
-<h3><code>tensord_open _</code></h3>
-<h3><code>tensord_has_nl buf len i</code></h3>
-<blockquote>Read until newline or buffer fills. Returns bytes read (>= 1) or -1.</blockquote>
-<h3><code>tensord_recv_line_loop fd buf max off</code></h3>
-<h3><code>tensord_exec cmd</code></h3>
-<h3><code>tensord_available _</code></h3>
-<h3><code>tensord_exec_on fd cmd</code></h3>
-<blockquote>exec on an already-open fd. Returns true on "OK" reply, false otherwise.</blockquote>
-<h3><code>tensord_matmul_on fd a_data b_data m k n</code></h3>
-<h3><code>tensord_close_fd fd</code></h3>
-<h3><code>tensord_build_cmd m k n</code></h3>
-<h3><code>tensord_matmul a_data b_data m k n</code></h3>
 <h2><code>stdlib/time.rail</code></h2>
 <h3><code>now _</code></h3>
 <blockquote>Get current Unix timestamp (seconds since epoch)</blockquote>
@@ -3229,120 +2316,6 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>Save a vocab to disk as a single file: one character per line.</blockquote>
 <blockquote>The vocab is regenerable from the corpus via build_vocab, so saving</blockquote>
 <blockquote>is optional — useful only when the corpus itself is not stored.</blockquote>
-<h2><code>stdlib/transformer.rail</code></h2>
-<h3><code>add_bias_row_loop dst bias cols n i</code></h3>
-<blockquote>Add a row-shaped bias to every row of a 2D tensor (in place via new arr).</blockquote>
-<h3><code>linear x w b</code></h3>
-<h3><code>linear_gelu x w b</code></h3>
-<blockquote>Fused linear+gelu using the matmul_bias_gelu kernel.</blockquote>
-<blockquote>x: [rows, in_dim], w: [in_dim, out_dim], b: [out_dim] -> [rows, out_dim]</blockquote>
-<h3><code>linear_relu x w b</code></h3>
-<blockquote>Fused linear+relu using the matmul_bias_relu kernel.</blockquote>
-<blockquote>x: [rows, in_dim], w: [in_dim, out_dim], b: [out_dim] -> [rows, out_dim]</blockquote>
-<h3><code>layernorm_row_accum data offset dim j sum sum_sq</code></h3>
-<h3><code>layernorm_row_apply dst src offset dim j mean std gamma beta</code></h3>
-<h3><code>layernorm_rows src dst gamma beta dim eps n_rows r</code></h3>
-<h3><code>layernorm x gamma beta</code></h3>
-<h3><code>layernorm_rows_save src dst gamma beta dim eps n_rows mean_arr rstd_arr r</code></h3>
-<h3><code>layernorm_save x gamma beta</code></h3>
-<blockquote>Returns a 3-element list [y, mean, rstd]:</blockquote>
-<blockquote>y     : Tensor with same shape as x (the layernorm output)</blockquote>
-<blockquote>mean  : float_arr of length n_rows (raw, no Tensor wrapper)</blockquote>
-<blockquote>rstd  : float_arr of length n_rows</blockquote>
-<h3><code>rms_row_sumsq xd base dim j acc</code></h3>
-<h3><code>rms_row_apply xd yd gd base dim j rstd</code></h3>
-<h3><code>rms_rows_save xd yd gd rstd_arr dim eps n_rows r</code></h3>
-<h3><code>rmsnorm_save x gamma</code></h3>
-<blockquote>Forward RMSNorm that saves rstd for backward.  Returns [y, rstd].</blockquote>
-<blockquote>Signature intentionally mirrors layernorm_save minus the mean output.</blockquote>
-<h3><code>cpu_rms_back_accum xd gd dyd base dim j rstd s</code></h3>
-<blockquote>RMSNorm backward.  Per-row:</blockquote>
-<blockquote>xhat_i   = x_i * rstd</blockquote>
-<blockquote>dxhat_i  = dy_i * gamma_i</blockquote>
-<blockquote>s        = Σ_i dxhat_i * xhat_i / dim</blockquote>
-<blockquote>dx_i     = rstd * (dxhat_i - xhat_i * s)</blockquote>
-<blockquote>gamma grad: dg_i += dy_i * xhat_i (accumulated across rows by caller</blockquote>
-<blockquote>if learnable; for fixed-gamma models we skip it).</blockquote>
-<h3><code>cpu_rms_back_write xd gd dyd dxd base dim j rstd s</code></h3>
-<h3><code>cpu_rms_back xd gd dyd dxd rstd_arr n_rows dim r</code></h3>
-<h3><code>rms_gamma_col xd dyd dgd base dim rstd j</code></h3>
-<blockquote>RMSNorm backward w.r.t. γ.  y[r,j] = (x[r,j] * rstd[r]) * γ[j], so</blockquote>
-<blockquote>dγ[j] = Σ_r dy[r,j] * x[r,j] * rstd[r].  Returns a Tensor of shape</blockquote>
-<blockquote>[dim] matching γ.</blockquote>
-<h3><code>rms_gamma_row xd dyd rd dgd n_rows dim r</code></h3>
-<h3><code>init_scaled_loop arr n fan_in seed i</code></h3>
-<blockquote>Kaiming-scaled deterministic init for a weight matrix of fan_in</blockquote>
-<blockquote>input dims. Produces values with std = sqrt(2/fan_in) which is the</blockquote>
-<blockquote>right target variance for SiLU / ReLU-family activations.  Uniform</blockquote>
-<blockquote>over [-sqrt(6/fan_in), sqrt(6/fan_in)] achieves that std.</blockquote>
-<blockquote></blockquote>
-<blockquote>Same deterministic-scatter PRNG as the existing init_weight helpers</blockquote>
-<blockquote>so runs are reproducible.</blockquote>
-<h3><code>init_scaled arr n fan_in seed</code></h3>
-<h3><code>rmsnorm_backward_gamma x rstd_arr dy</code></h3>
-<h3><code>rmsnorm_backward_dx x gamma rstd_arr dy</code></h3>
-<blockquote>Returns a Tensor of dx with the same shape as x.  CPU only for now;</blockquote>
-<blockquote>Metal kernel can come later if this shows up hot (it's dim-parallel,</blockquote>
-<blockquote>O(rows × dim) with one reduction).</blockquote>
-<h3><code>rope_row_pairs xd base d p j sign</code></h3>
-<h3><code>rope_positions xd seq d p sign</code></h3>
-<h3><code>silu_fwd_loop xd yd sig_out n i</code></h3>
-<h3><code>silu_forward x</code></h3>
-<h3><code>silu_bwd_loop xd dyd sig dxd n i</code></h3>
-<h3><code>silu_backward x dy sig_arr</code></h3>
-<blockquote>Given saved sig (σ(x)) from forward, compute dx = dy * silu'(x).</blockquote>
-<h3><code>rope_apply x</code></h3>
-<blockquote>Forward rotation. Mutates x_data in place.</blockquote>
-<h3><code>rope_apply_inverse x</code></h3>
-<blockquote>Inverse rotation (transpose). Used in backward pass: dq_unrotated =</blockquote>
-<blockquote>rope_apply_inverse(dq_rotated).</blockquote>
-<h3><code>cpu_ln_accum xd gd dyd base dim j mean rstd acc</code></h3>
-<blockquote>CPU LayerNorm backward.  Per-row reductions are collected into a small</blockquote>
-<blockquote>scratch float_arr (row_stats: [sum_dxhat, sum_dxhat_xhat]) so we never</blockquote>
-<blockquote>need to carry more than ~8 params in any helper — Rail's ARM64 codegen</blockquote>
-<blockquote>gets unhappy with wide mixed int/float parameter lists.</blockquote>
-<h3><code>cpu_ln_write xd gd dyd dxd base dim j mean rstd acc</code></h3>
-<h3><code>cpu_ln_back xd md rd gd dyd dxd n_rows dim r</code></h3>
-<h3><code>layernorm_backward_dx x mean_arr rstd_arr gamma dy</code></h3>
-<h3><code>ln_gb_row x_data dy_data dg_data db_data mean_arr rstd_arr dim n_rows r</code></h3>
-<blockquote>dgamma[j] = Σ_r dy[r,j] * x_hat[r,j]   where x_hat = (x - mean) * rstd</blockquote>
-<blockquote>dbeta[j]  = Σ_r dy[r,j]</blockquote>
-<h3><code>ln_gb_inner x_data dy_data dg_data db_data off dim mean rstd j</code></h3>
-<h3><code>layernorm_backward_gb x mean_arr rstd_arr dy</code></h3>
-<blockquote>Compute dgamma AND dbeta in one pass.  Returns [dgamma_t, dbeta_t].</blockquote>
-<h3><code>copy_cols_out src_data n_rows full_dim col_start block_dim dst_data r</code></h3>
-<h3><code>copy_cols_row src_data src_off dst_data dst_off len j</code></h3>
-<h3><code>copy_cols_in dst_data n_rows full_dim col_start block_dim src_data r</code></h3>
-<blockquote>Scatter a [n_rows, block_dim] buffer INTO column block of [n_rows, full_dim].</blockquote>
-<blockquote>Overwrites the destination columns.</blockquote>
-<h3><code>extract_head t n_rows full_dim head_dim h</code></h3>
-<blockquote>Extract head h (columns [h*head_dim .. (h+1)*head_dim)) from a</blockquote>
-<blockquote>[n_rows, full_dim] tensor into a fresh [n_rows, head_dim] tensor.</blockquote>
-<h3><code>insert_head dst n_rows full_dim head_dim h src</code></h3>
-<blockquote>Scatter a per-head result tensor into column block h of a</blockquote>
-<blockquote>[n_rows, full_dim] destination tensor (in place).</blockquote>
-<h3><code>scaled_dot_attention q k v</code></h3>
-<h3><code>apply_causal_mask_loop data seq i j</code></h3>
-<blockquote>Causal mask: sets upper-triangle (future positions) to -1e9 so softmax</blockquote>
-<blockquote>assigns them ~0. Applied to scores before softmax.</blockquote>
-<h3><code>scaled_dot_attention_causal q k v</code></h3>
-<h3><code>cpu_sm_sum yd dyd cols base j s</code></h3>
-<blockquote>CPU softmax backward per-row: dx[j] = y[j] * (dy[j] - Σ_k y[k]*dy[k]).</blockquote>
-<h3><code>cpu_sm_write yd dyd dxd cols base j sum</code></h3>
-<h3><code>cpu_sm_back yd dyd dxd rows cols r</code></h3>
-<h3><code>attention_backward q k v attn d_out</code></h3>
-<h3><code>feedforward x w1 b1 w2 b2</code></h3>
-<h3><code>sinusoidal_pe_fill arr seq dim p</code></h3>
-<blockquote>Sinusoidal PE (Vaswani-style):</blockquote>
-<blockquote>PE[pos, 2i]   = sin(pos / 10000^(2i/d))</blockquote>
-<blockquote>PE[pos, 2i+1] = cos(pos / 10000^(2i/d))</blockquote>
-<h3><code>sinusoidal_pe_row arr dim p i</code></h3>
-<h3><code>sinusoidal_pe_fill_next arr p</code></h3>
-<h3><code>sinusoidal_pe seq dim</code></h3>
-<h3><code>sinusoidal_pe_build arr seq dim p</code></h3>
-<h3><code>apply_pe x pe</code></h3>
-<blockquote>Apply: x[seq, dim] + pe[seq, dim]</blockquote>
-<h3><code>transformer_block_prenorm x wq wk wv wo ln1_g ln1_b ln2_g ln2_b w1 b1 w2 b2</code></h3>
 <h2><code>stdlib/x25519.rail</code></h2>
 <h3><code>x25519_limb_count</code></h3>
 <h3><code>x25519_a24</code></h3>
@@ -3407,7 +2380,7 @@ import "stdlib/&lt;name&gt;.rail"
 <blockquote>callers should prefer this and abort the handshake on ok==0.</blockquote>
 </main>
 <div class="docfooter">
-  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
+  Rail · self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
 </div>
 </body>
 </html>
