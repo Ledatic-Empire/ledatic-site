@@ -40,7 +40,8 @@
 #       as R6 matches. A release ledger row (inside <ol class="ledger">) is
 #       history and exempt. Until 2026-11-03 llms.txt, /rail and /rail/docs
 #       claimed all of these for two weeks after the 2026-10-21 cut, and this
-#       gate passed every morning.
+#       gate passed every morning. Also: a page calling the x402 lane unopened
+#       while data/catalog.json says a dataset serves on it.
 #
 # Scope: R1 to R5 read *.html at repo root and in entropy/ plus _shared
 # CSS/JS and shaders. R6 to R10 read every text file deploy.sh uploads: those,
@@ -307,9 +308,19 @@ CUT = [
      "the JIT was cut on 2026-10-21"),
     (r"\bmetal gpu (kernels?|matmul)\b|\b(emits|emitted|writes) (its own )?(metal |gpu )+kernels\b",
      "Metal was cut on 2026-10-21"),
-    (r"\breverse-mode autodiff\b|\bautograd\b|\b(llm|attested)[- ]training substrate\b",
+    (r"\breverse-mode autodiff\b|\bautograd\b|\b(llm|attested)[- ]training substrate\b|\btrains an? (small )?transformer\b",
      "the stdlib ML stack was cut on 2026-10-21"),
 ]
+# The x402 lane, as data/catalog.json states it: a page may not call a serving lane unopened
+# (2026-11-03: /data said "not serving yet" five days after Verified-Pairs went live on Base).
+try:
+    _cat = json.load(open("data/catalog.json", encoding="utf-8"))
+    SERVING = [d["name"] for d in _cat.get("datasets", [])
+               if str((d.get("x402") or {}).get("status", "")).startswith("serving")]
+except (OSError, ValueError, KeyError):
+    SERVING = []
+    print("R10\tdata/catalog.json\tunreadable: the x402 claims cannot be compared with it")
+UNOPENED = re.compile(r"\bnot serving yet\b|\bpublished intent, not a live lane\b|\bpaid endpoints are not (live|serving)\b")
 CUT = [(re.compile(p), why) for p, why in CUT]
 NUMS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8}
 BACKENDS = re.compile(r"\b(one|two|three|four|five|six|seven|eight|\d+) backends\b")
@@ -380,6 +391,8 @@ for path in files:
                 snip = " ".join(src[lines[m.start()] - 1].split())[:90]
                 print(f"R8\t{path.lstrip('./')}:{lines[m.start()]}\t'{m.group(0)}' ({why}) in: {snip}")
         hits = [(m, why) for rx, why in CUT for m in rx.finditer(text)]
+        if SERVING:
+            hits += [(m, f"data/catalog.json says {SERVING[0]} serves over x402") for m in UNOPENED.finditer(text)]
         hits += [(m, f"Rail's README counts {N_BACKENDS} backends") for m in BACKENDS.finditer(text)
                  if int(NUMS.get(m.group(1), m.group(1) if m.group(1).isdigit() else -1)) != N_BACKENDS]
         for m, why in hits:
@@ -402,7 +415,7 @@ if [ -n "$R6_OUT" ]; then
   while IFS=$'\t' read -r rule loc what; do
     case "$rule" in
       R6) violate "R6 retired beacon claim" "$loc" "$what" ;;
-      R10) violate "R10 a capability Rail cut, claimed as present" "$loc" "$what" ;;
+      R10) violate "R10 contradicted by what Rail or the catalog says today" "$loc" "$what" ;;
       *)  violate "R8 trust the system does not have" "$loc" "$what" ;;
     esac
   done <<< "$R6_OUT"

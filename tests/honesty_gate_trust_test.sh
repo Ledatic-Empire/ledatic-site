@@ -43,6 +43,8 @@ expect "R10 jit-emitted, meta attribute"  1 R10 "printf '<meta name=\"d\" conten
 expect "R10 metal gpu kernels, split"     1 R10 "printf '<p>its own Metal <b>GPU</b>\n kernels</p>\n' >> index.html"
 expect "R10 a ledger row is history"      0 -  "perl -0pi -e 's{(<ol class=\"ledger[^>]*>)}{\$1<li><p>Rail emits its own Metal GPU kernels.</p></li>}' changelog.html"
 expect "R10 saying it was cut passes"     0 -  "printf '<p>The WebAssembly backend was cut on 2026-10-21.</p>\n' >> rail.html"
+expect "R10 trains a small transformer"  1 R10 "printf '<p>a binary that trains a small transformer</p>\n' >> manifesto.html"
+expect "R10 x402 called unopened"        1 R10 "printf '<p>The paid endpoints are not serving yet.</p>\n' >> data.html"
 
 [ "$fails" -eq 0 ] && echo "all passed" || echo "$fails FAILED"
 exit $(( fails > 0 ))

@@ -155,7 +155,7 @@ pre.snippet .c { opacity: .55; }
         <span class="tag">Code &mdash; oracle-verified</span>
         <span class="name">Rail Verified-Pairs Corpus v2</span>
         <span class="price">$199</span>
-        <span class="per">single-organization license &middot; delivered by email within 24 h</span>
+        <span class="per">single-organization license &middot; a 30-day download link at checkout</span>
         <ul>
           <li><strong>52,243</strong> comment&rarr;program pairs; <strong>every program compiles</strong> — verified by running the compiler on each one at generation time, and re-verified end-to-end (all 52,243) before this page went live</li>
           <li>Bit-reproducible: generator + seed 1234 + oracle &rArr; byte-identical file (sha256 <code>1a6941af&hellip;</code>, bound at record 0 of the signed ledger that ships with the data)</li>
@@ -207,12 +207,14 @@ pre.snippet .c { opacity: .55; }
       software, not people: fetch <a href="/data/catalog.json">/data/catalog.json</a>
       and each product carries an <code>x402</code> block &mdash; endpoint, asset,
       price, and the <code>download_sha256</code> / <code>content_sha256</code> any
-      grant would be checked against. The paid endpoints are not serving yet, and we
-      won't pretend otherwise: the block is a published intent, not a live lane. When
-      it opens, agents will pay by protocol over
-      <a href="https://x402.org" rel="noopener">x402</a> &mdash; HTTP 402, no account,
-      no API key &mdash; against exactly the hashes printed today. Until then, email
-      us and we'll settle it by hand.
+      grant would be checked against. Rail Verified-Pairs has served this lane on Base
+      mainnet since 2026-10-29: an agent pays by protocol over
+      <a href="https://x402.org" rel="noopener">x402</a> (HTTP 402, USDC, no account,
+      no API key, no gas) against exactly the hashes printed here, and the response
+      carries a 30-day download link and an Ed25519-signed receipt. The Attested Text
+      Corpus is not served this way (2.45 GB has no automated delivery): its endpoint
+      answers 503 with the card link. Each product's <code>x402.status</code> in the
+      catalog says what its endpoint does today.
     </p>
   </div>
 </section>
