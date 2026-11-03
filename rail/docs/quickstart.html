@@ -74,8 +74,8 @@ rail_native: Mach-O 64-bit executable arm64
 </code></pre>
 <pre><code class="lang-">
 Compiling examples/hello.rail (244 chars)...
-  as: OK
-  ld: OK
+wrote /tmp/rail_out (50104 bytes); imports=10 rebases=11 main@0x1000005ac
+  link: OK
 hello, rail
 3628800
 42
@@ -137,8 +137,8 @@ This is the fixed-point property: the compiler's output is its own input. The bo
 </code></pre>
 <pre><code class="lang-">
 Compiling examples/quicksort.rail (1089 chars)...
-  as: OK
-  ld: OK
+wrote /tmp/rail_out (66536 bytes); imports=10 rebases=15 main@0x1000007bc
+  link: OK
 Input:
 3 6 1 8 2 9 4 7 5
 Sorted:
@@ -149,22 +149,6 @@ Larger list:
 </code></pre>
 <p>
 The source is 36 lines including comments. Cross-reference with <a href="examples/quicksort.html">examples/quicksort.md</a> for the explanation.
-</p>
-<h2>7. Try the WebAssembly backend</h2>
-<pre><code class="lang-bash">
-./rail_native wasm examples/wasm/hello.rail
-</code></pre>
-<pre><code class="lang-">
-Compiling examples/wasm/hello.rail to WASM...
-  WAT: 51277 bytes
-  wat2wasm: OK
-  Binary: /tmp/rail_out.wasm
-</code></pre>
-<p>
-<code>./rail_native wasm</code> emits a <code>.wat</code> file, runs the WebAssembly Binary Toolkit <code>wat2wasm</code> on it, and produces <code>/tmp/rail_out.wasm</code> (~12 KB). Load it in any WASM runtime that provides the <code>env.print</code> import (the live playground at ledatic.org does this).
-</p>
-<p>
-You need <code>wat2wasm</code> on <code>PATH</code> for this step. On macOS: <code>brew install wabt</code>.
 </p>
 <h2>8. Regenerate the stdlib reference</h2>
 <pre><code class="lang-bash">
@@ -191,7 +175,7 @@ bash verify.sh rail_native rail_native.attestation.json
 ok  artifact=rail_native  pulse_id=7309035  pk_fp=cac5f21a70564aeb
 </code></pre>
 <p>
-The downloaded binary is the one committed at the tag: <code>git show v5.4.0:rail_native | shasum -a 256</code> gives the same digest. Separately, <code>rail_safe.sha256</code> pins the <code>rail_safe</code> binary for tamper detection.
+The downloaded binary is the one committed at the tag: <code>git show v5.4.0:rail_native | shasum -a 256</code> gives the same digest.
 </p>
 <hr>
 <p>
@@ -200,11 +184,11 @@ You now have a working Rail toolchain on local hardware. Next steps:
 <ul>
 <li>Skim <a href="examples/">examples/</a> — 19 runnable programs with explanations.</li>
 <li>Skim <a href="stdlib.html">stdlib.md</a>, generated from the source of every stdlib module.</li>
-<li>Read <a href="backends.html">backends.md</a> if you want to target Linux ARM64, x86_64, or WASM-in-a-browser.</li>
+<li>Read <a href="backends.html">backends.md</a> if you want to target Linux ARM64 or x86_64.</li>
 </ul>
 </main>
 <div class="docfooter">
-  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
+  Rail · self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
 </div>
 </body>
 </html>

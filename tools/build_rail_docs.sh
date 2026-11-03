@@ -5,10 +5,14 @@
 
 set -euo pipefail
 
-SRC=$HOME/projects/rail/docs/site
+SRC=${RAIL_DOCS_SRC:-$HOME/projects/rail/docs/site}
 OUT=$HOME/projects/ledatic-site/rail/docs
 
 mkdir -p "$OUT" "$OUT/examples"
+# The output mirrors the source exactly: a page whose markdown left Rail leaves the site too.
+# Until 2026-11-03 nothing removed them, and /rail/docs/jit and five WebAssembly example pages
+# went on describing features Rail cut on 2026-10-21.
+rm -f "$OUT"/*.html "$OUT"/examples/*.html
 
 # md_to_body: emit just the <body> inner HTML for a markdown file.
 md_to_body() {
@@ -124,7 +128,7 @@ HTML
   cat <<HTML
 </main>
 <div class="docfooter">
-  Rail — self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
+  Rail · self-hosted compiler · <a href="/rail/docs/">All docs</a> · <a href="https://github.com/Ledatic-Empire/rail">GitHub</a>
 </div>
 </body>
 </html>
@@ -166,16 +170,17 @@ for f in index quickstart backends stdlib; do
 done
 
 # Examples index
+N_EXAMPLES=$(ls "$SRC"/examples/*.md | wc -l | tr -d ' ')
 {
   cat <<HTML
 <h1>Rail Examples</h1>
-<p>Twenty-two programs, each with its source and captured output. Pick one and read the source: that is the fastest way to learn Rail.</p>
+<p>${N_EXAMPLES} programs, each with its source and captured output. Pick one and read the source: that is the fastest way to learn Rail.</p>
 <ul>
 HTML
   for md in "$SRC"/examples/*.md; do
     name=$(basename "$md" .md)
     title=$(head -1 "$md" | sed 's/^# *//')
-    echo "  <li><a href=\"${name}.html\">${title}</a> — <code>${name}</code></li>"
+    echo "  <li><a href=\"${name}.html\">${title}</a>: <code>${name}</code></li>"
   done
   echo "</ul>"
 } > /tmp/examples_index_body.html

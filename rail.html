@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, four backends, JIT-emitted GPU kernels. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
+<meta name="description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, three backends. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/rail">
 <meta property="og:title" content="Rail · Ledatic">
-<meta property="og:description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, four backends, JIT-emitted GPU kernels. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
+<meta property="og:description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, three backends. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Rail · Ledatic">
-<meta name="twitter:description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, four backends, JIT-emitted GPU kernels. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
+<meta name="twitter:description" content="Rail is a self-hosting compiler whose seed binary links only the system library: one small binary, three backends. All but one tagged release is signed against a live entropy beacon and verifiable in your browser.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Rail · Ledatic</title>
@@ -192,10 +192,9 @@ pre.recipe .ok { color: var(--ph-600); }
       A self-hosting compiler. Its seed binary links only libSystem.
     </p>
     <p class="hero-desc fade-up">
-      Rail compiles itself to a <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> ARM64 binary. Four backends: native
-      ARM64, Linux ARM64, Linux x86_64, WASM (early); and it
-      JIT-emits its own Metal GPU kernels. One language for most of the stack:
-      compiler, TLS, plasma sim, beacon origin, training loop.
+      Rail compiles itself to a <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> ARM64 binary. Three backends: macOS
+      ARM64, Linux ARM64, Linux x86_64. One language for most of the stack:
+      compiler, TLS, plasma sim, beacon origin.
     </p>
     <div class="cta-row fade-up">
       <a class="btn btn-primary" href="/rail/docs/">Read the docs</a>
@@ -267,8 +266,8 @@ pre.recipe .ok { color: var(--ph-600); }
     <p class="lead reveal">
       Every module below is Rail source, compiled by Rail, running on the
       same <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> binary. No package manager. Where a module
-      crosses into C (SQLite through <code>foreign</code>; Metal and the JIT
-      through a small ObjC and C boundary), <code>SHIMS.md</code> lists it.
+      crosses into C (SQLite through <code>foreign</code>), <code>SHIMS.md</code>
+      lists it.
     </p>
 
     <div class="grid grid-2 grid-3 push">
@@ -284,13 +283,13 @@ pre.recipe .ok { color: var(--ph-600); }
       </div>
       <div class="card reveal">
         <span class="eyebrow">Data</span>
-        <h3>JSON, SQLite, Regex</h3>
-        <p>Full JSON parser/emitter. SQLite via Rail-native bindings. Regex with backtracking engine.</p>
+        <h3>JSON, SQLite</h3>
+        <p>Full JSON parser/emitter. SQLite via Rail-native bindings.</p>
       </div>
       <div class="card reveal">
-        <span class="eyebrow">ML</span>
-        <h3>Tensor + Autograd</h3>
-        <p>Metal GPU matmul. Reverse-mode autodiff. Transformer, optim, checkpoint &mdash; the attested-training substrate.</p>
+        <span class="eyebrow">Numerics</span>
+        <h3>Doubles under contract</h3>
+        <p>Every float rule is a written promise with a test behind it, checked bit for bit against C on ARM64 and x86-64 on every CI run.</p>
       </div>
       <div class="card reveal">
         <span class="eyebrow">Crypto</span>
@@ -300,7 +299,7 @@ pre.recipe .ok { color: var(--ph-600); }
       <div class="card reveal">
         <span class="eyebrow">Physics</span>
         <h3>Plasma MHD</h3>
-        <p>2D magnetohydrodynamics solver. Orszag-Tang vortex. The live run feeds the entropy beacon this site is clocked to.</p>
+        <p>2D magnetohydrodynamics solver, in its own public repo (<code>rail-plasma</code>). Orszag-Tang vortex. The live run feeds the entropy beacon this site is clocked to.</p>
       </div>
     </div>
     <p class="gloss push reveal">
@@ -365,6 +364,19 @@ pre.recipe .ok { color: var(--ph-600); }
         <p class="ttl">A typed trust boundary: authenticated vs unauthenticated values.</p>
         <p class="gloss">plain words: data that came from a checked proof and data that didn't now have different types &mdash; the compiler refuses to confuse them</p>
         <p>Float type-inference plus auth/unauth desugaring, merged to master. Sound for arbitrary payloads.</p>
+      </li>
+
+      <li class="reveal" id="v5-6-0">
+        <span class="mark chain-link" aria-hidden="true"></span>
+        <div class="erow">
+          <span class="lver"><data value="v5.6.0">v5.6.0</data></span>
+          <span class="ldate">2026-10-29</span>
+          <span class="anchor">attested <time-pulse data-pulse="9524638">@ p#9524638</time-pulse></span>
+          <button class="prove" aria-expanded="false" data-manifest="/releases/v5.6.0/rail_native.attestation.json" data-name="rail_native &middot; v5.6.0"><span class="prove-val">verify</span><span class="affix" aria-hidden="true">&#8907;</span></button><div class="tray" hidden></div>
+        </div>
+        <p class="ttl">The numerics contract, the runtime as source, and every claim gated.</p>
+        <p class="gloss">plain words: every float rule is now a written promise with a test behind it, checked bit for bit against C</p>
+        <p>Every Rail double is under <code>docs/NUMERICS.md</code>, a contract with a test per sentence, and CI compares Rail's doubles with C's bit for bit on ARM64 and x86-64. The ARM64 runtime is ordinary source files, and every macOS compile assembles, links and signs through one path. Metal, the JIT and the WebAssembly backend were cut; three backends remain. The three x86-64 defects found that morning were fixed the same day.</p>
       </li>
 
       <li class="reveal" id="v5-5-0">

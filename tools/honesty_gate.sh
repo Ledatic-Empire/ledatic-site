@@ -34,9 +34,16 @@
 #       AI answer product that was parked. Matched as R6 matches.
 #   R9  Em-dash ratchet: the house style forbids them. The count across every
 #       public text file may only go down from tools/emdash_baseline.txt.
+#   R10 Capabilities Rail cut, claimed as present (2026-11-03): a WebAssembly
+#       backend, the JIT, Metal GPU kernels, the stdlib ML stack, and any
+#       backend count other than the one Rail's README badge states. Matched
+#       as R6 matches. A release ledger row (inside <ol class="ledger">) is
+#       history and exempt. Until 2026-11-03 llms.txt, /rail and /rail/docs
+#       claimed all of these for two weeks after the 2026-10-21 cut, and this
+#       gate passed every morning.
 #
 # Scope: R1 to R5 read *.html at repo root and in entropy/ plus _shared
-# CSS/JS and shaders. R6 to R9 read every text file deploy.sh uploads: those,
+# CSS/JS and shaders. R6 to R10 read every text file deploy.sh uploads: those,
 # plus data/, rail/docs/, tios/, sdk/, entropy/*.py, attest/verify.sh, stats.json,
 # llms.txt, robots.txt and sitemap.xml. worker/ and tools/ are server and
 # operator side, not scanned.
@@ -257,7 +264,7 @@ done
 #    curly quotes, tildes and hyphens folded, line wraps collapsed, case
 #    ignored, so it cannot come back in a spelling the gate never checked.
 R6_OUT=$(python3 - "$STATS" $PUBLIC_TEXT <<'PYEOF'
-import html, json, re, sys
+import html, json, os, re, sys
 PHRASES = [
     "SHA-256 of the plasma state",                 # format 2 hashes a canonical message
     "prev_hash || state_hash",                     # ditto
@@ -292,6 +299,30 @@ TRUST = [
     (r"\bevery answer ships a proof\b|\bai you can check\b", "no AI answer product is live (parked 2026-09-05)"),
 ]
 TRUST = [(re.compile(p), why) for p, why in TRUST]
+# R10: what Rail cut on 2026-10-19 and 2026-10-21 (Rail CHANGELOG.md, v5.6.0, Removed).
+CUT = [
+    (r"\b(wasm|webassembly) backend\b|\brail_native wasm\b|\b(compiles?|compiled|compiling) (rail )?to (wasm|webassembly)\b|\bbackends?\b[^.]{0,80}\b(wasm|webassembly)\b",
+     "the WebAssembly backend was cut on 2026-10-21"),
+    (r"\bjit[- ]emit|\b(self-hosted|pure-rail|in-process) jit\b|\bjit[- ]first repl\b",
+     "the JIT was cut on 2026-10-21"),
+    (r"\bmetal gpu (kernels?|matmul)\b|\b(emits|emitted|writes) (its own )?(metal |gpu )+kernels\b",
+     "Metal was cut on 2026-10-21"),
+    (r"\breverse-mode autodiff\b|\bautograd\b|\b(llm|attested)[- ]training substrate\b",
+     "the stdlib ML stack was cut on 2026-10-21"),
+]
+CUT = [(re.compile(p), why) for p, why in CUT]
+NUMS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8}
+BACKENDS = re.compile(r"\b(one|two|three|four|five|six|seven|eight|\d+) backends\b")
+README = os.path.expanduser("~/projects/rail-https/README.md")
+try:
+    m = re.search(r"badge/backends-(\d+)-", open(README, encoding="utf-8").read())
+except OSError:
+    m = None
+if not m:
+    print(f"R10\t{README}\tno backends badge to compare the site's counts with")
+N_BACKENDS = int(m.group(1)) if m else -1
+LEDGER = re.compile(r'<ol class="ledger[^"]*">.*?</ol>', re.S)
+CUT_SAID = re.compile(r"\b(was|were|been) (cut|removed)\b|\bcut on 20\d\d-|\bleft on 20\d\d-")
 
 FOLD = {"‘": "'", "’": "'", "ʼ": "'", "“": '"', "”": '"',
         "∼": "~", "˜": "~", "～": "~", "‐": "-", "‑": "-"}
@@ -328,6 +359,10 @@ for path in files:
     # Body text as one stream, and every quoted attribute value on its own
     # (meta descriptions and og cards are public copy too).
     streams = [fold(raw)]
+    history = set()                         # source lines inside release ledger rows
+    for m in LEDGER.finditer(raw):
+        a = raw.count("\n", 0, m.start()) + 1
+        history.update(range(a, a + m.group(0).count("\n") + 1))
     for m in ATTR.finditer(raw):
         t, ls = fold(m.group(1))
         base = raw.count("\n", 0, m.start(1))
@@ -344,6 +379,19 @@ for path in files:
             for m in rx.finditer(text):
                 snip = " ".join(src[lines[m.start()] - 1].split())[:90]
                 print(f"R8\t{path.lstrip('./')}:{lines[m.start()]}\t'{m.group(0)}' ({why}) in: {snip}")
+        hits = [(m, why) for rx, why in CUT for m in rx.finditer(text)]
+        hits += [(m, f"Rail's README counts {N_BACKENDS} backends") for m in BACKENDS.finditer(text)
+                 if int(NUMS.get(m.group(1), m.group(1) if m.group(1).isdigit() else -1)) != N_BACKENDS]
+        for m, why in hits:
+            if lines[m.start()] in history:
+                continue
+            # A sentence that says the thing was cut is the truth, not the claim.
+            lo = text.rfind(". ", 0, m.start()) + 1
+            hi = text.find(". ", m.end())
+            if CUT_SAID.search(text[lo:hi if hi >= 0 else len(text)]):
+                continue
+            snip = " ".join(src[lines[m.start()] - 1].split())[:90]
+            print(f"R10\t{path.lstrip('./')}:{lines[m.start()]}\t'{m.group(0)}' ({why}) in: {snip}")
 cad = json.load(open(stats_path))["stats"].get("beacon:cadence", {})
 for name, val in [("display", cad.get("display", ""))] + sorted((cad.get("formats") or {}).items()):
     if "~" in str(val):
@@ -354,6 +402,7 @@ if [ -n "$R6_OUT" ]; then
   while IFS=$'\t' read -r rule loc what; do
     case "$rule" in
       R6) violate "R6 retired beacon claim" "$loc" "$what" ;;
+      R10) violate "R10 a capability Rail cut, claimed as present" "$loc" "$what" ;;
       *)  violate "R8 trust the system does not have" "$loc" "$what" ;;
     esac
   done <<< "$R6_OUT"
