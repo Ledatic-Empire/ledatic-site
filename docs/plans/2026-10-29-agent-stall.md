@@ -221,6 +221,24 @@ Payer 24 USDC, payTo 4. Semantic search ("compiler verified pairs dataset") does
 ranking takes up to six hours and a resource with no settlement for 30 days is dropped, so the stall
 stays listed only while something buys the look-inside about monthly (our own call counts).
 
+## Step 4c, 2026-11-06: a second index offered, taken free
+
+Coinstancy (a co-founder, by a bulk-mail campaign to hello@, three mails since 11-03) offered a free
+listing in its "Agentic Banking" catalog launching 2026-11-16, paid placements behind a Drive link (not
+opened), and a joint post. The owner's decision: the free listing for the pairs corpus and its look-inside,
+no paid tier, no repost. The reply (ledatic-life `drafts/2026-11-06-coinstancy-reply.md`, `check_draft`
+0 findings; the same check fails a planted 52,245) gives only public text, `og.png` as the logo, and
+`https://ledatic.org/data?ref=coinstancy` as the human link so RUM and the attention watch can tell the
+channel apart. A web search found no footprint for Coinstancy; expect probes, not buyers.
+
+What the stall saw in its first eight days (the analytics session, 11-06, GraphQL
+`httpRequestsAdaptiveGroups` on `/x402/rail-verified-pairs%`, 10-29 17:00Z to 11-06 17:00Z): 3,558
+responses were 402, 160 were 404, 4 were 200, and the four 200s are the house test buys; 130 distinct
+user agents, 81 of them self-named probes or monitors sending 84% of the 402s; the top caller an uptime
+probe with 798. payTo holds 4.0 USDC (`balanceOf` on mainnet.base.org): the four tests, no outside
+money. Bazaar lists the one resource, calls 30d 2, payers 1. This listing is a channel, not progress;
+the 11-28 table decides, and the catalog launches twelve days before it.
+
 
 ## Dross
 - The `aitwoz-cloud` tunnel (down) and the aitwoz webhook endpoint still enabled in Stripe: harmless,
