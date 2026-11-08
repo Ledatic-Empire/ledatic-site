@@ -123,7 +123,9 @@ PYEOF
 P_VERSION="${REG_VERSION}"
 # A decimal fraction is never a test count: the leading guard skips 0.240
 # (a colour stop on entropy.html blocked the deploy the day the suite hit 240).
-P_TESTS="(^|[^.0-9])\b(${REG_TESTS}|141|140)\b([^%0-9]|$)"
+# A comma-grouped thousand is never a test count either: "393,264 bytes" on plasma.html
+# blocked the 2026-11-07 deploy the week the suite hit 264.
+P_TESTS="(^|[^.,0-9])\b(${REG_TESTS}|141|140)\b([^%0-9]|$)"
 P_BYTES="\b(${REG_BYTES})\b"
 P_MB="\b1\.[0-9] ?MB\b"
 P_MODULES="(>[[:space:]]*${REG_MODULES}[[:space:]]*<|\b${REG_MODULES}\b[^0-9A-Za-z]{0,4}[Ss]tdlib|\b${REG_MODULES}\b[^0-9A-Za-z]{0,4}[Mm]odule|[Ss]tdlib[^0-9]{0,16}\b${REG_MODULES}\b|[Mm]odule[s]?[^0-9]{0,16}\b${REG_MODULES}\b)"
@@ -140,6 +142,8 @@ tests_selfcheck() { # $1 = 0 (must match) or 1 (must not), $2 = sample line
 tests_selfcheck 0 "${REG_TESTS}/${REG_TESTS} tests"
 tests_selfcheck 0 "all ${REG_TESTS} tests pass"
 tests_selfcheck 1 "const c = [[0.018, 0.${REG_TESTS}, 1.${REG_TESTS}]];"
+tests_selfcheck 1 "The frame you see is the first 393,${REG_TESTS} bytes"
+tests_selfcheck 0 "tests pass, ${REG_TESTS} of them"
 
 R1_PATTERNS=("$P_VERSION" "$P_TESTS" "$P_BYTES" "$P_MB" "$P_MODULES" "$P_TAGS" "$P_CADENCE")
 
