@@ -2,7 +2,7 @@
 
 > Ledatic builds the verifiable layer, from the doorstep to the monolith: a self-hosting compiler in Rail, a live MHD plasma beacon, a Pi-hosted Ed25519 witness chain, and a Rail-native verifier you can run yourself. Every release, every fleet snapshot, every client deliverable is bound to a live physics process and signed with Ed25519 keys whose public halves are published. Ledatic runs every signer, so a signature proves what was signed and when, not that anyone outside Ledatic agreed.
 
-LEDATIC is a software company in Detroit, MI. It makes Fieldcraft, a front-desk tool for service businesses: staff get answers drawn from the business's own approved documents, and a person reviews every draft. Its research arm builds the verifiable layer below. The thesis: the post-AI internet needs an independent third-party trust layer for compute, and the same primitive scales from one artifact at your doorstep to every record in a government archive.
+LEDATIC is a software company in Detroit, MI. It makes Fieldcraft, which puts a service business's scattered procedures and answers in one place: staff ask from their phones, a manager keeps the answers that worked, and the owner sees what keeps getting asked. Its research arm builds the verifiable layer below. The thesis: the post-AI internet needs an independent third-party trust layer for compute, and the same primitive scales from one artifact at your doorstep to every record in a government archive.
 
 ## The working surfaces
 
