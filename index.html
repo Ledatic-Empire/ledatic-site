@@ -246,18 +246,12 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <span class="eyebrow fade-up">Proof over promise</span>
+    <span class="eyebrow fade-up">Sea level &middot; start here</span>
     <h1 class="hero-title fade-up">
       Ledatic<span class="accent"> /</span>
     </h1>
     <p class="hero-sub fade-up">
-      Everyone else says &ldquo;trust me.&rdquo; We say &ldquo;check me&rdquo;: every release, deploy and pulse here ships a proof you can verify yourself.
-    </p>
-    <p class="hero-tenets gloss fade-up">
-      Verified beats reported &middot; the map is never sold as the territory &middot; an undetected lie costs a conspiracy
-    </p>
-    <p class="hero-verb fade-up">
-      We <a class="accent" href="physicify.html">physicify</a> it: make it live, make it attested, make it yours.
+      Ledatic builds software that runs itself, and proves what it did. Everyone else says &ldquo;trust me.&rdquo; We say &ldquo;check me.&rdquo;
     </p>
     <pulse-clock class="hero-clock fade-up" data-endpoint="/entropy/pulse" data-fresh-pulses="5" data-state="unknown">⌁ p#—</pulse-clock>
     <!-- the second act (B1): the five real steps of this page's proof, fed only by the
@@ -271,18 +265,15 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     </div>
     <p class="hero-hex fade-up">state <span data-hero-hex>&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;</span></p>
     <p class="hero-gloss gloss fade-up">
-      the public heartbeat this site is clocked to; every age below is
-      denominated in pulses, wall-clock is just the translation.
-      the plasma behind this page is drawn from it, pulse by pulse: each
-      receipt fires the shockwave, and if the beacon ever stops, the field
-      freezes. not a video, not a library:
-      <a href="_shared/shaders/field.frag">one shader you can read</a> ⌁
+      the number above is a public heartbeat, and this page is checking
+      itself against it right now. press the button to watch. the page
+      climbs from here: each section goes one step deeper.
     </p>
     <div class="cta-row fade-up">
       <button class="prove" id="prove-page" aria-expanded="false" aria-controls="prove-page-tray"
               data-manifest="/attest/site/latest.json"
               data-name="this page &middot; signed deploy manifest"><span class="prove-val">Prove this page</span><span class="affix" aria-hidden="true">⌁</span></button>
-      <a class="btn btn-primary" href="#products">What&rsquo;s live &darr;</a>
+      <a class="btn btn-primary" href="#climb">Start the climb &darr;</a>
       <a class="btn btn-ghost" href="manifesto.html">Read the manifesto</a>
     </div>
     <div class="tray" id="prove-page-tray" role="log" aria-live="polite" hidden></div>
@@ -291,10 +282,29 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 
 <main>
 
+<section class="section" id="climb">
+  <div class="wrap chain-spine">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal"><span class="accent">1,000 ft</span> &middot; What it is</span>
+    <h2 class="reveal">Software that runs itself, and shows its work.</h2>
+    <p class="lead reveal">
+      We build systems that keep working when nobody is watching. Each one
+      leaves a signed record of what it did, so anyone can check it
+      without taking our word.
+    </p>
+    <p class="lead reveal">
+      This page is one of them. It rebuilds and republishes itself every
+      morning, and the button at the top checks that what you are reading
+      is what we signed.
+    </p>
+    <p class="gloss reveal">the page gets more technical as it climbs; stop wherever you have what you came for</p>
+  </div>
+</section>
+
 <section class="section" id="products">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Now live</span>
+    <span class="eyebrow reveal"><span class="accent">4,000 ft</span> &middot; What you can use</span>
     <h2 class="reveal">Buy proof, and data you can prove.</h2>
     <p class="lead reveal">
       Two products, both built on the same attestation spine you just
@@ -323,36 +333,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 <section class="section">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Substrate</span>
-    <h2 class="reveal">One language under most of what you just verified.</h2>
-    <p class="lead reveal">
-      The compiler. The MHD simulation that becomes the beacon. The server
-      that publishes each pulse, and the signer on the witness. A TLS 1.3
-      stack. Each of those is Rail, and all of it compiles from a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed
-      binary you can read end to end. The rest, named plainly: the pulse
-      signer is Python, this page is served by a Cloudflare Worker, and the
-      button up top checks signatures with your browser's own WebCrypto.
-    </p>
-    <p class="gloss reveal">the compiler you run is the compiler you read</p>
-    <p class="lead push reveal">
-      Being readable is the prerequisite, not the point. A compiler small
-      enough to audit and reproducible enough to trust can act as a
-      <strong>referee</strong>, which is what machine-written code has
-      never had. A model's claim that its output is correct can't be checked
-      by anyone. A compile can be re-run by everyone.
-    </p>
-    <div class="cta-row push reveal">
-      <a class="btn btn-primary" href="oracle.html">How we train against it</a>
-      <a class="btn btn-secondary" href="rail.html">See the language</a>
-      <a class="btn btn-ghost" href="https://github.com/Ledatic-Empire/rail" target="_blank" rel="noopener">Source on GitHub</a>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap chain-spine">
-    <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">From the doorstep to the monolith</span>
+    <span class="eyebrow reveal"><span class="accent">7,000 ft</span> &middot; How you check it</span>
     <h2 class="reveal">Same primitive. Every scale.</h2>
     <p class="lead reveal">
       A signature you can re-derive in your browser, anchored to a public,
@@ -400,7 +381,36 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 <section class="section">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">Shipping cadence</span>
+    <span class="eyebrow reveal"><span class="accent">10,000 ft</span> &middot; What it stands on</span>
+    <h2 class="reveal">One language under most of what you just verified.</h2>
+    <p class="lead reveal">
+      The compiler. The MHD simulation that becomes the beacon. The server
+      that publishes each pulse, and the signer on the witness. A TLS 1.3
+      stack. Each of those is Rail, and all of it compiles from a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed
+      binary you can read end to end. The rest, named plainly: the pulse
+      signer is Python, this page is served by a Cloudflare Worker, and the
+      button up top checks signatures with your browser's own WebCrypto.
+    </p>
+    <p class="gloss reveal">the compiler you run is the compiler you read</p>
+    <p class="lead push reveal">
+      Being readable is the prerequisite, not the point. A compiler small
+      enough to audit and reproducible enough to trust can act as a
+      <strong>referee</strong>, which is what machine-written code has
+      never had. A model's claim that its output is correct can't be checked
+      by anyone. A compile can be re-run by everyone.
+    </p>
+    <div class="cta-row push reveal">
+      <a class="btn btn-primary" href="oracle.html">How we train against it</a>
+      <a class="btn btn-secondary" href="rail.html">See the language</a>
+      <a class="btn btn-ghost" href="https://github.com/Ledatic-Empire/rail" target="_blank" rel="noopener">Source on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap chain-spine">
+    <span class="chain-link reveal" aria-hidden="true"></span>
+    <span class="eyebrow reveal"><span class="accent">12,000 ft</span> &middot; The record so far</span>
     <h2 class="reveal"><data class="fig" data-src="repo:tags" data-fmt="count" value="47" data-pulse="2941323">47</data> tagged releases and counting.</h2>
 
     <div class="stat-row push">
@@ -438,7 +448,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 <section class="section">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
-    <span class="eyebrow reveal">2040, backwards</span>
+    <span class="eyebrow reveal"><span class="accent">14,000 ft</span> &middot; The long bet</span>
     <h2 class="reveal">Every pulse now commits to the one before it.</h2>
     <p class="lead reveal">
       The beacon ticks every <data class="fig" data-src="beacon:cadence" data-fmt="s" value="2" data-pulse="2941323">2 s</data>. Kept up, that is roughly 220 million
@@ -447,6 +457,20 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       later one changes, so every copy saved anywhere would disagree.
     </p>
     <p class="gloss reveal">fourteen years from now, this page will be able to prove what it said today</p>
+    <p class="lead push reveal">
+      We <a class="accent" href="physicify.html">physicify</a> it: make it live, make it attested, make it yours.
+    </p>
+    <p class="gloss reveal">
+      Verified beats reported &middot; the map is never sold as the territory &middot; an undetected lie costs a conspiracy
+    </p>
+    <p class="gloss reveal">
+      the heartbeat at the top of this page is that beacon; every age on
+      this site is denominated in pulses, wall-clock is just the translation.
+      the plasma behind the page is drawn from it, pulse by pulse: each
+      receipt fires the shockwave, and if the beacon ever stops, the field
+      freezes. not a video, not a library:
+      <a href="_shared/shaders/field.frag">one shader you can read</a> ⌁
+    </p>
   </div>
 </section>
 
