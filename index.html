@@ -184,7 +184,35 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 .hp-card h3 { margin: 0; font-size: 1.1rem; line-height: 1.3; }
 .hp-card p { margin: 0; font-size: .92rem; color: var(--tx-lo); }
 .hp-go { margin-top: auto; font-size: .9rem; color: var(--accent, #05e601); }
+
+/* The ascent: with JS the page is built bottom-up. DOM order stays sea level
+   first (readers, crawlers, no-JS); the mountain is drawn reversed and the
+   visitor lands at the bottom and scrolls up. */
+.ascend .mountain, .ascend .mountain > main { display: flex; flex-direction: column-reverse; }
+.scroll-up { display: none; }
+.ascend .scroll-up { display: block; margin-top: var(--sp-4); font-family: var(--font-body); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tx-lo, #7a8a7a); }
+.ascend .scroll-up b { color: var(--accent, #05e601); font-weight: 500; }
+.ascend .to-down { display: none; }
+.to-up { display: none; }
+.ascend .to-up { display: inline; }
+.altimeter { display: none; }
+.ascend .altimeter {
+  display: block; position: fixed; right: var(--sp-4); bottom: var(--sp-6); z-index: 40;
+  font-family: var(--font-body); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--tx-lo, #7a8a7a); background: color-mix(in srgb, var(--ink-0) 80%, transparent);
+  border: 1px solid var(--line); padding: .5em .8em; pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.ascend .altimeter b { color: var(--accent, #05e601); font-weight: 500; font-size: 1rem; }
+.ascend #scroll-progress { display: none; }   /* the altimeter is the progress here */
+.summit-mark { display: none; }
+.ascend .summit-mark { display: block; text-align: center; padding: 7rem var(--sp-4) var(--sp-4); font-family: var(--font-body); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tx-lo, #7a8a7a); }
 </style>
+<script>
+/* before first paint, so there is no flash of the top-down page */
+document.documentElement.classList.add('ascend');
+try { history.scrollRestoration = 'manual'; } catch (e) {}
+</script>
 <script type="speculationrules">
 {
   "prerender": [
@@ -238,7 +266,8 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
      receipts and freezes when the beacon goes quiet (§5.5). With JS off
      this degrades to the static poster, a hollow clock that claims
      nothing, and a plain page. -->
-<section class="hero">
+<div class="mountain">
+<section class="hero" data-alt="0">
   <div class="scene">
     <div class="scene-fallback" aria-hidden="true"></div>
     <canvas id="scene-canvas" data-field="home" data-field-src="_shared/shaders/field.frag" aria-hidden="true"></canvas>
@@ -268,12 +297,13 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       the number above is a public heartbeat, and this page is checking
       itself against it right now. press the button to watch. the page
       climbs from here: each section goes one step deeper.
+      <span class="scroll-up"><b>&uarr;</b> this page scrolls up. you are at the bottom of the mountain.</span>
     </p>
     <div class="cta-row fade-up">
       <button class="prove" id="prove-page" aria-expanded="false" aria-controls="prove-page-tray"
               data-manifest="/attest/site/latest.json"
               data-name="this page &middot; signed deploy manifest"><span class="prove-val">Prove this page</span><span class="affix" aria-hidden="true">⌁</span></button>
-      <a class="btn btn-primary" href="#climb">Start the climb &darr;</a>
+      <a class="btn btn-primary" href="#climb">Start the climb <span class="to-down">&darr;</span><span class="to-up">&uarr;</span></a>
       <a class="btn btn-ghost" href="manifesto.html">Read the manifesto</a>
     </div>
     <div class="tray" id="prove-page-tray" role="log" aria-live="polite" hidden></div>
@@ -282,7 +312,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
 
 <main>
 
-<section class="section" id="climb">
+<section class="section" id="climb" data-alt="1000">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal"><span class="accent">1,000 ft</span> &middot; What it is</span>
@@ -294,21 +324,38 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
     </p>
     <p class="lead reveal">
       This page is one of them. It rebuilds and republishes itself every
-      morning, and the button at the top checks that what you are reading
+      morning, and the button on the first screen checks that what you are reading
       is what we signed.
     </p>
-    <p class="gloss reveal">the page gets more technical as it climbs; stop wherever you have what you came for</p>
+    <div class="grid grid-2 grid-3 push">
+      <a class="card reveal" href="entropy.html">
+        <span class="eyebrow">Running now</span>
+        <h3>A public clock</h3>
+        <p>A machine here signs a fresh number every couple of seconds, each one linked to the last. Nobody starts it in the morning. It is the heartbeat on the first screen.</p>
+      </a>
+      <a class="card reveal" href="replay.html">
+        <span class="eyebrow">Running now</span>
+        <h3>A site that publishes itself</h3>
+        <p>Every morning this site rebuilds, signs and republishes itself, and keeps a record of every version it has ever shown.</p>
+      </a>
+      <a class="card reveal" href="data.html">
+        <span class="eyebrow">Running now</span>
+        <h3>A shop with no shopkeeper</h3>
+        <p>Datasets for sale that take payment and deliver with a signed receipt, with no person in the loop. No stranger has bought yet. We say so.</p>
+      </a>
+    </div>
+    <p class="gloss push reveal">the page gets more technical as it climbs; stop wherever you have what you came for</p>
   </div>
 </section>
 
-<section class="section" id="products">
+<section class="section" id="products" data-alt="4000">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal"><span class="accent">4,000 ft</span> &middot; What you can use</span>
     <h2 class="reveal">Buy proof, and data you can prove.</h2>
     <p class="lead reveal">
       Two products, both built on the same attestation spine you just
-      verified with the button above. Verification is free; you only pay to
+      verified with the button on the first screen. Verification is free; you only pay to
       anchor or to license.
     </p>
     <div class="home-products">
@@ -330,7 +377,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-alt="7000">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal"><span class="accent">7,000 ft</span> &middot; How you check it</span>
@@ -378,7 +425,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-alt="10000">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal"><span class="accent">10,000 ft</span> &middot; What it stands on</span>
@@ -389,7 +436,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       stack. Each of those is Rail, and all of it compiles from a single <data class="fig" data-src="repo:rail_native" data-fmt="approx_mb" value="908360" data-pulse="2941323">~0.9 MB</data> seed
       binary you can read end to end. The rest, named plainly: the pulse
       signer is Python, this page is served by a Cloudflare Worker, and the
-      button up top checks signatures with your browser's own WebCrypto.
+      button on the first screen checks signatures with your browser's own WebCrypto.
     </p>
     <p class="gloss reveal">the compiler you run is the compiler you read</p>
     <p class="lead push reveal">
@@ -407,7 +454,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-alt="12000">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal"><span class="accent">12,000 ft</span> &middot; The record so far</span>
@@ -440,12 +487,12 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       registry, not typed by hand; the last is a fact about the seed binary
       (<code>otool -L</code> lists only libSystem). all but one tagged release
       carries a signed attestation on the changelog, and the proof you can
-      press right here is the signed deploy manifest at the top of this page.
+      press right here is the signed deploy manifest on the first screen of this page.
     </p>
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-alt="14000">
   <div class="wrap chain-spine">
     <span class="chain-link reveal" aria-hidden="true"></span>
     <span class="eyebrow reveal"><span class="accent">14,000 ft</span> &middot; The long bet</span>
@@ -464,7 +511,7 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
       Verified beats reported &middot; the map is never sold as the territory &middot; an undetected lie costs a conspiracy
     </p>
     <p class="gloss reveal">
-      the heartbeat at the top of this page is that beacon; every age on
+      the heartbeat on the first screen is that beacon; every age on
       this site is denominated in pulses, wall-clock is just the translation.
       the plasma behind the page is drawn from it, pulse by pulse: each
       receipt fires the shockwave, and if the beacon ever stops, the field
@@ -474,7 +521,10 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   </div>
 </section>
 
+<p class="summit-mark" aria-hidden="true">&#9650; summit &middot; 14,000 ft &middot; you climbed the whole thing</p>
 </main>
+</div>
+<div class="altimeter" aria-hidden="true"><b data-altimeter>0</b> ft</div>
 
 <footer class="site-foot">
   <div class="wrap">
@@ -519,6 +569,48 @@ data.fig { border-bottom: 1px dotted var(--ph-800); padding-bottom: 1px; }
   </div>
 </footer>
 
+<script>
+/* The ascent: land at sea level (the bottom), drive the altimeter. */
+(function () {
+  if (!document.documentElement.classList.contains('ascend')) return;
+  var hero = document.querySelector('.mountain > .hero');
+  var out = document.querySelector('[data-altimeter]');
+  if (!hero) return;
+  var landed = false;
+  function land() {
+    if (location.hash && location.hash.length > 1) return;   // a deep link wins
+    if (landed && window.__ascentMoved) return;              // never yank a visitor who has scrolled
+    var y = hero.getBoundingClientRect().top + window.scrollY;   // the hero's own top: it can be taller than the screen
+    window.scrollTo(0, Math.max(0, y));
+    landed = true;
+  }
+  land();
+  window.addEventListener('load', land);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(land);
+  if (window.ResizeObserver) new ResizeObserver(land).observe(hero.parentNode);   // late layout above the hero; stops once the visitor moves
+  ['wheel', 'touchstart', 'keydown'].forEach(function (ev) {
+    window.addEventListener(ev, function () { window.__ascentMoved = true; }, { passive: true, once: true });
+  });
+  var stops = Array.prototype.slice.call(document.querySelectorAll('.mountain [data-alt]'));
+  function altitude() {
+    if (!out) return;
+    var mid = window.innerHeight / 2, pts = stops.map(function (el) {
+      var r = el.getBoundingClientRect();
+      return { y: r.top + (el === hero ? Math.min(r.height, window.innerHeight) : r.height) / 2, alt: +el.getAttribute('data-alt') };
+    }).sort(function (a, b) { return b.y - a.y; });          // lowest on screen first = lowest altitude
+    var alt = pts[0].alt;
+    if (mid <= pts[pts.length - 1].y) alt = pts[pts.length - 1].alt;
+    else for (var i = 0; i < pts.length - 1; i++) {
+      var a = pts[i], b = pts[i + 1];
+      if (mid <= a.y && mid >= b.y) { alt = a.alt + (b.alt - a.alt) * ((a.y - mid) / ((a.y - b.y) || 1)); break; }
+    }
+    out.textContent = (Math.round(alt / 50) * 50).toLocaleString('en-US');
+  }
+  altitude();
+  window.addEventListener('scroll', altitude, { passive: true });
+  window.addEventListener('resize', altitude, { passive: true });
+})();
+</script>
 <script src="_shared/site.js" defer></script>
 <script src="_shared/field.js" defer></script>
 <script type="module" src="_shared/pulse-clock.js"></script>
