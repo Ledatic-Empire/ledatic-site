@@ -576,19 +576,24 @@ try { history.scrollRestoration = 'manual'; } catch (e) {}
   var hero = document.querySelector('.mountain > .hero');
   var out = document.querySelector('[data-altimeter]');
   if (!hero) return;
-  var landed = false;
+  var landed = false, landY = 0;
   function land() {
     if (location.hash && location.hash.length > 1) return;   // a deep link wins
     if (landed && window.__ascentMoved) return;              // never yank a visitor who has scrolled
     var y = hero.getBoundingClientRect().top + window.scrollY;   // the hero's own top: it can be taller than the screen
-    window.scrollTo(0, Math.max(0, y));
+    landY = Math.max(0, y);
+    window.scrollTo({ top: landY, behavior: 'instant' });   // instant: a smooth landing would read as the visitor moving
     landed = true;
   }
   land();
   window.addEventListener('load', land);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(land);
   if (window.ResizeObserver) new ResizeObserver(land).observe(hero.parentNode);   // late layout above the hero; stops once the visitor moves
-  ['wheel', 'touchstart', 'keydown'].forEach(function (ev) {
+  // any scroll that is not our own landing is the visitor's (scrollbar drag, anchor link, script)
+  window.addEventListener('scroll', function () {
+    if (landed && Math.abs(window.scrollY - landY) > 40) window.__ascentMoved = true;
+  }, { passive: true });
+  ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) {
     window.addEventListener(ev, function () { window.__ascentMoved = true; }, { passive: true, once: true });
   });
   var stops = Array.prototype.slice.call(document.querySelectorAll('.mountain [data-alt]'));
