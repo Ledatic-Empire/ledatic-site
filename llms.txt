@@ -39,7 +39,7 @@ The recent campaign-intelligence engagement closed 2026-05-12 after 30 days. Not
 
 ## Manifesto
 
-- [/manifesto](https://ledatic.org/manifesto) — "Rail runs on Rail. The rest runs on physics." Two load-bearing claims: a compiler that rebuilds itself byte-for-byte, and a stack answerable to a verifiable physical clock.
+- [/manifesto](https://ledatic.org/manifesto) — "Built first, explained later." The ethos: Ledatic builds software that runs itself. We build before we explain, own the foundation, measure by autonomy, want knowledge, data and income, and would rather be accurate than impressive.
 
 ## Data for agents
 

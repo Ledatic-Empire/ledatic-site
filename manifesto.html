@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm, and a seed binary of about a megabyte that does most of the job.">
+<meta name="description" content="Ledatic builds software that runs itself. Built first, explained later: we own the foundation, we measure by autonomy, and we would rather be accurate than impressive.">
 <link rel="canonical" href="https://ledatic.org/manifesto">
 <!-- og:start -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ledatic.org/manifesto">
 <meta property="og:title" content="Manifesto · Ledatic">
-<meta property="og:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm, and a seed binary of about a megabyte that does most of the job.">
+<meta property="og:description" content="Ledatic builds software that runs itself. Built first, explained later: we own the foundation, we measure by autonomy, and we would rather be accurate than impressive.">
 <meta property="og:image" content="https://ledatic.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Ledatic">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Manifesto · Ledatic">
-<meta name="twitter:description" content="Two claims, both load-bearing: a compiler that rebuilds itself byte-for-byte, and a stack answerable to physics. No npm, and a seed binary of about a megabyte that does most of the job.">
+<meta name="twitter:description" content="Ledatic builds software that runs itself. Built first, explained later: we own the foundation, we measure by autonomy, and we would rather be accurate than impressive.">
 <meta name="twitter:image" content="https://ledatic.org/og.png">
 <!-- og:end -->
 <title>Manifesto · Ledatic</title>
@@ -31,6 +31,7 @@
   .essay .chain-spine { padding-left: var(--sp-6); }
   .essay .chain-link { display: block; margin: var(--sp-8) 0 var(--sp-4) calc(-1 * var(--sp-6) - 0.5em); background: var(--ink-0); padding: 0.25em 0; }
   .essay p.body, .essay p.lead { font-family: var(--font-body); }
+  .essay strong { color: var(--tx-hi); font-weight: 600; }
   .essay hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
 </style>
 </head>
@@ -79,14 +80,14 @@
   <div class="overlay" aria-hidden="true"></div>
 
   <div class="hero-content fade-up" style="max-width: 50rem; padding-top: 10rem; padding-bottom: 6rem;">
-    <span class="eyebrow">Manifesto &mdash; v2.0</span>
+    <span class="eyebrow">Manifesto &middot; v3.0 &middot; 2026-11-11</span>
     <h1 class="hero-title" style="font-size: clamp(2.5rem, 6vw, 4.5rem);">
-      Rail runs on Rail.<br>
-      The rest runs on<span class="accent"> physics.</span>
+      Built first.<br>
+      Explained<span class="accent"> later.</span>
     </h1>
     <p class="hero-sub" style="max-width: 40rem;">
-      Two claims. Both load-bearing. Both in service of one: you never
-      have to take our word for it.
+      How Ledatic works, what it measures, and what it wants from
+      the work.
     </p>
   </div>
 </section>
@@ -97,101 +98,110 @@
 
       <span class="chain-link" aria-hidden="true"></span>
       <p class="lead reveal">
-        The world is filling up with answers you can't check. A model
-        writes the report, signs the record, makes the call &mdash; and
-        you take it on faith: the model, the vendor, the cloud, every
-        layer underneath. We build the opposite. Software whose every
-        output carries a proof of how it was made &mdash; one a stranger
-        can verify without trusting us. Everyone else's machine says
-        trust me. Ours says <span class="accent">check me</span>.
-      </p>
-
-      <p class="body reveal">
-        That promise has a cost. You cannot import trust at any layer,
-        or the proof has a hole in it. So we own the whole stack &mdash;
-        and it stands on two claims.
+        Ledatic builds software that
+        <span class="accent">runs itself</span>. That sentence took
+        longer to find than the software took to build, and that says
+        most of what there is to say about this company.
       </p>
 
       <span class="chain-link" aria-hidden="true"></span>
       <p class="body reveal">
-        A compiler that cannot recompile itself is a rumor. Rail is not a
-        rumor. The binary you hold rebuilds itself byte-for-byte from its
-        own source, every release. That's the first claim.
-      </p>
-
-      <p class="body reveal">
-        The second is harder to defend. It says that most of this stack
-        (the TLS handshake, the plasma sim, the compiler that builds them)
-        is answerable to physics. Not to npm, not to dependencies you can't
-        audit. Where we still lean on someone else's runtime, we say so:
-        a Cloudflare Worker serves this page, and Python signs the pulses. When a primitive runs, it runs on transistors you can
-        point at. The distance between the source and the silicon is
-        short and legible.
+        <strong>We build before we explain.</strong> Ideas here start as
+        working systems, and the understanding lives in the thing itself
+        before it lives in a sentence. We have made peace with that
+        order. A system that works but is poorly described can be fixed
+        with a better sentence. A system that is beautifully described
+        and does not work can only be fixed by doing the work.
       </p>
 
       <span class="chain-link" aria-hidden="true"></span>
       <p class="body reveal">
-        Most software companies grow by accretion. A library calls a
-        library that calls a runtime that calls a kernel. Each layer
-        promises to hide the one below. Ledatic is built the other way.
-        We remove layers until what's left is small enough to carry in
-        your head.
+        <strong>We own the foundation.</strong> Ledatic wrote its own
+        programming language from scratch: Rail, a compiler that
+        compiles itself, from a seed binary of <data class="fig" data-src="repo:rail_native" data-fmt="mb" value="908360" data-pulse="2941323">0.9 MB</data> that links nothing beyond the system library.
+        Nobody required this, and existing languages would have been
+        faster. But a company whose purpose is software that operates
+        without supervision should understand its tools all the way
+        down, and the surest way to understand something is to build it.
       </p>
 
       <p class="body reveal">
-        What's left, in our case, is: a <data class="fig" data-src="repo:rail_native" data-fmt="mb" value="908360" data-pulse="2941323">0.9 MB</data> binary that speaks
-        TLS 1.3, verifies X.509 chains, runs a 2D magnetohydrodynamics
-        simulation, and serves the beacon's
-        pulses. Written in a language that compiles itself, and linking
-        nothing beyond the system library.
-      </p>
-
-      <p class="body reveal">
-        We don't think this is the only way to build software. We think
-        it's the way worth building the next decade's software in. Code
-        nobody owns is piling up; we'd rather own ours, end to end, so
-        the proof goes all the way down.
+        Today we train models against that compiler, with a compile as
+        the checker, and our own 138M-parameter model replays its
+        training steps to the same bytes on chips from three makers.
+        Where we still lean on someone else's runtime, we say so: a
+        Cloudflare Worker serves this page, and Python signs the
+        beacon's pulses. Every layer we wrote is one we can open and
+        read.
       </p>
 
       <hr>
 
       <span class="chain-link" aria-hidden="true"></span>
       <p class="body reveal">
-        And that ownership buys something rented stacks can't: a
-        tamper-evident seal on what the machine produces. A witness on
-        separate hardware signs it, anchored to a public, hash-chained
-        physics beacon. Today that witness is a Raspberry Pi we run;
-        witnesses we don't run are the planned fix. Change one byte and
-        the seal breaks. We did this for a
-        real AI model's output &mdash; ran it in our own language, exact
-        to the bit, and signed the result so anyone could check it from
-        raw bytes, with no shared code.
+        <strong>We measure by autonomy.</strong> The test we apply to
+        anything we make is simple: does it keep working when nobody is
+        watching?
       </p>
 
       <p class="body reveal">
-        We don't claim the answer is always right. We claim something
-        narrower and harder to beat: an undetected lie would cost a
-        conspiracy. Today, faking a sealed output means forging records
-        that one witness, run by us, already signed. Outside witnesses are
-        what will make it cost a conspiracy.
+        An entropy beacon that signs a pulse <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every 2 s</data>, each one chained
+        to the last, more than ten million of them so far. A site that
+        rebuilds, re-signs and redeploys itself every morning. A data
+        stall that takes payment from software agents and hands back a
+        signed receipt with no hand on it. A trading system that ran on
+        its own until we paused it. A reasoning loop built to tune
+        itself, which taught us the most on the day its gains turned out
+        to be noise.
+      </p>
+
+      <p class="body reveal">
+        These look like unrelated projects, and for a long time we
+        called ourselves "multi-faceted" because we could not see past
+        that. They are the same project. Each one answers the question
+        of how much a piece of software can be relied on to do alone.
       </p>
 
       <hr>
 
       <span class="chain-link" aria-hidden="true"></span>
       <p class="body reveal">
-        Here is the long bet, counted backwards from 2040. The entropy
-        beacon signs a pulse <data class="fig" data-src="beacon:cadence" data-fmt="words" value="2" data-pulse="2941323">every 2 s</data>, each one chained
-        to the last. Kept going, that is roughly 220 million pulses
-        by 2040, and since pulse format 2 every link commits to the one
-        before it, so rewriting one pulse rewrites every pulse after it. You cannot buy a backlog of
-        time. It has to start somewhere, and it started here.
+        <strong>We want three things from the work: knowledge, data, and
+        income.</strong> We say so plainly because pretending otherwise
+        would be dishonest. Knowledge, because every system we build
+        teaches us something we could not have learned by reading. Data,
+        because systems that run themselves produce a record that is
+        valuable in its own right. Income, because a company that earns
+        can keep building on its own terms.
       </p>
 
+      <p class="body reveal">
+        Income is the one still unproven. The stall takes payment and
+        delivers by itself, and as of November 2026 no stranger has
+        bought from it. When one does, that will be the proof that
+        matters: something we built runs well enough alone that people
+        pay for what it produces.
+      </p>
+
+      <span class="chain-link" aria-hidden="true"></span>
+      <p class="body reveal">
+        <strong>We would rather be accurate than impressive.</strong> It
+        is easy to describe technology in a way that sounds good to a
+        room, and harder to describe it in a way that is true. Builders
+        know every exception, and the temptation is either to bury
+        people in detail or to give up and say "I don't even know what
+        I'm building." Neither is honest. Our commitment is to say the
+        simple true thing first, then go as deep as anyone asks. It is
+        why the paragraph above says what has not happened yet.
+      </p>
+
+      <hr>
+
+      <span class="chain-link" aria-hidden="true"></span>
       <p class="body reveal" style="color: var(--tx-hi);">
-        If you want to watch us do it, the source is public. If you want
-        to verify we're doing it, the beacon signs what we've been up to.
-        The two doors below are how to start.
+        What Ledatic has is a habit: make the thing, make it stand on
+        its own, then learn to say what it is. The software runs itself.
+        We are still learning to speak for it.
       </p>
 
       <div class="cta-row reveal" style="margin-top: 2rem;">
