@@ -18,10 +18,24 @@ w path s =
 
 -- Emit one <url> block to the sitemap file. Keeps the full live-page list
 -- (verified 200) in one place so the daily deploy stops shrinking the sitemap.
-surl sf path date freq prio =
+-- lastmod is the day the page's source last changed in git, not the day this
+-- generator ran. Until 2026-11-15 every URL carried today's date, so the sitemap
+-- said all pages changed daily and the committed copy was modified every morning.
+-- A file git has no commit for (new, not yet committed) falls back to today.
+moddate file today =
+  trim (shell (cat ["/usr/bin/git -C ~/projects/ledatic-site log -1 --format=%cs -- ", file, " 2>/dev/null | /usr/bin/grep . || echo ", today]))
+
+-- Dry run (the test's path): with /tmp/ledatic_gen_llms_dry present, the three
+-- files are generated in /tmp and nothing is pushed to KV or copied into the repo.
+push dry cmd =
+  if dry == "1" then "dry run: not deployed, not copied" else shell cmd
+
+surl sf path file today freq prio =
+  let date = moddate file today
   w sf (cat ["  <url>\n    <loc>https://ledatic.org", path, "</loc>\n    <lastmod>", date, "</lastmod>\n    <changefreq>", freq, "</changefreq>\n    <priority>", prio, "</priority>\n  </url>\n"])
 
 main =
+  let dry = trim (shell "test -e /tmp/ledatic_gen_llms_dry && echo 1 || echo 0")
   let f = "/tmp/ledatic_llms.txt"
   let _ = shell (cat ["rm -f ", f])
 
@@ -89,9 +103,9 @@ main =
   let size = trim (shell (cat ["wc -c < ", f]))
   let _ = print (cat ["Generated: ", f, " (", size, " bytes)"])
   let _ = print "Deploying to Cloudflare KV as key: llms.txt"
-  let deploy_result = shell "./rail_native --out-prefix /tmp/ledatic_deploy_c3 run ~/projects/ledatic-site/railgen/cf_deploy.rail /tmp/ledatic_llms.txt llms.txt 2>&1"
+  let deploy_result = push dry "./rail_native --out-prefix /tmp/ledatic_deploy_c3 run ~/projects/ledatic-site/railgen/cf_deploy.rail /tmp/ledatic_llms.txt llms.txt 2>&1"
   let _ = print deploy_result
-  let _ = shell "cp /tmp/ledatic_llms.txt ~/projects/ledatic-site/llms.txt"
+  let _ = push dry "cp /tmp/ledatic_llms.txt ~/projects/ledatic-site/llms.txt"
 
   -- robots.txt
   let r = "/tmp/ledatic_robots.txt"
@@ -104,9 +118,9 @@ main =
   let _ = print ""
   let _ = print (cat ["Generated: ", r, " (", rsize, " bytes)"])
   let _ = print "Deploying to Cloudflare KV as key: robots.txt"
-  let r_result = shell "./rail_native --out-prefix /tmp/ledatic_deploy_c3 run ~/projects/ledatic-site/railgen/cf_deploy.rail /tmp/ledatic_robots.txt robots.txt 2>&1"
+  let r_result = push dry "./rail_native --out-prefix /tmp/ledatic_deploy_c3 run ~/projects/ledatic-site/railgen/cf_deploy.rail /tmp/ledatic_robots.txt robots.txt 2>&1"
   let _ = print r_result
-  let _ = shell "cp /tmp/ledatic_robots.txt ~/projects/ledatic-site/robots.txt"
+  let _ = push dry "cp /tmp/ledatic_robots.txt ~/projects/ledatic-site/robots.txt"
 
   -- sitemap.xml
   let date = trim (shell "date -u '+%Y-%m-%d'")
@@ -115,37 +129,37 @@ main =
   let _ = w s "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   let _ = w s "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
   -- Full live-page set (each verified 200). The working surfaces first,
-  -- then the verb, then supporting pages. Daily lastmod for the live panels.
-  let _ = surl s "/" date "weekly" "1.0"
-  let _ = surl s "/rail" date "weekly" "0.9"
-  let _ = surl s "/oracle" date "weekly" "0.9"
-  let _ = surl s "/entropy" date "daily" "0.8"
-  let _ = surl s "/aliens" date "monthly" "0.4"
-  let _ = surl s "/system" date "daily" "0.8"
-  let _ = surl s "/physicify" date "weekly" "0.8"
-  let _ = surl s "/plasma" date "weekly" "0.7"
-  let _ = surl s "/manifesto" date "monthly" "0.7"
-  let _ = surl s "/provenance" date "monthly" "0.7"
-  let _ = surl s "/verify" date "monthly" "0.7"
-  let _ = surl s "/changelog" date "weekly" "0.6"
-  let _ = surl s "/case-campaign-intel" date "monthly" "0.6"
-  let _ = surl s "/ot" date "monthly" "0.5"
-  let _ = surl s "/fleet" date "weekly" "0.5"
-  let _ = surl s "/crossvendor" date "monthly" "0.6"
-  let _ = surl s "/llms.txt" date "weekly" "0.5"
+  -- then the verb, then supporting pages. Each names the file its lastmod comes from.
+  let _ = surl s "/" "index.html" date "weekly" "1.0"
+  let _ = surl s "/rail" "rail.html" date "weekly" "0.9"
+  let _ = surl s "/oracle" "oracle.html" date "weekly" "0.9"
+  let _ = surl s "/entropy" "entropy.html" date "daily" "0.8"
+  let _ = surl s "/aliens" "aliens.html" date "monthly" "0.4"
+  let _ = surl s "/system" "system.html" date "daily" "0.8"
+  let _ = surl s "/physicify" "physicify.html" date "weekly" "0.8"
+  let _ = surl s "/plasma" "plasma.html" date "weekly" "0.7"
+  let _ = surl s "/manifesto" "manifesto.html" date "monthly" "0.7"
+  let _ = surl s "/provenance" "provenance.html" date "monthly" "0.7"
+  let _ = surl s "/verify" "verify.html" date "monthly" "0.7"
+  let _ = surl s "/changelog" "changelog.html" date "weekly" "0.6"
+  let _ = surl s "/case-campaign-intel" "case-campaign-intel.html" date "monthly" "0.6"
+  let _ = surl s "/ot" "ot.html" date "monthly" "0.5"
+  let _ = surl s "/fleet" "fleet.html" date "weekly" "0.5"
+  let _ = surl s "/crossvendor" "crossvendor.html" date "monthly" "0.6"
+  let _ = surl s "/llms.txt" "llms.txt" date "weekly" "0.5"
   -- the stall (2026-10-29): its pages and the machine-readable catalog
-  let _ = surl s "/data" date "monthly" "0.6"
-  let _ = surl s "/data/rail-verified-pairs-v2" date "monthly" "0.5"
-  let _ = surl s "/data/attested-text-corpus-v2" date "monthly" "0.5"
-  let _ = surl s "/data/catalog.json" date "monthly" "0.5"
+  let _ = surl s "/data" "data.html" date "monthly" "0.6"
+  let _ = surl s "/data/rail-verified-pairs-v2" "data/rail-verified-pairs-v2.html" date "monthly" "0.5"
+  let _ = surl s "/data/attested-text-corpus-v2" "data/attested-text-corpus-v2.html" date "monthly" "0.5"
+  let _ = surl s "/data/catalog.json" "data/catalog.json" date "monthly" "0.5"
   let _ = w s "</urlset>\n"
   let ssize = trim (shell (cat ["wc -c < ", s]))
   let _ = print ""
   let _ = print (cat ["Generated: ", s, " (", ssize, " bytes)"])
   let _ = print "Deploying to Cloudflare KV as key: sitemap.xml"
-  let s_result = shell "./rail_native --out-prefix /tmp/ledatic_deploy_c3 run ~/projects/ledatic-site/railgen/cf_deploy.rail /tmp/ledatic_sitemap.xml sitemap.xml 2>&1"
+  let s_result = push dry "./rail_native --out-prefix /tmp/ledatic_deploy_c3 run ~/projects/ledatic-site/railgen/cf_deploy.rail /tmp/ledatic_sitemap.xml sitemap.xml 2>&1"
   let _ = print s_result
-  let _ = shell "cp /tmp/ledatic_sitemap.xml ~/projects/ledatic-site/sitemap.xml"
+  let _ = push dry "cp /tmp/ledatic_sitemap.xml ~/projects/ledatic-site/sitemap.xml"
 
   let _ = print ""
   let _ = print "Done."
