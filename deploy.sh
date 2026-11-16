@@ -11,6 +11,7 @@
 #   2. stats generation      tools/gen_stats.sh → _shared/stats.json (substrate-derived)
 #   2b. verifier gate        attest/verify.sh must be rail origin/master's, byte for byte
 #   3. honesty gate          tools/honesty_gate.sh — nonzero exit BLOCKS the deploy
+#   3b. sitemap, ascent    tests/sitemap_lastmod_test.sh and tests/ascent_test.py (since 2026-11-15)
 #   4. physics gate          the entropy beacon must be advancing
 #   5. stage                 final bytes per file: Figure injection (HTML) + ?v= stamps
 #   6. upload                staged bytes → KV
@@ -174,6 +175,45 @@ motion_gate() {
     echo "deploy: MOTION GATE FAILED (exit $?) — deploy blocked. tools/motion_gate.sh --full for the whole picture." >&2
     exit 3
   }
+}
+
+# ── Gate 2d: sitemap, each lastmod is the day the page last changed in git ──
+# tests/sitemap_lastmod_test.sh runs the real generator in dry-run mode and
+# compares every URL with git. Until 2026-11-15 every URL carried the day the
+# generator ran. A gate that cannot run (exit 2) blocks like one that fails.
+sitemap_gate() {
+  if [ "${DEPLOY_SKIP_SITEMAP_GATE:-0}" = "1" ]; then
+    echo "deploy: sitemap gate SKIPPED via DEPLOY_SKIP_SITEMAP_GATE=1" >&2
+    return 0
+  fi
+  local out rc
+  out=$(./tests/sitemap_lastmod_test.sh 2>&1) && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    printf '%s\n' "$out" | tail -8 >&2
+    echo "deploy: SITEMAP GATE FAILED (exit $rc): deploy blocked. tests/sitemap_lastmod_test.sh for the whole picture." >&2
+    exit 3
+  fi
+  echo "deploy: sitemap gate ok: $(printf '%s\n' "$out" | tail -2 | head -1)"
+}
+
+# ── Gate 2e: ascent, the home page lands at sea level and climbs ────────
+# tests/ascent_test.py in a real browser at desktop and phone widths: the
+# visitor lands on the hero, the top of the page is the summit, and a late
+# layout change never pulls them back down (the 2026-11-11 defect). Needs the
+# same .venv as the motion gate; one that cannot run blocks the deploy.
+ascent_gate() {
+  if [ "${DEPLOY_SKIP_ASCENT_GATE:-0}" = "1" ]; then
+    echo "deploy: ascent gate SKIPPED via DEPLOY_SKIP_ASCENT_GATE=1" >&2
+    return 0
+  fi
+  local out rc
+  out=$(.venv/bin/python tests/ascent_test.py 2>&1) && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    printf '%s\n' "$out" | tail -8 >&2
+    echo "deploy: ASCENT GATE FAILED (exit $rc): deploy blocked. .venv/bin/python tests/ascent_test.py for the whole picture." >&2
+    exit 3
+  fi
+  echo "deploy: ascent gate ok: $(printf '%s\n' "$out" | grep -c '^ok ') checks passed"
 }
 
 # ── Gate 3: physics — refuse to deploy if the entropy beacon is stale ───
@@ -861,6 +901,8 @@ verifier_gate
 honesty_gate
 changelog_gate
 citation_gate
+sitemap_gate
+ascent_gate
 motion_gate
 gate_on_beacon
 load_prev_manifest
