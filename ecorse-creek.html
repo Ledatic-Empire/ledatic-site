@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="What the public record says about contaminated fill along Ecorse Creek in Wyandotte, with every quote linked to its EPA or state document.">
+<title>Ecorse Creek Fill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column on survey-map paper; wide figures sit in their own scroll boxes.
+   Colour: the waste is Prussian blue, so that is the accent; the rest is the topographic map's
+   water, marsh and contour inks. */
+:root {
+  --paper: #f6f8f9; --panel: #ffffff; --ink: #17212b; --muted: #55616c; --rule: #d3dbe1;
+  --prussian: #1d3f74; --water: #2a7894; --marsh: #557a33; --olive: #87692a; --found: #3a434c;
+  --band: #e4ebf2; --unknown: #eef1f3; --clean-bg: #f3efe4; --clean-dot: #b9a77c;
+  --trash-bg: #efe6da; --trash-line: #a07c55; --blue-zone: #c9d6ec;
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Public Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --step-0: 1rem; --step-1: 1.2rem; --step-2: 1.6rem; --step-3: clamp(2.6rem, 7vw, 4.4rem);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f151b; --panel: #151d25; --ink: #e2e8ee; --muted: #98a4af; --rule: #28323c;
+  --prussian: #8fb0e8; --water: #63b4d0; --marsh: #97bd6c; --olive: #cfab62; --found: #b9c3cc;
+  --band: #18232f; --unknown: #1a222a; --clean-bg: #2a271f; --clean-dot: #8c7c55;
+  --trash-bg: #2c241b; --trash-line: #a3825c; --blue-zone: #22385c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #0f151b; --panel: #151d25; --ink: #e2e8ee; --muted: #98a4af; --rule: #28323c;
+  --prussian: #8fb0e8; --water: #63b4d0; --marsh: #97bd6c; --olive: #cfab62; --found: #b9c3cc;
+  --band: #18232f; --unknown: #1a222a; --clean-bg: #2a271f; --clean-dot: #8c7c55;
+  --trash-bg: #2c241b; --trash-line: #a3825c; --blue-zone: #22385c; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--step-0)/1.6 var(--body); }
+.wrap { max-width: 64rem; margin: 0 auto; padding-block: 2.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 3.5rem; }
+.col { max-width: 42rem; }
+a { color: var(--prussian); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--prussian); outline-offset: 2px; border-radius: 2px; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-3); font-weight: 800; font-stretch: 72%; line-height: .95; letter-spacing: -.01em; }
+h2 { font-size: var(--step-2); font-weight: 700; font-stretch: 85%; line-height: 1.1; }
+p { margin: 0; }
+section { display: grid; gap: 1.25rem; }
+.eyebrow, .meta, .kind, .cite, .ticklab, .bandlab, .key, .st, .sub, code, .eye, .lg { font-family: var(--mono); }
+.eyebrow { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: var(--step-1); line-height: 1.5; max-width: 40rem; }
+.lede em { font-style: normal; font-weight: 600; }
+.meta { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; }
+.today { font-size: .95rem; color: var(--muted); max-width: 42rem; padding-left: 1rem; border-left: 3px solid var(--rule); }
+header { display: grid; gap: 1.1rem; }
+.cite { font-size: .78rem; white-space: nowrap; }
+
+/* where it stands */
+.stands { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+.stand { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 1.1rem 1.2rem 1.2rem; display: grid; gap: .6rem; align-content: start; min-width: 0; }
+.stand h3 { margin: 0; font: 700 1.05rem/1.2 var(--display); font-stretch: 90%; display: flex; align-items: center; gap: .55rem; }
+.stand h3 .sig { width: 1.45rem; height: 1.45rem; border-radius: 3px; display: inline-grid; place-items: center; font: 600 .9rem/1 var(--mono); flex: none; }
+.stand.yes .sig { background: var(--marsh); color: var(--panel); }
+.stand.no .sig { background: var(--olive); color: var(--panel); }
+.stand.open .sig { border: 1.5px dashed var(--muted); color: var(--muted); }
+.stand ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .55rem; font-size: .95rem; }
+
+/* strip */
+.figure { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1rem .75rem; display: grid; gap: .6rem; min-width: 0; }
+.scroll { overflow-x: auto; }
+.strip svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.depth svg { display: block; width: 100%; max-width: 640px; min-width: 460px; height: auto; }
+svg text { fill: var(--ink); }
+.band { fill: var(--band); }
+.bandlab { font-size: 10px; letter-spacing: .1em; fill: var(--muted); }
+.axis { stroke: var(--muted); stroke-width: 1; }
+.tick { stroke: var(--muted); }
+.ticklab { font-size: 11px; fill: var(--muted); }
+.mk { stroke: var(--panel); stroke-width: 1.5; }
+.mk.creek { fill: var(--water); } .mk.land { fill: var(--marsh); } .mk.fill { fill: var(--prussian); }
+.mk.water { fill: var(--olive); } .mk.found { fill: var(--found); }
+a:focus-visible .mk, a:hover .mk { stroke: var(--ink); stroke-width: 2; }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; }
+.lg { font-size: .75rem; color: var(--muted); display: inline-flex; align-items: center; gap: .4rem; }
+.lg i { width: .65rem; height: .65rem; border-radius: 50%; display: inline-block; }
+.lg.creek i { background: var(--water); } .lg.land i { background: var(--marsh); } .lg.fill i { background: var(--prussian); }
+.lg.water i { background: var(--olive); } .lg.found i { background: var(--found); }
+.caption { font-size: .85rem; color: var(--muted); max-width: 46rem; }
+
+/* events */
+.events { list-style: none; margin: 0; padding: 0; display: grid; }
+.event { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1.25rem; padding-block: 1.1rem; border-top: 1px solid var(--rule); scroll-margin-top: 1rem; }
+.event:target { background: var(--band); }
+.when { display: grid; gap: .35rem; align-content: start; }
+.when b { font: 700 1.05rem/1.2 var(--display); font-stretch: 85%; }
+.kind { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: inline-flex; align-items: center; gap: .4rem; }
+.kind::before { content: ""; width: .55rem; height: .55rem; border-radius: 50%; background: var(--found); }
+.creek .kind::before { background: var(--water); } .land .kind::before { background: var(--marsh); }
+.fill .kind::before { background: var(--prussian); } .water .kind::before { background: var(--olive); }
+.body { display: grid; gap: .5rem; min-width: 0; max-width: 44rem; }
+.what { font-weight: 600; }
+blockquote { margin: 0; padding-left: .9rem; border-left: 2px solid var(--rule); color: var(--ink); font-style: italic; }
+.src { display: flex; flex-wrap: wrap; gap: .3rem .9rem; align-items: baseline; }
+.eye { font-size: .72rem; color: var(--muted); }
+
+/* depth */
+.rule { stroke: var(--muted); } .rule.major { stroke-width: 1.2; }
+.ground { stroke: var(--ink); stroke-width: 2; }
+.colhead { font: 600 13px var(--body); }
+.lab { font: 400 12.5px var(--body); } .lab.strong { font-weight: 600; } .lab.mute { fill: var(--muted); font-style: italic; }
+.unknown { fill: var(--unknown); stroke: var(--rule); stroke-dasharray: 4 3; }
+.clean { fill: url(#dots); } .cleanbg { fill: var(--clean-bg); } .dot { fill: var(--clean-dot); }
+.trash { fill: url(#hatch); } .trashbg { fill: var(--trash-bg); } .hatchline { stroke: var(--trash-line); stroke-width: 1.4; }
+.tag { fill: var(--panel); opacity: .92; }
+.blue { stroke: var(--prussian); stroke-width: 3; }
+.bluezone { fill: var(--blue-zone); stroke: var(--prussian); stroke-width: 1; }
+
+/* sources */
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th { text-align: left; font: 500 .7rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 .75rem .5rem 0; }
+td { border-top: 1px solid var(--rule); padding: .7rem .75rem .7rem 0; vertical-align: top; }
+td.key { font-size: .8rem; font-weight: 500; width: 3rem; }
+td.doc { min-width: 16rem; }
+.sub { display: block; font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+.st { font-size: .7rem; white-space: nowrap; padding: .2rem .5rem; border-radius: 3px; display: inline-block; }
+.st.full { background: var(--prussian); color: var(--panel); }
+.st.passages { border: 1px solid var(--prussian); color: var(--prussian); }
+.st.searched { border: 1px dashed var(--muted); color: var(--muted); }
+.conflicts { margin: 0; padding-left: 1.1rem; display: grid; gap: .5rem; font-size: .95rem; max-width: 46rem; }
+code { font-size: .85em; }
+
+/* open */
+.open-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 2rem; }
+.open-grid > div { display: grid; gap: .75rem; align-content: start; min-width: 0; }
+.open-grid h3 { margin: 0; font: 700 1.05rem var(--display); font-stretch: 90%; }
+.open-grid ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .6rem; font-size: .95rem; }
+footer { border-top: 1px solid var(--rule); padding-top: 1.5rem; display: grid; gap: .75rem; font-size: .88rem; color: var(--muted); max-width: 46rem; }
+
+@media (max-width: 560px) {
+  .event { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+  .when { grid-auto-flow: column; justify-content: start; align-items: baseline; gap: .9rem; }
+  td.doc { min-width: 12rem; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">Research notes · Wyandotte, Michigan</p>
+    <h1>Ecorse Creek Fill</h1>
+    <p class="lede">The idea being tested: <em>Parks and yards along Ecorse Creek in Wyandotte, Ecorse and Lincoln Park were raised with the same contaminated fill, moved during repeated reshaping of the creek.</em> This page sets that idea against the public record, one quote at a time.</p>
+    <p class="meta"><span>Updated 18 November 2026</span><span>10 public documents</span><span>28 quotes, each checked against its source</span></p>
+    <p class="today">EPA cleaned up the North Drive yards by June 2003 (<a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 6</a>). Its 2016 review found that "the remedy is protective of human health and environment" (<a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 6</a>). The park's trash layer stays in place under clean fill, with a deed restriction on the land.</p>
+  </header>
+
+  <section aria-labelledby="h-stands">
+    <h2 id="h-stands">Where it stands</h2>
+    <div class="stands">
+      <div class="stand yes"><h3><span class="sig" aria-hidden="true">+</span>The record supports</h3><ul><li>Industrial waste was used to fill wetland along North Drive in Wyandotte, between a 1945 aerial photo and a house built on the lot in 1955.</li><li>The creek there was reshaped at least twice: rechanneled by 1957, and its south bank straightened with construction debris in the early 1980s.</li><li>Cyanide waste similar to North Drive&#x27;s turned up on a second Wyandotte lot, on Oak Street, about 1.5 miles away, in 1995.</li></ul></div>
+      <div class="stand no"><h3><span class="sig" aria-hidden="true">&minus;</span>The record cuts against</h3><ul><li>The one park EPA dug into, Kiwanis 1000 Park, held household trash. EPA says it had no similarities to the waste in the yards and did not continue under the neighbouring lots.</li><li>No source has been found yet for contamination at Beaver, Lions, Pepper or Council Point parks.</li></ul></div>
+      <div class="stand open"><h3><span class="sig" aria-hidden="true">?</span>Not known yet</h3><ul><li>Which industry the waste came from and who hauled it. No document read so far names either.</li><li>What the fill north of the river is made of. EPA says only that it is extensive.</li><li>Anything about fill in Ecorse or Lincoln Park. Every document read so far is about Wyandotte or the whole watershed.</li></ul></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-time">
+    <h2 id="h-time">What happened, and when</h2>
+    <div class="figure strip">
+      <div class="scroll"><svg viewBox="0 0 1000 112" role="img" aria-label="Time strip from 1920 to 2020. The period in question, the 1920s to the 1960s, is shaded. Most of the dated evidence about fill falls between 1945 and 1957."><rect class="band" x="24.0" y="8" width="476.0" height="76"/><text class="bandlab" x="32.0" y="24">THE PERIOD IN QUESTION</text><line class="axis" x1="24" x2="976" y1="84" y2="84"/><line class="tick" x1="24.0" x2="24.0" y1="84" y2="90"/><text class="ticklab" x="24.0" y="106" text-anchor="middle">1920</text><line class="tick" x1="119.2" x2="119.2" y1="84" y2="90"/><text class="ticklab" x="119.2" y="106" text-anchor="middle">1930</text><line class="tick" x1="214.4" x2="214.4" y1="84" y2="90"/><text class="ticklab" x="214.4" y="106" text-anchor="middle">1940</text><line class="tick" x1="309.6" x2="309.6" y1="84" y2="90"/><text class="ticklab" x="309.6" y="106" text-anchor="middle">1950</text><line class="tick" x1="404.8" x2="404.8" y1="84" y2="90"/><text class="ticklab" x="404.8" y="106" text-anchor="middle">1960</text><line class="tick" x1="500.0" x2="500.0" y1="84" y2="90"/><text class="ticklab" x="500.0" y="106" text-anchor="middle">1970</text><line class="tick" x1="595.2" x2="595.2" y1="84" y2="90"/><text class="ticklab" x="595.2" y="106" text-anchor="middle">1980</text><line class="tick" x1="690.4" x2="690.4" y1="84" y2="90"/><text class="ticklab" x="690.4" y="106" text-anchor="middle">1990</text><line class="tick" x1="785.6" x2="785.6" y1="84" y2="90"/><text class="ticklab" x="785.6" y="106" text-anchor="middle">2000</text><line class="tick" x1="880.8" x2="880.8" y1="84" y2="90"/><text class="ticklab" x="880.8" y="106" text-anchor="middle">2010</text><line class="tick" x1="976.0" x2="976.0" y1="84" y2="90"/><text class="ticklab" x="976.0" y="106" text-anchor="middle">2020</text><a href="#e0"><circle class="mk creek" cx="81.1" cy="40" r="5"><title>1926: The North Branch becomes a county drain.</title></circle></a><a href="#e1"><circle class="mk creek" cx="90.6" cy="40" r="5"><title>1927 to 1928: The LeBlanc Drain, a tributary, is enclosed.</title></circle></a><a href="#e2"><circle class="mk land" cx="109.7" cy="52" r="5"><title>Before 1930: The Wyandotte bank of the creek is wetland.</title></circle></a><a href="#e3"><circle class="mk land" cx="185.8" cy="52" r="5"><title>1937: An aerial photo shows wetland and a small brook among the North Drive lots.</title></circle></a><a href="#e4"><circle class="mk land" cx="262.0" cy="52" r="5"><title>1945: Aerial photos still show marsh on the north side of North Drive.</title></circle></a><a href="#e5"><rect class="mk fill" x="262.0" y="60" width="95.2" height="8" rx="4"><title>1945 to 1955: The swampy ground is filled with material from local industries.</title></rect></a><a href="#e6"><circle class="mk fill" cx="309.6" cy="64" r="5"><title>1945 to 1955: Neighbours who watched the filling had a name for the blue soil.</title></circle></a><a href="#e7"><circle class="mk land" cx="319.1" cy="52" r="5"><title>1951: An aerial photo shows most of the wetland filled and houses along North Drive.</title></circle></a><a href="#e8"><circle class="mk land" cx="357.2" cy="52" r="5"><title>1955: The house on the contaminated lot is built, according to the city assessor. EPA&#x27;s contractor thought the waste went in before it.</title></circle></a><a href="#e9"><circle class="mk creek" cx="376.2" cy="40" r="5"><title>By 1957: The creek is rechanneled, and the point where its two branches meet is moved.</title></circle></a><a href="#e10"><circle class="mk water" cx="490.5" cy="52" r="5"><title>August 1969: A state study finds sewage degrading the creek. This concerns sewage, not fill.</title></circle></a><a href="#e11"><circle class="mk creek" cx="614.2" cy="40" r="5"><title>Early 1980s: The south bank is straightened behind several houses.</title></circle></a><a href="#e12"><circle class="mk found" cx="680.9" cy="64" r="5"><title>1989: Workers digging on a North Drive lot find blue soil. EPA identifies the compound.</title></circle></a><a href="#e13"><circle class="mk found" cx="738.0" cy="64" r="5"><title>March 1995: Similar waste is found on a residential lot on Oak Street, about 1.5 miles away.</title></circle></a><a href="#e14"><circle class="mk found" cx="785.6" cy="64" r="5"><title>March 2000: A layer of household trash is found under Kiwanis 1000 Park. It is a different fill.</title></circle></a><a href="#e16"><circle class="mk found" cx="833.2" cy="64" r="5"><title>July 2005: After the yards are cleaned up, EPA takes the site off its priority list. The park&#x27;s trash stays in place under clean fill.</title></circle></a><a href="#e17"><circle class="mk found" cx="937.9" cy="64" r="5"><title>2016: EPA&#x27;s latest review finds the cleanup still protects people.</title></circle></a></svg></div>
+      <div class="legend"><span class="lg creek"><i></i>Creek</span><span class="lg land"><i></i>Land</span><span class="lg fill"><i></i>Fill</span><span class="lg water"><i></i>Water</span><span class="lg found"><i></i>Found</span></div>
+    </div>
+    <p class="caption">Each mark is a dated statement in one of the documents below; select one to jump to it. The bar spans 1945 to 1955, the window EPA gives for the filling on North Drive. The written record found so far is thin before 1945.</p>
+    <ol class="events"><li class="event creek" id="e0"><div class="when"><b>1926</b><span class="kind">Creek</span></div><div class="body"><p class="what">The North Branch becomes a county drain.</p><blockquote>The NBEC is a County Drain, established in 1926 with improvements dating back to 1863.</blockquote><p class="src"><a class="cite" href="https://www.allianceofdownriverwatersheds.com/wp-content/uploads/2014/09/ecorse_creek_wmp.pdf" title="Ecorse Creek Watershed Management Plan, Alliance of Downriver Watersheds">WP, p. 168</a></p></div></li><li class="event creek" id="e1"><div class="when"><b>1927 to 1928</b><span class="kind">Creek</span></div><div class="body"><p class="what">The LeBlanc Drain, a tributary, is enclosed.</p><blockquote>The LeBlanc Drain was enclosed in 1927-28</blockquote><p class="src"><a class="cite" href="https://www.allianceofdownriverwatersheds.com/wp-content/uploads/2014/09/ecorse_creek_wmp.pdf" title="Ecorse Creek Watershed Management Plan, Alliance of Downriver Watersheds">WP, p. 25</a></p></div></li><li class="event land" id="e2"><div class="when"><b>Before 1930</b><span class="kind">Land</span></div><div class="body"><p class="what">The Wyandotte bank of the creek is wetland.</p><blockquote>Before 1930, land along the banks of the Ecorse River in Wyandotte was primarily wetlands.</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 18</a></p></div></li><li class="event land" id="e3"><div class="when"><b>1937</b><span class="kind">Land</span></div><div class="body"><p class="what">An aerial photo shows wetland and a small brook among the North Drive lots.</p><blockquote>1937 aerial photograph shows the wetlands and a small brook that flowed to the river</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 18</a></p></div></li><li class="event land" id="e4"><div class="when"><b>1945</b><span class="kind">Land</span></div><div class="body"><p class="what">Aerial photos still show marsh on the north side of North Drive.</p><blockquote>Aerial photographs, dated 1945, show low-lying marshlands on the north side of North Drive</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/931147.pdf" title="EPA, nomination package for an ATSDR health advisory site (redacted)">N1, p. 53</a></p></div></li><li class="event fill" id="e5"><div class="when"><b>1945 to 1955</b><span class="kind">Fill</span></div><div class="body"><p class="what">The swampy ground is filled with material from local industries.</p><blockquote>During the period between 1945 and 1955, and prior to the house [on the lot] being built, the low lying swampy area of the creek was filled with material from local industries.</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/src/document/05/633427" title="EPA, National Priorities List site narrative">N2, p. 1</a></p></div></li><li class="event fill" id="e6"><div class="when"><b>1945 to 1955</b><span class="kind">Fill</span></div><div class="body"><p class="what">Neighbours who watched the filling had a name for the blue soil.</p><blockquote>Local residents who lived nearby during the filling recall the blue soil being called &quot;gas wash&quot;, and coming from a local industry.</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/931147.pdf" title="EPA, nomination package for an ATSDR health advisory site (redacted)">N1, p. 84</a> <span class="eye">machine text garbled here; compared with the page image</span></p></div></li><li class="event land" id="e7"><div class="when"><b>1951</b><span class="kind">Land</span></div><div class="body"><p class="what">An aerial photo shows most of the wetland filled and houses along North Drive.</p><blockquote>most of the wetland areas had been filled and that residential development has occurred along North Drive</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 18</a></p></div></li><li class="event land" id="e8"><div class="when"><b>1955</b><span class="kind">Land</span></div><div class="body"><p class="what">The house on the contaminated lot is built, according to the city assessor. EPA&#x27;s contractor thought the waste went in before it.</p><blockquote>was built in 1955. The blue waste material may have been dumped during the fill operations there prior to the construction of the house</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/931147.pdf" title="EPA, nomination package for an ATSDR health advisory site (redacted)">N1, p. 53</a></p></div></li><li class="event creek" id="e9"><div class="when"><b>By 1957</b><span class="kind">Creek</span></div><div class="body"><p class="what">The creek is rechanneled, and the point where its two branches meet is moved.</p><blockquote>By 1957, the river had been rechanneled, resulting in the confluence of the north and south branches of the river being relocated. Extensive fill is evident north of the Ecorse River.</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 18</a></p></div></li><li class="event water" id="e10"><div class="when"><b>August 1969</b><span class="kind">Water</span></div><div class="body"><p class="what">A state study finds sewage degrading the creek. This concerns sewage, not fill.</p><blockquote>concluded as early as 1969 that the combined sewage discharge of Allen Park and other communities was degrading the water quality of the Ecorse Creek</blockquote><p class="src"><a class="cite" href="https://www.elr.info/sites/default/files/litigation/14.20237.htm" title="Michigan v. City of Allen Park, U.S. District Court opinion">AP</a></p></div></li><li class="event creek" id="e11"><div class="when"><b>Early 1980s</b><span class="kind">Creek</span></div><div class="body"><p class="what">The south bank is straightened behind several houses.</p><blockquote>straightening the south bank of the river at the rear of several residential properties, reportedly using construction debris as fill</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 18</a></p></div></li><li class="event found" id="e12"><div class="when"><b>1989</b><span class="kind">Found</span></div><div class="body"><p class="what">Workers digging on a North Drive lot find blue soil. EPA identifies the compound.</p><blockquote>EPA found a large area of soil contaminated with ferric ferrocyanide, suspected to be from a coal-gasification plant.</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 18</a></p></div></li><li class="event found" id="e13"><div class="when"><b>March 1995</b><span class="kind">Found</span></div><div class="body"><p class="what">Similar waste is found on a residential lot on Oak Street, about 1.5 miles away.</p><blockquote>an area of cyanide contamination, similar to the material identified at the North Drive area, was discovered</blockquote><p class="src"><a class="cite" href="https://www.govinfo.gov/content/pkg/FR-2005-05-02/html/05-8601.htm" title="Federal Register, notice deleting the site from the National Priorities List">FR</a></p></div></li><li class="event found" id="e14"><div class="when"><b>March 2000</b><span class="kind">Found</span></div><div class="body"><p class="what">A layer of household trash is found under Kiwanis 1000 Park. It is a different fill.</p><blockquote>This material had no similarities to the cyanide waste found in the residential areas</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 19</a></p></div></li><li class="event found" id="e15"><div class="when"><b>March 2000</b><span class="kind">Found</span></div><div class="body"><p class="what">The trash layer stops at the park&#x27;s edge.</p><blockquote>the debris layer did not continue under adjacent properties</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 19</a></p></div></li><li class="event found" id="e16"><div class="when"><b>July 2005</b><span class="kind">Found</span></div><div class="body"><p class="what">After the yards are cleaned up, EPA takes the site off its priority list. The park&#x27;s trash stays in place under clean fill.</p><blockquote>This action will be effective July 1, 2005</blockquote><p class="src"><a class="cite" href="https://www.govinfo.gov/content/pkg/FR-2005-05-02/html/05-8601.htm" title="Federal Register, notice deleting the site from the National Priorities List">FR</a></p></div></li><li class="event found" id="e17"><div class="when"><b>2016</b><span class="kind">Found</span></div><div class="body"><p class="what">EPA&#x27;s latest review finds the cleanup still protects people.</p><blockquote>the remedy is protective of human health and environment</blockquote><p class="src"><a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 6</a></p></div></li></ol>
+  </section>
+
+  <section aria-labelledby="h-depth">
+    <h2 id="h-depth">Two different fills on one site</h2>
+    <p class="col">On the one stretch of creek EPA dug into, the yards and the park next to them were raised with different material. The yards held the blue gas-cleaning waste. The park held household trash, and EPA found it stopped at the park's edge.</p>
+    <div class="figure depth">
+      <div class="scroll"><svg viewBox="0 0 600 380" role="img" aria-label="Two soil columns drawn to the same depth scale in feet. North Drive yards: blue soil about 2 feet down; the highest cyanide, 32,300 milligrams per kilogram, measured at 4 to 6 feet. Kiwanis 1000 Park: 3 feet of clean fill over a layer of household trash about 6 feet thick."><defs><pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" class="trashbg"/><line x1="0" y1="0" x2="0" y2="9" class="hatchline"/></pattern><pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" class="cleanbg"/><circle cx="3" cy="3" r="1.1" class="dot"/><circle cx="8" cy="8" r="1.1" class="dot"/></pattern></defs><line class="rule major" x1="52" x2="64" y1="40.0" y2="40.0"/><text class="ticklab" x="46" y="44.0" text-anchor="end">0</text><line class="rule" x1="52" x2="60" y1="70.0" y2="70.0"/><line class="rule major" x1="52" x2="64" y1="100.0" y2="100.0"/><text class="ticklab" x="46" y="104.0" text-anchor="end">2</text><line class="rule" x1="52" x2="60" y1="130.0" y2="130.0"/><line class="rule major" x1="52" x2="64" y1="160.0" y2="160.0"/><text class="ticklab" x="46" y="164.0" text-anchor="end">4</text><line class="rule" x1="52" x2="60" y1="190.0" y2="190.0"/><line class="rule major" x1="52" x2="64" y1="220.0" y2="220.0"/><text class="ticklab" x="46" y="224.0" text-anchor="end">6</text><line class="rule" x1="52" x2="60" y1="250.0" y2="250.0"/><line class="rule major" x1="52" x2="64" y1="280.0" y2="280.0"/><text class="ticklab" x="46" y="284.0" text-anchor="end">8</text><line class="rule" x1="52" x2="60" y1="310.0" y2="310.0"/><line class="rule major" x1="52" x2="64" y1="340.0" y2="340.0"/><text class="ticklab" x="46" y="344.0" text-anchor="end">10</text><text class="ticklab" x="46" y="366.0" text-anchor="end">feet</text><line class="ground" x1="64" x2="576" y1="40" y2="40"/><text class="colhead" x="92" y="26">Yards on North Drive, 1989 to 1994</text><rect class="unknown" x="92" y="40.0" width="208" height="300.0"/><line class="blue" x1="92" x2="300" y1="100.0" y2="100.0"/><text class="lab" x="100" y="93.0">blue soil, about 2 ft down</text><rect class="bluezone" x="92" y="160.0" width="208" height="60.0"/><text class="lab strong" x="100" y="187.0">highest cyanide measured</text><text class="lab" x="100" y="203.0">32,300 mg/kg, 4 to 6 ft</text><text class="lab mute" x="100" y="286.0">layer thickness not given</text><text class="colhead" x="352" y="26">Kiwanis 1000 Park, test pits, 2000</text><rect class="clean" x="352" y="40.0" width="208" height="90.0"/><text class="lab" x="360" y="89.0">clean fill, 3 ft</text><rect class="trash" x="352" y="130.0" width="208" height="180.0"/><rect class="tag" x="358" y="194.0" width="168" height="44" rx="3"/><text class="lab strong" x="366" y="211.0">household trash</text><text class="lab" x="366" y="228.0">about 6 ft thick</text><rect class="unknown" x="352" y="310.0" width="208" height="30.0"/><text class="lab mute" x="360" y="329.0">below: not described</text></svg></div>
+    </div>
+    <p class="caption">Both columns use the same scale, in feet below the surface. The yard column marks the depths where things were measured, not the thickness of a layer, which EPA does not give. Yards: <a class="cite" href="https://semspub.epa.gov/src/document/05/633427" title="EPA, National Priorities List site narrative">N2, p. 1</a> for the blue soil on one lot, <a class="cite" href="https://www.govinfo.gov/content/pkg/FR-2005-05-02/html/05-8601.htm" title="Federal Register, notice deleting the site from the National Priorities List">FR</a> for the highest reading. Park: <a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 19</a>.</p>
+  </section>
+
+  <section aria-labelledby="h-docs">
+    <h2 id="h-docs">The documents</h2>
+    <p class="col">Every document here is public and linked. The status says how much of it has been read so far.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th scope="col">Key</th><th scope="col">Document</th><th scope="col">Status</th></tr></thead>
+        <tbody><tr><td class="key">R3</td><td class="doc"><a href="https://semspub.epa.gov/work/05/494413.pdf">EPA, Third Five-Year Review, Lower Ecorse Creek Dump</a><span class="sub">2016 · 30 pages. Scanned; the quoted pages were also checked by eye.</span></td><td><span class="st passages">Passages read</span></td></tr><tr><td class="key">R2</td><td class="doc"><a href="https://semspub.epa.gov/work/HQ/180498.pdf">EPA, Second Five-Year Review</a><span class="sub">March 2011 · 50 pages.</span></td><td><span class="st searched">Searched by keyword</span></td></tr><tr><td class="key">R1</td><td class="doc"><a href="https://semspub.epa.gov/work/HQ/179352.pdf">EPA, First Five-Year Review</a><span class="sub">review period Dec 2005 to May 2006 · 62 pages.</span></td><td><span class="st passages">Passages read</span></td></tr><tr><td class="key">N1</td><td class="doc"><a href="https://semspub.epa.gov/work/05/931147.pdf">EPA, nomination package for an ATSDR health advisory site (redacted)</a><span class="sub">1989 to 1993 · 105 pages. Scanned; the quoted pages were also checked by eye.</span></td><td><span class="st passages">Passages read</span></td></tr><tr><td class="key">N2</td><td class="doc"><a href="https://semspub.epa.gov/src/document/05/633427">EPA, National Priorities List site narrative</a><span class="sub">about 1994 · 2 pages.</span></td><td><span class="st full">Read in full</span></td></tr><tr><td class="key">FR</td><td class="doc"><a href="https://www.govinfo.gov/content/pkg/FR-2005-05-02/html/05-8601.htm">Federal Register, notice deleting the site from the National Priorities List</a><span class="sub">2 May 2005 · 5 pages.</span></td><td><span class="st passages">Passages read</span></td></tr><tr><td class="key">SP</td><td class="doc"><a href="https://cumulis.epa.gov/supercpad/SiteProfiles/index.cfm?fuseaction=second.cleanup&amp;id=0506252">EPA, Lower Ecorse Creek Dump site profile</a><span class="sub">web page, fetched 2026 · 1 page.</span></td><td><span class="st passages">Passages read</span></td></tr><tr><td class="key">WP</td><td class="doc"><a href="https://www.allianceofdownriverwatersheds.com/wp-content/uploads/2014/09/ecorse_creek_wmp.pdf">Ecorse Creek Watershed Management Plan, Alliance of Downriver Watersheds</a><span class="sub">printed June 2012 · 193 pages.</span></td><td><span class="st searched">Searched by keyword</span></td></tr><tr><td class="key">CE</td><td class="doc"><a href="https://upload.wikimedia.org/wikipedia/commons/b/b9/North_Branch_Ecorse_Creek_flood_risk_management_general_reevaluation_report-_Wayne_County,_Michigan,_general_reevaluation_report_-_USACE-p16021coll7-14934.pdf">U.S. Army Corps of Engineers, North Branch Ecorse Creek General Reevaluation Report</a><span class="sub">about 2020 · 43 pages.</span></td><td><span class="st searched">Searched by keyword</span></td></tr><tr><td class="key">AP</td><td class="doc"><a href="https://www.elr.info/sites/default/files/litigation/14.20237.htm">Michigan v. City of Allen Park, U.S. District Court opinion</a><span class="sub">2 November 1983 · 1 page.</span></td><td><span class="st searched">Searched by keyword</span></td></tr></tbody>
+      </table>
+    </div>
+    <h3 class="eyebrow">Where EPA's own papers disagree</h3>
+    <ul class="conflicts"><li>The site's EPA ID: <code>MID985574227</code> on the review's summary form (<a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 7</a>), <code>MID980274179</code> on its map sheet (<a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 22</a>).</li><li>Where Oak Street lies from North Drive: "about 1.5 miles southwest" (<a class="cite" href="https://semspub.epa.gov/work/05/494413.pdf" title="EPA, Third Five-Year Review, Lower Ecorse Creek Dump">R3, p. 17</a>), "approximately 1.5 miles west-northwest" (<a class="cite" href="https://www.govinfo.gov/content/pkg/FR-2005-05-02/html/05-8601.htm" title="Federal Register, notice deleting the site from the National Priorities List">FR</a>).</li></ul>
+  </section>
+
+  <section aria-labelledby="h-open">
+    <h2 id="h-open">Still open</h2>
+    <div class="open-grid">
+      <div><h3>Questions</h3><ul><li>Which parks besides Kiwanis 1000 Park are said to sit on contaminated fill, in which city, and where that claim was first made. Named so far: Beaver, Lions, Pepper and Council Point.</li><li>Which industry made the blue waste, and who hauled it to North Drive.</li><li>How the same kind of waste reached a lot on Oak Street, 1.5 miles away.</li><li>What the extensive fill north of the river, visible by 1957, is made of.</li><li>Whether any state report from the 1920s to the 1950s describes dumping along the creek.</li></ul></div>
+      <div><h3>Records that could answer them</h3><ul><li>EPA Region 5: the Remedial Investigation (February 1996), and the two volumes of aerial photo interpretation and the 1990 extent-of-contamination study listed in the site&#x27;s administrative record. These should hold the fill mapping.</li><li>The full text of EPA&#x27;s Record of Decision, 17 July 1996. Only a catalogue entry has been found online.</li><li>ATSDR&#x27;s public health assessment for the site, 29 November 1995.</li><li>Wayne County Drain Commissioner files for Ecorse Creek and the Sexton-Kilfoil and LeBlanc drains, 1920s to 1960s.</li><li>The State&#x27;s Ecorse River Water Quality Study, August 1969.</li><li>Historical aerial photos (Wayne State University&#x27;s collection) and the Wyandotte Herald (Library of Congress). Not yet opened.</li></ul></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>How this page is made. Every quote is copied from a public document and linked to it. Before the page is built, a script checks each quote against the document's own text on the page cited, and a quote it cannot find stops the build. Where the document is a scan, the quoted pages were also compared with the page image. Words in square brackets replace a house number; the addresses are in the EPA records.</p>
+    <p>The documents were searched and read, and this page assembled, with the help of an AI model. The quote check above is what stands between that and the page: a quote reaches the page only if it is in the document.</p>
+    <p>This is a reading of public records, not the opinion of an engineer, a doctor or a lawyer. Where it says a document does not show something, it means a search did not find it, not that it never happened.</p>
+    <p>A research note from <a href="https://ledatic.org">Ledatic</a>.</p>
+  </footer>
+</main>
+</body>
+</html>
