@@ -250,3 +250,28 @@ the 11-28 table decides, and the catalog launches twelve days before it.
 ## What this plan does not claim
 That agents want attested datasets. That is the thing step 7 measures. The hours come out of Fieldcraft
 and Fromwhere, by the owner's decision on 2026-10-29.
+
+## Step 7, read one day early, 2026-11-27 (the owner present; the final pull is 2026-11-28)
+
+From the site Worker's own ledgers in KV (`x402sales:log`, `stripesales:log`), read 2026-11-27 05:15Z:
+
+| Count | Value | Note |
+|---|---|---|
+| x402 settles | 4 | all Base mainnet, all the look-inside at 1.00 USDC, all on 2026-10-29 within about three hours |
+| x402 payers | 1 | `0x7874DD28...eE49`: the estate's own mainnet payer of the launch-day buys (named in the 10-29 session's output and in `worker/worker.js` as the example receipt's payer); the owner, asked: "it is mine it must be" |
+| x402 settles after 2026-10-29 | 0 | |
+| Stripe sales in the stall's lane | 0 | the ledger's two live sessions (about 11-04 and 11-12) carry no stall pack; 11-04 is the owner's own $0 Fromwhere trial |
+| Purchases by something that is not us | **0** | |
+| requests to `/x402/*` in 30 days | 16,400 at least | step 2 closed 2026-11-27 (the owner added Zone Analytics Read; `tokens/verify` active). Cloudflare GraphQL `httpRequestsAdaptiveGroups`, a day at a time, the top 200 groups a day, so a floor. Nearly all are the look-inside answering 402 to the x402 market's own probes and indexes: x402station 4,162, CarbonMonitor 1,494, alalanet-prober 968, BotsRated-probe 901 ("unpaid check; no payment"), lumiere-paycheck-prober 836, AgentRankProbe 773, KertivoStatus 668, x402-census-probe 622, `node` 605, x402-reliability-probe 495, x402-audit 354, Agent402 639, x402-router-crawler 231 |
+| requests to `/data*` in 30 days | 1,379 at least | mostly `curl/8.7.1` (ours and scanners) and browser user agents at 25 to 40 a path |
+| requests to `/llms.txt` in 30 days | 5,783 at least | Agent402 and its crawler 5,526 |
+
+What the traffic adds: the stall was found. The x402 indexes and uptime monitors asked the look-inside for
+its price thousands of times and none paid, which is what an index does; no user agent in the top groups
+reads as a buyer acting for someone. So the listing works and discovery by machines is not the gap this
+reading can show; the product at this price is.
+
+Reading: unless the 11-28 pull differs, the rule above applies as written: the stall stays up as it is,
+nothing more is built for agents, and the claim that agents want attested datasets was measured at this
+price for thirty days and did not hold. That is a result about this product at this price, not about the
+market (memory `x402-research-2026-11-16`).

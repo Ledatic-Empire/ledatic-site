@@ -7,7 +7,8 @@
 import { readFileSync } from "node:fs";
 import { createPublicKey, verify as edVerify, randomBytes } from "node:crypto";
 
-const worker = (await import("../worker/worker.js")).default;
+// X402_WORKER names another copy of the Worker (an absolute path): how a planted defect is run through this gate
+const worker = (await import(process.env.X402_WORKER || "../worker/worker.js")).default;
 
 function kvStub() {
   const m = new Map();
@@ -180,6 +181,64 @@ let requirements;
   check("look inside delivers the public sample with its own sha256 in the receipt, no download grant minted",
     r.status === 200 && j.receipt && /sample200\.jsonl$/.test(j.receipt.download_url) && j.receipt.sha256 === "79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64"
     && ![...kv.m.keys()].some((k) => k.startsWith("dl:")), `status ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
+}
+// 8d. the draw pack (2026-11-27): one USDC buys 100 bound draws; each draw is fixed by the bind, the
+// pulse and the receipt key, checks offline, and counts the pack down
+{
+  const { createHash } = await import("node:crypto");
+  const kv = kvStub();
+  const e = env("mainnet", kv);
+  const DP = "https://ledatic.org/x402/bound-draws-100";
+  const r0 = await get(e, DP);
+  const req0 = unb64(r0.headers.get("payment-required")).accepts[0];
+  check("the draw pack asks for exactly 1 USDC on Base mainnet", r0.status === 402 && req0.amount === "1000000" && req0.network === "eip155:8453");
+  const realFetch = globalThis.fetch;
+  const TX = "0x" + randomBytes(32).toString("hex");
+  let beaconUp = true;
+  const PULSE = { pulse_id: 4242, value_hex: "ab".repeat(32), timestamp_utc: "2026-11-27T00:00:00Z" };
+  globalThis.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.includes("/x402/verify")) return new Response(JSON.stringify({ isValid: true, payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json" } });
+    if (u.includes("/x402/settle")) return new Response(JSON.stringify({ success: true, transaction: TX, network: "eip155:8453", payer: "0x000000000000000000000000000000000000dEaD" }), { headers: { "content-type": "application/json" } });
+    if (u.startsWith("https://beacon.ledatic.org/pulse")) { if (!beaconUp) throw new Error("down"); return new Response(JSON.stringify(PULSE), { headers: { "content-type": "application/json" } }); }
+    return realFetch(url, init);
+  };
+  try {
+    e.CDP_API_KEY_ID = "test"; e.CDP_API_KEY_SECRET = randomBytes(32).toString("hex");
+    const r = await get(e, DP, { "payment-signature": b64(payload(req0)) });
+    const j = await r.json();
+    const token = ((j.receipt && j.receipt.download_url) || "").split("token=")[1] || "";
+    const packOf = () => JSON.parse(kv.m.get(`drawpack:${token}`) || "{}");
+    check("a settled pack purchase answers 200 with a token, a pack of 100 in KV, and the token's sha256 in the receipt",
+      r.status === 200 && /^[0-9a-f]{64}$/.test(token) && packOf().remaining === 100 && j.receipt.sha256 === createHash("sha256").update(token).digest("hex")
+      && JSON.parse(kv.m.get("x402sales:log")).some((x) => x.transaction === TX && x.product === "bound-draws-100"), `status ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
+    const kj = await (await get(e, "https://ledatic.org/x402/key")).json();
+    const pub = createPublicKey({ key: Buffer.concat([Buffer.from("302a300506032b6570032100", "hex"), Buffer.from(kj.public_key_hex, "hex")]), format: "der", type: "spki" });
+    const draw = async (q) => { const d = await get(e, `https://ledatic.org/x402/draw?${q}`); return [d.status, await d.json()]; };
+    const [s1, d1] = await draw(`token=${token}&bind=c0ffee`);
+    const canon = (rec) => JSON.stringify(rec, Object.keys(rec).sort());
+    const dig1 = s1 === 200 ? createHash("sha256").update(canon(d1.record)).digest("hex") : "";
+    check("a draw answers 200, index 0, the bind and the pulse in its record, 99 left",
+      s1 === 200 && d1.record.index === 0 && d1.record.bind === "c0ffee" && d1.record.pulse_id === 4242 && d1.record.pulse_value_hex === PULSE.value_hex
+      && d1.remaining === 99 && packOf().remaining === 99, JSON.stringify(d1).slice(0, 200));
+    check("the draw checks offline: the record's sha256, the Ed25519 signature against /x402/key, and draw_hex as the signature's sha256",
+      s1 === 200 && dig1 === d1.canonical_sha256 && edVerify(null, Buffer.from(dig1, "utf8"), pub, Buffer.from(d1.signature, "hex"))
+      && d1.draw_hex === createHash("sha256").update(Buffer.from(d1.signature, "hex")).digest("hex"));
+    check("a record with another bind does not verify under the same signature",
+      s1 === 200 && !edVerify(null, Buffer.from(createHash("sha256").update(canon({ ...d1.record, bind: "c0ffef" })).digest("hex"), "utf8"), pub, Buffer.from(d1.signature, "hex")));
+    const [s2, d2] = await draw(`token=${token}&bind=c0ffee`);
+    check("the same bind again is the next index and another draw", s2 === 200 && d2.record.index === 1 && d2.draw_hex !== d1.draw_hex && d2.remaining === 98);
+    const [s3, d3] = await draw(`token=${token}&bind=c0ffef`);
+    check("another bind gives another draw", s3 === 200 && d3.draw_hex !== d2.draw_hex && d3.record.bind === "c0ffef");
+    check("no token answers 403 with how to buy", (await draw("bind=00"))[0] === 403);
+    check("an unknown token answers 404", (await draw(`token=${"0".repeat(64)}`))[0] === 404);
+    check("a bind that is not hex answers 400 and takes no draw", (await draw(`token=${token}&bind=xyz`))[0] === 400 && packOf().remaining === 97);
+    beaconUp = false;
+    check("with the beacon down the draw answers 503 and the pack is not counted down", (await draw(`token=${token}&bind=00`))[0] === 503 && packOf().remaining === 97);
+    beaconUp = true;
+    kv.m.set(`drawpack:${token}`, JSON.stringify({ ...packOf(), remaining: 0 }));
+    check("a spent pack answers 410", (await draw(`token=${token}&bind=00`))[0] === 410);
+  } finally { globalThis.fetch = realFetch; }
 }
 // 8c. the EIP-712 domain the 402 advertises must be what the token contract says (the first
 // mainnet purchase failed on exactly this: Base USDC is "USD Coin", Sepolia's is "USDC")

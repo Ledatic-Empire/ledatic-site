@@ -779,8 +779,17 @@ const X402_PRODUCTS = {
     sample: "https://ledatic.org/data/rail-verified-pairs-v2-sample200.jsonl",
     sampleSha256: "79f5265567f075617163f57d050073b6b687ef897980919daf51ea15c52e6e64",
   },
+  // Bound draws (2026-11-27, plan docs/plans/2026-11-27-draw-pack.md): one USDC buys a pack of 100
+  // draws, spent one at a time at /x402/draw. What is bought is the pack token; the receipt's sha256
+  // is the token's.
+  "bound-draws-100": {
+    pack: null, usd: 1, buy: null, draws: 100, sample: null,
+    // under 500 characters: the CDP facilitator refused the payment payload with the first, 514-character text (2026-11-27)
+    description: "100 bound random draws for 1 USDC (a cent a draw). A draw is 32 bytes fixed by your bind value, the public beacon pulse current when served, and Ledatic's Ed25519 receipt key; neither side chooses it and it checks offline against /x402/key. Spend at /x402/draw?token=<pack token>&bind=<hex>. Not a secret: do not use a draw as a key.",
+  },
 };
 const X402_TIMEOUT = 300;
+const X402_DRAW_HELP = "buy a pack at https://ledatic.org/x402/bound-draws-100 (x402 v2, 1 USDC for 100 draws), then GET /x402/draw?token=<pack token>&bind=<up to 64 bytes of hex>";
 
 function x402B64(obj) {
   const b = new TextEncoder().encode(JSON.stringify(obj));
@@ -859,7 +868,16 @@ async function x402Facilitator(env, net, suffix, body) {
 // without it, validate says "no bazaar discovery extension found" (2026-10-29).
 // Shape copied from the SDK's declare_discovery_extension for a GET with no input.
 function x402BazaarExtension(slug, prod) {
-  const example = {
+  const example = prod.draws ? {
+    receipt: {
+      product: slug, amount: String(prod.usd * 1000000), asset: X402_NETWORKS.mainnet.usdc, network: X402_NETWORKS.mainnet.id,
+      pay_to: X402_PAY_TO, delivered: `${prod.draws} bound draws: GET the download_url with &bind=<your hex> once a draw`,
+      download_url: "https://ledatic.org/x402/draw?token=<64 hex, the pack token>",
+    },
+    draw: { draw_hex: "<64 hex>", index: 0, remaining: prod.draws - 1, bind: "<your hex>", pulse_id: 10735748,
+            verify: "draw_hex is the sha256 of the signature bytes; the signature is ed25519 over the utf-8 bytes of canonical_sha256; public key at /x402/key" },
+    verify: "ed25519: signature over the utf-8 bytes of canonical_sha256, public key at /x402/key",
+  } : {
     receipt: {
       product: slug, sha256: prod.lookInside ? prod.sampleSha256 : DATA_DELIVERABLES[prod.pack].sha256,
       amount: String(prod.usd * 1000000), asset: X402_NETWORKS.mainnet.usdc, network: X402_NETWORKS.mainnet.id,
@@ -894,10 +912,11 @@ async function handleX402(request, env, url, pathname) {
     return jsonResponse({ algorithm: "ed25519", public_key_hex: await x402PubHex(env),
       message: "the utf-8 bytes of canonical_sha256 (sha256 hex of the receipt JSON with sorted keys, no spaces)" }, 200);
   }
+  if (pathname === "/x402/draw") return x402Draw(env, url);
   const slug = pathname.slice("/x402/".length).replace(/\/+$/, "");
   const prod = X402_PRODUCTS[slug];
   if (!prod) return jsonResponse({ error: "unknown product", catalog: "https://ledatic.org/data/catalog.json" }, 404);
-  const meta = DATA_DELIVERABLES[prod.pack];
+  const meta = prod.draws ? { online: true, sha256: null } : DATA_DELIVERABLES[prod.pack];
   if (mode !== "sepolia" && mode !== "mainnet") {
     return jsonResponse({ error: "x402 is not enabled on this product yet", buy_url: prod.buy,
       note: "card checkout works today; see the catalog's x402.status" }, 503);
@@ -905,7 +924,7 @@ async function handleX402(request, env, url, pathname) {
   if (mode === "mainnet" && !meta.online) {
     return jsonResponse({ error: "not delivered over x402 yet (2.45 GB; card checkout, then email within 24 h)", buy_url: prod.buy }, 503);
   }
-  if (mode === "sepolia" && !prod.sample) {
+  if (mode === "sepolia" && !prod.sample && !prod.draws) {
     return jsonResponse({ error: "no testnet sample for this product" }, 503);
   }
   const net = X402_NETWORKS[mode];
@@ -950,8 +969,15 @@ async function handleX402(request, env, url, pathname) {
   const s = await x402Facilitator(env, net, "/settle", body);
   if (s.error) return jsonResponse({ error: s.error, detail: s.detail || null }, 503);
   if (!s.success) return deny(`settlement failed: ${s.errorReason || "unknown"}`);
-  let downloadUrl, delivered;
-  if (mode === "mainnet" && !prod.lookInside) {
+  let downloadUrl, delivered, packSha = null;
+  if (prod.draws) {
+    const token = sdkBytesToHex(crypto.getRandomValues(new Uint8Array(32)));
+    packSha = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token))));
+    await env.LEDATIC_KV.put(`drawpack:${token}`, JSON.stringify({ size: prod.draws, remaining: prod.draws,
+      transaction: s.transaction, mode, created_at: Math.floor(Date.now() / 1000) }));
+    downloadUrl = `https://ledatic.org/x402/draw?token=${token}`;
+    delivered = `${prod.draws} bound draws${mode === "sepolia" ? " (TESTNET pack)" : ""}: GET the download_url with &bind=<your hex> once a draw`;
+  } else if (mode === "mainnet" && !prod.lookInside) {
     const token = await mintDownloadToken(env, prod.pack, `x402:${s.transaction}`);
     downloadUrl = `https://ledatic.org/data/download/${token}`;
     delivered = "the paid file (30-day link, 25 downloads)";
@@ -962,7 +988,7 @@ async function handleX402(request, env, url, pathname) {
     downloadUrl = prod.sample;
     delivered = "testnet: the free sample";
   }
-  const deliveredSha = prod.lookInside ? prod.sampleSha256 : meta.sha256;
+  const deliveredSha = prod.draws ? packSha : prod.lookInside ? prod.sampleSha256 : meta.sha256;
   let pulse = null;
   try {
     // The beacon origin directly: a Worker cannot fetch its own zone's routes.
@@ -993,6 +1019,43 @@ async function handleX402(request, env, url, pathname) {
     facilitator_extensions: s.extensionResponses || null,
   }), { status: 200, headers: sec({ "content-type": "application/json", "cache-control": "no-store",
     "payment-response": x402B64({ success: true, transaction: s.transaction, network: net.id, payer: receipt.payer }) }) });
+}
+// GET /x402/draw?token=<pack token>&bind=<hex>: one bound draw from a paid pack. The draw is fixed by
+// the caller's bind, the beacon pulse current when it is served and this Worker's receipt key: the
+// Ed25519 signature (RFC 8032, no randomness of its own) over the canonical record, hashed. The pack
+// is counted down in KV after the pulse is read and the draw is signed, so a failed draw costs nothing.
+// KV is eventually consistent: two draws on one token in the same instant can share an index.
+async function x402Draw(env, url) {
+  if (!env.X402_GRANT_KEY) return jsonResponse({ error: "no receipt key bound" }, 503);
+  const token = (url.searchParams.get("token") || "").trim();
+  const bind = (url.searchParams.get("bind") || "").trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(token)) return jsonResponse({ error: "a pack token is required", how: X402_DRAW_HELP }, 403);
+  if (!/^([0-9a-f]{2}){0,64}$/.test(bind)) return jsonResponse({ error: "bind must be hex, at most 64 bytes" }, 400);
+  const raw = await env.LEDATIC_KV.get(`drawpack:${token}`);
+  if (!raw) return jsonResponse({ error: "unknown pack token", how: X402_DRAW_HELP }, 404);
+  const pack = JSON.parse(raw);
+  if (!(pack.remaining > 0)) return jsonResponse({ error: "this pack is spent", how: X402_DRAW_HELP }, 410);
+  let pulse = null;
+  try {
+    const p = await fetch("https://beacon.ledatic.org/pulse", { signal: AbortSignal.timeout(3000) });
+    const j = await p.json();
+    if (Number.isInteger(j.pulse_id) && /^[0-9a-f]{64}$/.test(j.value_hex || "")) pulse = j;
+  } catch { pulse = null; }
+  if (!pulse) return jsonResponse({ error: "the beacon did not answer; the draw was not taken, try again" }, 503);
+  const tokenSha = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token))));
+  const record = { v: 1, pack_sha256: tokenSha, index: pack.size - pack.remaining, bind,
+                   pulse_id: pulse.pulse_id, pulse_value_hex: pulse.value_hex };
+  const canonical = JSON.stringify(record, Object.keys(record).sort());
+  const digest = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
+  const signature = await sdkWitnessSign(env.X402_GRANT_KEY.trim(), digest);
+  const draw = sdkBytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", sdkHexToBytes(signature))));
+  pack.remaining -= 1;
+  await env.LEDATIC_KV.put(`drawpack:${token}`, JSON.stringify(pack));
+  return new Response(JSON.stringify({
+    draw_hex: draw, record, canonical_sha256: digest, signature, public_key_hex: await x402PubHex(env),
+    remaining: pack.remaining, pulse_timestamp_utc: pulse.timestamp_utc || null,
+    verify: "record is JSON with sorted keys and no spaces; canonical_sha256 is its sha256 hex; signature is ed25519 over the utf-8 bytes of canonical_sha256 (key at /x402/key); draw_hex is the sha256 of the 64 signature bytes; the pulse is public at https://ledatic.org/entropy",
+  }), { status: 200, headers: sec({ "content-type": "application/json", "cache-control": "no-store" }) });
 }
 async function sdkWitnessSign(seedHex, msg) {
   const seed = sdkHexToBytes(seedHex);
