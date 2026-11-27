@@ -1,6 +1,6 @@
 {
   "catalog": "ledatic-attested-data",
-  "updated": "2026-10-29",
+  "updated": "2026-11-27",
   "verify_note": "Every listing's provenance chain is independently re-verifiable; see each dataset page.",
   "datasets": [
     {
@@ -74,5 +74,25 @@
     "human": "stripe: see each dataset's buy_url and delivery",
     "agent": "x402 v2 (USDC, EIP-3009 exact scheme): see each dataset's x402.endpoint and x402.status; a served response carries a receipt signed by the key at /x402/key, verifiable offline against download_sha256"
   },
-  "agents_note": "Machine buyers: the pairs corpus is sold over x402 on Base mainnet (USDC, no account, no gas: a 402, a signed EIP-3009 authorization, the file and a signed receipt). The text corpus is card checkout only, delivered by email within 24 h. Humans: buy_url. Verify the free sample first; the paid tarball must hash to download_sha256."
+  "agents_note": "Machine buyers: the pairs corpus is sold over x402 on Base mainnet (USDC, no account, no gas: a 402, a signed EIP-3009 authorization, the file and a signed receipt). The text corpus is card checkout only, delivered by email within 24 h. Humans: buy_url. Verify the free sample first; the paid tarball must hash to download_sha256.",
+  "services": [
+    {
+      "id": "bound-draws-100",
+      "title": "Bound random draws, 100 for 1 USDC",
+      "price_usd": 1,
+      "unit": "a pack of 100 draws (a cent a draw)",
+      "what": "Each draw is 32 bytes fixed by the bind value the caller sends, the public beacon pulse current when it is served, and Ledatic's Ed25519 receipt key: the draw is the SHA-256 of the signature over them. Neither side chooses it; anyone can check it offline.",
+      "not": "A draw is randomness to show someone else, not a secret: do not use one as a key. Ledatic runs the beacon and holds the signing key; the draw proves what was signed, not that a third party agreed. Two draws on one token in the same instant can share an index.",
+      "x402": {
+        "endpoint": "https://ledatic.org/x402/bound-draws-100",
+        "network": "eip155:8453 (Base mainnet)",
+        "asset": "USDC",
+        "amount": "1000000",
+        "spend": "GET https://ledatic.org/x402/draw?token=<the pack token from the receipt's download_url>&bind=<up to 64 bytes of hex>",
+        "receipt_key": "https://ledatic.org/x402/key",
+        "status": "serving since 2026-11-27"
+      },
+      "verify": "record is JSON with sorted keys and no spaces; canonical_sha256 is its sha256 hex; signature is ed25519 over the utf-8 bytes of canonical_sha256; draw_hex is the sha256 of the 64 signature bytes; the pulse is public at https://ledatic.org/entropy"
+    }
+  ]
 }
